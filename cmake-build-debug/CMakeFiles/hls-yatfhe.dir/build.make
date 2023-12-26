@@ -83,33 +83,97 @@ CMakeFiles/hls-yatfhe.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hls-yatfhe.dir/main.cpp.s"
 	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/xintong/GitHub/hls-yatfhe/main.cpp -o CMakeFiles/hls-yatfhe.dir/main.cpp.s
 
-CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o: CMakeFiles/hls-yatfhe.dir/flags.make
-CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o: /Users/xintong/GitHub/hls-yatfhe/src/timer.cpp
-CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o: CMakeFiles/hls-yatfhe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/xintong/GitHub/hls-yatfhe/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o -MF CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o.d -o CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o -c /Users/xintong/GitHub/hls-yatfhe/src/timer.cpp
+CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o: CMakeFiles/hls-yatfhe.dir/flags.make
+CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o: /Users/xintong/GitHub/hls-yatfhe/src/numeric_functions.cpp
+CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o: CMakeFiles/hls-yatfhe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/xintong/GitHub/hls-yatfhe/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o -MF CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o.d -o CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o -c /Users/xintong/GitHub/hls-yatfhe/src/numeric_functions.cpp
 
-CMakeFiles/hls-yatfhe.dir/src/timer.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hls-yatfhe.dir/src/timer.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/xintong/GitHub/hls-yatfhe/src/timer.cpp > CMakeFiles/hls-yatfhe.dir/src/timer.cpp.i
+CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.i"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/xintong/GitHub/hls-yatfhe/src/numeric_functions.cpp > CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.i
 
-CMakeFiles/hls-yatfhe.dir/src/timer.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hls-yatfhe.dir/src/timer.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/xintong/GitHub/hls-yatfhe/src/timer.cpp -o CMakeFiles/hls-yatfhe.dir/src/timer.cpp.s
+CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.s"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/xintong/GitHub/hls-yatfhe/src/numeric_functions.cpp -o CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.s
+
+CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o: CMakeFiles/hls-yatfhe.dir/flags.make
+CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o: /Users/xintong/GitHub/hls-yatfhe/src/polynomial.cpp
+CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o: CMakeFiles/hls-yatfhe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/xintong/GitHub/hls-yatfhe/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o -MF CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o.d -o CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o -c /Users/xintong/GitHub/hls-yatfhe/src/polynomial.cpp
+
+CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.i"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/xintong/GitHub/hls-yatfhe/src/polynomial.cpp > CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.i
+
+CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.s"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/xintong/GitHub/hls-yatfhe/src/polynomial.cpp -o CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.s
+
+CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o: CMakeFiles/hls-yatfhe.dir/flags.make
+CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o: /Users/xintong/GitHub/hls-yatfhe/src/time_counter.cpp
+CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o: CMakeFiles/hls-yatfhe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/xintong/GitHub/hls-yatfhe/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o -MF CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o.d -o CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o -c /Users/xintong/GitHub/hls-yatfhe/src/time_counter.cpp
+
+CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.i"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/xintong/GitHub/hls-yatfhe/src/time_counter.cpp > CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.i
+
+CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.s"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/xintong/GitHub/hls-yatfhe/src/time_counter.cpp -o CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.s
+
+CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o: CMakeFiles/hls-yatfhe.dir/flags.make
+CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o: /Users/xintong/GitHub/hls-yatfhe/src/tlwe.cpp
+CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o: CMakeFiles/hls-yatfhe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/xintong/GitHub/hls-yatfhe/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o -MF CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o.d -o CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o -c /Users/xintong/GitHub/hls-yatfhe/src/tlwe.cpp
+
+CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.i"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/xintong/GitHub/hls-yatfhe/src/tlwe.cpp > CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.i
+
+CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.s"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/xintong/GitHub/hls-yatfhe/src/tlwe.cpp -o CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.s
+
+CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o: CMakeFiles/hls-yatfhe.dir/flags.make
+CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o: /Users/xintong/GitHub/hls-yatfhe/src/trlwe.cpp
+CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o: CMakeFiles/hls-yatfhe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/xintong/GitHub/hls-yatfhe/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o -MF CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o.d -o CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o -c /Users/xintong/GitHub/hls-yatfhe/src/trlwe.cpp
+
+CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.i"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/xintong/GitHub/hls-yatfhe/src/trlwe.cpp > CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.i
+
+CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.s"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/xintong/GitHub/hls-yatfhe/src/trlwe.cpp -o CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.s
 
 # Object files for target hls-yatfhe
 hls__yatfhe_OBJECTS = \
 "CMakeFiles/hls-yatfhe.dir/main.cpp.o" \
-"CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o"
+"CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o" \
+"CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o" \
+"CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o" \
+"CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o" \
+"CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o"
 
 # External object files for target hls-yatfhe
 hls__yatfhe_EXTERNAL_OBJECTS =
 
 hls-yatfhe: CMakeFiles/hls-yatfhe.dir/main.cpp.o
-hls-yatfhe: CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o
+hls-yatfhe: CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o
+hls-yatfhe: CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o
+hls-yatfhe: CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o
+hls-yatfhe: CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o
+hls-yatfhe: CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o
 hls-yatfhe: CMakeFiles/hls-yatfhe.dir/build.make
 hls-yatfhe: CMakeFiles/hls-yatfhe.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/xintong/GitHub/hls-yatfhe/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable hls-yatfhe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/xintong/GitHub/hls-yatfhe/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable hls-yatfhe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hls-yatfhe.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

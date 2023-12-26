@@ -153,29 +153,125 @@ main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/main.cpp.s
 .PHONY : main.cpp.s
 
-src/timer.o: src/timer.cpp.o
-.PHONY : src/timer.o
+src/numeric_functions.o: src/numeric_functions.cpp.o
+.PHONY : src/numeric_functions.o
 
 # target to build an object file
-src/timer.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/timer.cpp.o
-.PHONY : src/timer.cpp.o
+src/numeric_functions.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.o
+.PHONY : src/numeric_functions.cpp.o
 
-src/timer.i: src/timer.cpp.i
-.PHONY : src/timer.i
+src/numeric_functions.i: src/numeric_functions.cpp.i
+.PHONY : src/numeric_functions.i
 
 # target to preprocess a source file
-src/timer.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/timer.cpp.i
-.PHONY : src/timer.cpp.i
+src/numeric_functions.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.i
+.PHONY : src/numeric_functions.cpp.i
 
-src/timer.s: src/timer.cpp.s
-.PHONY : src/timer.s
+src/numeric_functions.s: src/numeric_functions.cpp.s
+.PHONY : src/numeric_functions.s
 
 # target to generate assembly for a file
-src/timer.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/timer.cpp.s
-.PHONY : src/timer.cpp.s
+src/numeric_functions.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/numeric_functions.cpp.s
+.PHONY : src/numeric_functions.cpp.s
+
+src/polynomial.o: src/polynomial.cpp.o
+.PHONY : src/polynomial.o
+
+# target to build an object file
+src/polynomial.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.o
+.PHONY : src/polynomial.cpp.o
+
+src/polynomial.i: src/polynomial.cpp.i
+.PHONY : src/polynomial.i
+
+# target to preprocess a source file
+src/polynomial.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.i
+.PHONY : src/polynomial.cpp.i
+
+src/polynomial.s: src/polynomial.cpp.s
+.PHONY : src/polynomial.s
+
+# target to generate assembly for a file
+src/polynomial.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/polynomial.cpp.s
+.PHONY : src/polynomial.cpp.s
+
+src/time_counter.o: src/time_counter.cpp.o
+.PHONY : src/time_counter.o
+
+# target to build an object file
+src/time_counter.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o
+.PHONY : src/time_counter.cpp.o
+
+src/time_counter.i: src/time_counter.cpp.i
+.PHONY : src/time_counter.i
+
+# target to preprocess a source file
+src/time_counter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.i
+.PHONY : src/time_counter.cpp.i
+
+src/time_counter.s: src/time_counter.cpp.s
+.PHONY : src/time_counter.s
+
+# target to generate assembly for a file
+src/time_counter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.s
+.PHONY : src/time_counter.cpp.s
+
+src/tlwe.o: src/tlwe.cpp.o
+.PHONY : src/tlwe.o
+
+# target to build an object file
+src/tlwe.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.o
+.PHONY : src/tlwe.cpp.o
+
+src/tlwe.i: src/tlwe.cpp.i
+.PHONY : src/tlwe.i
+
+# target to preprocess a source file
+src/tlwe.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.i
+.PHONY : src/tlwe.cpp.i
+
+src/tlwe.s: src/tlwe.cpp.s
+.PHONY : src/tlwe.s
+
+# target to generate assembly for a file
+src/tlwe.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.s
+.PHONY : src/tlwe.cpp.s
+
+src/trlwe.o: src/trlwe.cpp.o
+.PHONY : src/trlwe.o
+
+# target to build an object file
+src/trlwe.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.o
+.PHONY : src/trlwe.cpp.o
+
+src/trlwe.i: src/trlwe.cpp.i
+.PHONY : src/trlwe.i
+
+# target to preprocess a source file
+src/trlwe.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.i
+.PHONY : src/trlwe.cpp.i
+
+src/trlwe.s: src/trlwe.cpp.s
+.PHONY : src/trlwe.s
+
+# target to generate assembly for a file
+src/trlwe.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/trlwe.cpp.s
+.PHONY : src/trlwe.cpp.s
 
 # Help Target
 help:
@@ -189,9 +285,21 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
-	@echo "... src/timer.o"
-	@echo "... src/timer.i"
-	@echo "... src/timer.s"
+	@echo "... src/numeric_functions.o"
+	@echo "... src/numeric_functions.i"
+	@echo "... src/numeric_functions.s"
+	@echo "... src/polynomial.o"
+	@echo "... src/polynomial.i"
+	@echo "... src/polynomial.s"
+	@echo "... src/time_counter.o"
+	@echo "... src/time_counter.i"
+	@echo "... src/time_counter.s"
+	@echo "... src/tlwe.o"
+	@echo "... src/tlwe.i"
+	@echo "... src/tlwe.s"
+	@echo "... src/trlwe.o"
+	@echo "... src/trlwe.i"
+	@echo "... src/trlwe.s"
 .PHONY : help
 
 

@@ -89,7 +89,19 @@
 		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/main.cpp">
 			<Option target="hls-yatfhe"/>
 		</Unit>
-		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/timer.cpp">
+		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/numeric_functions.cpp">
+			<Option target="hls-yatfhe"/>
+		</Unit>
+		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/polynomial.cpp">
+			<Option target="hls-yatfhe"/>
+		</Unit>
+		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/time_counter.cpp">
+			<Option target="hls-yatfhe"/>
+		</Unit>
+		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/tlwe.cpp">
+			<Option target="hls-yatfhe"/>
+		</Unit>
+		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/trlwe.cpp">
 			<Option target="hls-yatfhe"/>
 		</Unit>
 		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/CMakeLists.txt">

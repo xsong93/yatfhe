@@ -1,5 +1,5 @@
-CMakeFiles/hls-yatfhe.dir/main.cpp.o: \
-  /Users/xintong/GitHub/hls-yatfhe/main.cpp \
+CMakeFiles/hls-yatfhe.dir/src/time_counter.cpp.o: \
+  /Users/xintong/GitHub/hls-yatfhe/src/time_counter.cpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/c++/v1/iostream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/c++/v1/__assert \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/c++/v1/__config \
@@ -731,9 +731,5 @@ CMakeFiles/hls-yatfhe.dir/main.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_fsfilcnt_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/_types/_nl_item.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/c++/v1/__bsd_locale_defaults.h \
-  /Users/xintong/GitHub/hls-yatfhe/./include/tlwe.h \
-  /Users/xintong/GitHub/hls-yatfhe/./include/torus.h \
-  /Users/xintong/GitHub/hls-yatfhe/./include/trlwe.h \
   /Users/xintong/GitHub/hls-yatfhe/./util/time_counter.h \
-  /Users/xintong/GitHub/hls-yatfhe/./include/parameters.h \
   /Users/xintong/GitHub/hls-yatfhe/./util/control_helper.h
