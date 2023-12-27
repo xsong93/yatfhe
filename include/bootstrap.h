@@ -9,20 +9,20 @@
 #include "trgsw.h"
 
 struct BootstrappingKey {
-    TrgswDft* s;
-    Trgsw* su;
-    int n;
-    int k;
-    int N;
-    int bgBit;
-    int l;
-    int unfolding;
+    TrgswDft* s{ new TrgswDft};
+    Trgsw* su{ new Trgsw};
+    int n{};
+    int k{};
+    int N{};
+    int bgBit{};
+    int l{};
+    int unfolding{};
 };
 
-void trgswEncZero(Trgsw *trgsw, double alpha, const TrgswKey* key);
+void trgswEncZero(Trgsw& trgsw, double alpha, const TrgswKey& key);
 
-BootstrappingKey* newBootstrappingKeyWoUnfolding(const TrgswKey* trgswKey, const TlweKey* tlweKey);
+void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey);
 
-BootstrappingKey* newBootstrappingKey(const TrgswKey* trgswKey, const TlweKey* tlweKey, int unfolding);
+void newBootstrappingKey(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, int unfolding);
 
 #endif //HLS_YATFHE_BOOTSTRAP_H

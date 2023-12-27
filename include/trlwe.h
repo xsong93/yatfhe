@@ -9,39 +9,37 @@
 #include "polynomial.h"
 
 struct Trlwe {
-    TorusPolynomial* a; // k
-    TorusPolynomial* b; // 1
+    TorusPolynomial* a{ new TorusPolynomial }; // k
+    TorusPolynomial* b{ new TorusPolynomial }; // 1
 //    int k;
 };
 
 struct TrlweKey {
-    IntPolynomial* s;
-    int k;
+    IntPolynomial* s{ new IntPolynomial };
+    int k{};
 //    double sigma;
 };
 
 struct TrlweDft{
-    LagrangePolynomial* a;
-    LagrangePolynomial* b;
+    LagrangePolynomial* a{ new LagrangePolynomial };
+    LagrangePolynomial* b{ new LagrangePolynomial };
 //    int k;
 };
 
-TrlweKey *trlweNewBinaryKey(int N, int k);
+void trlweNewBinaryKey(TrlweKey& trlweKey, int N, int k);
 
-void trlweInitKey(TrlweKey *key, int N, int k);
+void trlweInitKey(TrlweKey& key, int N, int k);
 
-//TrlweKey* trlweInitKey(int N, int k, double sigma);
+void initTrlweSample(Trlwe& trlwe, int k, int N);
 
-//Trlwe* initTrlweSample(int k, int N);
+void initTrlweDftSample(TrlweDft& trlweDft, int k, int N);
 
-void initTrlweSample(Trlwe* trlwe, int k, int N);
+void trlweKeyGen(TrlweKey& key, int N, int k);
 
-TrlweDft* initTrlweDftSample(int k, int N);
+void deleteRlweKey(TrlweKey& key);
 
-void initTrlweDftSample(TrlweDft* trlweDft, int k, int N);
+void deleteRlweSample(Trlwe& sample);
 
-void trlweKeyGen(TrlweKey* key, int N, int k);
-
-void deleteRlweKey(TrlweKey* key);
+void deleteRlweDftSample(TrlweDft& sample);
 
 #endif //HLS_YATFHE_TRLWE_H

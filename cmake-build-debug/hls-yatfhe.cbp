@@ -89,6 +89,9 @@
 		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/main.cpp">
 			<Option target="hls-yatfhe"/>
 		</Unit>
+		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/bootstrap.cpp">
+			<Option target="hls-yatfhe"/>
+		</Unit>
 		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/numeric_functions.cpp">
 			<Option target="hls-yatfhe"/>
 		</Unit>
@@ -99,6 +102,9 @@
 			<Option target="hls-yatfhe"/>
 		</Unit>
 		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/tlwe.cpp">
+			<Option target="hls-yatfhe"/>
+		</Unit>
+		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/trgsw.cpp">
 			<Option target="hls-yatfhe"/>
 		</Unit>
 		<Unit filename="/Users/xintong/GitHub/hls-yatfhe/src/trlwe.cpp">

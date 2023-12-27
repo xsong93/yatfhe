@@ -7,17 +7,16 @@
 #include "torus.h"
 
 struct LagrangePolynomial {
-    double* coeffs;
-    int N;
+    double* coeffs{ new double };
+    int N{};
 };
 
-//TorusPolynomial* initTorusPolynomial(int N);void initTorusPolynomial(TorusPolynomial* torusPolynomial, int N)
+void initTorusPolynomial(TorusPolynomial& torusPolynomial, int N);
 
-//LagrangePolynomial* initLagrangePolynomial(int N);
+void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, int N);
 
-void initTorusPolynomial(TorusPolynomial* torusPolynomial, int N);
+void deletePolynomial(TorusPolynomial& polynomial);
 
-void initLagrangePolynomial(LagrangePolynomial* lagrangePolynomial, int N);
-
+void deletePolynomial(LagrangePolynomial& polynomial);
 
 #endif //HLS_YATFHE_POLYNOMIAL_H

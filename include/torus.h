@@ -9,15 +9,15 @@
 
 //#ifdef TORUS32
 using Torus = uint32_t;
-#undef USE_COMPRESSED_TRLWE
-#else
-using Torus = uint64_t;
-#endif
+//#undef USE_COMPRESSED_TRLWE
+//#else
+//using Torus = uint64_t;
+//#endif
 
 /* Polynomials */
 struct TorusPolynomial {
-    Torus * coeffs; // N
-    int N;
+    Torus* coeffs{ new Torus }; // N
+    int N{};
 };
 
 using Binary = int16_t;

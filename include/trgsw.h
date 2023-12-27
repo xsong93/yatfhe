@@ -8,29 +8,29 @@
 #include "trlwe.h"
 
 struct Trgsw {
-    Trlwe* samples; // l * (k + 1)
+    Trlwe* trlweSamples{new Trlwe }; // l * (k + 1)
 //    int l;
 //    int bgBit;
 };
 
 struct TrgswKey {
-    TrlweKey* trlweKey;
-    int l;
-    int bgBit;
+    TrlweKey* trlweKey{ new TrlweKey };
+    int l{};
+    int bgBit{};
 };
 
 struct TrgswDft {
-    TrlweDft* samples;
+    TrlweDft* trlweDftSamples{new TrlweDft };
 //    int l;
 //    int bgBit;
 };
 
-TrgswKey* trgswInitKey(TrlweKey* trlweKey, int l, int bgBit);
+void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, int l, int bgBit);
 
-void initTrgswSample(Trgsw* trgsw, int l, int bgBit, int k, int N);
+void initTrgswSample(Trgsw& trgsw, int l, int bgBit, int k, int N);
 
-void initTrgswDftSample(TrgswDft* trgsw, int l, int bgBit, int k, int N);
+void initTrgswDftSample(TrgswDft& trgswDft, int l, int bgBit, int k, int N);
 
-void initTrgswDftSample(TrgswDft* trgswDft, int n, int l, int bgBit, int k, int N);
+void deleteTrgswKey(TrgswKey& trgswKey);
 
 #endif //HLS_YATFHE_TRGSW_H

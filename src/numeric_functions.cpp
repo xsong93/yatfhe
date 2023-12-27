@@ -7,6 +7,7 @@
 
 using namespace std;
 default_random_engine generator;
+uniform_int_distribution<Torus> uniformTorus32Distrib(INT32_MIN, INT32_MAX);
 
 // Gaussian sample centered in message, with standard deviation sigma
 Torus gaussian32(Torus message, const double sigma) {

@@ -153,6 +153,30 @@ main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+src/bootstrap.o: src/bootstrap.cpp.o
+.PHONY : src/bootstrap.o
+
+# target to build an object file
+src/bootstrap.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/bootstrap.cpp.o
+.PHONY : src/bootstrap.cpp.o
+
+src/bootstrap.i: src/bootstrap.cpp.i
+.PHONY : src/bootstrap.i
+
+# target to preprocess a source file
+src/bootstrap.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/bootstrap.cpp.i
+.PHONY : src/bootstrap.cpp.i
+
+src/bootstrap.s: src/bootstrap.cpp.s
+.PHONY : src/bootstrap.s
+
+# target to generate assembly for a file
+src/bootstrap.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/bootstrap.cpp.s
+.PHONY : src/bootstrap.cpp.s
+
 src/numeric_functions.o: src/numeric_functions.cpp.o
 .PHONY : src/numeric_functions.o
 
@@ -249,6 +273,30 @@ src/tlwe.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/tlwe.cpp.s
 .PHONY : src/tlwe.cpp.s
 
+src/trgsw.o: src/trgsw.cpp.o
+.PHONY : src/trgsw.o
+
+# target to build an object file
+src/trgsw.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/trgsw.cpp.o
+.PHONY : src/trgsw.cpp.o
+
+src/trgsw.i: src/trgsw.cpp.i
+.PHONY : src/trgsw.i
+
+# target to preprocess a source file
+src/trgsw.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/trgsw.cpp.i
+.PHONY : src/trgsw.cpp.i
+
+src/trgsw.s: src/trgsw.cpp.s
+.PHONY : src/trgsw.s
+
+# target to generate assembly for a file
+src/trgsw.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hls-yatfhe.dir/build.make CMakeFiles/hls-yatfhe.dir/src/trgsw.cpp.s
+.PHONY : src/trgsw.cpp.s
+
 src/trlwe.o: src/trlwe.cpp.o
 .PHONY : src/trlwe.o
 
@@ -285,6 +333,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... src/bootstrap.o"
+	@echo "... src/bootstrap.i"
+	@echo "... src/bootstrap.s"
 	@echo "... src/numeric_functions.o"
 	@echo "... src/numeric_functions.i"
 	@echo "... src/numeric_functions.s"
@@ -297,6 +348,9 @@ help:
 	@echo "... src/tlwe.o"
 	@echo "... src/tlwe.i"
 	@echo "... src/tlwe.s"
+	@echo "... src/trgsw.o"
+	@echo "... src/trgsw.i"
+	@echo "... src/trgsw.s"
 	@echo "... src/trlwe.o"
 	@echo "... src/trlwe.i"
 	@echo "... src/trlwe.s"

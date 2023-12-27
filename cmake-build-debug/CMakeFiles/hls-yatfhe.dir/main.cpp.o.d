@@ -734,6 +734,9 @@ CMakeFiles/hls-yatfhe.dir/main.cpp.o: \
   /Users/xintong/GitHub/hls-yatfhe/./include/tlwe.h \
   /Users/xintong/GitHub/hls-yatfhe/./include/torus.h \
   /Users/xintong/GitHub/hls-yatfhe/./include/trlwe.h \
+  /Users/xintong/GitHub/hls-yatfhe/./include/polynomial.h \
+  /Users/xintong/GitHub/hls-yatfhe/./include/trgsw.h \
+  /Users/xintong/GitHub/hls-yatfhe/./include/bootstrap.h \
   /Users/xintong/GitHub/hls-yatfhe/./util/time_counter.h \
   /Users/xintong/GitHub/hls-yatfhe/./include/parameters.h \
   /Users/xintong/GitHub/hls-yatfhe/./util/control_helper.h

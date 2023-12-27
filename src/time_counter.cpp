@@ -11,7 +11,7 @@ TimeCounter::TimeCounter() {
 }
 
 TimeCounter* TimeCounter::init () {
-    auto* timer = new TimeCounter();
+    TimeCounter* timer{new TimeCounter};
     timer->printTime("init timer");
     return timer;
 }
