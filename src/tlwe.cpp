@@ -10,7 +10,8 @@ using namespace std;
 void tlweInitKey(TlweKey& key, const int n, const double sigma) {
     key.n = n;
     key.sigma = sigma;
-    key.s = new Integer;
+//    key.s = new Integer[n];
+    key.s.resize(n);
 }
 
 void tlweNewBinaryKey(TlweKey& key, const int n, const double sigma) {
@@ -19,16 +20,16 @@ void tlweNewBinaryKey(TlweKey& key, const int n, const double sigma) {
 }
 
 void lweKeyGen(TlweKey& key, const int n) {
-    uniform_int_distribution<int64_t> distribution(0, 1);
+    uniform_int_distribution<int> distribution(0, 1);
     std::cout <<"TlweKey: ";
     for (int i = 0; i < n; i++) {
-        key.s[i] = distribution(generator);
-        std::cout <<key.s[i]<<" ";
+        key.s[i] = distribution(rng);
+        std::cout << i << ":" <<key.s[i]<<" ";
     }
     std::cout <<endl;
 }
 
 void deleteLweKey(TlweKey& key) {
-    delete key.s;
-    key.s = nullptr;
+//    delete key.s;
+//    key.s = nullptr;
 }

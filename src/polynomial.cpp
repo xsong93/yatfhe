@@ -12,8 +12,8 @@ void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, const int N)
 }
 
 void deletePolynomial(TorusPolynomial& polynomial) {
-    delete polynomial.coeffs;
-    polynomial.coeffs = nullptr;
+//    delete polynomial.coeffs;
+//    polynomial.coeffs = nullptr;
 }
 
 void deletePolynomial(LagrangePolynomial& polynomial) {

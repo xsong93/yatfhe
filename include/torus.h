@@ -6,9 +6,11 @@
 #define HLS_YATFHE_TORUS_H
 
 #include <cstdlib>
+#include <vector>
+//#include <cstdint>
 
 //#ifdef TORUS32
-using Torus = uint32_t;
+using Torus = int32_t;
 //#undef USE_COMPRESSED_TRLWE
 //#else
 //using Torus = uint64_t;
@@ -16,7 +18,8 @@ using Torus = uint32_t;
 
 /* Polynomials */
 struct TorusPolynomial {
-    Torus* coeffs{ new Torus }; // N
+//    Torus* coeffs{ new Torus[N] }; // N
+    std::vector<Torus> coeffs; // N
     int N{};
 };
 

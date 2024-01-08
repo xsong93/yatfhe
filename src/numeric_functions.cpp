@@ -7,6 +7,8 @@
 
 using namespace std;
 default_random_engine generator;
+random_device rd;
+mt19937 rng(rd());
 uniform_int_distribution<Torus> uniformTorus32Distrib(INT32_MIN, INT32_MAX);
 
 // Gaussian sample centered in message, with standard deviation sigma

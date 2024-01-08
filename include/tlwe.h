@@ -6,9 +6,11 @@
 #define HLS_YATFHE_TLWE_H
 
 #include "torus.h"
+#include <vector>
 
 struct TlweKey {
-    Integer* s{ new Integer };
+//    Integer* s{ new Integer };
+    std::vector<Integer> s; // n
     int n{};
     double sigma{};
 };

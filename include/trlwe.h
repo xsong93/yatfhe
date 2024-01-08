@@ -5,6 +5,7 @@
 #ifndef HLS_YATFHE_TRLWE_H
 #define HLS_YATFHE_TRLWE_H
 
+#include <vector>
 #include "torus.h"
 #include "polynomial.h"
 
@@ -15,7 +16,8 @@ struct Trlwe {
 };
 
 struct TrlweKey {
-    IntPolynomial* s{ new IntPolynomial };
+//    IntPolynomial* s{ new IntPolynomial[k] }; // k
+    std::vector<IntPolynomial> s; // k
     int k{};
 //    double sigma;
 };

@@ -22,6 +22,9 @@ int main(int argc, char **argv) {
 //    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);
     TrgswKey trgswKey{};
     trgswInitKey(trgswKey, trlweKey, YatfheParameters::l, YatfheParameters::bg_bit);
+
+
+
 //    TLWE_KS_Key tlwe_ksk = tlwe_new_KS_key(key_tlwe, key_tlwe_out, t, base_bit);
 //
 //    auto * input = static_cast<Torus *>(safe_aligned_malloc(sizeof(Torus) * (_EXECS * 4 + 1)));
@@ -51,12 +54,6 @@ int main(int argc, char **argv) {
 ////#endif
 
     std::cout <<1;
-    deleteLweKey(tlweKey);
-    std::cout <<2;
-    deleteLweKey(keyTlweOut);
-    std::cout <<3;
-    deleteRlweKey(trlweKey);
-    std::cout <<4;
     deleteTrgswKey(trgswKey);
     delete timer;
     return 0;
