@@ -4,6 +4,7 @@
 #include <iostream>
 #include "bootstrap.h"
 #include "numeric_functions.h"
+#include "fft.h"
 
 void newBootstrappingKey(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const int unfolding) {
     if (unfolding == 1) {
@@ -39,10 +40,10 @@ void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const TrgswKey& trgsw
     bsk.unfolding = 1;
     bsk.bsk.resize(n);
     for (int i = 0; i < n; i++) {
-        Trgsw trgsw = bsk.bsk[i];
+        Trgsw* trgsw = &bsk.bsk[i];
         initTrgswDftSample(bsk.bskDft[i], trgswKey);
-        initTrgswSample(trgsw, trgswKey);
-        trgswEncZero(trgsw, tlweKey.sigma, trgswKey);
+        initTrgswSample(*trgsw, trgswKey);
+        trgswEncZero(*trgsw, tlweKey.sigma, trgswKey);
         const Integer message = tlweKey.s[i];
         //tGswAddMuIntH(result, message, key->params);
     }
@@ -55,13 +56,14 @@ void trgswEncZero(Trgsw& trgsw, const double sigma, const TrgswKey& trgswKey) {
     const int l = trgswKey.l;
     const int kpl = (k + 1) * l;
     for (int p = 0; p < kpl; p++) {
-        Trlwe trlwe = trgsw.trlweSamples[p];
+        Trlwe* trlwe = &trgsw.trlweSamples[p];
         for (int j = 0; j < N; j++) {
-            trlwe.b.coeffs[j] = addGaussianNoise(0, sigma);
+            trlwe->b.coeffs[j] = addGaussianNoise(0, sigma);
         }
+//        fft(trlwe.b);
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < N; j++) {
-                trlwe.a[i].coeffs[j] = uniformTorus32Distrib(rng);
+                trlwe->a[i].coeffs[j] = uniformTorus32Distrib(rng);
             }
 //            torusPolynomialAddMulR(trlwe.b, trgswKey.trlweKey.s[i], trlwe.a[i]);
         }
