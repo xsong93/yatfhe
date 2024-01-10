@@ -9,10 +9,10 @@
 #include <vector>
 
 struct TlweKey {
-//    Integer* s{ new Integer };
-    std::vector<Integer> s; // n
-    int n{};
-    double sigma{};
+//    Integer* bskDft{ new Integer };
+    int n {};
+    double sigma {};
+    std::vector<Integer> s {}; // n
 };
 
 void tlweInitKey(TlweKey& key, int n, double sigma);

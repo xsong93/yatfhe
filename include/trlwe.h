@@ -10,21 +10,24 @@
 #include "polynomial.h"
 
 struct Trlwe {
-    TorusPolynomial* a{ new TorusPolynomial }; // k
-    TorusPolynomial* b{ new TorusPolynomial }; // 1
+//    TorusPolynomial* a{ new TorusPolynomial }; // k
+    std::vector<TorusPolynomial> a {}; // k
+    TorusPolynomial b {}; // 1
 //    int k;
 };
 
 struct TrlweKey {
-//    IntPolynomial* s{ new IntPolynomial[k] }; // k
-    std::vector<IntPolynomial> s; // k
-    int k{};
+//    IntPolynomial* bskDft{ new IntPolynomial[k] }; // k
+    std::vector<IntPolynomial> s {}; // k
+    int k {};
 //    double sigma;
 };
 
 struct TrlweDft{
-    LagrangePolynomial* a{ new LagrangePolynomial };
-    LagrangePolynomial* b{ new LagrangePolynomial };
+//    LagrangePolynomial* a{ new LagrangePolynomial };
+//    LagrangePolynomial* b{ new LagrangePolynomial };
+    std::vector<LagrangePolynomial> a {}; // k
+    LagrangePolynomial b {}; // 1
 //    int k;
 };
 

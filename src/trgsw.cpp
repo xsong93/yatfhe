@@ -6,25 +6,35 @@
 #include "trlwe.h"
 
 void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const int l, const int bgBit) {
-    trgswKey.trlweKey = &trlweKey;
+    trgswKey.trlweKey = trlweKey;
     trgswKey.l = l;
     trgswKey.bgBit = bgBit;
 }
 
-void initTrgswSample(Trgsw& trgsw, const int l, const int bgBit, const int k, const int N) {
-    for (int i = 0; i < l * (k + 1); i++) {
+void initTrgswSample(Trgsw& trgsw, const TrgswKey& trgswKey) {
+    const int l = trgswKey.l;
+    const int k = trgswKey.trlweKey.k;
+    const int N = trgswKey.trlweKey.s[0].N;
+    const int kpl = l * (k + 1);
+    trgsw.trlweSamples.resize(kpl);
+    for (int i = 0; i < kpl; i++) {
         initTrlweSample(trgsw.trlweSamples[i], k, N);
     }
 }
 
-void initTrgswDftSample(TrgswDft& trgswDft, const int l, const int bgBit, const int k, const int N) {
-    for (size_t i = 0; i < l * (k + 1); i++) {
+void initTrgswDftSample(TrgswDft& trgswDft, const TrgswKey& trgswKey) {
+    const int l = trgswKey.l;
+    const int k = trgswKey.trlweKey.k;
+    const int N = trgswKey.trlweKey.s[0].N;
+    const int kpl = l * (k + 1);
+    trgswDft.trlweDftSamples.resize(kpl);
+    for (size_t i = 0; i < kpl; i++) {
         initTrlweDftSample(trgswDft.trlweDftSamples[i], k, N);
     }
 }
 
 void deleteTrgswKey(TrgswKey& trgswKey) {
-    trgswKey.trlweKey = nullptr;
+//    trgswKey.trlweKey = nullptr;
 }
 
 

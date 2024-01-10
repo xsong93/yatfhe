@@ -10,7 +10,7 @@ using namespace std;
 void tlweInitKey(TlweKey& key, const int n, const double sigma) {
     key.n = n;
     key.sigma = sigma;
-//    key.s = new Integer[n];
+//    key.bskDft = new Integer[n];
     key.s.resize(n);
 }
 
@@ -30,6 +30,6 @@ void lweKeyGen(TlweKey& key, const int n) {
 }
 
 void deleteLweKey(TlweKey& key) {
-//    delete key.s;
-//    key.s = nullptr;
+//    delete key.bskDft;
+//    key.bskDft = nullptr;
 }

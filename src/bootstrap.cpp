@@ -5,11 +5,11 @@
 #include "bootstrap.h"
 #include "numeric_functions.h"
 
-//void newBootstrappingKey(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const int unfolding) {
-//    if (unfolding == 1) {
-//        return newBootstrappingKeyWoUnfolding(bsk, trgswKey, tlweKey);
-//    }
-////    const int l = trgswKey->l, Bg_bit = trgswKey->Bg_bit, k = trgswKey->trlwe_key->k, N = trgswKey->trlwe_key->s[0]->N;
+void newBootstrappingKey(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const int unfolding) {
+    if (unfolding == 1) {
+        newBootstrappingKeyWoUnfolding(bsk, trgswKey, tlweKey);
+    }
+////    const int l = trgswKey->l, Bg_bit = trgswKey->Bg_bit, k = trgswKey->trlwe_key->k, N = trgswKey->trlwe_key->bskDft[0]->N;
 //    BootstrappingKey* res{new BootstrappingKey};
 ////    res->n = tlweKey->n;
 ////    res->k = k;
@@ -31,44 +31,42 @@
 //            trgsw_monomial_sample(res->su[i*finalExp + j], key, 0, trgswKey);
 //        }
 //    }
-//    return res;
-//}
-//
-//void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
-//    bsk.s = new TrgswDft;
-//    for (int i = 0; i < tlweKey.n; i++) {
-//        initTrgswDftSample(bsk.s[i], trgswKey.l, trgswKey.bgBit, trgswKey.trlweKey->k, trgswKey.trlweKey->s[0].N);
-//    }
-//    bsk.unfolding = 1;
-//    Trgsw* trgsw{new Trgsw};
-//    initTrgswSample(trgsw, trgswKey.l, trgswKey.bgBit, trgswKey.trlweKey->k, trgswKey.trlweKey->s[0].N);
-//    for (int i = 0; i < tlweKey.n; i++) {
-////        trgsw_monomial_sample(trgsw, tlweKey->s[i], 0, trgswKey);
-////        trgsw_to_DFT(res->s[i], trgsw);
-//        trgswEncZero(*trgsw, tlweKey.sigma, trgswKey);
-//        //tGswAddMuIntH(result, message, key->params);
-//    }
-//    free_trgsw(trgsw);
-//    return bsk;
-//}
-//
-//void trgswEncZero(Trgsw& trgsw, const double sigma, const TrgswKey& key) {
-//    const int N = key.trlweKey->s[0].N;
-//    const int k = key.trlweKey->k;
-//    const int l = key.l;
-//    for (int p = 0; p < (k + 1) * l; p++) {
-//        Trlwe* trlwe = &trgsw.trlweSamples[p];
-//        for (int j = 0; j < N; j++) {
-//            trlwe->b->coeffs[j] = gaussian32(0, sigma);
-//        }
-//        for (int i = 0; i < k; i++) {
-//            for (int m = 0; m < N; m++) {
-//                trlwe->a[i].coeffs[m] = uniformTorus32Distrib(generator);
-//            }
-//            torusPolynomialAddMulR(trlwe->b, &key->trlweKey[i], &trlwe->a[i]);
-//        }
-//    }
-//}
+}
+
+void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
+    const int n = tlweKey.n;
+    bsk.bskDft.resize(n);
+    bsk.unfolding = 1;
+    bsk.bsk.resize(n);
+    for (int i = 0; i < n; i++) {
+        Trgsw trgsw = bsk.bsk[i];
+        initTrgswDftSample(bsk.bskDft[i], trgswKey);
+        initTrgswSample(trgsw, trgswKey);
+        trgswEncZero(trgsw, tlweKey.sigma, trgswKey);
+        const Integer message = tlweKey.s[i];
+        //tGswAddMuIntH(result, message, key->params);
+    }
+}
+
+// trgsw(0)
+void trgswEncZero(Trgsw& trgsw, const double sigma, const TrgswKey& trgswKey) {
+    const int N = trgswKey.trlweKey.s[0].N;
+    const int k = trgswKey.trlweKey.k;
+    const int l = trgswKey.l;
+    const int kpl = (k + 1) * l;
+    for (int p = 0; p < kpl; p++) {
+        Trlwe trlwe = trgsw.trlweSamples[p];
+        for (int j = 0; j < N; j++) {
+            trlwe.b.coeffs[j] = addGaussianNoise(0, sigma);
+        }
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < N; j++) {
+                trlwe.a[i].coeffs[j] = uniformTorus32Distrib(rng);
+            }
+//            torusPolynomialAddMulR(trlwe.b, trgswKey.trlweKey.s[i], trlwe.a[i]);
+        }
+    }
+}
 
 
 

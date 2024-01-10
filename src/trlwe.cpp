@@ -36,35 +36,37 @@ void trlweKeyGen(TrlweKey& key, const int N, const int k) {
 }
 
 void initTrlweSample(Trlwe& trlwe, const int k, const int N) {
+    trlwe.a.resize(k);
     for (int i = 0; i < k; i++) {
         initTorusPolynomial(trlwe.a[i], N);
     }
-    initTorusPolynomial(*trlwe.b, N);
+    initTorusPolynomial(trlwe.b, N);
 }
 
 void initTrlweDftSample(TrlweDft& trlweDft, const int k, const int N) {
+    trlweDft.a.resize(k);
     for (int i = 0; i < k; i++) {
         initLagrangePolynomial(trlweDft.a[i], N);
     }
-    initLagrangePolynomial(*trlweDft.b, N);
+    initLagrangePolynomial(trlweDft.b, N);
 }
 
 void deleteRlweKey(TrlweKey& key) {
 //    const int k = key.k;
 //    for (int i = 0; i < k; i++) {
-//        delete[] key.s[i].coeffs;
-//        key.s[i].coeffs = nullptr;
+//        delete[] key.bskDft[i].coeffs;
+//        key.bskDft[i].coeffs = nullptr;
 //    }
-//    delete[] key.s;
-//    key.s = nullptr;
+//    delete[] key.bskDft;
+//    key.bskDft = nullptr;
 }
 
 void deleteRlweSample(Trlwe& sample) {
-    deletePolynomial(*sample.a);
-    deletePolynomial(*sample.b);
+//    deletePolynomial(*sample.a);
+//    deletePolynomial(*sample.b);
 }
 
 void deleteRlweDftSample(TrlweDft& sample) {
-    deletePolynomial(*sample.a);
-    deletePolynomial(*sample.b);
+//    deletePolynomial(*sample.a);
+//    deletePolynomial(*sample.b);
 }

@@ -5,31 +5,35 @@
 #ifndef HLS_YATFHE_TRGSW_H
 #define HLS_YATFHE_TRGSW_H
 
+#include <vector>
 #include "trlwe.h"
 
 struct Trgsw {
-    Trlwe* trlweSamples{new Trlwe }; // l * (k + 1)
+//    Trlwe* trlweSamples{new Trlwe }; // l * (k + 1)
+    std::vector<Trlwe> trlweSamples {}; // l * (k + 1)
 //    int l;
 //    int bgBit;
 };
 
 struct TrgswKey {
-    TrlweKey* trlweKey{ new TrlweKey };
-    int l{};
-    int bgBit{};
+//    TrlweKey* trlweKey{ new TrlweKey };
+    TrlweKey trlweKey {};
+    int l {};
+    int bgBit {};
 };
 
 struct TrgswDft {
-    TrlweDft* trlweDftSamples{new TrlweDft };
+//    TrlweDft* trlweDftSamples{new TrlweDft };
+    std::vector<TrlweDft> trlweDftSamples {};
 //    int l;
 //    int bgBit;
 };
 
 void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, int l, int bgBit);
 
-void initTrgswSample(Trgsw& trgsw, int l, int bgBit, int k, int N);
+void initTrgswSample(Trgsw& trgsw, const TrgswKey& trgswKey);
 
-void initTrgswDftSample(TrgswDft& trgswDft, int l, int bgBit, int k, int N);
+void initTrgswDftSample(TrgswDft& trgswDft, const TrgswKey& trgswKey);
 
 void deleteTrgswKey(TrgswKey& trgswKey);
 

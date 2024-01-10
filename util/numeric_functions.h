@@ -11,13 +11,12 @@
 
 using namespace std;
 
-extern default_random_engine generator;
 extern random_device rd;
 extern mt19937 rng;
 extern uniform_int_distribution<Torus> uniformTorus32Distrib;
 static const int64_t twoP32 = INT64_C(1) << 32; // 2^32
 
-Torus gaussian32(Torus message, double sigma);
+Torus addGaussianNoise(Torus message, double sigma);
 
 Torus dToT32(double d);
 

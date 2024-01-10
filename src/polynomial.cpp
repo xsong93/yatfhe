@@ -4,10 +4,12 @@
 #include "polynomial.h"
 
 void initTorusPolynomial(TorusPolynomial& torusPolynomial, const int N) {
+    torusPolynomial.coeffs.resize(N);
     torusPolynomial.N = N;
 }
 
 void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, const int N) {
+    lagrangePolynomial.coeffs.resize(N);
     lagrangePolynomial.N = N;
 }
 
@@ -17,6 +19,6 @@ void deletePolynomial(TorusPolynomial& polynomial) {
 }
 
 void deletePolynomial(LagrangePolynomial& polynomial) {
-    delete polynomial.coeffs;
-    polynomial.coeffs = nullptr;
+//    delete polynomial.coeffs;
+//    polynomial.coeffs = nullptr;
 }

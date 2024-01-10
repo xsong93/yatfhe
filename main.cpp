@@ -13,15 +13,15 @@ int main(int argc, char **argv) {
     COUNT_TIME("test", timer, std::cout << YatfheParameters::N << std::endl;)
     COUNT_TIME("test", timer, std::cout << YatfheParameters::k << std::endl;)
 
-    TlweKey tlweKey{};
+    TlweKey tlweKey {};
     tlweNewBinaryKey(tlweKey, YatfheParameters::n, YatfheParameters::lwe_std_dev);
-    TlweKey keyTlweOut{};
+    TlweKey keyTlweOut {};
     tlweNewBinaryKey(keyTlweOut, YatfheParameters::N, YatfheParameters::lwe_std_dev);
-    TrlweKey trlweKey{};
+    TrlweKey trlweKey {};
     trlweNewBinaryKey(trlweKey, YatfheParameters::N, YatfheParameters::k);
 //    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);
-    TrgswKey trgswKey{};
-    trgswInitKey(trgswKey, trlweKey, YatfheParameters::l, YatfheParameters::bg_bit);
+    TrgswKey trgswKey {trlweKey, YatfheParameters::l, YatfheParameters::bg_bit};
+//    trgswInitKey(trgswKey, trlweKey, YatfheParameters::l, YatfheParameters::bg_bit);
 
 
 
@@ -38,10 +38,10 @@ int main(int argc, char **argv) {
 //
 //    TRLWE lut_c = trlwe_new_noiseless_trivial_sample(poly_res, k, N);
 
-//    BootstrappingKey bsKey{};
-//    newBootstrappingKey(bsKey, trgswKey, tlweKey, 1);
-////    Bootstrap_GA_Key bk_ga_key = new_bootstrap_key_ga(trgsw_key, key_tlwe);
-////
+    BootstrappingKey bsKey {};
+    newBootstrappingKey(bsKey, trgswKey, tlweKey, 1);
+//    Bootstrap_GA_Key bk_ga_key = new_bootstrap_key_ga(trgsw_key, key_tlwe);
+//
 ////#ifdef BENCH_TRGSW_BOOTSTRAP
 //    TRGSW_DFT c_trgsw = trgsw_alloc_new_DFT_sample(l, Bg_bit, k, N);
 ////    BENCHMARK("TRGSW_BS_P1", _EXECS, "TRGSW Functional Bootstrap PHASE 1",
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 ////#endif
 
     std::cout <<1;
-    deleteTrgswKey(trgswKey);
+//    deleteTrgswKey(trgswKey);
     delete timer;
     return 0;
 }

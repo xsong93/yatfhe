@@ -4,11 +4,14 @@
 
 #ifndef HLS_YATFHE_POLYNOMIAL_H
 #define HLS_YATFHE_POLYNOMIAL_H
+
+#include <vector>
 #include "torus.h"
 
 struct LagrangePolynomial {
-    double* coeffs{ new double };
-    int N{};
+//    double* coeffs{ new double };
+    std::vector<double> coeffs {}; // N
+    int N {};
 };
 
 void initTorusPolynomial(TorusPolynomial& torusPolynomial, int N);
