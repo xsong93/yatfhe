@@ -5,7 +5,7 @@
 #ifndef HLS_YATFHE_NTT_CONSTANTS_H
 #define HLS_YATFHE_NTT_CONSTANTS_H
 
-#include <stdint.h>
+#include <cstdint>
 
 
 

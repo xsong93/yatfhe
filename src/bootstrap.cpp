@@ -45,10 +45,12 @@ void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const TrgswKey& trgsw
         initTrgswDftSample(trgswDft, trgswKey);
         initTrgswSample(trgsw, trgswKey);
         trgswEncZero(trgsw, trgswDft, tlweKey.sigma, trgswKey);
-        const Integer message = tlweKey.s[i];
-        //tGswAddMuIntH(result, message, key->params);
+        // const Integer message = tlweKey.s[i];
+        //tGswAddMuIntH(result //trgsw, message, key->params);
     }
 }
+
+
 
 // trgsw(0)
 void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const double sigma, const TrgswKey& trgswKey) {
@@ -67,7 +69,17 @@ void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const double sigma, const Tr
             for (int j = 0; j < N; j++) {
                 trlwe.a[i].coeffs[j] = uniformTorus32Distrib(rng);
             }
-//            torusPolynomialAddMulR(trlwe.b, trgswKey.trlweKey.s[i], trlwe.a[i]);
+            LagrangePolynomial sDft {};
+            LagrangePolynomial aDft {};
+            initLagrangePolynomial(sDft, N);
+            initLagrangePolynomial(aDft, N);
+
+            ntt(trgswKey.trlweKey.s[i], sDft);
+            ntt(trlwe.a[i], aDft);
+            for (int j = 0; j < N; j++) {
+                auto tmp = modMul(aDft.coeffs[j], sDft.coeffs[j]);
+                trlweDft.b.coeffs[j] = modAdd(trlweDft.b.coeffs[j], tmp);
+            }
         }
     }
 }

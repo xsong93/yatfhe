@@ -7,8 +7,8 @@
 using namespace std;
 
 // Function to perform Number Theoretic Transform (NTT)
-void ntt(TorusPolynomial& torusPolynomial, LagrangePolynomial& lagrangePolynomial) {
-    vector<Torus>& input = torusPolynomial.coeffs;
+void ntt(const TorusPolynomial& torusPolynomial, LagrangePolynomial& lagrangePolynomial) {
+    const vector<Torus>& input = torusPolynomial.coeffs;
     vector<uint64_t>& output = lagrangePolynomial.coeffs;
     const int32_t N = lagrangePolynomial.N;
 
@@ -38,7 +38,7 @@ void ntt(TorusPolynomial& torusPolynomial, LagrangePolynomial& lagrangePolynomia
     }
 }
 
-void bitRevShuffle(std::vector<uint64_t> &x, int N) {
+void bitRevShuffle(std::vector<uint64_t>& x, int N) {
     int j = 0;
     int b = 0;
 
