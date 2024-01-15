@@ -4,7 +4,7 @@
 #include <iostream>
 #include "bootstrap.h"
 #include "numeric_functions.h"
-#include "fft.h"
+#include "ntt.h"
 
 void newBootstrappingKey(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const int unfolding) {
     if (unfolding == 1) {
@@ -40,30 +40,32 @@ void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const TrgswKey& trgsw
     bsk.unfolding = 1;
     bsk.bsk.resize(n);
     for (int i = 0; i < n; i++) {
-        Trgsw* trgsw = &bsk.bsk[i];
-        initTrgswDftSample(bsk.bskDft[i], trgswKey);
-        initTrgswSample(*trgsw, trgswKey);
-        trgswEncZero(*trgsw, tlweKey.sigma, trgswKey);
+        Trgsw& trgsw = bsk.bsk[i];
+        TrgswDft& trgswDft = bsk.bskDft[i];
+        initTrgswDftSample(trgswDft, trgswKey);
+        initTrgswSample(trgsw, trgswKey);
+        trgswEncZero(trgsw, trgswDft, tlweKey.sigma, trgswKey);
         const Integer message = tlweKey.s[i];
         //tGswAddMuIntH(result, message, key->params);
     }
 }
 
 // trgsw(0)
-void trgswEncZero(Trgsw& trgsw, const double sigma, const TrgswKey& trgswKey) {
+void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const double sigma, const TrgswKey& trgswKey) {
     const int N = trgswKey.trlweKey.s[0].N;
     const int k = trgswKey.trlweKey.k;
     const int l = trgswKey.l;
     const int kpl = (k + 1) * l;
     for (int p = 0; p < kpl; p++) {
-        Trlwe* trlwe = &trgsw.trlweSamples[p];
+        Trlwe& trlwe = trgsw.trlweSamples[p];
+        TrlweDft& trlweDft = trgswDft.trlweDftSamples[p];
         for (int j = 0; j < N; j++) {
-            trlwe->b.coeffs[j] = addGaussianNoise(0, sigma);
+            trlwe.b.coeffs[j] = addGaussianNoise(0, sigma);
         }
-//        fft(trlwe.b);
+        ntt(trlwe.b, trlweDft.b);
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < N; j++) {
-                trlwe->a[i].coeffs[j] = uniformTorus32Distrib(rng);
+                trlwe.a[i].coeffs[j] = uniformTorus32Distrib(rng);
             }
 //            torusPolynomialAddMulR(trlwe.b, trgswKey.trlweKey.s[i], trlwe.a[i]);
         }

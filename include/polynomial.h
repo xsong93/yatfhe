@@ -10,7 +10,7 @@
 
 struct LagrangePolynomial {
 //    double* coeffs{ new double };
-    std::vector<double> coeffs {}; // N
+    std::vector<uint64_t> coeffs {}; // N
     int N {};
 };
 

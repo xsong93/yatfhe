@@ -22,7 +22,7 @@ struct BootstrappingKey {
     int unfolding {};
 };
 
-void trgswEncZero(Trgsw& trgsw, double alpha, const TrgswKey& trgswKey);
+void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, double alpha, const TrgswKey& trgswKey);
 
 void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey);
 
