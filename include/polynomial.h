@@ -6,6 +6,7 @@
 #define HLS_YATFHE_POLYNOMIAL_H
 
 #include <vector>
+#include <cstdint>
 #include "torus.h"
 
 struct LagrangePolynomial {
