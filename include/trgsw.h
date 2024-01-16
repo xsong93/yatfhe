@@ -35,6 +35,8 @@ void initTrgswSample(Trgsw& trgsw, const TrgswKey& trgswKey);
 
 void initTrgswDftSample(TrgswDft& trgswDft, const TrgswKey& trgswKey);
 
+void allocNewTrgswDftSample(TrgswDft &trgswDftSample, int l, int Bg_bit, int k, int N);
+
 void deleteTrgswKey(TrgswKey& trgswKey);
 
 #endif //HLS_YATFHE_TRGSW_H

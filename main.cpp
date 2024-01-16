@@ -42,16 +42,17 @@ int main(int argc, char **argv) {
     newBootstrappingKey(bsKey, trgswKey, tlweKey, 1);
 //    Bootstrap_GA_Key bk_ga_key = new_bootstrap_key_ga(trgsw_key, key_tlwe);
 //
-////#ifdef BENCH_TRGSW_BOOTSTRAP
-//    TRGSW_DFT c_trgsw = trgsw_alloc_new_DFT_sample(l, Bg_bit, k, N);
-////    BENCHMARK("TRGSW_BS_P1", _EXECS, "TRGSW Functional Bootstrap PHASE 1",
-//    functional_bootstrap_trgsw_phase1(c_trgsw, sel, bsKey, 4);
-////    );
-//
-////    BENCHMARK("TRGSW_BS_P2", _EXECS, "TRGSW Functional Bootstrap PHASE 2",
-//    functional_bootstrap_trgsw_phase2(c[4], c_trgsw, lut_c);
-////    );
-////#endif
+//#ifdef BENCH_TRGSW_BOOTSTRAP
+    TrgswDft newDftSample {};
+    trgsw_alloc_new_DFT_sample(YatfheParameters::l, YatfheParameters::bg_bit, YatfheParameters::k, YatfheParameters::N);
+//    BENCHMARK("TRGSW_BS_P1", _EXECS, "TRGSW Functional Bootstrap PHASE 1",
+    functional_bootstrap_trgsw_phase1(newDftSample, sel, bsKey, 4);
+//    );
+
+//    BENCHMARK("TRGSW_BS_P2", _EXECS, "TRGSW Functional Bootstrap PHASE 2",
+    functional_bootstrap_trgsw_phase2(c[4], newDftSample, lut_c);
+//    );
+//#endif
 
     std::cout <<1;
 //    deleteTrgswKey(trgswKey);

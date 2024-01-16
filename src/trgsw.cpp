@@ -28,8 +28,16 @@ void initTrgswDftSample(TrgswDft& trgswDft, const TrgswKey& trgswKey) {
     const int N = trgswKey.trlweKey.s[0].N;
     const int kpl = l * (k + 1);
     trgswDft.trlweDftSamples.resize(kpl);
-    for (size_t i = 0; i < kpl; i++) {
+    for (int i = 0; i < kpl; i++) {
         initTrlweDftSample(trgswDft.trlweDftSamples[i], k, N);
+    }
+}
+
+void allocNewTrgswDftSample(TrgswDft& trgswDftSample, const int l, const int Bg_bit, const int k, const int N) {
+    const int kpl = l *  (k + 1);
+    trgswDftSample.trlweDftSamples.resize(kpl);
+    for (int i = 0; i < kpl; i++) {
+        trgswDftSample.trlweDftSamples[i] = trlwe_alloc_new_DFT_sample(k, N);
     }
 }
 
