@@ -10,24 +10,29 @@
 #include "trlwe.h"
 
 struct Trgsw {
-//    Trlwe* trlweSamples{new Trlwe }; // l * (k + 1)
     std::vector<Trlwe> trlweSamples {}; // l * (k + 1)
-//    int l;
+    int l;
 //    int bgBit;
+
+    Trgsw(const YatfheParameters& p) :
+        trlweSamples(p.l * (p.k + 1), Trlwe(p.k, p.N)),
+        l(p.l) {};
 };
 
 struct TrgswKey {
-//    TrlweKey* trlweKey{ new TrlweKey };
     TrlweKey trlweKey {};
     int l {};
     int bgBit {};
 };
 
 struct TrgswDft {
-//    TrlweDft* trlweDftSamples{new TrlweDft };
-    std::vector<TrlweDft> trlweDftSamples {};
-//    int l;
+    std::vector<TrlweDft> trlweDftSamples; // l *  (k + 1)
+    int l;
 //    int bgBit;
+
+    TrgswDft(const YatfheParameters& p) :
+        trlweDftSamples(p.l * (p.k + 1), TrlweDft(p.k, p.N)),
+        l(p.l) {};
 };
 
 void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& yatfheParameters);

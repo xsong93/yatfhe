@@ -8,6 +8,7 @@
 #include <vector>
 #include "tlwe.h"
 #include "trgsw.h"
+#include "yatfhe_parameters.h"
 
 struct BootstrappingKey {
 //    TrgswDft* bskDft{ new TrgswDft};
@@ -20,7 +21,15 @@ struct BootstrappingKey {
     int bgBit {};
     int l {};
     int unfolding {};
+
+    explicit BootstrappingKey(const YatfheParameters& parameters) :
+        n(parameters.n),
+        unfolding(parameters.unfolding),
+        bsk(parameters.n, Trgsw(parameters)),
+        bskDft(parameters.n,TrgswDft(parameters)) {};
 };
+
+void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, const YatfheParameters& parameters);
 
 void calculateB(std::vector<uint64_t>& coeffsA, std::vector<uint64_t>& coeffsS, std::vector<uint64_t>& coeffsB, int N);
 

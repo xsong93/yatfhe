@@ -14,10 +14,10 @@ uniform_int_distribution<Torus> uniformTorus32Distrib(INT32_MIN, INT32_MAX);
 Torus addGaussianNoise(Torus message, const double sigma) {
     normal_distribution<double> normalDistribution(0.0, sigma);
     double err = normalDistribution(rng);
-    return message + dToT32(err);
+    return message + doubleToTorus32(err);
 }
 
 // Convert double to Torus32
-Torus dToT32(const double d) {
+Torus doubleToTorus32(const double d) {
     return int32_t(int64_t((d - int64_t(d)) * twoP32));
 }

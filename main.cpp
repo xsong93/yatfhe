@@ -6,22 +6,23 @@
 #include "time_counter.h"
 #include "yatfhe_parameters.h"
 #include "control_helper.h"
+#include "numeric_functions.h"
 
 int main(int argc, char **argv) {
     auto* timer = TimeCounter::init();
-    const YatfheParameters yatfheParameters {};
-    COUNT_TIME("test n", timer, std::cout << yatfheParameters.n << std::endl;)
-    COUNT_TIME("test N", timer, std::cout << yatfheParameters.N << std::endl;)
-    COUNT_TIME("test k", timer, std::cout << yatfheParameters.k << std::endl;)
+    const YatfheParameters param {};
+    COUNT_TIME("test n", timer, std::cout << param.n << std::endl;)
+    COUNT_TIME("test N", timer, std::cout << param.N << std::endl;)
+    COUNT_TIME("test k", timer, std::cout << param.k << std::endl;)
 
-    TlweKey tlweKey {};
-    newBinaryTlweKey(tlweKey, yatfheParameters);
-    TlweKey keyTlweOut {};
-    newBinaryTlweKey(keyTlweOut, yatfheParameters);
-    TrlweKey trlweKey {};
-    newBinaryTrlweKey(trlweKey, yatfheParameters);
+    TlweKey tlweKey(param.n, param.lweStdDev);
+    lweKeyGen(tlweKey, param.n);
+    TlweKey keyTlweOut(param.n, param.lweStdDev);
+    lweKeyGen(keyTlweOut, param.n);
+    TrlweKey trlweKey(param.k, param.N);
+    trlweKeyGen(trlweKey, param.N, param.k);
 //    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);
-    TrgswKey trgswKey {trlweKey, yatfheParameters.l, yatfheParameters.bgBit};
+    TrgswKey trgswKey {trlweKey, param.l, param.bgBit};
 
 //    TLWE_KS_Key tlwe_ksk = tlwe_new_KS_key(key_tlwe, key_tlwe_out, t, baseBit);
 //
@@ -30,25 +31,27 @@ int main(int argc, char **argv) {
 //    TLWE c[_EXECS*4 + 1];
 //    for (size_t i = 0; i < _EXECS*4 + 1; i++) c[i] = tlwe_new_sample(input[i], key_tlwe_out);
 //
-//    TLWE sel = tlwe_new_sample(double2torus(1./8), key_tlwe);
+
+    Tlwe tlweSample(param.n);
+    symEncryptToTlweSample(tlweSample, doubleToTorus32(1.0 / 8), tlweKey);
 //    TorusPolynomial poly_res = polynomial_new_torus_polynomial(N);
 //    for (size_t i = 0; i < N; i++) poly_res->coeffs[i] = input[i / (N / 4)];
 //
 //    TRLWE lut_c = trlwe_new_noiseless_trivial_sample(poly_res, k, N);
 
-    BootstrappingKey bsKey {};
-    newBootstrappingKey(bsKey, yatfheParameters, trgswKey, tlweKey);
+    BootstrappingKey bsKey {param};
+    newBootstrappingKey(bsKey, param, trgswKey, tlweKey);
 //    Bootstrap_GA_Key bk_ga_key = new_bootstrap_key_ga(trgsw_key, key_tlwe);
 //
 //#ifdef BENCH_TRGSW_BOOTSTRAP
-    TrgswDft newDftSample {};
-    initTrgswDftSample(newDftSample, yatfheParameters);
+    TrgswDft dftSample {param};
+//    initTrgswDftSample(dftSample, param);
 ////    BENCHMARK("TRGSW_BS_P1", _EXECS, "TRGSW Functional Bootstrap PHASE 1",
-//    functional_bootstrap_trgsw_phase1(newDftSample, sel, bsKey, 4);
+    trgswFunctionalBootstrapping(dftSample, tlweSample, bsKey, param);
 ////    );
 //
 ////    BENCHMARK("TRGSW_BS_P2", _EXECS, "TRGSW Functional Bootstrap PHASE 2",
-//    functional_bootstrap_trgsw_phase2(c[4], newDftSample, lut_c);
+//    functional_bootstrap_trgsw_phase2(c[4], dftSample, lut_c);
 ////    );
 ////#endif
 

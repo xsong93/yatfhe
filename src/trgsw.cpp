@@ -17,7 +17,7 @@ void initTrgswSample(Trgsw& trgsw, const YatfheParameters& yatfheParameters) {
     const int k = yatfheParameters.k;
     const int N = yatfheParameters.N;
     const int kpl = l * (k + 1);
-    trgsw.trlweSamples.resize(kpl);
+//    trgsw.trlweSamples.resize(kpl);
     for (int i = 0; i < kpl; i++) {
         initTrlweSample(trgsw.trlweSamples[i], k, N);
     }
@@ -28,7 +28,7 @@ void initTrgswDftSample(TrgswDft& trgswDftSample, const YatfheParameters& yatfhe
     const int k = yatfheParameters.k;
     const int N = yatfheParameters.N;
     const int kpl = l *  (k + 1);
-    trgswDftSample.trlweDftSamples.resize(kpl);
+//    trgswDftSample.trlweDftSamples.resize(kpl);
     for (int i = 0; i < kpl; i++) {
         initTrlweDftSample(trgswDftSample.trlweDftSamples[i], k, N);
     }

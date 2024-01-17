@@ -12,6 +12,10 @@
 struct LagrangePolynomial {
     std::vector<uint64_t> coeffs {}; // N
     int N {};
+
+    explicit LagrangePolynomial(int N) :
+        N(N),
+        coeffs(N, 0) {};
 };
 
 void initTorusPolynomial(TorusPolynomial& torusPolynomial, int N);

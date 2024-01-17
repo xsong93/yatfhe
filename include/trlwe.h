@@ -11,25 +11,37 @@
 #include "polynomial.h"
 
 struct Trlwe {
-//    TorusPolynomial* a{ new TorusPolynomial }; // k
     std::vector<TorusPolynomial> a {}; // k
     TorusPolynomial b {}; // 1
-//    int k;
+    int k;
+
+    Trlwe(int k, int N) :
+        a(k, TorusPolynomial(N)),
+        b(TorusPolynomial(N)),
+        k(k) {};
 };
 
 struct TrlweKey {
-//    IntPolynomial* bskDft{ new IntPolynomial[k] }; // k
     std::vector<IntPolynomial> s {}; // k
     int k {};
 //    double sigma;
+
+    TrlweKey() : k(0), s(0) {};
+
+    explicit TrlweKey(int k, int N):
+        k(k),
+        s(k, TorusPolynomial(N)) {};
 };
 
 struct TrlweDft{
-//    LagrangePolynomial* a{ new LagrangePolynomial };
-//    LagrangePolynomial* b{ new LagrangePolynomial };
     std::vector<LagrangePolynomial> a {}; // k
-    LagrangePolynomial b {}; // 1
-//    int k;
+    LagrangePolynomial b; // 1
+    int k;
+
+    TrlweDft(int k, int N) :
+        a(k, LagrangePolynomial(N)),
+        b(LagrangePolynomial(N)),
+        k(k) {};
 };
 
 void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& yatfheParameters);

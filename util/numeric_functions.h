@@ -18,6 +18,6 @@ static const int64_t twoP32 = INT64_C(1) << 32; // 2^32
 
 Torus addGaussianNoise(Torus message, double sigma);
 
-Torus dToT32(double d);
+Torus doubleToTorus32(double d);
 
 #endif //HLS_YATFHE_NUMERIC_FUNCTIONS_H

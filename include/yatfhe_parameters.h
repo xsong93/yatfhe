@@ -52,6 +52,7 @@ struct YatfheParameters {
     int t {8};
     int baseBit {2};
     int unfolding {1};
+    int torusBase {4};
 #endif
 
 #endif

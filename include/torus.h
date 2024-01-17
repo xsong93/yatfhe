@@ -18,9 +18,14 @@ using Torus = int32_t;
 
 /* Polynomials */
 struct TorusPolynomial {
-//    Torus* coeffs{ new Torus[N] }; // N
     std::vector<Torus> coeffs {}; // N
     int N {};
+
+    TorusPolynomial() : coeffs(), N() {};
+
+    explicit TorusPolynomial(int N) :
+        coeffs(N),
+        N(N) {};
 };
 
 using Binary = int16_t;

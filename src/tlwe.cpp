@@ -30,6 +30,19 @@ void lweKeyGen(TlweKey& key, const int n) {
     std::cout <<endl;
 }
 
+void initTlweSample(Tlwe& tlwe, int n) {
+    tlwe.a.resize(n);
+    tlwe.n = n;
+}
+
+void symEncryptToTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key) {
+    tlweSample.b = addGaussianNoise(message, key.sigma);
+    for (int i = 0; i < key.n; i++) {
+        tlweSample.a[i] = uniformTorus32Distrib(rng);
+        tlweSample.b += key.s[i] * tlweSample.a[i];
+    }
+}
+
 void deleteLweKey(TlweKey& key) {
 //    delete key.bskDft;
 //    key.bskDft = nullptr;
