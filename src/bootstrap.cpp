@@ -66,8 +66,8 @@ void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& yatf
             initCoeffsViaUniformDistribution(trlweSample.a[i].coeffs, N);
             LagrangePolynomial sDft {};
             LagrangePolynomial aDft {};
-            initLagrangePolynomial(sDft, k);
-            initLagrangePolynomial(aDft, k);
+            initLagrangePolynomial(sDft, N);
+            initLagrangePolynomial(aDft, N);
             applyNtt(trgswKey.trlweKey.s[i], sDft);
             applyNtt(trlweSample.a[i], aDft);
             calculateB(aDft.coeffs, sDft.coeffs, trlweDftSample.b.coeffs, N);

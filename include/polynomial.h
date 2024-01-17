@@ -10,7 +10,6 @@
 #include "torus.h"
 
 struct LagrangePolynomial {
-//    double* coeffs{ new double };
     std::vector<uint64_t> coeffs {}; // N
     int N {};
 };

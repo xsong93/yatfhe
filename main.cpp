@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 //    TRLWE lut_c = trlwe_new_noiseless_trivial_sample(poly_res, k, N);
 
     BootstrappingKey bsKey {};
-    newBootstrappingKey(bsKey, yatfheParameters,trgswKey, tlweKey);
+    newBootstrappingKey(bsKey, yatfheParameters, trgswKey, tlweKey);
 //    Bootstrap_GA_Key bk_ga_key = new_bootstrap_key_ga(trgsw_key, key_tlwe);
 //
 //#ifdef BENCH_TRGSW_BOOTSTRAP
