@@ -11,7 +11,7 @@
 
 constexpr uint64_t MODULUS = 0xffffffff00000001UL;
 
-void ntt(const TorusPolynomial& torusPolynomial, LagrangePolynomial& lagrangePolynomial);
+void applyNtt(const TorusPolynomial& torusPolynomial, LagrangePolynomial& lagrangePolynomial);
 
 void bitRevShuffle(std::vector<uint64_t>& x, int N);
 

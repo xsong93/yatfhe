@@ -2,21 +2,22 @@
 // Created by Xintong Song on 2023/12/8.
 //
 #include <iostream>
+#include "yatfhe_parameters.h"
 #include "tlwe.h"
 #include "numeric_functions.h"
 
 using namespace std;
 
-void tlweInitKey(TlweKey& key, const int n, const double sigma) {
+void initTlweKey(TlweKey& key, const int n, const double sigma) {
     key.n = n;
     key.sigma = sigma;
 //    key.bskDft = new Integer[n];
     key.s.resize(n);
 }
 
-void tlweNewBinaryKey(TlweKey& key, const int n, const double sigma) {
-    tlweInitKey(key, n, sigma);
-    lweKeyGen(key, n);
+void newBinaryTlweKey(TlweKey& key, const YatfheParameters& parameters) {
+    initTlweKey(key, parameters.n, parameters.lweStdDev);
+    lweKeyGen(key, parameters.n);
 }
 
 void lweKeyGen(TlweKey& key, const int n) {

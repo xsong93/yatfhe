@@ -3,19 +3,20 @@
 //
 #include <iostream>
 #include <random>
+#include "yatfhe_parameters.h"
 #include "trlwe.h"
 #include "polynomial.h"
 #include "numeric_functions.h"
 
 using namespace std;
 
-void trlweNewBinaryKey(TrlweKey& trlweKey, const int N, const int k) {
-    trlweKey.k = k;
-    trlweInitKey(trlweKey, N, k);
-    trlweKeyGen(trlweKey, N, k);
+void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& yatfheParameters) {
+    trlweKey.k = yatfheParameters.k;
+    initTrlweKey(trlweKey, yatfheParameters.N, yatfheParameters.k);
+    trlweKeyGen(trlweKey, yatfheParameters.N, yatfheParameters.k);
 }
 
-void trlweInitKey(TrlweKey& key, const int N, const int k) {
+void initTrlweKey(TrlweKey& key, const int N, const int k) {
     key.s.resize(k);
     for (int i = 0; i < k; i++) {
         initTorusPolynomial(key.s[i], N);

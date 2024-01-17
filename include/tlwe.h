@@ -6,6 +6,7 @@
 #define HLS_YATFHE_TLWE_H
 
 #include "torus.h"
+#include "yatfhe_parameters.h"
 #include <vector>
 
 struct TlweKey {
@@ -15,9 +16,9 @@ struct TlweKey {
     std::vector<Integer> s {}; // n
 };
 
-void tlweInitKey(TlweKey& key, int n, double sigma);
+void initTlweKey(TlweKey& key, const int n, const double sigma);
 
-void tlweNewBinaryKey(TlweKey& key, int n, double sigma);
+void newBinaryTlweKey(TlweKey& key, const YatfheParameters& parameters);
 
 void lweKeyGen(TlweKey& result, int n);
 

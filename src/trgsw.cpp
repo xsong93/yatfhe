@@ -2,19 +2,20 @@
 // Created by Xintong Song on 2023/12/25.
 //
 #include <iostream>
+#include "yatfhe_parameters.h"
 #include "trgsw.h"
 #include "trlwe.h"
 
-void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const int l, const int bgBit) {
+void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& yatfheParameters) {
     trgswKey.trlweKey = trlweKey;
-    trgswKey.l = l;
-    trgswKey.bgBit = bgBit;
+    trgswKey.l = yatfheParameters.l;
+    trgswKey.bgBit = yatfheParameters.bgBit;
 }
 
-void initTrgswSample(Trgsw& trgsw, const TrgswKey& trgswKey) {
-    const int l = trgswKey.l;
-    const int k = trgswKey.trlweKey.k;
-    const int N = trgswKey.trlweKey.s[0].N;
+void initTrgswSample(Trgsw& trgsw, const YatfheParameters& yatfheParameters) {
+    const int l = yatfheParameters.l;
+    const int k = yatfheParameters.k;
+    const int N = yatfheParameters.N;
     const int kpl = l * (k + 1);
     trgsw.trlweSamples.resize(kpl);
     for (int i = 0; i < kpl; i++) {
@@ -22,22 +23,14 @@ void initTrgswSample(Trgsw& trgsw, const TrgswKey& trgswKey) {
     }
 }
 
-void initTrgswDftSample(TrgswDft& trgswDft, const TrgswKey& trgswKey) {
-    const int l = trgswKey.l;
-    const int k = trgswKey.trlweKey.k;
-    const int N = trgswKey.trlweKey.s[0].N;
-    const int kpl = l * (k + 1);
-    trgswDft.trlweDftSamples.resize(kpl);
-    for (int i = 0; i < kpl; i++) {
-        initTrlweDftSample(trgswDft.trlweDftSamples[i], k, N);
-    }
-}
-
-void allocNewTrgswDftSample(TrgswDft& trgswDftSample, const int l, const int Bg_bit, const int k, const int N) {
+void initTrgswDftSample(TrgswDft& trgswDftSample, const YatfheParameters& yatfheParameters) {
+    const int l = yatfheParameters.l;
+    const int k = yatfheParameters.k;
+    const int N = yatfheParameters.N;
     const int kpl = l *  (k + 1);
     trgswDftSample.trlweDftSamples.resize(kpl);
     for (int i = 0; i < kpl; i++) {
-        trgswDftSample.trlweDftSamples[i] = trlwe_alloc_new_DFT_sample(k, N);
+        initTrlweDftSample(trgswDftSample.trlweDftSamples[i], k, N);
     }
 }
 

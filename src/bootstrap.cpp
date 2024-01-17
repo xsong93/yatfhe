@@ -6,9 +6,9 @@
 #include "numeric_functions.h"
 #include "ntt.h"
 
-void newBootstrappingKey(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const int unfolding) {
-    if (unfolding == 1) {
-        newBootstrappingKeyWoUnfolding(bsk, trgswKey, tlweKey);
+void newBootstrappingKey(BootstrappingKey& bsk, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
+    if (yatfheParameters.unfolding == 1) {
+        newBootstrappingKeyWoUnfolding(bsk, yatfheParameters, trgswKey, tlweKey);
     }
 ////    const int l = trgswKey->l, Bg_bit = trgswKey->Bg_bit, k = trgswKey->trlwe_key->k, N = trgswKey->trlwe_key->bskDft[0]->N;
 //    BootstrappingKey* res{new BootstrappingKey};
@@ -34,53 +34,64 @@ void newBootstrappingKey(BootstrappingKey& bsk, const TrgswKey& trgswKey, const 
 //    }
 }
 
-void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
-    const int n = tlweKey.n;
+void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
+    const int n = yatfheParameters.n;
     bsk.bskDft.resize(n);
     bsk.unfolding = 1;
     bsk.bsk.resize(n);
     for (int i = 0; i < n; i++) {
         Trgsw& trgsw = bsk.bsk[i];
         TrgswDft& trgswDft = bsk.bskDft[i];
-        initTrgswDftSample(trgswDft, trgswKey);
-        initTrgswSample(trgsw, trgswKey);
-        trgswEncZero(trgsw, trgswDft, tlweKey.sigma, trgswKey);
+        initTrgswDftSample(trgswDft, yatfheParameters);
+        initTrgswSample(trgsw, yatfheParameters);
+        trgswEncZero(trgsw, trgswDft, yatfheParameters, trgswKey);
         // const Integer message = tlweKey.s[i];
         //tGswAddMuIntH(result //trgsw, message, key->params);
     }
 }
 
-
-
 // trgsw(0)
-void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const double sigma, const TrgswKey& trgswKey) {
-    const int N = trgswKey.trlweKey.s[0].N;
-    const int k = trgswKey.trlweKey.k;
-    const int l = trgswKey.l;
+void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey) {
+    const int N = yatfheParameters.N;
+    const int k = yatfheParameters.k;
+    const int l = yatfheParameters.l;
     const int kpl = (k + 1) * l;
+    const double sigma = yatfheParameters.lweStdDev;
     for (int p = 0; p < kpl; p++) {
-        Trlwe& trlwe = trgsw.trlweSamples[p];
-        TrlweDft& trlweDft = trgswDft.trlweDftSamples[p];
-        for (int j = 0; j < N; j++) {
-            trlwe.b.coeffs[j] = addGaussianNoise(0, sigma);
-        }
-        ntt(trlwe.b, trlweDft.b);
+        Trlwe& trlweSample = trgsw.trlweSamples[p];
+        TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[p];
+        addGaussianNoiseToCoeffs(trlweSample.b.coeffs, N, sigma);
+        applyNtt(trlweSample.b, trlweDftSample.b);
         for (int i = 0; i < k; i++) {
-            for (int j = 0; j < N; j++) {
-                trlwe.a[i].coeffs[j] = uniformTorus32Distrib(rng);
-            }
+            initCoeffsViaUniformDistribution(trlweSample.a[i].coeffs, N);
             LagrangePolynomial sDft {};
             LagrangePolynomial aDft {};
-            initLagrangePolynomial(sDft, N);
-            initLagrangePolynomial(aDft, N);
-
-            ntt(trgswKey.trlweKey.s[i], sDft);
-            ntt(trlwe.a[i], aDft);
-            for (int j = 0; j < N; j++) {
-                auto tmp = modMul(aDft.coeffs[j], sDft.coeffs[j]);
-                trlweDft.b.coeffs[j] = modAdd(trlweDft.b.coeffs[j], tmp);
-            }
+            initLagrangePolynomial(sDft, k);
+            initLagrangePolynomial(aDft, k);
+            applyNtt(trgswKey.trlweKey.s[i], sDft);
+            applyNtt(trlweSample.a[i], aDft);
+            calculateB(aDft.coeffs, sDft.coeffs, trlweDftSample.b.coeffs, N);
         }
+    }
+}
+
+// b = aj*sj
+void calculateB(std::vector<uint64_t>& coeffsA, std::vector<uint64_t>& coeffsS, std::vector<uint64_t>& coeffsB, const int N) {
+    for (int j = 0; j < N; j++) {
+        auto tmp = modMul(coeffsA[j], coeffsS[j]);
+        coeffsB[j] = modAdd(coeffsB[j], tmp);
+    }
+}
+
+void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const int N) {
+    for (int j = 0; j < N; j++) {
+        coeffs[j] = uniformTorus32Distrib(rng);
+    }
+}
+
+void addGaussianNoiseToCoeffs(std::vector<Torus>& coeffs, const int N, const double sigma) {
+    for (int j = 0; j < N; j++) {
+        coeffs[j] = addGaussianNoise(0, sigma);
     }
 }
 

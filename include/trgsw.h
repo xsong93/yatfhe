@@ -6,6 +6,7 @@
 #define HLS_YATFHE_TRGSW_H
 
 #include <vector>
+#include "yatfhe_parameters.h"
 #include "trlwe.h"
 
 struct Trgsw {
@@ -29,13 +30,11 @@ struct TrgswDft {
 //    int bgBit;
 };
 
-void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, int l, int bgBit);
+void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& yatfheParameters);
 
-void initTrgswSample(Trgsw& trgsw, const TrgswKey& trgswKey);
+void initTrgswSample(Trgsw& trgsw, const YatfheParameters& yatfheParameters);
 
-void initTrgswDftSample(TrgswDft& trgswDft, const TrgswKey& trgswKey);
-
-void allocNewTrgswDftSample(TrgswDft &trgswDftSample, int l, int Bg_bit, int k, int N);
+void initTrgswDftSample(TrgswDft &trgswDftSample, const YatfheParameters& yatfheParameters);
 
 void deleteTrgswKey(TrgswKey& trgswKey);
 

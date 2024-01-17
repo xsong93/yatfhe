@@ -6,6 +6,7 @@
 #define HLS_YATFHE_TRLWE_H
 
 #include <vector>
+#include "yatfhe_parameters.h"
 #include "torus.h"
 #include "polynomial.h"
 
@@ -31,9 +32,9 @@ struct TrlweDft{
 //    int k;
 };
 
-void trlweNewBinaryKey(TrlweKey& trlweKey, int N, int k);
+void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& yatfheParameters);
 
-void trlweInitKey(TrlweKey& key, int N, int k);
+void initTrlweKey(TrlweKey& key, const int N, const int k);
 
 void initTrlweSample(Trlwe& trlwe, int k, int N);
 

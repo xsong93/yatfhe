@@ -22,10 +22,16 @@ struct BootstrappingKey {
     int unfolding {};
 };
 
-void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, double alpha, const TrgswKey& trgswKey);
+void calculateB(std::vector<uint64_t>& coeffsA, std::vector<uint64_t>& coeffsS, std::vector<uint64_t>& coeffsB, int N);
 
-void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey);
+void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, int N);
 
-void newBootstrappingKey(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, int unfolding);
+void addGaussianNoiseToCoeffs(std::vector<Torus>& coeffs, int N, double sigma);
+
+void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey);
+
+void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey, const TlweKey& tlweKey);
+
+void newBootstrappingKey(BootstrappingKey& bsk, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey, const TlweKey& tlweKey);
 
 #endif //HLS_YATFHE_BOOTSTRAP_H
