@@ -14,7 +14,7 @@ struct Trgsw {
     int l;
 //    int bgBit;
 
-    Trgsw(const YatfheParameters& p) :
+    explicit Trgsw(const YatfheParameters& p) :
         trlweSamples(p.l * (p.k + 1), Trlwe(p.k, p.N)),
         l(p.l) {};
 };
@@ -23,6 +23,11 @@ struct TrgswKey {
     TrlweKey trlweKey {};
     int l {};
     int bgBit {};
+
+    explicit TrgswKey(const YatfheParameters& p) :
+        l(p.l),
+        bgBit(p.bgBit),
+        trlweKey(TrlweKey(p.k, p.N)) {};
 };
 
 struct TrgswDft {
@@ -30,7 +35,7 @@ struct TrgswDft {
     int l;
 //    int bgBit;
 
-    TrgswDft(const YatfheParameters& p) :
+    explicit TrgswDft(const YatfheParameters& p) :
         trlweDftSamples(p.l * (p.k + 1), TrlweDft(p.k, p.N)),
         l(p.l) {};
 };

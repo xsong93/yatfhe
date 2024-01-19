@@ -7,7 +7,7 @@
 using namespace std;
 
 // Function to perform Number Theoretic Transform (NTT)
-void applyNtt(const TorusPolynomial& torusPolynomial, LagrangePolynomial& lagrangePolynomial) {
+void applyNtt(LagrangePolynomial& lagrangePolynomial, const TorusPolynomial& torusPolynomial) {
     const vector<Torus>& input = torusPolynomial.coeffs;
     vector<uint64_t>& output = lagrangePolynomial.coeffs;
     const int32_t N = lagrangePolynomial.N;

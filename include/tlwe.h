@@ -35,7 +35,7 @@ void newBinaryTlweKey(TlweKey& key, const YatfheParameters& parameters);
 
 void lweKeyGen(TlweKey& result, int n);
 
-void symEncryptToTlweSample(Tlwe& tlweSample, Torus message, const TlweKey& key);
+void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key);
 
 void deleteLweKey(TlweKey& key);
 

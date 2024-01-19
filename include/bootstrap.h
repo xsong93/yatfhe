@@ -11,9 +11,7 @@
 #include "yatfhe_parameters.h"
 
 struct BootstrappingKey {
-//    TrgswDft* bskDft{ new TrgswDft};
     std::vector<TrgswDft> bskDft {}; // n
-//    Trgsw* su{ new Trgsw};
     std::vector<Trgsw> bsk {}; // n
     int n {};
     int k {};
@@ -31,16 +29,20 @@ struct BootstrappingKey {
 
 void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, const YatfheParameters& parameters);
 
-void calculateB(std::vector<uint64_t>& coeffsA, std::vector<uint64_t>& coeffsS, std::vector<uint64_t>& coeffsB, int N);
+void calModularInnerProduct(LagrangePolynomial& b, std::vector<TorusPolynomial>& a, const std::vector<IntPolynomial>& s,
+                            int N, int k);
+
+void modularAccumulate(std::vector<uint64_t>& coeffsB, std::vector<uint64_t>& coeffsA, std::vector<uint64_t>& coeffsS,
+                       const int N);
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, int N);
 
-void addGaussianNoiseToCoeffs(std::vector<Torus>& coeffs, int N, double sigma);
+void initCoeffsWithGaussianNoise(std::vector<Torus>& coeffs, Torus msg, int N, double sigma);
 
-void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey);
+void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& parameters, const TrgswKey& trgswKey);
 
-void newBootstrappingKeyWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey, const TlweKey& tlweKey);
+void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey, const TlweKey& tlweKey);
 
-void newBootstrappingKey(BootstrappingKey& bsk, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey, const TlweKey& tlweKey);
+void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& parameters, const TrgswKey& trgswKey, const TlweKey& tlweKey);
 
 #endif //HLS_YATFHE_BOOTSTRAP_H

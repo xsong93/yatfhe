@@ -16,38 +16,38 @@ int main(int argc, char **argv) {
     COUNT_TIME("test k", timer, std::cout << param.k << std::endl;)
 
     TlweKey tlweKey(param.n, param.lweStdDev);
-    lweKeyGen(tlweKey, param.n);
     TlweKey keyTlweOut(param.n, param.lweStdDev);
+    TrgswKey trgswKey {param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    BootstrappingKey bsKey {param};
+    lweKeyGen(tlweKey, param.n);
     lweKeyGen(keyTlweOut, param.n);
-    TrlweKey trlweKey(param.k, param.N);
     trlweKeyGen(trlweKey, param.N, param.k);
-//    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);
-    TrgswKey trgswKey {trlweKey, param.l, param.bgBit};
+    bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
 
+    Tlwe tlweSample(param.n);
+    TrgswDft dftSample {param};
+    symEncTlweSample(tlweSample, doubleToTorus32(1.0 / 8), tlweKey);
+    trgswFunctionalBootstrapping(dftSample, tlweSample, bsKey, param);
+
+//    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);
 //    TLWE_KS_Key tlwe_ksk = tlwe_new_KS_key(key_tlwe, key_tlwe_out, t, baseBit);
-//
 //    auto * input = static_cast<Torus *>(safe_aligned_malloc(sizeof(Torus) * (_EXECS * 4 + 1)));
 //    generate_random_bytes(sizeof(Torus)*(_EXECS*4 + 1), (uint8_t *) input);
 //    TLWE c[_EXECS*4 + 1];
 //    for (size_t i = 0; i < _EXECS*4 + 1; i++) c[i] = tlwe_new_sample(input[i], key_tlwe_out);
 //
-
-    Tlwe tlweSample(param.n);
-    symEncryptToTlweSample(tlweSample, doubleToTorus32(1.0 / 8), tlweKey);
 //    TorusPolynomial poly_res = polynomial_new_torus_polynomial(N);
 //    for (size_t i = 0; i < N; i++) poly_res->coeffs[i] = input[i / (N / 4)];
 //
 //    TRLWE lut_c = trlwe_new_noiseless_trivial_sample(poly_res, k, N);
-
-    BootstrappingKey bsKey {param};
-    newBootstrappingKey(bsKey, param, trgswKey, tlweKey);
 //    Bootstrap_GA_Key bk_ga_key = new_bootstrap_key_ga(trgsw_key, key_tlwe);
 //
 //#ifdef BENCH_TRGSW_BOOTSTRAP
-    TrgswDft dftSample {param};
+
 //    initTrgswDftSample(dftSample, param);
 ////    BENCHMARK("TRGSW_BS_P1", _EXECS, "TRGSW Functional Bootstrap PHASE 1",
-    trgswFunctionalBootstrapping(dftSample, tlweSample, bsKey, param);
+
 ////    );
 //
 ////    BENCHMARK("TRGSW_BS_P2", _EXECS, "TRGSW Functional Bootstrap PHASE 2",

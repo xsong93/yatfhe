@@ -35,7 +35,8 @@ void initTlweSample(Tlwe& tlwe, int n) {
     tlwe.n = n;
 }
 
-void symEncryptToTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key) {
+// b = aj * sj + u + e
+void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key) {
     tlweSample.b = addGaussianNoise(message, key.sigma);
     for (int i = 0; i < key.n; i++) {
         tlweSample.a[i] = uniformTorus32Distrib(rng);
