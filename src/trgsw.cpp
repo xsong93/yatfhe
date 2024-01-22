@@ -34,6 +34,21 @@ void initTrgswDftSample(TrgswDft& trgswDftSample, const YatfheParameters& yatfhe
     }
 }
 
+void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& parameters) {
+    const int l = parameters.l;
+    const int bgBit = parameters.bgBit;
+    const int k = parameters.k;
+    const int N = parameters.N;
+    const int kpl = (k + 1) * l;
+    for (int i = 0; i < l; i++) {
+        const uint64_t h = 1UL << (sizeof(Torus)*8 - (i + 1) * bgBit);
+        for (int j = 0; j < k; j++) {
+            trgswSample.trlweSamples[j * l + i].a[j].coeffs[0] += msg * h;
+        }
+        trgswSample.trlweSamples[k * l + i].b.coeffs[0] += msg * h;
+    }
+}
+
 void deleteTrgswKey(TrgswKey& trgswKey) {
 //    trgswKey.trlweKey = nullptr;
 }

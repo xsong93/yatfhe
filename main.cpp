@@ -25,11 +25,10 @@ int main(int argc, char **argv) {
     trlweKeyGen(trlweKey, param.N, param.k);
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
 
-    Tlwe tlweSample(param.n);
-    TrgswDft dftSample {param};
-    symEncTlweSample(tlweSample, doubleToTorus32(1.0 / 8), tlweKey);
-    trgswFunctionalBootstrapping(dftSample, tlweSample, bsKey, param);
-
+    Tlwe input(param.n);
+    TrgswDft output {param};
+    symEncTlweSample(input, doubleToTorus32(1.0 / 8), tlweKey);
+    trgswFunctionalBootstrapping(output, input, bsKey, 1, param);
 //    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);
 //    TLWE_KS_Key tlwe_ksk = tlwe_new_KS_key(key_tlwe, key_tlwe_out, t, baseBit);
 //    auto * input = static_cast<Torus *>(safe_aligned_malloc(sizeof(Torus) * (_EXECS * 4 + 1)));
@@ -45,13 +44,13 @@ int main(int argc, char **argv) {
 //
 //#ifdef BENCH_TRGSW_BOOTSTRAP
 
-//    initTrgswDftSample(dftSample, param);
+//    initTrgswDftSample(output, param);
 ////    BENCHMARK("TRGSW_BS_P1", _EXECS, "TRGSW Functional Bootstrap PHASE 1",
 
 ////    );
 //
 ////    BENCHMARK("TRGSW_BS_P2", _EXECS, "TRGSW Functional Bootstrap PHASE 2",
-//    functional_bootstrap_trgsw_phase2(c[4], dftSample, lut_c);
+//    functional_bootstrap_trgsw_phase2(c[4], output, lut_c);
 ////    );
 ////#endif
 

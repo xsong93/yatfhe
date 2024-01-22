@@ -7,7 +7,7 @@
 #include "ntt.h"
 
 
-void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, const YatfheParameters& parameters) {
+void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, const Torus msg, const YatfheParameters& parameters) {
     const int N = parameters.N;
     const int l = parameters.l;
     const int bgBit = parameters.bgBit;
@@ -16,8 +16,9 @@ void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const Bootstrap
     const int logN2 = (int) log2(N2);
     const int torusBase = parameters.torusBase;
     const Torus precOffset = doubleToTorus32(1.0 / (4 * torusBase));
-//    Trgsw tv = genNoiselessTrivialTrgswSample(1, parameters);
-//    Trgsw tmp = trgsw_alloc_new_sample(l, bgBit, k, N);
+    Trgsw tv(parameters);
+    genNoiselessTrgswSample(tv, msg, parameters);
+    Trgsw tmp(parameters);
 //    trgsw_mul_bly_xai(tmp, tv, N2 - torus2int(in->b + precOffset, logN2));
 //    blind_rotate_trgsw(tmp, in->a, key->s, in->n);
 //    trgsw_to_DFT(out, tmp);
@@ -51,14 +52,14 @@ void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& paramete
 //    }
 }
 
-void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& yatfheParameters, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
+void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& parameters, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
     const int n = bsk.n;
     for (int i = 0; i < n; i++) {
         Trgsw& trgsw = bsk.bsk[i];
         TrgswDft& trgswDft = bsk.bskDft[i];
-//        initTrgswDftSample(trgswDft, yatfheParameters);
-//        initTrgswSample(trgsw, yatfheParameters);
-        trgswEncZero(trgsw, trgswDft, yatfheParameters, trgswKey);
+//        initTrgswDftSample(trgswDft, parameters);
+//        initTrgswSample(trgsw, parameters);
+        trgswEncZero(trgsw, trgswDft, parameters, trgswKey);
         // const Integer message = tlweKey.s[i];
         //tGswAddMuIntH(result //trgsw, message, key->params);
     }

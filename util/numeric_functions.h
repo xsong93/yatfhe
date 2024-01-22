@@ -20,4 +20,8 @@ Torus addGaussianNoise(Torus message, double sigma);
 
 Torus doubleToTorus32(double d);
 
+Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
+
+Torus int2torus(uint64_t x, int log_scale);
+
 #endif //HLS_YATFHE_NUMERIC_FUNCTIONS_H

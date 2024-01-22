@@ -46,6 +46,8 @@ void initTrgswSample(Trgsw& trgsw, const YatfheParameters& yatfheParameters);
 
 void initTrgswDftSample(TrgswDft &trgswDftSample, const YatfheParameters& yatfheParameters);
 
+void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& parameters);
+
 void deleteTrgswKey(TrgswKey& trgswKey);
 
 #endif //HLS_YATFHE_TRGSW_H

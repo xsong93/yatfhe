@@ -21,3 +21,15 @@ Torus addGaussianNoise(Torus message, const double sigma) {
 Torus doubleToTorus32(const double d) {
     return int32_t(int64_t((d - int64_t(d)) * twoP32));
 }
+
+Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {
+    uint64_t interv = ((UINT64_C(1) << 63) / Msize) * 2; // width of each intervall
+    uint64_t phase64 = mu * interv;
+    //floor to the nearest multiples of interv
+    return phase64 >> 32;
+}
+
+Torus int2torus(uint64_t x, int log_scale) {
+    const uint64_t bit_size = sizeof(Torus) * 8;
+    return x << (bit_size - log_scale);
+}
