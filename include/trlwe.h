@@ -44,9 +44,9 @@ struct TrlweDft{
         k(k) {};
 };
 
-void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& yatfheParameters);
+void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& param);
 
-void initTrlweKey(TrlweKey& key, const int N, const int k);
+void initTrlweKey(TrlweKey& key, int N, int k);
 
 void initTrlweSample(Trlwe& trlwe, int k, int N);
 

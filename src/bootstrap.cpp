@@ -7,26 +7,29 @@
 #include "ntt.h"
 
 
-void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, const Torus msg, const YatfheParameters& parameters) {
-    const int N = parameters.N;
-    const int l = parameters.l;
-    const int bgBit = parameters.bgBit;
-    const int k = parameters.k;
+void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, const Torus msg, const YatfheParameters& param) {
+    const int n = param.n;
+    const int N = param.N;
+    const int l = param.l;
+    const int bgBit = param.bgBit;
+    const int k = param.k;
     const int N2 = N * 2;
     const int logN2 = (int) log2(N2);
-    const int torusBase = parameters.torusBase;
+    const int torusBase = param.torusBase;
     const Torus precOffset = doubleToTorus32(1.0 / (4 * torusBase));
-    Trgsw tv(parameters);
-    genNoiselessTrgswSample(tv, msg, parameters);
-    Trgsw tmp(parameters);
+    NegaCyclicTlwe negaCyclicInput(N2);
+    modSwitchFromTorus32ToN2(negaCyclicInput, in);
+    Trgsw tv(param);
+    genNoiselessTrgswSample(tv, msg, param);
+    Trgsw tmp(param);
 //    trgsw_mul_bly_xai(tmp, tv, N2 - torus2int(in->b + precOffset, logN2));
 //    blind_rotate_trgsw(tmp, in->a, key->s, in->n);
 //    trgsw_to_DFT(out, tmp);
 }
 
-void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& parameters, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
+void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
     if (bsk.unfolding == 1) {
-        bootstrappingKeyGenWoUnfolding(bsk, parameters, trgswKey, tlweKey);
+        bootstrappingKeyGenWoUnfolding(bsk, param, trgswKey, tlweKey);
     }
 ////    const int l = trgswKey->l, Bg_bit = trgswKey->Bg_bit, k = trgswKey->trlwe_key->k, N = trgswKey->trlwe_key->bskDft[0]->N;
 //    BootstrappingKey* res{new BootstrappingKey};
@@ -52,26 +55,26 @@ void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& paramete
 //    }
 }
 
-void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& parameters, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
+void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
     const int n = bsk.n;
     for (int i = 0; i < n; i++) {
         Trgsw& trgsw = bsk.bsk[i];
         TrgswDft& trgswDft = bsk.bskDft[i];
-//        initTrgswDftSample(trgswDft, parameters);
-//        initTrgswSample(trgsw, parameters);
-        trgswEncZero(trgsw, trgswDft, parameters, trgswKey);
+//        initTrgswDftSample(trgswDft, param);
+//        initTrgswSample(trgsw, param);
+        trgswEncZero(trgsw, trgswDft, param, trgswKey);
         // const Integer message = tlweKey.s[i];
         //tGswAddMuIntH(result //trgsw, message, key->params);
     }
 }
 
 // trgsw(0)
-void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& parameters, const TrgswKey& trgswKey) {
-    const int N = parameters.N;
-    const int k = parameters.k;
-    const int l = parameters.l;
+void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
+    const int N = param.N;
+    const int k = param.k;
+    const int l = param.l;
     const int kpl = (k + 1) * l;
-    const double sigma = parameters.lweStdDev;
+    const double sigma = param.lweStdDev;
     for (int p = 0; p < kpl; p++) {
         Trlwe& trlweSample = trgsw.trlweSamples[p];
         TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[p];

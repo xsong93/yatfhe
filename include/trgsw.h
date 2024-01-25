@@ -40,13 +40,13 @@ struct TrgswDft {
         l(p.l) {};
 };
 
-void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& yatfheParameters);
+void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& param);
 
-void initTrgswSample(Trgsw& trgsw, const YatfheParameters& yatfheParameters);
+void initTrgswSample(Trgsw& trgsw, const YatfheParameters& param);
 
-void initTrgswDftSample(TrgswDft &trgswDftSample, const YatfheParameters& yatfheParameters);
+void initTrgswDftSample(TrgswDft &trgswDftSample, const YatfheParameters& param);
 
-void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& parameters);
+void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& param);
 
 void deleteTrgswKey(TrgswKey& trgswKey);
 

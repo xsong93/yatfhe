@@ -15,9 +15,9 @@ void initTlweKey(TlweKey& key, const int n, const double sigma) {
     key.s.resize(n);
 }
 
-void newBinaryTlweKey(TlweKey& key, const YatfheParameters& parameters) {
-    initTlweKey(key, parameters.n, parameters.lweStdDev);
-    lweKeyGen(key, parameters.n);
+void newBinaryTlweKey(TlweKey& key, const YatfheParameters& param) {
+    initTlweKey(key, param.n, param.lweStdDev);
+    lweKeyGen(key, param.n);
 }
 
 void lweKeyGen(TlweKey& key, const int n) {
@@ -41,6 +41,15 @@ void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key)
     for (int i = 0; i < key.n; i++) {
         tlweSample.a[i] = uniformTorus32Distrib(rng);
         tlweSample.b += key.s[i] * tlweSample.a[i];
+    }
+}
+
+void modSwitchFromTorus32ToN2(NegaCyclicTlwe& output, const Tlwe& input) {
+    const int n = input.n;
+    const int N2 = output.N2;
+    output.b = modSwitchFromTorus32(input.b, N2);
+    for (int i = 0; i < n; i++) {
+        output.a[i] = modSwitchFromTorus32(input.a[i], N2);
     }
 }
 

@@ -10,9 +10,9 @@
 
 using namespace std;
 
-void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& yatfheParameters) {
-    initTrlweKey(trlweKey, yatfheParameters.N, yatfheParameters.k);
-    trlweKeyGen(trlweKey, yatfheParameters.N, yatfheParameters.k);
+void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& param) {
+    initTrlweKey(trlweKey, param.N, param.k);
+    trlweKeyGen(trlweKey, param.N, param.k);
 }
 
 void initTrlweKey(TrlweKey& key, const int N, const int k) {

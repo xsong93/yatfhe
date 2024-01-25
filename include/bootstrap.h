@@ -28,7 +28,7 @@ struct BootstrappingKey {
 };
 
 void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, Torus msg,
-                                  const YatfheParameters& parameters);
+                                  const YatfheParameters& param);
 
 void calModularInnerProduct(LagrangePolynomial& b, std::vector<TorusPolynomial>& a, const std::vector<IntPolynomial>& s,
                             int N, int k);
@@ -40,11 +40,11 @@ void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, int N);
 
 void initCoeffsWithGaussianNoise(std::vector<Torus>& coeffs, Torus msg, int N, double sigma);
 
-void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& parameters, const TrgswKey& trgswKey);
+void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& parameters, const TrgswKey& trgswKey,
+void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey,
                                     const TlweKey& tlweKey);
 
-void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& parameters, const TrgswKey& trgswKey, const TlweKey& tlweKey);
+void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey, const TlweKey& tlweKey);
 
 #endif //HLS_YATFHE_BOOTSTRAP_H

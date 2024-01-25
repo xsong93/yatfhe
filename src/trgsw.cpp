@@ -6,16 +6,16 @@
 #include "trgsw.h"
 #include "trlwe.h"
 
-void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& yatfheParameters) {
+void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& param) {
     trgswKey.trlweKey = trlweKey;
-    trgswKey.l = yatfheParameters.l;
-    trgswKey.bgBit = yatfheParameters.bgBit;
+    trgswKey.l = param.l;
+    trgswKey.bgBit = param.bgBit;
 }
 
-void initTrgswSample(Trgsw& trgsw, const YatfheParameters& yatfheParameters) {
-    const int l = yatfheParameters.l;
-    const int k = yatfheParameters.k;
-    const int N = yatfheParameters.N;
+void initTrgswSample(Trgsw& trgsw, const YatfheParameters& param) {
+    const int l = param.l;
+    const int k = param.k;
+    const int N = param.N;
     const int kpl = l * (k + 1);
 //    trgsw.trlweSamples.resize(kpl);
     for (int i = 0; i < kpl; i++) {
@@ -23,10 +23,10 @@ void initTrgswSample(Trgsw& trgsw, const YatfheParameters& yatfheParameters) {
     }
 }
 
-void initTrgswDftSample(TrgswDft& trgswDftSample, const YatfheParameters& yatfheParameters) {
-    const int l = yatfheParameters.l;
-    const int k = yatfheParameters.k;
-    const int N = yatfheParameters.N;
+void initTrgswDftSample(TrgswDft& trgswDftSample, const YatfheParameters& param) {
+    const int l = param.l;
+    const int k = param.k;
+    const int N = param.N;
     const int kpl = l *  (k + 1);
 //    trgswDftSample.trlweDftSamples.resize(kpl);
     for (int i = 0; i < kpl; i++) {
@@ -34,11 +34,11 @@ void initTrgswDftSample(TrgswDft& trgswDftSample, const YatfheParameters& yatfhe
     }
 }
 
-void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& parameters) {
-    const int l = parameters.l;
-    const int bgBit = parameters.bgBit;
-    const int k = parameters.k;
-    const int N = parameters.N;
+void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& param) {
+    const int l = param.l;
+    const int bgBit = param.bgBit;
+    const int k = param.k;
+    const int N = param.N;
     const int kpl = (k + 1) * l;
     for (int i = 0; i < l; i++) {
         const uint64_t h = 1UL << (sizeof(Torus)*8 - (i + 1) * bgBit);

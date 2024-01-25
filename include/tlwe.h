@@ -17,6 +17,14 @@ struct Tlwe {
     explicit Tlwe(int n) : n(n), a(n), b(0) {};
 };
 
+struct NegaCyclicTlwe {
+    std::vector<int32_t> a {}; // 2N
+    int32_t b {};
+    int N2 {};
+
+    explicit NegaCyclicTlwe(int N2) : N2(N2), a(N2), b(0) {};
+};
+
 struct TlweKey {
     int n {};
     double sigma {};
@@ -27,15 +35,17 @@ struct TlweKey {
     explicit TlweKey(int n) : n(n), s(n), sigma(0) {};
 };
 
-void initTlweKey(TlweKey& key, const int n, const double sigma);
+void initTlweKey(TlweKey& key, int n, double sigma);
 
 void initTlweSample(Tlwe& tlwe, int n);
 
-void newBinaryTlweKey(TlweKey& key, const YatfheParameters& parameters);
+void newBinaryTlweKey(TlweKey& key, const YatfheParameters& param);
 
 void lweKeyGen(TlweKey& result, int n);
 
-void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key);
+void modSwitchFromTorus32ToN2(NegaCyclicTlwe& output, const Tlwe& input);
+
+void symEncTlweSample(Tlwe& tlweSample, Torus message, const TlweKey& key);
 
 void deleteLweKey(TlweKey& key);
 
