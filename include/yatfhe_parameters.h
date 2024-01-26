@@ -47,12 +47,16 @@ struct YatfheParameters {
     // RGSW params
     // const int l = 6, Bg_bit = 6;
     int l {3};
-    int bgBit ={7};
+    int bgBit {7};
     // KS params
     int t {8};
     int baseBit {2};
+    int bg {1 << bgBit};
+    int halfBg {bg / 2};
+    int maskMod {bg - 1};
     int unfolding {1};
     int torusBase {4};
+
 #endif
 
 #endif

@@ -13,6 +13,15 @@ void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, const int N)
     lagrangePolynomial.N = N;
 }
 
+// output = (X^{a} - 1) * input = x^a * input - input
+void torusPolynomialMulByXaiMinusOne(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
+    const int32_t N = input.N;
+    const int32_t aTrue = (a < N) ? a : a - N;
+    for (int32_t i = 0; i < N; i++) {
+        out.coeffs[i] = ((i < aTrue) ? -input.coeffs[i - aTrue + N] : input.coeffs[i - aTrue]) - input.coeffs[i];
+    }
+}
+
 void deletePolynomial(TorusPolynomial& polynomial) {
 //    delete polynomial.coeffs;
 //    polynomial.coeffs = nullptr;

@@ -22,6 +22,8 @@ void initTorusPolynomial(TorusPolynomial& torusPolynomial, int N);
 
 void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, int N);
 
+void torusPolynomialMulByXaiMinusOne(TorusPolynomial& out, int a, const TorusPolynomial& input);
+
 void deletePolynomial(TorusPolynomial& polynomial);
 
 void deletePolynomial(LagrangePolynomial& polynomial);

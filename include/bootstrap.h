@@ -30,6 +30,14 @@ struct BootstrappingKey {
 void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, Torus msg,
                                   const YatfheParameters& param);
 
+void blindRotate(Trlwe& acc, const BootstrappingKey& bsk, const NegaCyclicTlwe& sample, const YatfheParameters& param);
+
+void muxRotate(Trlwe& res, Trlwe& acc, const TrgswDft& bski, int barai, const YatfheParameters& param);
+
+void trgswMulToTrlwe(Trlwe& acc, const TrgswDft& bski, const YatfheParameters& param);
+
+void gadgetDecomposition(std::vector<IntPolynomial>& output, const std::vector<TorusPolynomial>& input, const YatfheParameters& param);
+
 void calModularInnerProduct(LagrangePolynomial& b, std::vector<TorusPolynomial>& a, const std::vector<IntPolynomial>& s,
                             int N, int k);
 

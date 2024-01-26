@@ -20,11 +20,74 @@ void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const Bootstrap
     NegaCyclicTlwe negaCyclicInput(N2);
     modSwitchFromTorus32ToN2(negaCyclicInput, in);
     Trgsw tv(param);
-    genNoiselessTrgswSample(tv, msg, param);
+    Trlwe acc(k + 1, N);
+//    genNoiselessTrgswSample(tv, msg, param);
+    genNoiselessTrlweSample(acc, msg, negaCyclicInput, param);
     Trgsw tmp(param);
 //    trgsw_mul_bly_xai(tmp, tv, N2 - torus2int(in->b + precOffset, logN2));
-//    blind_rotate_trgsw(tmp, in->a, key->s, in->n);
+    blindRotate(acc, bsk, negaCyclicInput, param);
 //    trgsw_to_DFT(out, tmp);
+}
+
+void blindRotate(Trlwe& acc, const BootstrappingKey& bsk, const NegaCyclicTlwe& sample, const YatfheParameters& param) {
+    const int n = param.n;
+    const int k = param.k;
+    const int N = param.N;
+    const auto bara = sample.a;
+    Trlwe temp(k + 1, N);
+    for (int i = 0; i < n; i++) {
+        if (bara[i] == 0) {
+            continue;
+        }
+        muxRotate(temp, acc, bsk.bskDft[i], bara[i], param);
+    }
+}
+
+// ACC = BSKi * [(X^barai - 1) * ACC] + ACC
+void muxRotate(Trlwe& res, Trlwe& acc, const TrgswDft& bski, const int barai, const YatfheParameters& param) {
+    const auto k = param.k;
+
+    // res = (X^barai - 1) * ACC
+    for (int i = 0; i <= k; i++) {
+        torusPolynomialMulByXaiMinusOne(res.a[i], barai, acc.a[i]);
+    }
+
+    // acc *= BKi
+    trgswMulToTrlwe(acc, bski, param);
+}
+
+// accum -(GD)> deca -(fft)> decaFFT -(mul)> tmpa -(ifft)> accum
+void trgswMulToTrlwe(Trlwe& acc, const TrgswDft& bski, const YatfheParameters& param) {
+    const int k = param.k;
+    const int l = param.l;
+    const int kpl = (k + 1) * l;
+    vector<IntPolynomial> decomp(kpl);
+
+    // gadget decomposition, G^-1 * TGLWE, T_(N,q)^(k+1) -> Z_N^(k+1)*l
+    gadgetDecomposition(decomp , acc.a, param);
+
+}
+
+void gadgetDecomposition(vector<IntPolynomial>& output, const vector<TorusPolynomial>& input, const YatfheParameters& param) {
+    const int k = param.k;
+    const int N = param.N;
+    const int l = param.l;
+    const int bgBit = param.bgBit;
+    const int maskMod = param.maskMod;
+    const int halfBg = param.halfBg;
+
+    // offset = Bg/2 * (2^(32-Bgbit) + 2^(32-2*Bgbit) + ... + 2^(32-l*Bgbit))
+    int32_t temp1 = 0;
+    for (int32_t i = 0; i < l; ++i) {
+        int32_t temp0 = 1 << (32 - (i + 1) * bgBit);
+        temp1 += temp0;
+    }
+    const int offset = temp1 * halfBg;
+
+    for (int i = 0; i <= k; i++) {
+        output[i * l];
+        input [i];
+    }
 }
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey, const TlweKey& tlweKey) {

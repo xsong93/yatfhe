@@ -41,7 +41,7 @@ void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParamete
     const int N = param.N;
     const int kpl = (k + 1) * l;
     for (int i = 0; i < l; i++) {
-        const uint64_t h = 1UL << (sizeof(Torus)*8 - (i + 1) * bgBit);
+        const uint64_t h = 1UL << (sizeof(Torus) * 8 - (i + 1) * bgBit);
         for (int j = 0; j < k; j++) {
             trgswSample.trlweSamples[j * l + i].a[j].coeffs[0] += msg * h;
         }

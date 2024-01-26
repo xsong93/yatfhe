@@ -4,6 +4,7 @@
 #include <iostream>
 #include <random>
 #include "yatfhe_parameters.h"
+#include "tlwe.h"
 #include "trlwe.h"
 #include "polynomial.h"
 #include "numeric_functions.h"
@@ -48,6 +49,21 @@ void initTrlweDftSample(TrlweDft& trlweDft, const int k, const int N) {
         initLagrangePolynomial(trlweDft.a[i], N);
     }
     initLagrangePolynomial(trlweDft.b, N);
+}
+
+void genNoiselessTrlweSample(Trlwe& acc, const Torus msg, const NegaCyclicTlwe& negaCyclicInput, const YatfheParameters& param) {
+    const auto& barb = negaCyclicInput.b;
+    if (barb == 0) {
+        std::fill(acc.b.coeffs.begin(), acc.b.coeffs.end(), msg);
+        return;
+    }
+    const int N = param.N;
+    const int N2 = negaCyclicInput.N2;
+    const int rot = N2 - barb;
+    const int rotTrue = (rot < N) ? rot : rot - N;
+    for (int i = 0; i < N; i++) {
+        acc.b.coeffs[i] = (i < rotTrue) ? -msg : msg;
+    }
 }
 
 void deleteRlweKey(TrlweKey& key) {

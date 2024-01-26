@@ -6,6 +6,7 @@
 #define HLS_YATFHE_TRLWE_H
 
 #include <vector>
+#include "tlwe.h"
 #include "yatfhe_parameters.h"
 #include "torus.h"
 #include "polynomial.h"
@@ -53,6 +54,8 @@ void initTrlweSample(Trlwe& trlwe, int k, int N);
 void initTrlweDftSample(TrlweDft& trlweDft, int k, int N);
 
 void trlweKeyGen(TrlweKey& key, int N, int k);
+
+void genNoiselessTrlweSample(Trlwe& acc, Torus msg, const NegaCyclicTlwe& negaCyclicInput, const YatfheParameters& param);
 
 void deleteRlweKey(TrlweKey& key);
 
