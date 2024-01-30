@@ -41,6 +41,8 @@ void blindRotate(Trlwe& acc, const BootstrappingKey& bsk, const NegaCyclicTlwe& 
         }
         muxRotate(temp, acc, bsk.bskDft[i], bara[i], param);
     }
+
+    // todo
 }
 
 // ACC = BSKi * [(X^barai - 1) * ACC] + ACC
@@ -54,6 +56,8 @@ void muxRotate(Trlwe& res, Trlwe& acc, const TrgswDft& bski, const int barai, co
 
     // acc *= BKi
     trgswMulToTrlwe(acc, bski, param);
+
+    // todo
 }
 
 // accum -(GD)> deca -(fft)> decaFFT -(mul)> tmpa -(ifft)> accum
@@ -61,33 +65,12 @@ void trgswMulToTrlwe(Trlwe& acc, const TrgswDft& bski, const YatfheParameters& p
     const int k = param.k;
     const int l = param.l;
     const int kpl = (k + 1) * l;
-    vector<IntPolynomial> decomp(kpl);
+    vector<vector<IntPolynomial>> decomp(k + 1, vector<IntPolynomial>(l, IntPolynomial(param.N, 0)));
 
     // gadget decomposition, G^-1 * TGLWE, T_(N,q)^(k+1) -> Z_N^(k+1)*l
     gadgetDecomposition(decomp , acc.a, param);
 
-}
-
-void gadgetDecomposition(vector<IntPolynomial>& output, const vector<TorusPolynomial>& input, const YatfheParameters& param) {
-    const int k = param.k;
-    const int N = param.N;
-    const int l = param.l;
-    const int bgBit = param.bgBit;
-    const int maskMod = param.maskMod;
-    const int halfBg = param.halfBg;
-
-    // offset = Bg/2 * (2^(32-Bgbit) + 2^(32-2*Bgbit) + ... + 2^(32-l*Bgbit))
-    int32_t temp1 = 0;
-    for (int32_t i = 0; i < l; ++i) {
-        int32_t temp0 = 1 << (32 - (i + 1) * bgBit);
-        temp1 += temp0;
-    }
-    const int offset = temp1 * halfBg;
-
-    for (int i = 0; i <= k; i++) {
-        output[i * l];
-        input [i];
-    }
+    // todo
 }
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
@@ -147,39 +130,6 @@ void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& para
     }
 }
 
-// b = akN * skN
-void calModularInnerProduct(LagrangePolynomial& b, std::vector<TorusPolynomial>& a, const std::vector<IntPolynomial>& s,
-                            const int N, const int k) {
-    for (int i = 0; i < k; i++) {
-        initCoeffsViaUniformDistribution(a[i].coeffs, N);
-        LagrangePolynomial sDft {N};
-        LagrangePolynomial aDft {N};
-        applyNtt(sDft, s[i]);
-        applyNtt(aDft, a[i]);
-        modularAccumulate(b.coeffs, aDft.coeffs, sDft.coeffs, N);
-    }
-}
-
-// b += a * s mod p
-void modularAccumulate(std::vector<uint64_t>& coeffsB, std::vector<uint64_t>& coeffsA, std::vector<uint64_t>& coeffsS,
-                       const int N) {
-    for (int j = 0; j < N; j++) {
-        auto tmp = modMul(coeffsA[j], coeffsS[j]);
-        coeffsB[j] = modAdd(coeffsB[j], tmp);
-    }
-}
-
-void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const int N) {
-    for (int j = 0; j < N; j++) {
-        coeffs[j] = uniformTorus32Distrib(rng);
-    }
-}
-
-void initCoeffsWithGaussianNoise(std::vector<Torus>& coeffs, const Torus msg, const int N, const double sigma) {
-    for (int j = 0; j < N; j++) {
-        coeffs[j] = addGaussianNoise(msg, sigma);
-    }
-}
 
 
 

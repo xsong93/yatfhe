@@ -24,8 +24,12 @@ struct TorusPolynomial {
     TorusPolynomial() : coeffs(), N() {};
 
     explicit TorusPolynomial(int N) :
-        coeffs(N),
+        coeffs(N, 0),
         N(N) {};
+
+    explicit TorusPolynomial(int N, int value) :
+            coeffs(N, value),
+            N(N) {};
 };
 
 using Binary = int16_t;

@@ -10,9 +10,11 @@
 #include "trgsw.h"
 #include "yatfhe_parameters.h"
 
+using namespace std;
+
 struct BootstrappingKey {
-    std::vector<TrgswDft> bskDft {}; // n
-    std::vector<Trgsw> bsk {}; // n
+    vector<TrgswDft> bskDft {}; // n
+    vector<Trgsw> bsk {}; // n
     int n {};
     int k {};
     int N {};
@@ -35,18 +37,6 @@ void blindRotate(Trlwe& acc, const BootstrappingKey& bsk, const NegaCyclicTlwe& 
 void muxRotate(Trlwe& res, Trlwe& acc, const TrgswDft& bski, int barai, const YatfheParameters& param);
 
 void trgswMulToTrlwe(Trlwe& acc, const TrgswDft& bski, const YatfheParameters& param);
-
-void gadgetDecomposition(std::vector<IntPolynomial>& output, const std::vector<TorusPolynomial>& input, const YatfheParameters& param);
-
-void calModularInnerProduct(LagrangePolynomial& b, std::vector<TorusPolynomial>& a, const std::vector<IntPolynomial>& s,
-                            int N, int k);
-
-void modularAccumulate(std::vector<uint64_t>& coeffsB, std::vector<uint64_t>& coeffsA, std::vector<uint64_t>& coeffsS,
-                       int N);
-
-void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, int N);
-
-void initCoeffsWithGaussianNoise(std::vector<Torus>& coeffs, Torus msg, int N, double sigma);
 
 void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 

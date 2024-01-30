@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <random>
 #include "torus.h"
+#include "polynomial.h"
+#include "yatfhe_parameters.h"
 
 using namespace std;
 
@@ -25,5 +27,17 @@ Torus doubleToTorus32(double d);
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
 
 Torus int2torus(uint64_t x, int log_scale);
+
+int32_t genOffset(int bgBit, int halfBg, int l);
+
+void gadgetDecomposition(vector<vector<IntPolynomial>>& output, const vector<TorusPolynomial>& input, const YatfheParameters& param);
+
+void modularAccumulate(vector<uint64_t>& coeffsB, vector<uint64_t>& coeffsA, vector<uint64_t>& coeffsS, int N);
+
+void calModularInnerProduct(LagrangePolynomial& b, vector<TorusPolynomial>& a, const vector<IntPolynomial>& s, int N, int k);
+
+void initCoeffsViaUniformDistribution(vector<Torus>& coeffs, int N);
+
+void initCoeffsWithGaussianNoise(vector<Torus>& coeffs, Torus msg, int N, double sigma);
 
 #endif //HLS_YATFHE_NUMERIC_FUNCTIONS_H
