@@ -1,20 +1,17 @@
 //
 // Created by Xintong Song on 2024/1/11.
 //
+#include <iostream>
 #include "ntt.h"
 #include "ntt_constants.h"
 
 using namespace std;
 
-void nttTransform(LagrangePolynomial& out, const TorusPolynomial& in) {
-    // todo
-}
-
 // Function to perform Number Theoretic Transform (NTT)
-void applyNtt(LagrangePolynomial& lagrangePolynomial, const TorusPolynomial& torusPolynomial) {
-    const vector<Torus>& input = torusPolynomial.coeffs;
-    vector<uint64_t>& output = lagrangePolynomial.coeffs;
-    const int32_t N = lagrangePolynomial.N;
+void applyNtt(LagrangePolynomial& out, const TorusPolynomial& in) {
+    const vector<Torus>& input = in.coeffs;
+    vector<uint64_t>& output = out.coeffs;
+    const int32_t N = out.N;
 
     for (int i = 0; i < N; i++) {
         uint64_t inputValue = input[i] < 0 ? input[i] + MODULUS : input[i];
@@ -42,39 +39,37 @@ void applyNtt(LagrangePolynomial& lagrangePolynomial, const TorusPolynomial& tor
     }
 }
 
-void applyIntt(LagrangePolynomial& torusPolynomial, LagrangePolynomial& lagrangePolynomial) {
-    vector<uint64_t>& input = lagrangePolynomial.coeffs;
-    vector<uint64_t>& output = torusPolynomial.coeffs;
-    int32_t N = lagrangePolynomial.N;
-    uint64_t b = 0;
+void applyIntt(TorusPolynomial& out, LagrangePolynomial& in) {
+    vector<uint64_t>& input = in.coeffs;
+    int32_t N = in.N;
+    LagrangePolynomial temp(N);
+    vector<uint64_t>& tmp = temp.coeffs;
+    vector<Torus>& output = out.coeffs;
     int inv = 0;
     bitRevShuffle(input, N);
-    for (int trans_size = 2; trans_size <= N; trans_size = trans_size * 2) {
+    for (int transSize = 2; transSize <= N; transSize = transSize * 2) {
         uint64_t wb = 1;
-        for (int t = 0; t < (trans_size >> 1); t++) {
-            for (int trans = 0; trans < (N / trans_size); trans++) {
-                int i = trans * trans_size + t;
-                int j = i + (trans_size >> 1);
+        for (int t = 0; t < (transSize >> 1); t++) {
+            for (int trans = 0; trans < (N / transSize); trans++) {
+                int i = trans * transSize + t;
+                int j = i + (transSize >> 1);
                 uint64_t a = input[i];
-                if (wb == 1) {
-                    b = input[j];
-                } else {
-                    b = modMul(input[j], wb);
-                }
+                uint64_t b = (wb == 1) ? input[j] : modMul(input[j], wb);
                 input[i] = modAdd(a, b);
-                input[j] = modAdd(a, b);
+                input[j] = modSub(a, b);
             }
-            wb = wb_inverse_2[inv];
-            inv++;
+            wb = wb_inverse_2[inv++];
         }
     }
-    int i = 0;
-    for (i = 0; i < N; i++) {
-        output[i] = modMul(input[i], scale_2);    //scale_2*phi inversev, modulus  (phi inverse sclaed)
-        uint64_t phi = phi_inverse_2[i];
-        output[i] = modMul(output[i], phi);
+    for (int i = 0; i < N; i++) {
+        tmp[i] = modMul(input[i], scale_2);    //scale_2*phi inversev, modulus  (phi inverse sclaed)
+        tmp[i] = modMul(tmp[i], phi_inverse_2[i]);
     }
-    // todo
+
+    uint64_t med = MODULUS / 2;
+    for (int i = 0; i < N; i++) {
+        output[i] = (Torus)((tmp[i] & 0xffffffff) - (tmp[i] > med));
+    }
 }
 
 void bitRevShuffle(std::vector<uint64_t>& x, int N) {
@@ -103,7 +98,7 @@ uint64_t modAdd(uint64_t x, uint64_t y) {
 }
 
 uint64_t modSub(uint64_t x, uint64_t y) {
-    return (x >= y) ? (x - y) : (MODULUS - x + y);
+    return (x >= y) ? (x - y) : (MODULUS - y + x);
 }
 
 uint64_t modMul(uint64_t x, uint64_t y) {

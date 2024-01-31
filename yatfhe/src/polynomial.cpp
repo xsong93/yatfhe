@@ -28,6 +28,31 @@ void polynomialAddMulPointWise(LagrangePolynomial& res, const LagrangePolynomial
     }
 }
 
+void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2) {
+    const int N = res.N;
+    for (int i = 0; i < N; i++) {
+        Torus tmp {0};
+        for (int j = 0; j < N; j++) {
+            tmp = (j <= i) ? (tmp + poly1.coeffs[j] * poly2.coeffs[i - j]) : (tmp - poly1.coeffs[j] * poly2.coeffs[N + i - j]);
+        }
+        res.coeffs[i] = tmp;
+    }
+}
+
+void polynomialAdd(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2) {
+    const int N = res.N;
+    for (int i = 0; i < N; i++) {
+        res.coeffs[i] = poly1.coeffs[i] + poly2.coeffs[i];
+    }
+}
+
+void polynomialSub(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2) {
+    const int N = res.N;
+    for (int i = 0; i < N; i++) {
+        res.coeffs[i] = poly1.coeffs[i] - poly2.coeffs[i];
+    }
+}
+
 void deletePolynomial(TorusPolynomial& polynomial) {
 //    delete polynomial.coeffs;
 //    polynomial.coeffs = nullptr;

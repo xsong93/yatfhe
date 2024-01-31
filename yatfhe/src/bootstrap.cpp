@@ -82,7 +82,7 @@ void trgswMulToTrlwe(Trlwe& acc, const TrgswDft& bski, const YatfheParameters& p
     // acc = gsw (*) acc, point-wisely
     for (int i = 0; i <= k; i++) {
         for (int p = 0; p < l; p++) {
-
+            // todo
         }
     }
 }

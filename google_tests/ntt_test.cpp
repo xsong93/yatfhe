@@ -7,28 +7,45 @@
 #include "numeric_functions.h"
 
 TEST(NttTest, X) {
-    LagrangePolynomial a(1024);
-    LagrangePolynomial b(1024);
-    LagrangePolynomial res(1024);
-    LagrangePolynomial res1(1024);
-    TorusPolynomial a1(1024);
-    TorusPolynomial b1(1024);
-    TorusPolynomial res2(1024);
+    const int N = 1024;
+    LagrangePolynomial a(N);
+    LagrangePolynomial b(N);
+    LagrangePolynomial tmpMul(N);
+    LagrangePolynomial tmpAdd(N);
+    LagrangePolynomial tmpSub(N);
+
+    IntPolynomial poly1(N);
+    TorusPolynomial poly2(N);
+    TorusPolynomial resMul(N);
+    TorusPolynomial resAdd(N);
+    TorusPolynomial resSub(N);
+    TorusPolynomial navMul(N);
+    TorusPolynomial navAdd(N);
+    TorusPolynomial navSub(N);
+
     for (int i = 0; i < a.N; i++) {
-        a1.coeffs[i] = i;
-        b1.coeffs[i] = i;
+        poly1.coeffs[i] = i;
+        poly2.coeffs[i] = i;
     }
-    applyNtt(a, a1);
-    applyNtt(b, b1);
+    applyNtt(a, poly1);
+    applyNtt(b, poly2);
+
     for (int i = 0; i < a.N; i++) {
-        res.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
+        tmpMul.coeffs[i] = modMul(a.coeffs[i], b.coeffs[i]);
+        tmpAdd.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
+        tmpSub.coeffs[i] = modSub(a.coeffs[i], b.coeffs[i]);
     }
-    applyIntt(res1, res);
-    uint64_t med = MODULUS / 2;
-    std::cout << "res1:[";
-    for (int i = 0; i < res2.N; i++) {
-        res2.coeffs[i] = (Torus)((res1.coeffs[i] & 0xffffffff) - (res1.coeffs[i] > med));
-        std::cout << i << ":" <<res2.coeffs[i]<<" ";
+
+    applyIntt(resMul, tmpMul);
+    applyIntt(resAdd, tmpAdd);
+    applyIntt(resSub, tmpSub);
+    polynomialMulNaive(navMul, poly1, poly2);
+    polynomialAdd(navAdd, poly1, poly2);
+    polynomialSub(navSub, poly1, poly2);
+    
+    for (int i = 0; i < navMul.N; i++) {
+        EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
+        EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
+        EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
     }
-    std::cout<<std::endl;
 }

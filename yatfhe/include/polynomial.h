@@ -30,6 +30,12 @@ void torusPolynomialMulByXaiMinusOne(TorusPolynomial& out, int a, const TorusPol
 
 void polynomialAddMulPointWise(LagrangePolynomial& res, const LagrangePolynomial& a, const LagrangePolynomial& b);
 
+void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);
+
+void polynomialAdd(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);
+
+void polynomialSub(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);
+
 void deletePolynomial(TorusPolynomial& polynomial);
 
 void deletePolynomial(LagrangePolynomial& polynomial);
