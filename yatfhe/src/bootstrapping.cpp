@@ -66,6 +66,7 @@ void trgswMulToTrlwe(Trlwe& acc, const TrgswDft& bski, const YatfheParameters& p
     const int l = param.l;
     const int N = param.N;
     const int kpl = (k + 1) * l;
+    vector<LagrangePolynomial> accDft(k + 1, LagrangePolynomial(N));
     vector<vector<IntPolynomial>> decomp(k + 1, vector<IntPolynomial>(l, IntPolynomial(N)));
     vector<vector<LagrangePolynomial>> decompDft(k + 1, vector<LagrangePolynomial>(l, LagrangePolynomial(N)));
 
@@ -79,10 +80,13 @@ void trgswMulToTrlwe(Trlwe& acc, const TrgswDft& bski, const YatfheParameters& p
         }
     }
 
-    // acc = gsw (*) acc, point-wisely
+    // acc += gsw (*) acc, point-wisely
     for (int i = 0; i <= k; i++) {
         for (int p = 0; p < l; p++) {
-            // todo
+            for (int i = 0; i <= k; i++) {
+                modularAccumulate(accDft[i].coeffs, decompDft[i][p].coeffs, bski.trlweDftSamples[i * p].a[i].coeffs);
+                // todo
+            }
         }
     }
 }

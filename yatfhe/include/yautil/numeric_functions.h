@@ -32,7 +32,7 @@ int32_t genOffset(int bgBit, int halfBg, int l);
 
 void gadgetDecomposition(vector<vector<IntPolynomial>>& output, const vector<TorusPolynomial>& input, const YatfheParameters& param);
 
-void modularAccumulate(vector<uint64_t>& coeffsB, vector<uint64_t>& coeffsA, vector<uint64_t>& coeffsS, int N);
+void modularAccumulate(vector<uint64_t>& coeffsB, const vector<uint64_t>& coeffsA, const vector<uint64_t>& coeffsS);
 
 void calModularInnerProduct(LagrangePolynomial& b, vector<TorusPolynomial>& a, const vector<IntPolynomial>& s, int N, int k);
 

@@ -85,7 +85,8 @@ void gadgetDecomposition(vector<vector<IntPolynomial>>& output, const vector<Tor
 }
 
 // b += a * s mod p
-void modularAccumulate(std::vector<uint64_t>& coeffsB, std::vector<uint64_t>& coeffsA, std::vector<uint64_t>& coeffsS, const int N) {
+void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
+    const auto N = coeffsB.size();
     for (int j = 0; j < N; j++) {
         auto tmp = modMul(coeffsA[j], coeffsS[j]);
         coeffsB[j] = modAdd(coeffsB[j], tmp);
@@ -100,7 +101,7 @@ void calModularInnerProduct(LagrangePolynomial& b, std::vector<TorusPolynomial>&
         LagrangePolynomial aDft {N};
         applyNtt(sDft, s[i]);
         applyNtt(aDft, a[i]);
-        modularAccumulate(b.coeffs, aDft.coeffs, sDft.coeffs, N);
+        modularAccumulate(b.coeffs, aDft.coeffs, sDft.coeffs);
     }
 }
 

@@ -22,12 +22,6 @@ void torusPolynomialMulByXaiMinusOne(TorusPolynomial& out, const int a, const To
     }
 }
 
-void polynomialAddMulPointWise(LagrangePolynomial& res, const LagrangePolynomial& a, const LagrangePolynomial& b) {
-    for (int i = 0; i < res.N; i++) {
-        res.coeffs[i] += a.coeffs[i] * b.coeffs[i];
-    }
-}
-
 void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
