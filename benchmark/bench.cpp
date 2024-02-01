@@ -1,15 +1,15 @@
 #include <iostream>
-#include "tlwe.h"
-#include "trlwe.h"
-#include "trgsw.h"
-#include "bootstrap.h"
-#include "time_counter.h"
-#include "yatfhe_parameters.h"
-#include "control_helper.h"
-#include "numeric_functions.h"
+#include "yatfhe/tlwe.h"
+#include "yatfhe/trlwe.h"
+#include "yatfhe/trgsw.h"
+#include "yatfhe/bootstrapping.h"
+#include "yautil/time_counter.h"
+#include "yatfhe/yatfhe_parameters.h"
+#include "yautil/control_helper.h"
+#include "yautil/numeric_functions.h"
 
 int main(int argc, char **argv) {
-    auto* timer = TimeCounter::init();
+    TimeCounter timer {};
     const YatfheParameters param {};
     COUNT_TIME("test n", timer, std::cout << param.n << std::endl;)
     COUNT_TIME("test N", timer, std::cout << param.N << std::endl;)
@@ -55,7 +55,5 @@ int main(int argc, char **argv) {
 ////#endif
 
     std::cout <<1;
-//    deleteTrgswKey(trgswKey);
-    delete timer;
     return 0;
 }

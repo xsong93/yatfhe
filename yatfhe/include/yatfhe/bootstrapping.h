@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2023/12/25.
 //
 
-#ifndef HLS_YATFHE_BOOTSTRAP_H
-#define HLS_YATFHE_BOOTSTRAP_H
+#ifndef HLS_YATFHE_BOOTSTRAPPING_H
+#define HLS_YATFHE_BOOTSTRAPPING_H
 
 #include <vector>
 #include "tlwe.h"
@@ -45,4 +45,4 @@ void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameter
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey, const TlweKey& tlweKey);
 
-#endif //HLS_YATFHE_BOOTSTRAP_H
+#endif //HLS_YATFHE_BOOTSTRAPPING_H

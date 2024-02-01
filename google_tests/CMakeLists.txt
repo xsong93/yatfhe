@@ -4,7 +4,9 @@ add_subdirectory(lib)
 
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
-set(SOURCE_FILES ntt_test.cpp)
+#set(SOURCE_FILES ntt_test.cpp)
+
+file(GLOB SOURCE_FILES *.cpp)
 
 add_executable(google_tests_run ${SOURCE_FILES}) # adding the google_tests_run target
 

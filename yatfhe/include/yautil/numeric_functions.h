@@ -7,9 +7,9 @@
 
 #include <cstdlib>
 #include <random>
-#include "torus.h"
-#include "polynomial.h"
-#include "yatfhe_parameters.h"
+#include "yatfhe/torus.h"
+#include "yatfhe/polynomial.h"
+#include "yatfhe/yatfhe_parameters.h"
 
 using namespace std;
 

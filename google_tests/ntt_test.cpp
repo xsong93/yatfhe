@@ -2,11 +2,13 @@
 // Created by Xintong Song on 2024/1/30.
 //
 #include "gtest/gtest.h"
-#include "ntt.h"
-#include "polynomial.h"
-#include "numeric_functions.h"
+#include "yatfhe/ntt.h"
+#include "yatfhe/polynomial.h"
+#include "yautil/numeric_functions.h"
+#include "yautil/time_counter.h"
 
 TEST(NttTest, X) {
+    TimeCounter timer {};
     const int N = 1024;
     LagrangePolynomial a(N);
     LagrangePolynomial b(N);
@@ -27,19 +29,23 @@ TEST(NttTest, X) {
         poly1.coeffs[i] = i;
         poly2.coeffs[i] = i;
     }
-    applyNtt(a, poly1);
-    applyNtt(b, poly2);
+    COUNT_TIME("NTT_MULT", timer,
+                    applyNtt(a, poly1);
+                    applyNtt(b, poly2);
+                    for (int i = 0; i < a.N; i++) {
+                       tmpMul.coeffs[i] = modMul(a.coeffs[i], b.coeffs[i]);
+                    }
+                    applyIntt(resMul, tmpMul);)
+    COUNT_TIME("NAIVE_MULT", timer,
+                    polynomialMulNaive(navMul, poly1, poly2);)
 
     for (int i = 0; i < a.N; i++) {
-        tmpMul.coeffs[i] = modMul(a.coeffs[i], b.coeffs[i]);
         tmpAdd.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
         tmpSub.coeffs[i] = modSub(a.coeffs[i], b.coeffs[i]);
     }
-
-    applyIntt(resMul, tmpMul);
     applyIntt(resAdd, tmpAdd);
     applyIntt(resSub, tmpSub);
-    polynomialMulNaive(navMul, poly1, poly2);
+
     polynomialAdd(navAdd, poly1, poly2);
     polynomialSub(navSub, poly1, poly2);
     
@@ -48,4 +54,5 @@ TEST(NttTest, X) {
         EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
         EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
     }
+    std::cout << ">>>>>>>> NTT test passed! <<<<<<<<" << std::endl;
 }

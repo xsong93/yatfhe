@@ -19,8 +19,6 @@ private:
 public:
     TimeCounter();
 
-    static TimeCounter* init();
-
     void lock();
 
     void unlock();
@@ -39,10 +37,10 @@ public:
 };
 
 #define COUNT_TIME(MSG, T, CODE) \
-    T->lock();                   \
-    T->resetTime();              \
+    T.lock();                    \
+    T.resetTime();               \
     CODE;                        \
-    T->printTime(MSG);           \
-    T->unlock();
+    T.printTime(MSG);            \
+    T.unlock();
 
 #endif //HLS_YATFHE_TIME_COUNTER_H

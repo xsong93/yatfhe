@@ -2,7 +2,7 @@
 // Created by Xintong Song on 2023/12/25.
 //
 #include <iostream>
-#include "bootstrap.h"
+#include "bootstrapping.h"
 #include "numeric_functions.h"
 #include "ntt.h"
 

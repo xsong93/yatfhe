@@ -4,10 +4,8 @@
 
 #include"ntt_constants.h"
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdint.h>
-
+#include <cstdint>
+#include <cstdlib>
 
 uint64_t scale_2 = 18428729670909296641U; // needed for inverse: n^(-1) N=2048
 

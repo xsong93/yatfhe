@@ -8,12 +8,7 @@
 
 TimeCounter::TimeCounter() {
     time = high_resolution_clock::now();
-}
-
-TimeCounter* TimeCounter::init () {
-    TimeCounter* timer{new TimeCounter};
-    timer->printTime("init timer");
-    return timer;
+    printTime("init timer");
 }
 
 void TimeCounter::lock () {
