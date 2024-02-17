@@ -50,19 +50,19 @@ void muxRotate(Trlwe& res, Trlwe& accum, const TrgswDft& bski, const int barai, 
     const auto k = param.k;
 
     // res = (X^barai - 1) * accum
-    for (int i = 0; i <= k; i++) {
+    for (int i = 0; i < k + 1; i++) {
         torusPolynomialMulByXaiMinusOne(res.a[i], barai, accum.a[i]);
     }
 
     // accum *= bski
-    trgswMulToTrlwe(accum, bski, param);
+    accMulToBsk(accum, bski, param);
 
-    // todo
-
+    // res += accum
+    trlweAccumulate(res, accum);
 }
 
 // accum -(GD)> decomp -(ntt)> decompDft -(mul)> accDft -(intt)> accum
-void trgswMulToTrlwe(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& param) {
+void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& param) {
     const int k = param.k;
     const int l = param.l;
     const int N = param.N;

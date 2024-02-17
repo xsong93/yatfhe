@@ -36,7 +36,7 @@ void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const NegaCyclicTlwe
 
 void muxRotate(Trlwe& res, Trlwe& accum, const TrgswDft& bski, int barai, const YatfheParameters& param);
 
-void trgswMulToTrlwe(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& param);
+void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& param);
 
 void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 

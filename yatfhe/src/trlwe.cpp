@@ -66,6 +66,18 @@ void genNoiselessTrlweSample(Trlwe& acc, const Torus msg, const NegaCyclicTlwe& 
     }
 }
 
+/**
+ * res.b += accum.b,
+ * res.a += accum.a
+ * */
+void trlweAccumulate(Trlwe& res, Trlwe& accum) {
+    const auto k = res.k;
+    for (int i = 0; i < k + 1; i++) {
+        ploynomialAccumulate(res.a[i], accum.a[i]);
+    }
+    ploynomialAccumulate(res.b, accum.b);
+}
+
 //void deleteRlweKey(TrlweKey& key) {
 ////    const int k = key.k;
 ////    for (int i = 0; i < k; i++) {
