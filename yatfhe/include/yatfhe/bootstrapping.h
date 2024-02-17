@@ -34,7 +34,7 @@ void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const Bootstrap
 
 void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const NegaCyclicTlwe& sample, const YatfheParameters& param);
 
-void muxRotate(Trlwe& res, Trlwe& accum, const TrgswDft& bski, int barai, const YatfheParameters& param);
+void muxRotate(Trlwe& res, const Trlwe& input, const TrgswDft& bski, int barai, const YatfheParameters& param);
 
 void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& param);
 

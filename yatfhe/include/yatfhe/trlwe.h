@@ -55,9 +55,9 @@ struct TrlweDft{
 
 void trlweKeyGen(TrlweKey& key, int N, int k);
 
-void trlweAccumulate(Trlwe& res, Trlwe& accum);
+void trlweAccumulate(Trlwe& res, const Trlwe& accum);
 
-void genNoiselessTrlweSample(Trlwe& acc, Torus msg, const NegaCyclicTlwe& negaCyclicInput, const YatfheParameters& param);
+void genNoiselessTrlweSample(Trlwe& accum, Torus msg, const NegaCyclicTlwe& negaCyclicInput, const YatfheParameters& param);
 
 //void deleteRlweKey(TrlweKey& key);
 //

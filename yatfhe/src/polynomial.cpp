@@ -34,7 +34,7 @@ void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const 
 }
 
 // res += accum
-void ploynomialAccumulate(TorusPolynomial& res, TorusPolynomial& accum) {
+void ploynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
         res.coeffs[i] += accum.coeffs[i];

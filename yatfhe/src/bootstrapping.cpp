@@ -27,8 +27,12 @@ void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const Bootstrap
 //    trgsw_mul_bly_xai(tmp, tv, N2 - torus2int(in->b + precOffset, logN2));
     blindRotate(accum, bsk, negaCyclicInput, param);
 //    trgsw_to_DFT(out, tmp);
+    //todo
 }
 
+/**
+ * Multiply the accumulator by X^sum(bara_i * s_i)
+ * */
 void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const NegaCyclicTlwe& sample, const YatfheParameters& param) {
     const int n = param.n;
     const int k = param.k;
@@ -40,25 +44,27 @@ void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const NegaCyclicTlwe
             continue;
         }
         muxRotate(temp, accum, bsk.bskDft[i], bara[i], param);
+        swap(temp, accum);
     }
-
-    // todo
 }
 
-// accum = bski * [(X^barai - 1) * accum] + accum
-void muxRotate(Trlwe& res, Trlwe& accum, const TrgswDft& bski, const int barai, const YatfheParameters& param) {
+// res = bski * [(X^barai - 1) * input] + input
+void muxRotate(Trlwe& res, const Trlwe& input, const TrgswDft& bski, const int barai, const YatfheParameters& param) {
     const auto k = param.k;
 
-    // res = (X^barai - 1) * accum
+    // res = (X^barai - 1) * input
     for (int i = 0; i < k + 1; i++) {
-        torusPolynomialMulByXaiMinusOne(res.a[i], barai, accum.a[i]);
+        torusPolynomialMulByXaiMinusOne(res.a[i], barai, input.a[i]);
     }
 
-    // accum *= bski
-    accMulToBsk(accum, bski, param);
+    // res *= bski
+    accMulToBsk(res, bski, param);
 
-    // res += accum
-    trlweAccumulate(res, accum);
+    // res += input
+//    trlweAccumulate(res, input);
+    for (int i = 0; i < k + 1; i++) {
+        ploynomialAccumulate(res.a[i], input.a[i]);
+    }
 }
 
 // accum -(GD)> decomp -(ntt)> decompDft -(mul)> accDft -(intt)> accum
@@ -80,7 +86,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& par
         }
     }
 
-    // accum += gsw (*) accum, point-wisely
+    // accum += bsk (*) accum, point-wisely
     for (int i = 0; i < k + 1; i++) {
         for (int j = 0; j < l; j++) {
             for (int m = 0; m < k + 1; m++) {

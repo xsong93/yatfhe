@@ -51,10 +51,10 @@ void trlweKeyGen(TrlweKey& key, const int N, const int k) {
 //    initLagrangePolynomial(trlweDft.b, N);
 //}
 
-void genNoiselessTrlweSample(Trlwe& acc, const Torus msg, const NegaCyclicTlwe& negaCyclicInput, const YatfheParameters& param) {
+void genNoiselessTrlweSample(Trlwe& accum, const Torus msg, const NegaCyclicTlwe& negaCyclicInput, const YatfheParameters& param) {
     const auto& barb = negaCyclicInput.b;
     if (barb == 0) {
-        std::fill(acc.b.coeffs.begin(), acc.b.coeffs.end(), msg);
+        std::fill(accum.b.coeffs.begin(), accum.b.coeffs.end(), msg);
         return;
     }
     const int N = param.N;
@@ -62,20 +62,19 @@ void genNoiselessTrlweSample(Trlwe& acc, const Torus msg, const NegaCyclicTlwe& 
     const int rot = N2 - barb;
     const int rotTrue = (rot < N) ? rot : rot - N;
     for (int i = 0; i < N; i++) {
-        acc.b.coeffs[i] = (i < rotTrue) ? -msg : msg;
+        accum.b.coeffs[i] = (i < rotTrue) ? -msg : msg;
     }
 }
 
 /**
- * res.b += accum.b,
  * res.a += accum.a
  * */
-void trlweAccumulate(Trlwe& res, Trlwe& accum) {
+void trlweAccumulate(Trlwe& res, const Trlwe& accum) {
     const auto k = res.k;
     for (int i = 0; i < k + 1; i++) {
         ploynomialAccumulate(res.a[i], accum.a[i]);
     }
-    ploynomialAccumulate(res.b, accum.b);
+//    ploynomialAccumulate(res.b, accum.b);
 }
 
 //void deleteRlweKey(TrlweKey& key) {
