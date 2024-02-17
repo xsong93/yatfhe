@@ -32,11 +32,11 @@ struct BootstrappingKey {
 void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, Torus msg,
                                   const YatfheParameters& param);
 
-void blindRotate(Trlwe& acc, const BootstrappingKey& bsk, const NegaCyclicTlwe& sample, const YatfheParameters& param);
+void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const NegaCyclicTlwe& sample, const YatfheParameters& param);
 
-void muxRotate(Trlwe& res, Trlwe& acc, const TrgswDft& bski, int barai, const YatfheParameters& param);
+void muxRotate(Trlwe& res, Trlwe& accum, const TrgswDft& bski, int barai, const YatfheParameters& param);
 
-void trgswMulToTrlwe(Trlwe& acc, const TrgswDft& bski, const YatfheParameters& param);
+void trgswMulToTrlwe(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& param);
 
 void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 

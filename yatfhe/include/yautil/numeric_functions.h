@@ -34,7 +34,7 @@ void gadgetDecomposition(vector<vector<IntPolynomial>>& output, const vector<Tor
 
 void modularAccumulate(vector<uint64_t>& coeffsB, const vector<uint64_t>& coeffsA, const vector<uint64_t>& coeffsS);
 
-void calModularInnerProduct(LagrangePolynomial& b, vector<TorusPolynomial>& a, const vector<IntPolynomial>& s, int N, int k);
+void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const IntPolynomial& s, const int N);
 
 void initCoeffsViaUniformDistribution(vector<Torus>& coeffs, int N);
 

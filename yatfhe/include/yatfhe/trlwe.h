@@ -35,32 +35,32 @@ struct TrlweKey {
 };
 
 struct TrlweDft{
-    std::vector<LagrangePolynomial> a {}; // k
+    std::vector<LagrangePolynomial> a {}; // k + 1
     LagrangePolynomial b; // 1
     int k;
 
     TrlweDft(int k, int N) :
-        a(k, LagrangePolynomial(N)),
+        a(k + 1, LagrangePolynomial(N)),
         b(LagrangePolynomial(N)),
         k(k) {};
 };
 
-void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& param);
-
-void initTrlweKey(TrlweKey& key, int N, int k);
-
-void initTrlweSample(Trlwe& trlwe, int k, int N);
-
-void initTrlweDftSample(TrlweDft& trlweDft, int k, int N);
+//void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& param);
+//
+//void initTrlweKey(TrlweKey& key, int N, int k);
+//
+//void initTrlweSample(Trlwe& trlwe, int k, int N);
+//
+//void initTrlweDftSample(TrlweDft& trlweDft, int k, int N);
 
 void trlweKeyGen(TrlweKey& key, int N, int k);
 
 void genNoiselessTrlweSample(Trlwe& acc, Torus msg, const NegaCyclicTlwe& negaCyclicInput, const YatfheParameters& param);
 
-void deleteRlweKey(TrlweKey& key);
-
-void deleteRlweSample(Trlwe& sample);
-
-void deleteRlweDftSample(TrlweDft& sample);
+//void deleteRlweKey(TrlweKey& key);
+//
+//void deleteRlweSample(Trlwe& sample);
+//
+//void deleteRlweDftSample(TrlweDft& sample);
 
 #endif //HLS_YATFHE_TRLWE_H

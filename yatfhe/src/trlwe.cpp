@@ -11,17 +11,17 @@
 
 using namespace std;
 
-void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& param) {
-    initTrlweKey(trlweKey, param.N, param.k);
-    trlweKeyGen(trlweKey, param.N, param.k);
-}
+//void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& param) {
+//    initTrlweKey(trlweKey, param.N, param.k);
+//    trlweKeyGen(trlweKey, param.N, param.k);
+//}
 
-void initTrlweKey(TrlweKey& key, const int N, const int k) {
-    for (int i = 0; i < k; i++) {
-        TorusPolynomial torusPolynomial(N);
-        key.s.push_back(torusPolynomial);
-    }
-}
+//void initTrlweKey(TrlweKey& key, const int N, const int k) {
+//    for (int i = 0; i < k; i++) {
+//        TorusPolynomial torusPolynomial(N);
+//        key.s.push_back(torusPolynomial);
+//    }
+//}
 
 void trlweKeyGen(TrlweKey& key, const int N, const int k) {
     uniform_int_distribution<int> distribution(0, 1);
@@ -35,21 +35,21 @@ void trlweKeyGen(TrlweKey& key, const int N, const int k) {
     cout << endl;
 }
 
-void initTrlweSample(Trlwe& trlwe, const int k, const int N) {
-//    trlwe.a.resize(k);
-    for (int i = 0; i < k; i++) {
-        initTorusPolynomial(trlwe.a[i], N);
-    }
-    initTorusPolynomial(trlwe.b, N);
-}
-
-void initTrlweDftSample(TrlweDft& trlweDft, const int k, const int N) {
-//    trlweDft.a.resize(k);
-    for (int i = 0; i < k; i++) {
-        initLagrangePolynomial(trlweDft.a[i], N);
-    }
-    initLagrangePolynomial(trlweDft.b, N);
-}
+//void initTrlweSample(Trlwe& trlwe, const int k, const int N) {
+////    trlwe.a.resize(k);
+//    for (int i = 0; i < k; i++) {
+//        initTorusPolynomial(trlwe.a[i], N);
+//    }
+//    initTorusPolynomial(trlwe.b, N);
+//}
+//
+//void initTrlweDftSample(TrlweDft& trlweDft, const int k, const int N) {
+////    trlweDft.a.resize(k);
+//    for (int i = 0; i < k; i++) {
+//        initLagrangePolynomial(trlweDft.a[i], N);
+//    }
+//    initLagrangePolynomial(trlweDft.b, N);
+//}
 
 void genNoiselessTrlweSample(Trlwe& acc, const Torus msg, const NegaCyclicTlwe& negaCyclicInput, const YatfheParameters& param) {
     const auto& barb = negaCyclicInput.b;
@@ -66,22 +66,22 @@ void genNoiselessTrlweSample(Trlwe& acc, const Torus msg, const NegaCyclicTlwe& 
     }
 }
 
-void deleteRlweKey(TrlweKey& key) {
-//    const int k = key.k;
-//    for (int i = 0; i < k; i++) {
-//        delete[] key.bskDft[i].coeffs;
-//        key.bskDft[i].coeffs = nullptr;
-//    }
-//    delete[] key.bskDft;
-//    key.bskDft = nullptr;
-}
-
-void deleteRlweSample(Trlwe& sample) {
-//    deletePolynomial(*sample.a);
-//    deletePolynomial(*sample.b);
-}
-
-void deleteRlweDftSample(TrlweDft& sample) {
-//    deletePolynomial(*sample.a);
-//    deletePolynomial(*sample.b);
-}
+//void deleteRlweKey(TrlweKey& key) {
+////    const int k = key.k;
+////    for (int i = 0; i < k; i++) {
+////        delete[] key.bskDft[i].coeffs;
+////        key.bskDft[i].coeffs = nullptr;
+////    }
+////    delete[] key.bskDft;
+////    key.bskDft = nullptr;
+//}
+//
+//void deleteRlweSample(Trlwe& sample) {
+////    deletePolynomial(*sample.a);
+////    deletePolynomial(*sample.b);
+//}
+//
+//void deleteRlweDftSample(TrlweDft& sample) {
+////    deletePolynomial(*sample.a);
+////    deletePolynomial(*sample.b);
+//}

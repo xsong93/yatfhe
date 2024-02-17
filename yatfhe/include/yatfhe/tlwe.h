@@ -35,11 +35,11 @@ struct TlweKey {
     explicit TlweKey(int n) : n(n), s(n), sigma(0) {};
 };
 
-void initTlweKey(TlweKey& key, int n, double sigma);
-
-void initTlweSample(Tlwe& tlwe, int n);
-
-void newBinaryTlweKey(TlweKey& key, const YatfheParameters& param);
+//void initTlweKey(TlweKey& key, int n, double sigma);
+//
+//void initTlweSample(Tlwe& tlwe, int n);
+//
+//void newBinaryTlweKey(TlweKey& key, const YatfheParameters& param);
 
 void lweKeyGen(TlweKey& result, int n);
 
@@ -47,6 +47,6 @@ void modSwitchFromTorus32ToN2(NegaCyclicTlwe& output, const Tlwe& input);
 
 void symEncTlweSample(Tlwe& tlweSample, Torus message, const TlweKey& key);
 
-void deleteLweKey(TlweKey& key);
+//void deleteLweKey(TlweKey& key);
 
 #endif //HLS_YATFHE_TLWE_H

@@ -8,17 +8,17 @@
 
 using namespace std;
 
-void initTlweKey(TlweKey& key, const int n, const double sigma) {
-    key.n = n;
-    key.sigma = sigma;
-//    key.bskDft = new Integer[n];
-    key.s.resize(n);
-}
+//void initTlweKey(TlweKey& key, const int n, const double sigma) {
+//    key.n = n;
+//    key.sigma = sigma;
+////    key.bskDft = new Integer[n];
+//    key.s.resize(n);
+//}
 
-void newBinaryTlweKey(TlweKey& key, const YatfheParameters& param) {
-    initTlweKey(key, param.n, param.lweStdDev);
-    lweKeyGen(key, param.n);
-}
+//void newBinaryTlweKey(TlweKey& key, const YatfheParameters& param) {
+//    initTlweKey(key, param.n, param.lweStdDev);
+//    lweKeyGen(key, param.n);
+//}
 
 void lweKeyGen(TlweKey& key, const int n) {
     uniform_int_distribution<int> distribution(0, 1);
@@ -30,10 +30,10 @@ void lweKeyGen(TlweKey& key, const int n) {
     std::cout <<endl;
 }
 
-void initTlweSample(Tlwe& tlwe, int n) {
-    tlwe.a.resize(n);
-    tlwe.n = n;
-}
+//void initTlweSample(Tlwe& tlwe, int n) {
+//    tlwe.a.resize(n);
+//    tlwe.n = n;
+//}
 
 // b = aj * sj + u + e
 void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key) {
@@ -53,7 +53,7 @@ void modSwitchFromTorus32ToN2(NegaCyclicTlwe& output, const Tlwe& input) {
     }
 }
 
-void deleteLweKey(TlweKey& key) {
-//    delete key.bskDft;
-//    key.bskDft = nullptr;
-}
+//void deleteLweKey(TlweKey& key) {
+////    delete key.bskDft;
+////    key.bskDft = nullptr;
+//}

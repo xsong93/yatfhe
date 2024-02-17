@@ -6,33 +6,33 @@
 #include "trgsw.h"
 #include "trlwe.h"
 
-void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& param) {
-    trgswKey.trlweKey = trlweKey;
-    trgswKey.l = param.l;
-    trgswKey.bgBit = param.bgBit;
-}
-
-void initTrgswSample(Trgsw& trgsw, const YatfheParameters& param) {
-    const int l = param.l;
-    const int k = param.k;
-    const int N = param.N;
-    const int kpl = l * (k + 1);
-//    trgsw.trlweSamples.resize(kpl);
-    for (int i = 0; i < kpl; i++) {
-        initTrlweSample(trgsw.trlweSamples[i], k, N);
-    }
-}
-
-void initTrgswDftSample(TrgswDft& trgswDftSample, const YatfheParameters& param) {
-    const int l = param.l;
-    const int k = param.k;
-    const int N = param.N;
-    const int kpl = l *  (k + 1);
-//    trgswDftSample.trlweDftSamples.resize(kpl);
-    for (int i = 0; i < kpl; i++) {
-        initTrlweDftSample(trgswDftSample.trlweDftSamples[i], k, N);
-    }
-}
+//void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& param) {
+//    trgswKey.trlweKey = trlweKey;
+//    trgswKey.l = param.l;
+//    trgswKey.bgBit = param.bgBit;
+//}
+//
+//void initTrgswSample(Trgsw& trgsw, const YatfheParameters& param) {
+//    const int l = param.l;
+//    const int k = param.k;
+//    const int N = param.N;
+//    const int kpl = l * (k + 1);
+////    trgsw.trlweSamples.resize(kpl);
+//    for (int i = 0; i < kpl; i++) {
+//        initTrlweSample(trgsw.trlweSamples[i], k, N);
+//    }
+//}
+//
+//void initTrgswDftSample(TrgswDft& trgswDftSample, const YatfheParameters& param) {
+//    const int l = param.l;
+//    const int k = param.k;
+//    const int N = param.N;
+//    const int kpl = l *  (k + 1);
+////    trgswDftSample.trlweDftSamples.resize(kpl);
+//    for (int i = 0; i < kpl; i++) {
+//        initTrlweDftSample(trgswDftSample.trlweDftSamples[i], k, N);
+//    }
+//}
 
 void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& param) {
     const int l = param.l;
@@ -49,9 +49,9 @@ void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParamete
     }
 }
 
-void deleteTrgswKey(TrgswKey& trgswKey) {
-//    trgswKey.trlweKey = nullptr;
-}
+//void deleteTrgswKey(TrgswKey& trgswKey) {
+////    trgswKey.trlweKey = nullptr;
+//}
 
 
 

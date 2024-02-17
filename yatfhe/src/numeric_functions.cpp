@@ -93,16 +93,11 @@ void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_
     }
 }
 
-// b = akN * skN
-void calModularInnerProduct(LagrangePolynomial& b, std::vector<TorusPolynomial>& a, const std::vector<IntPolynomial>& s, const int N, const int k) {
-    for (int i = 0; i < k; i++) {
-        initCoeffsViaUniformDistribution(a[i].coeffs, N);
-        LagrangePolynomial sDft {N};
-        LagrangePolynomial aDft {N};
-        applyNtt(sDft, s[i]);
-        applyNtt(aDft, a[i]);
-        modularAccumulate(b.coeffs, aDft.coeffs, sDft.coeffs);
-    }
+// b = aN * sN
+void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const IntPolynomial& s, const int N) {
+    LagrangePolynomial sDft {N};
+    applyNtt(sDft, s);
+    modularAccumulate(b.coeffs, a.coeffs, sDft.coeffs);
 }
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const int N) {
