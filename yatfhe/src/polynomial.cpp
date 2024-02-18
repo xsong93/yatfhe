@@ -18,7 +18,7 @@ void torusPolynomialMulByXaiMinusOne(TorusPolynomial& out, const int a, const To
     const int32_t N = input.N;
     const int32_t aTrue = (a < N) ? a : a - N;
     for (int32_t i = 0; i < N; i++) {
-        out.coeffs[i] = ((i < aTrue) ? -input.coeffs[i - aTrue + N] : input.coeffs[i - aTrue]) - input.coeffs[i];
+        out.coeffs[i] = ((i < aTrue) ? (-input.coeffs[i - aTrue + N]) : (input.coeffs[i - aTrue]) - input.coeffs[i]);
     }
 }
 
@@ -34,7 +34,7 @@ void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const 
 }
 
 // res += accum
-void ploynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum) {
+void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
         res.coeffs[i] += accum.coeffs[i];

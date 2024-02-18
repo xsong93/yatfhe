@@ -7,6 +7,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yautil/control_helper.h"
 #include "yautil/numeric_functions.h"
+#include "yautil/tool.h"
 
 int main(int argc, char **argv) {
     TimeCounter timer {};
@@ -26,9 +27,11 @@ int main(int argc, char **argv) {
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
 
     Tlwe input(param.n);
-    TrgswDft output {param};
+    Tlwe output {param.N * (param.k + 1)};
     symEncTlweSample(input, doubleToTorus32(1.0 / 8), tlweKey);
     trgswFunctionalBootstrapping(output, input, bsKey, 1, param);
+//    printTlweAB(input, "input boot");
+
 //    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);
 //    TLWE_KS_Key tlwe_ksk = tlwe_new_KS_key(key_tlwe, key_tlwe_out, t, baseBit);
 //    auto * input = static_cast<Torus *>(safe_aligned_malloc(sizeof(Torus) * (_EXECS * 4 + 1)));

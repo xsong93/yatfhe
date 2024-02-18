@@ -2,12 +2,15 @@
 // Created by Xintong Song on 2023/12/25.
 //
 #include <iostream>
+#include "trlwe.h"
 #include "bootstrapping.h"
 #include "numeric_functions.h"
 #include "ntt.h"
+#include "yautil/tool.h"
 
+int icon = 0;
 
-void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const BootstrappingKey& bsk, const Torus msg, const YatfheParameters& param) {
+void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& in, const BootstrappingKey& bsk, const Torus msg, const YatfheParameters& param) {
     const int n = param.n;
     const int N = param.N;
     const int l = param.l;
@@ -19,15 +22,12 @@ void trgswFunctionalBootstrapping(TrgswDft& out, const Tlwe& in, const Bootstrap
     const Torus precOffset = doubleToTorus32(1.0 / (4 * torusBase));
     NegaCyclicTlwe negaCyclicInput(N2);
     modSwitchFromTorus32ToN2(negaCyclicInput, in);
-    Trgsw tv(param);
     Trlwe accum(k + 1, N);
-//    genNoiselessTrgswSample(tv, msg, param);
-    genNoiselessTrlweSample(accum, msg, negaCyclicInput, param);
-    Trgsw tmp(param);
-//    trgsw_mul_bly_xai(tmp, tv, N2 - torus2int(in->b + precOffset, logN2));
+    genNoiselessTrlweSample(accum, msg, negaCyclicInput, param); // todo: should msg be encrypted forehead?
+//    printTrlweAB(accum, "accum");
     blindRotate(accum, bsk, negaCyclicInput, param);
-//    trgsw_to_DFT(out, tmp);
-    //todo
+    extractTlweFromTrlwe(out, accum, 0);
+//    printTrlweAB(accum, "accum");
 }
 
 /**
@@ -58,12 +58,15 @@ void muxRotate(Trlwe& res, const Trlwe& input, const TrgswDft& bski, const int b
     }
 
     // res *= bski
-    accMulToBsk(res, bski, param);
+    accMulToBsk(res, bski, param); // todo: debug
+    if (icon++ == 0) {
+//        printTrlweAB(res, "res");
+    }
 
     // res += input
 //    trlweAccumulate(res, input);
     for (int i = 0; i < k + 1; i++) {
-        ploynomialAccumulate(res.a[i], input.a[i]);
+        polynomialAccumulate(res.a[i], input.a[i]);
     }
 }
 
@@ -78,6 +81,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& par
 
     // gadget decomposition, G^-1 * TGLWE, T_(N,q)^(k+1) -> Z_N^(k+1)*l
     gadgetDecomposition(decomp , accum.a, param);
+//    printPolyMat(decomp, "decomp");
 
     // ntt
     for (int i = 0; i < k + 1; i++) {

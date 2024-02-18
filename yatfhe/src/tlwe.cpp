@@ -5,6 +5,7 @@
 #include "yatfhe_parameters.h"
 #include "tlwe.h"
 #include "numeric_functions.h"
+#include "yautil/tool.h"
 
 using namespace std;
 
@@ -22,12 +23,10 @@ using namespace std;
 
 void lweKeyGen(TlweKey& key, const int n) {
     uniform_int_distribution<int> distribution(0, 1);
-    std::cout <<"TlweKey: ";
     for (int i = 0; i < n; i++) {
         key.s[i] = distribution(rng);
-        std::cout << i << ":" <<key.s[i]<<" ";
     }
-    std::cout <<endl;
+//    printArray(key.s, "TlweKey");
 }
 
 //void initTlweSample(Tlwe& tlwe, int n) {
@@ -37,7 +36,7 @@ void lweKeyGen(TlweKey& key, const int n) {
 
 // b = aj * sj + u + e
 void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key) {
-    tlweSample.b = addGaussianNoise(message, key.sigma);
+    tlweSample.b = addGaussianNoise(message, key.sigma); // error term
     for (int i = 0; i < key.n; i++) {
         tlweSample.a[i] = uniformTorus32Distrib(rng);
         tlweSample.b += key.s[i] * tlweSample.a[i];

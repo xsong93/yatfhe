@@ -30,7 +30,7 @@ void torusPolynomialMulByXaiMinusOne(TorusPolynomial& out, int a, const TorusPol
 
 void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);
 
-void ploynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);
+void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);
 
 void polynomialAdd(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);
 
