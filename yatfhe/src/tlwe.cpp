@@ -43,12 +43,22 @@ void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key)
     }
 }
 
-void modSwitchFromTorus32ToN2(NegaCyclicTlwe& output, const Tlwe& input) {
-    const int n = input.n;
-    const int N2 = output.N2;
-    output.b = modSwitchFromTorus32(input.b, N2);
+// mu = b - as
+double symDecTlweSample(Tlwe& in, TlweKey& key) {
+    auto n = key.n;
+    Torus aXs= 0;
     for (int i = 0; i < n; i++) {
-        output.a[i] = modSwitchFromTorus32(input.a[i], N2);
+        aXs += in.a[i] * key.s[i];
+    }
+    return torus32ToDouble(in.b - aXs);
+}
+
+void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
+    const int n = input.n;
+    const int newMod = output.mod;
+    output.b = modSwitchFromTorus32(input.b, newMod);
+    for (int i = 0; i < n; i++) {
+        output.a[i] = modSwitchFromTorus32(input.a[i], newMod);
     }
 }
 

@@ -50,19 +50,11 @@ void trlweKeyGen(TrlweKey& key, const int N, const int k) {
 //    initLagrangePolynomial(trlweDft.b, N);
 //}
 
-void genNoiselessTrlweSample(Trlwe& accum, const Torus msg, const NegaCyclicTlwe& negaCyclicInput, const YatfheParameters& param) {
-    const auto& barb = negaCyclicInput.b;
-    if (barb == 0) {
-        std::fill(accum.b.coeffs.begin(), accum.b.coeffs.end(), msg);
-        return;
-    }
-    const int N = param.N;
-    const int N2 = negaCyclicInput.N2;
-    const int rot = N2 - barb;
-    const int rotTrue = (rot < N) ? rot : rot - N;
-    for (int i = 0; i < N; i++) {
-        accum.b.coeffs[i] = (i < rotTrue) ? -msg : msg;
-    }
+// Trlwe: (X^-b) * (0,...,0,v)
+void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& negaCyclicInput, const YatfheParameters& param) {
+    const auto barb = negaCyclicInput.b;
+    const auto rot = negaCyclicInput.mod - barb;
+    torusPolynomialMulByXai(accum.b, rot, v);
 }
 
 /**

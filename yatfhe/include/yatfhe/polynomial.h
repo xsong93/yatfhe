@@ -26,6 +26,8 @@ void initTorusPolynomial(TorusPolynomial& torusPolynomial, int N);
 
 void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, int N);
 
+void torusPolynomialMulByXai(TorusPolynomial& out, int a, const TorusPolynomial& input);
+
 void torusPolynomialMulByXaiMinusOne(TorusPolynomial& out, int a, const TorusPolynomial& input);
 
 void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);

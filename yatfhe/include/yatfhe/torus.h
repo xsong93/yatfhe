@@ -27,7 +27,7 @@ struct TorusPolynomial {
         coeffs(N, 0),
         N(N) {};
 
-    explicit TorusPolynomial(int N, int value) :
+    explicit TorusPolynomial(int N, Torus value) :
             coeffs(N, value),
             N(N) {};
 };

@@ -24,6 +24,8 @@ int32_t modSwitchFromTorus32(Torus phase, int32_t Msize);
 
 Torus doubleToTorus32(double d);
 
+double torus32ToDouble(Torus in);
+
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
 
 Torus int2torus(uint64_t x, int log_scale);

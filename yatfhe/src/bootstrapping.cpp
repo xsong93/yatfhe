@@ -10,7 +10,7 @@
 
 int icon = 0;
 
-void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& in, const BootstrappingKey& bsk, const Torus msg, const YatfheParameters& param) {
+void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TorusPolynomial& v, const YatfheParameters& param) {
     const int n = param.n;
     const int N = param.N;
     const int l = param.l;
@@ -19,21 +19,22 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& in, const Bootstrapping
     const int N2 = N * 2;
     const int logN2 = (int) log2(N2);
     const int torusBase = param.torusBase;
-    const Torus precOffset = doubleToTorus32(1.0 / (4 * torusBase));
-    NegaCyclicTlwe negaCyclicInput(N2);
-    modSwitchFromTorus32ToN2(negaCyclicInput, in);
+//    const Torus precOffset = doubleToTorus32(1.0 / (4 * torusBase));
+    ScaledTlwe inputModN2(N2, n);
+    rescaleTlweFromTorus32(inputModN2, input);
     Trlwe accum(k + 1, N);
-    genNoiselessTrlweSample(accum, msg, negaCyclicInput, param); // todo: should msg be encrypted forehead?
+    genNoiselessTrlweSample(accum, v, inputModN2, param);
 //    printTrlweAB(accum, "accum");
-    blindRotate(accum, bsk, negaCyclicInput, param);
+    blindRotate(accum, bsk, inputModN2, param);
     extractTlweFromTrlwe(out, accum, 0);
+    // todo: keyswitching
 //    printTrlweAB(accum, "accum");
 }
 
 /**
  * Multiply the accumulator by X^sum(bara_i * s_i)
  * */
-void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const NegaCyclicTlwe& sample, const YatfheParameters& param) {
+void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& sample, const YatfheParameters& param) {
     const int n = param.n;
     const int k = param.k;
     const int N = param.N;

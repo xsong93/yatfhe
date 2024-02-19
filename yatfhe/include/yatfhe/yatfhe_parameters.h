@@ -55,7 +55,7 @@ struct YatfheParameters {
     int halfBg {bg / 2};
     int maskMod {bg - 1};
     int unfolding {1};
-    int torusBase {4};
+    int torusBase {8};
 
 #endif
 

@@ -26,12 +26,21 @@ int main(int argc, char **argv) {
     trlweKeyGen(trlweKey, param.N, param.k);
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
 
+    Torus mu = doubleToTorus32(1.0 / 8);
+    TorusPolynomial v(param.N, modSwitchToTorus32(2, 8));
     Tlwe input(param.n);
     Tlwe output {param.N * (param.k + 1)};
-    symEncTlweSample(input, doubleToTorus32(1.0 / 8), tlweKey);
-    trgswFunctionalBootstrapping(output, input, bsKey, 1, param);
-//    printTlweAB(input, "input boot");
+    symEncTlweSample(input, mu, tlweKey);
 
+    cout <<"msg:"<<torus32ToDouble(mu)<<endl;
+    double decPre = symDecTlweSample(input, tlweKey);
+    cout <<"decPre:"<<decPre<<endl;
+
+    trgswFunctionalBootstrapping(output, input, bsKey, v, param);
+//    printTlweAB(input, "input boot");
+    printTlweAB(output, "output boot");
+    double decAft = symDecTlweSample(output, tlweKey);
+    cout <<"decAft:"<<decAft<<endl;
 //    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);
 //    TLWE_KS_Key tlwe_ksk = tlwe_new_KS_key(key_tlwe, key_tlwe_out, t, baseBit);
 //    auto * input = static_cast<Torus *>(safe_aligned_malloc(sizeof(Torus) * (_EXECS * 4 + 1)));
@@ -57,6 +66,5 @@ int main(int argc, char **argv) {
 ////    );
 ////#endif
 
-    std::cout <<1;
     return 0;
 }

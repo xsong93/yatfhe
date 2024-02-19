@@ -23,6 +23,10 @@ Torus doubleToTorus32(const double d) {
     return int32_t(int64_t((d - int64_t(d)) * twoP32));
 }
 
+double torus32ToDouble(const Torus in) {
+    return double(in) / twoP32;
+}
+
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {
     uint64_t interv = ((UINT64_C(1) << 63) / Msize) * 2; // width of each interval
     uint64_t phase64 = mu * interv;
