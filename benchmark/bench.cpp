@@ -10,11 +10,15 @@
 #include "yautil/tool.h"
 
 int main(int argc, char **argv) {
-    TimeCounter timer {};
+//    TimeCounter timer {};
     const YatfheParameters param {};
-    COUNT_TIME("test n", timer, std::cout << param.n << std::endl;)
-    COUNT_TIME("test N", timer, std::cout << param.N << std::endl;)
-    COUNT_TIME("test k", timer, std::cout << param.k << std::endl;)
+    COUNT_TIME("init timer", std::cout << std::endl;)
+    COUNT_TIME("test timer", std::cout << param.lweStdDev << std::endl;)
+    COUNT_TIME("test timer", std::cout << param.lweStdDev << std::endl;)
+    COUNT_TIME("test timer", std::cout << param.lweStdDev << std::endl;)
+//    COUNT_TIME_LOCK("test n", timer, std::cout << param.n << std::endl;)
+//    COUNT_TIME_LOCK("test N", timer, std::cout << param.N << std::endl;)
+//    COUNT_TIME_LOCK("test k", timer, std::cout << param.k << std::endl;)
 
     TlweKey tlweKey(param.n, param.lweStdDev);
     TlweKey keyTlweOut(param.n, param.lweStdDev);

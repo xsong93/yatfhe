@@ -7,26 +7,19 @@
 #include "numeric_functions.h"
 #include "ntt.h"
 #include "yautil/tool.h"
-
-int icon = 0;
+#include "yautil/time_counter.h"
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TorusPolynomial& v, const YatfheParameters& param) {
     const int n = param.n;
     const int N = param.N;
-    const int l = param.l;
-    const int bgBit = param.bgBit;
     const int k = param.k;
     const int N2 = N * 2;
-    const int logN2 = (int) log2(N2);
-    const int torusBase = param.torusBase;
-//    const Torus precOffset = doubleToTorus32(1.0 / (4 * torusBase));
     ScaledTlwe inputModN2(N2, n);
-    rescaleTlweFromTorus32(inputModN2, input);
     Trlwe accum(k + 1, N);
-    genNoiselessTrlweSample(accum, v, inputModN2, param);
-//    printTrlweAB(accum, "accum");
+    rescaleTlweFromTorus32(inputModN2, input);
+    genNoiselessTrlweSample(accum, v, inputModN2); // (X^-b) * (0,...,0,v)
     blindRotate(accum, bsk, inputModN2, param);
-    extractTlweFromTrlwe(out, accum, 0);
+    extractTlweFromTrlwe(out, accum, 0); // todo: debug
     // todo: keyswitching
 //    printTrlweAB(accum, "accum");
 }
@@ -34,38 +27,30 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const Bootstrapp
 /**
  * Multiply the accumulator by X^sum(bara_i * s_i)
  * */
-void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& sample, const YatfheParameters& param) {
+void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     const int n = param.n;
     const int k = param.k;
     const int N = param.N;
-    const auto bara = sample.a;
-    Trlwe temp(k + 1, N);
+    const auto bara = input.a;
     for (int i = 0; i < n; i++) {
         if (bara[i] == 0) {
             continue;
         }
-        muxRotate(temp, accum, bsk.bskDft[i], bara[i], param);
-        swap(temp, accum);
+        Trlwe temp(k + 1, N);
+        trlweRotateMinusOne(temp, accum, bara[i]); // temp = c1 - c0 = (X^barai - 1) * input
+        controlMux(temp, accum, bsk.bskDft[i], param);
+        swap(temp.a, accum.a);
     }
 }
 
-// res = bski * [(X^barai - 1) * input] + input
-void muxRotate(Trlwe& res, const Trlwe& input, const TrgswDft& bski, const int barai, const YatfheParameters& param) {
-    const auto k = param.k;
-
-    // res = (X^barai - 1) * input
-    for (int i = 0; i < k + 1; i++) {
-        torusPolynomialMulByXaiMinusOne(res.a[i], barai, input.a[i]);
-    }
+// res = bsk * (c1 - c0) + c0 = bski * [(X^barai - 1) * input] + input
+void controlMux(Trlwe& res, const Trlwe& input, const TrgswDft& bski, const YatfheParameters& param) {
+    const int k = param.k;
 
     // res *= bski
     accMulToBsk(res, bski, param); // todo: debug
-    if (icon++ == 0) {
-//        printTrlweAB(res, "res");
-    }
 
     // res += input
-//    trlweAccumulate(res, input);
     for (int i = 0; i < k + 1; i++) {
         polynomialAccumulate(res.a[i], input.a[i]);
     }

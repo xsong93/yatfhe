@@ -14,7 +14,7 @@ void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, const int N)
 }
 
 // output = (X^{a}) * input
-void torusPolynomialMulByXai(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
+void torusPolynomialRotate(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
     const auto N = input.N;
     const auto aTrue = (a < N) ? a : a - N;
     const auto isWrap = (a < N) ? 1 : -1; // 1: no wrap; -1:wrap around
@@ -24,7 +24,7 @@ void torusPolynomialMulByXai(TorusPolynomial& out, const int a, const TorusPolyn
 }
 
 // output = (X^{a} - 1) * input = x^a * input - input
-void torusPolynomialMulByXaiMinusOne(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
+void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
     const auto N = input.N;
     const auto aTrue = (a < N) ? a : a - N;
     const auto isWrap = (a < N) ? 1 : -1; // 1: no wrap; -1:wrap around

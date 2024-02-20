@@ -51,10 +51,10 @@ void trlweKeyGen(TrlweKey& key, const int N, const int k) {
 //}
 
 // Trlwe: (X^-b) * (0,...,0,v)
-void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& negaCyclicInput, const YatfheParameters& param) {
+void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& negaCyclicInput) {
     const auto barb = negaCyclicInput.b;
     const auto rot = negaCyclicInput.mod - barb;
-    torusPolynomialMulByXai(accum.b, rot, v);
+    torusPolynomialRotate(accum.b, rot, v);
 }
 
 /**
@@ -62,7 +62,7 @@ void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const Scale
  * */
 void trlweAccumulate(Trlwe& res, const Trlwe& accum) {
     const auto k = res.k;
-    for (int i = 0; i < k + 1; i++) {
+    for (auto i = 0; i < k + 1; i++) {
         polynomialAccumulate(res.a[i], accum.a[i]);
     }
 //    ploynomialAccumulate(res.b, accum.b);
@@ -70,13 +70,36 @@ void trlweAccumulate(Trlwe& res, const Trlwe& accum) {
 
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, const int index) {
     const auto N = in.b.N;
-    const auto k = in.k;
-    for (int i = 0; i < k; i++) {
-        for (int j = 0; j < N; j++) {
+    const auto size = in.a.size();
+    for (auto i = 0; i < size; i++) {
+        for (auto j = 0; j < N; j++) {
             out.a[i * N + j] = (j <= index) ? (in.a[i].coeffs[index - j]) : (-in.a[i].coeffs[N + index - j]);
         }
     }
     out.b = in.b.coeffs[index];
+}
+
+// res = X^barai * input - input = (X^barai - 1) * input
+void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, const int a) {
+    const auto size = input.a.size();
+    for (auto i = 0; i < size; i++) {
+        torusPolynomialRotateMinusOne(res.a[i], a, input.a[i]);
+    }
+}
+
+void copyTrlwe(Trlwe& target, const Trlwe& source, const bool copyA, const bool copyB) {
+    const auto size = source.a.size();
+    const auto N = source.b.N;
+    for (auto j = 0; j < N; j++) {
+        if (copyA) {
+            for (auto i = 0; i < size; i++) {
+                target.a[i].coeffs[j] = source.a[i].coeffs[j];
+            }
+        }
+        if (copyB) {
+            target.b.coeffs[j] = source.b.coeffs[j];
+        }
+    }
 }
 
 //void deleteRlweKey(TrlweKey& key) {

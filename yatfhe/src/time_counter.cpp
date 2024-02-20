@@ -6,6 +6,8 @@
 #include "time_counter.h"
 #include "control_helper.h"
 
+time_point<high_resolution_clock> TimeCounter::timeGlobal = high_resolution_clock::now();
+
 TimeCounter::TimeCounter() {
     time = high_resolution_clock::now();
     printTime("init timer");

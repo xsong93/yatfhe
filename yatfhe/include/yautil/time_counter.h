@@ -10,6 +10,7 @@
 #include <mutex>
 
 using namespace std::chrono;
+//extern time_point<high_resolution_clock> timeGlobal;
 
 class TimeCounter {
 private:
@@ -17,6 +18,8 @@ private:
     std::mutex mux;
 
 public:
+    static time_point<high_resolution_clock> timeGlobal;
+
     TimeCounter();
 
     void lock();
@@ -36,7 +39,12 @@ public:
     static void printTimeRefresh(const std::string& message, clock_t *start);
 };
 
-#define COUNT_TIME(MSG, T, CODE) \
+#define COUNT_TIME(MSG, CODE)                                             \
+    TimeCounter::timeGlobal = high_resolution_clock::now();               \
+    CODE;                                                                 \
+    TimeCounter::printTime(MSG, TimeCounter::timeGlobal);
+
+#define COUNT_TIME_LOCK(MSG, T, CODE) \
     T.lock();                    \
     T.resetTime();               \
     CODE;                        \

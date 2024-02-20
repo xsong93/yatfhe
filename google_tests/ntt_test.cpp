@@ -8,7 +8,7 @@
 #include "yautil/time_counter.h"
 
 TEST(NttTest, X) {
-    TimeCounter timer {};
+    COUNT_TIME("init timer", cout << endl;)
     const int N = 1024;
     LagrangePolynomial a(N);
     LagrangePolynomial b(N);
@@ -29,14 +29,14 @@ TEST(NttTest, X) {
         poly1.coeffs[i] = i;
         poly2.coeffs[i] = i;
     }
-    COUNT_TIME("NTT_MULT", timer,
+    COUNT_TIME("NTT_MULT",
                     applyNtt(a, poly1);
                     applyNtt(b, poly2);
                     for (int i = 0; i < a.N; i++) {
                        tmpMul.coeffs[i] = modMul(a.coeffs[i], b.coeffs[i]);
                     }
                     applyIntt(resMul, tmpMul);)
-    COUNT_TIME("NAIVE_MULT", timer,
+    COUNT_TIME("NAIVE_MULT",
                     polynomialMulNaive(navMul, poly1, poly2);)
 
     for (int i = 0; i < a.N; i++) {

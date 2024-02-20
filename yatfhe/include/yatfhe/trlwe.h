@@ -59,7 +59,11 @@ void trlweAccumulate(Trlwe& res, const Trlwe& accum);
 
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);
 
-void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& negaCyclicInput, const YatfheParameters& param);
+void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, int a);
+
+void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);
+
+void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& negaCyclicInput);
 
 //void deleteRlweKey(TrlweKey& key);
 //

@@ -31,9 +31,9 @@ struct BootstrappingKey {
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TorusPolynomial& v, const YatfheParameters& param);
 
-void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& sample, const YatfheParameters& param);
+void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param);
 
-void muxRotate(Trlwe& res, const Trlwe& input, const TrgswDft& bski, int barai, const YatfheParameters& param);
+void controlMux(Trlwe& res, const Trlwe& input, const TrgswDft& bski, const YatfheParameters& param);
 
 void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& param);
 
