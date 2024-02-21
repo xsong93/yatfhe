@@ -10,15 +10,13 @@
 #include "trlwe.h"
 
 struct Trgsw {
-    std::vector<Trlwe> trlweSamples {}; // l * (k + 1)
-    std::vector<std::vector<Trlwe>> trlweSamples2 {};
+    std::vector<std::vector<Trlwe>> trlweSamples {};
     int l;
 //    int bgBit;
 
     explicit Trgsw(const YatfheParameters& p) :
-        trlweSamples(p.l * (p.k + 1), Trlwe(p.k, p.N)),
-        trlweSamples2(p.k + 1, std::vector<Trlwe>(p.l, Trlwe(p.k, p.N))),
-        l(p.l) {};
+            trlweSamples(p.k + 1, std::vector<Trlwe>(p.l, Trlwe(p.k, p.N))),
+            l(p.l) {};
 };
 
 struct TrgswKey {
@@ -33,15 +31,13 @@ struct TrgswKey {
 };
 
 struct TrgswDft {
-//    std::vector<TrlweDft> trlweDftSamples; // l *  (k + 1)
-    std::vector<std::vector<TrlweDft>> trlweDftSamples2; // l *  (k + 1)
+    std::vector<std::vector<TrlweDft>> trlweDftSamples; // l *  (k + 1)
     int l;
 //    int bgBit;
 
     explicit TrgswDft(const YatfheParameters& p) :
-//        trlweDftSamples(p.l * (p.k + 1), TrlweDft(p.k, p.N)),
-        trlweDftSamples2(p.k + 1, std::vector<TrlweDft>(p.l, TrlweDft(p.k, p.N))),
-        l(p.l) {};
+            trlweDftSamples(p.k + 1, std::vector<TrlweDft>(p.l, TrlweDft(p.k, p.N))),
+            l(p.l) {};
 };
 
 //void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& param);

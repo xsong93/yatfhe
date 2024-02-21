@@ -31,14 +31,14 @@ int main(int argc, char **argv) {
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
 
     Torus mu = doubleToTorus32(1.0 / 8);
-    TorusPolynomial v(param.N, modSwitchToTorus32(2, 8));
+    TorusPolynomial v(param.N);
+    generateTestPolynomial(v, 8, 2 * param.N); //todo: debug
     Tlwe input(param.n);
     Tlwe output {param.N * (param.k + 1)};
     symEncTlweSample(input, mu, tlweKey);
 
     cout <<"msg:"<<torus32ToDouble(mu)<<endl;
-    double decPre = symDecTlweSample(input, tlweKey);
-    cout <<"decPre:"<<decPre<<endl;
+    cout <<"decPre:"<<symDecTlweSample(input, tlweKey)<<endl;
 
     trgswFunctionalBootstrapping(output, input, bsKey, v, param);
 //    printTlweAB(input, "input boot");

@@ -1,7 +1,9 @@
 //
 // Created by Xintong Song on 2023/12/25.
 //
+#include "iostream"
 #include "polynomial.h"
+#include "numeric_functions.h"
 
 void initTorusPolynomial(TorusPolynomial& torusPolynomial, const int N) {
     torusPolynomial.coeffs.resize(N);
@@ -11,6 +13,15 @@ void initTorusPolynomial(TorusPolynomial& torusPolynomial, const int N) {
 void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, const int N) {
     lagrangePolynomial.coeffs.resize(N);
     lagrangePolynomial.N = N;
+}
+
+// vj = ((pj / q) mod p) / p
+void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) {
+    const auto N = v.N;
+    for (auto i = 0; i < N; i++) {
+        int tmp = (modP * i / modQ) % modP;
+        v.coeffs[i] = doubleToTorus32((double) tmp / modP);
+    }
 }
 
 // output = (X^{a}) * input

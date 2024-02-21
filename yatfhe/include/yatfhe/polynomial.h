@@ -26,9 +26,11 @@ void initTorusPolynomial(TorusPolynomial& torusPolynomial, int N);
 
 void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, int N);
 
-void torusPolynomialRotate(TorusPolynomial& out, const int a, const TorusPolynomial& input);
+void generateTestPolynomial(TorusPolynomial& v, int modP, int modQ);
 
-void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const TorusPolynomial& input);
+void torusPolynomialRotate(TorusPolynomial& out, int a, const TorusPolynomial& input);
+
+void torusPolynomialRotateMinusOne(TorusPolynomial& out, int a, const TorusPolynomial& input);
 
 void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);
 

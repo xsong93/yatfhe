@@ -63,7 +63,7 @@ void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, int a);
 
 void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);
 
-void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& negaCyclicInput);
+void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput);
 
 //void deleteRlweKey(TrlweKey& key);
 //

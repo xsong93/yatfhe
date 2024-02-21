@@ -51,9 +51,9 @@ void trlweKeyGen(TrlweKey& key, const int N, const int k) {
 //}
 
 // Trlwe: (X^-b) * (0,...,0,v)
-void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& negaCyclicInput) {
-    const auto barb = negaCyclicInput.b;
-    const auto rot = negaCyclicInput.mod - barb;
+void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput) {
+    const auto barb = scaledInput.b;
+    const auto rot = scaledInput.mod - barb;
     torusPolynomialRotate(accum.b, rot, v);
 }
 
@@ -68,6 +68,7 @@ void trlweAccumulate(Trlwe& res, const Trlwe& accum) {
 //    ploynomialAccumulate(res.b, accum.b);
 }
 
+// out = (a', b[index])
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, const int index) {
     const auto N = in.b.N;
     const auto size = in.a.size();

@@ -16,10 +16,10 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const Bootstrapp
     const int N2 = N * 2;
     ScaledTlwe inputModN2(N2, n);
     Trlwe accum(k + 1, N);
-    rescaleTlweFromTorus32(inputModN2, input);
+    rescaleTlweFromTorus32(inputModN2, input); //rescale to mod 2N
     genNoiselessTrlweSample(accum, v, inputModN2); // (X^-b) * (0,...,0,v)
     blindRotate(accum, bsk, inputModN2, param);
-    extractTlweFromTrlwe(out, accum, 0); // todo: debug
+    extractTlweFromTrlwe(out, accum, 0); // out = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     // todo: keyswitching
 //    printTrlweAB(accum, "accum");
 }
@@ -80,7 +80,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& par
     for (int i = 0; i < k + 1; i++) {
         for (int j = 0; j < l; j++) {
             for (int m = 0; m < k + 1; m++) {
-                modularAccumulate(accDft[m].coeffs, decompDft[i][j].coeffs, bski.trlweDftSamples2[i][j].a[m].coeffs);
+                modularAccumulate(accDft[m].coeffs, decompDft[i][j].coeffs, bski.trlweDftSamples[i][j].a[m].coeffs);
             }
         }
     }
@@ -139,17 +139,10 @@ void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& para
     const int l = param.l;
     const int kpl = (k + 1) * l;
     const double sigma = param.lweStdDev;
-//    for (int p = 0; p < kpl; p++) {
-//        Trlwe& trlweSample = trgsw.trlweSamples[p];
-//        TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[p];
-//        initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, N, sigma);
-//        applyNtt(trlweDftSample.b, trlweSample.b);
-//        calModularInnerProductNtt(trlweDftSample.b, trlweSample.a, trgswKey.trlweKey.s, N, k);
-//    }
     for (int i = 0; i < k + 1; i++) {
         for (int j = 0; j < l; j++) {
-            Trlwe& trlweSample = trgsw.trlweSamples2[i][j];
-            TrlweDft& trlweDftSample = trgswDft.trlweDftSamples2[i][j];
+            Trlwe& trlweSample = trgsw.trlweSamples[i][j];
+            TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[i][j];
             initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, N, sigma); // init b
             applyNtt(trlweDftSample.b, trlweSample.b);
             for (int m = 0; m < k; m++) {
