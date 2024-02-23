@@ -18,9 +18,16 @@ Torus addGaussianNoise(Torus message, const double sigma) {
     return message + doubleToTorus32(err);
 }
 
-// Convert double to Torus32
+// Convert double to Torus32, d in [-0.5, 0.5)
 Torus doubleToTorus32(const double d) {
-    return int32_t(int64_t((d - int64_t(d)) * twoP32));
+    auto frac = d - (int64_t) d; // get the fraction part of d
+    if (frac >= 0.5) {
+        frac = frac - 1;
+    } else if (frac < -0.5) {
+        frac = 1 + frac;
+    }
+    auto scaledFrac = int64_t(frac * twoP32); // scale the fraction part to [0, 2^32), then cast the result to a 64-bit integer
+    return int32_t(scaledFrac); // rescale to int32
 }
 
 double torus32ToDouble(const Torus in) {
