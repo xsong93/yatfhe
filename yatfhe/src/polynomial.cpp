@@ -20,8 +20,10 @@ void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) 
     const auto N = v.N;
     for (auto i = 0; i < N; i++) {
         int tmp = (modP * i / modQ) % modP;
+        cout << (double) tmp / modP;
         v.coeffs[i] = doubleToTorus32((double) tmp / modP);
     }
+    cout << endl;
 }
 
 // output = (X^{a}) * input

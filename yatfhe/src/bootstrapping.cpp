@@ -16,11 +16,13 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const Bootstrapp
     const int N2 = N * 2;
     ScaledTlwe inputModN2(N2, n);
     Trlwe accum(k + 1, N);
+    Tlwe tmp(n);
     rescaleTlweFromTorus32(inputModN2, input); //rescale to mod 2N
     genNoiselessTrlweSample(accum, v, inputModN2); // (X^-b) * (0,...,0,v)
     blindRotate(accum, bsk, inputModN2, param);
-    extractTlweFromTrlwe(out, accum, 0); // out = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    extractTlweFromTrlwe(tmp, accum, 0); // out = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     // todo: keyswitching
+    lweKeySwitch(out, bsk, tmp);
 //    printTrlweAB(accum, "accum");
 }
 

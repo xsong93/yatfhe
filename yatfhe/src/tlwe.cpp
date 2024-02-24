@@ -62,6 +62,32 @@ void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
     }
 }
 
+void lweKeySwitch(Tlwe& output, Tlwe& keySwitchingKey, Tlwe& input, YatfheParameters& param) {
+    output.b = input.b;
+    auto n = param.n;
+    auto t = param.t;
+    auto mask = param.maskMod;
+    auto precOffset = 1 << (32 - (1 + param.baseBit * t)); //precision
+    for (auto i = 0; i < n; i++) {
+        auto barai = input.a[i] = precOffset;
+        for (auto j = 0; j < t; j++) {
+            auto aij = (barai >> (32 - (j + 1) * param.baseBit)) & mask;
+            if (aij != 0) {
+                lweSubTo(output, keySwitchingKey);
+            }
+        }
+    }
+}
+
+// output -= input
+void lweSubTo(Tlwe& output, Tlwe& input) {
+    auto n = output.n;
+    output.b -= input.b;
+    for (auto i = 0; i < n; i++) {
+        output.a[i] -= input.a[i];
+    }
+}
+
 //void deleteLweKey(TlweKey& key) {
 ////    delete key.bskDft;
 ////    key.bskDft = nullptr;

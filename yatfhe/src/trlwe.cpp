@@ -55,6 +55,11 @@ void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const Scale
     const auto barb = scaledInput.b;
     const auto rot = scaledInput.mod - barb;
     torusPolynomialRotate(accum.b, rot, v);
+    std::vector<double> t(accum.b.coeffs.size());
+    for (int i = 0; i < accum.b.N; i++) {
+        t[i] = torus32ToDouble(accum.b.coeffs[i]);
+    }
+    printArray(t, "b:");
 }
 
 /**

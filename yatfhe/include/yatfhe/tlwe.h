@@ -36,6 +36,10 @@ struct TlweKey {
     explicit TlweKey(int n) : n(n), s(n), sigma(0) {};
 };
 
+struct TlweKeySwitchingKey {
+    //todo
+};
+
 //void initTlweKey(TlweKey& key, int n, double sigma);
 //
 //void initTlweSample(Tlwe& tlwe, int n);
@@ -49,6 +53,10 @@ void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input);
 void symEncTlweSample(Tlwe& tlweSample, Torus message, const TlweKey& key);
 
 double symDecTlweSample(Tlwe& in, TlweKey& key);
+
+void lweKeySwitch(Tlwe& output, Tlwe& keySwitchingKey, Tlwe& input, YatfheParameters& param);
+
+void lweSubTo(Tlwe& output, Tlwe& input);
 
 //void deleteLweKey(TlweKey& key);
 

@@ -49,9 +49,9 @@ struct YatfheParameters {
     int l {3};
     int bgBit {7};
     // KS params
-    int t {8};
-    int baseBit {2};
-    int bg {1 << bgBit};
+    int t {8}; // ks decomposition length
+    int baseBit {2}; // log2(base)
+    int bg {1 << bgBit};  // decomposition base: a power of 2
     int halfBg {bg / 2};
     int maskMod {bg - 1};
     int unfolding {1};

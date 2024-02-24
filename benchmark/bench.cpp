@@ -13,12 +13,6 @@ int main(int argc, char **argv) {
 //    TimeCounter timer {};
     const YatfheParameters param {};
     COUNT_TIME("init timer", std::cout << std::endl;)
-    COUNT_TIME("test timer", std::cout << param.lweStdDev << std::endl;)
-    COUNT_TIME("test timer", std::cout << param.lweStdDev << std::endl;)
-    COUNT_TIME("test timer", std::cout << param.lweStdDev << std::endl;)
-//    COUNT_TIME_LOCK("test n", timer, std::cout << param.n << std::endl;)
-//    COUNT_TIME_LOCK("test N", timer, std::cout << param.N << std::endl;)
-//    COUNT_TIME_LOCK("test k", timer, std::cout << param.k << std::endl;)
 
     TlweKey tlweKey(param.n, param.lweStdDev);
     TlweKey keyTlweOut(param.n, param.lweStdDev);
@@ -32,7 +26,7 @@ int main(int argc, char **argv) {
 
     Torus mu = doubleToTorus32(1.0 / 8);
     TorusPolynomial v(param.N);
-    generateTestPolynomial(v, 8, 2 * param.N); //todo: debug
+    generateTestPolynomial(v, 8, 2 * param.N);
     Tlwe input(param.n);
     Tlwe output {param.N * (param.k + 1)};
     symEncTlweSample(input, mu, tlweKey);
