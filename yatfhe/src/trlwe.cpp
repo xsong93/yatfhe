@@ -53,8 +53,8 @@ void trlweKeyGen(TrlweKey& key, const int N, const int k) {
 // Trlwe: (X^-b) * (0,...,0,v)
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput) {
     const auto barb = scaledInput.b;
-    const auto rot = scaledInput.mod - barb;
-    torusPolynomialRotate(accum.b, rot, v);
+    torusPolynomialRotate(accum.b, -barb, v);
+
     std::vector<double> t(accum.b.coeffs.size());
     for (int i = 0; i < accum.b.N; i++) {
         t[i] = torus32ToDouble(accum.b.coeffs[i]);
@@ -85,12 +85,13 @@ void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, const int index) {
     out.b = in.b.coeffs[index];
 }
 
-// res = X^barai * input - input = (X^barai - 1) * input
+// res = X^barai * input - input
 void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, const int a) {
     const auto size = input.a.size();
     for (auto i = 0; i < size; i++) {
         torusPolynomialRotateMinusOne(res.a[i], a, input.a[i]);
     }
+    torusPolynomialRotateMinusOne(res.b, a, input.b);
 }
 
 void copyTrlwe(Trlwe& target, const Trlwe& source, const bool copyA, const bool copyB) {

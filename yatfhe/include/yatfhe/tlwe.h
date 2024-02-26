@@ -58,6 +58,8 @@ void lweKeySwitch(Tlwe& output, Tlwe& keySwitchingKey, Tlwe& input, YatfheParame
 
 void lweSubTo(Tlwe& output, Tlwe& input);
 
+void tlweCopy(Tlwe& output, Tlwe& input);
+
 //void deleteLweKey(TlweKey& key);
 
 #endif //HLS_YATFHE_TLWE_H

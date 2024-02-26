@@ -15,22 +15,33 @@ void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, const int N)
     lagrangePolynomial.N = N;
 }
 
+int validateRotator(const int a, const int N) {
+    int aTrue = a % (2 * N);
+    if (aTrue < 0) {
+        aTrue += 2 * N;
+    }
+    return (aTrue < N) ? aTrue : aTrue - N;
+}
+
 // vj = ((pj / q) mod p) / p
 void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) {
     const auto N = v.N;
     for (auto i = 0; i < N; i++) {
         int tmp = (modP * i / modQ) % modP;
-        cout << (double) tmp / modP;
+        cout << (double) tmp / modP << " ";
         v.coeffs[i] = doubleToTorus32((double) tmp / modP);
     }
     cout << endl;
 }
 
 // output = (X^{a}) * input
+// for example. N = 5
+// if a = 3, a0 + x^1 * a1 + x^2 * a2 + x^3* a3 + x^4 * a4 ---> x^3 * a0 + x^4 * a1 - a2 - x * a3 - x^2 * a4 -> (-a2, -a3, -a4, a0, a1)
+// if a = -1, a0 + x^1 * a1 + x^2 * a2 + x^3* a3 + x^4 * a4 ---> -x^4 * a0 + a1 + x * a2 + x^2 * a3 + x^3 * a4 -> (a1, a2, a3, a4, -a0) <=> a = 9 <=> -1 * (a = 4)
 void torusPolynomialRotate(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
     const auto N = input.N;
-    const auto aTrue = (a < N) ? a : a - N;
-    const auto isWrap = (a < N) ? 1 : -1; // 1: no wrap; -1:wrap around
+    const auto aTrue = validateRotator(a, N);
+    const auto isWrap = (aTrue < N) ? 1 : -1; // 1: no wrap; -1:wrap around
     for (auto i = 0; i < N; i++) {
         out.coeffs[i] = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
     }
@@ -39,8 +50,8 @@ void torusPolynomialRotate(TorusPolynomial& out, const int a, const TorusPolynom
 // output = (X^{a} - 1) * input = x^a * input - input
 void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
     const auto N = input.N;
-    const auto aTrue = (a < N) ? a : a - N;
-    const auto isWrap = (a < N) ? 1 : -1; // 1: no wrap; -1:wrap around
+    const auto aTrue = validateRotator(a, N);
+    const auto isWrap = (aTrue < N) ? 1 : -1; // 1: no wrap; -1:wrap around
     for (auto i = 0; i < N; i++) {
         out.coeffs[i] = ((i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap)) - input.coeffs[i];
     }

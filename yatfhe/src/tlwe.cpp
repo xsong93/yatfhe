@@ -88,6 +88,14 @@ void lweSubTo(Tlwe& output, Tlwe& input) {
     }
 }
 
+void tlweCopy(Tlwe& output, Tlwe& input) {
+    const auto n = input.n;
+    for (auto i = 0; i < n; i++) {
+        output.a[i] = input.a[i];
+    }
+    output.b = input.b;
+}
+
 //void deleteLweKey(TlweKey& key) {
 ////    delete key.bskDft;
 ////    key.bskDft = nullptr;
