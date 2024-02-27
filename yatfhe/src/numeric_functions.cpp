@@ -64,6 +64,16 @@ int32_t genOffset(const int bgBit, const int halfBg, const int l) {
     return temp1 * halfBg;
 }
 
+// 1/B, ..., 1/B^l, B = 2^b
+std::vector<Torus> genPowersOfBgbit(const int bgBit, const int l) {
+    std::vector<Torus> h(l);
+    for (auto i = 0; i < l; i++) {
+        int power = (32 - (i + 1) * bgBit);
+        h[i] = 1 << power; // 1/(bg^(i + 1)) as Torus32: 2^32 * 2^(-b*(i+1))
+    }
+    return h;
+}
+
 void gadgetDecomposition(vector<vector<IntPolynomial>>& output, const vector<TorusPolynomial>& input, const YatfheParameters& param) {
     const int k = param.k;
     const int N = param.N;
@@ -87,20 +97,28 @@ void gadgetDecomposition(vector<vector<IntPolynomial>>& output, const vector<Tor
     }
 }
 
+// b = a * s mod p
+void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {
+    const auto N = output.size();
+    for (auto j = 0; j < N; j++) {
+        output[j] = modMul(coeffsA[j], coeffsB[j]);
+    }
+}
+
 // b += a * s mod p
 void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
     const auto N = coeffsB.size();
-    for (int j = 0; j < N; j++) {
+    for (auto j = 0; j < N; j++) {
         auto tmp = modMul(coeffsA[j], coeffsS[j]);
         coeffsB[j] = modAdd(coeffsB[j], tmp);
     }
 }
 
 // b = aN * sN
-void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const IntPolynomial& s, const int N) {
-    LagrangePolynomial sDft {N};
-    applyNtt(sDft, s);
-    modularAccumulate(b.coeffs, a.coeffs, sDft.coeffs);
+void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const LagrangePolynomial& s) {
+//    LagrangePolynomial sDft {N};
+//    applyNtt(sDft, s);
+    modularAccumulate(b.coeffs, a.coeffs, s.coeffs);
 }
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const int N) {

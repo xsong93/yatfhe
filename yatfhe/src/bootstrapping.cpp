@@ -46,7 +46,7 @@ void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& in
     }
 }
 
-// res = bsk * (c1 - c0) + c0 = bski * [ X^barai * input - input] + input
+// res = bsk * (c1 - c0) + c0 = bski * [ X^barai * input - input] + input = bski * res + input
 void controlMux(Trlwe& res, const Trlwe& input, const TrgswDft& bski, const YatfheParameters& param) {
     const auto k = param.k;
 
@@ -94,7 +94,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& par
     }
 }
 
-void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
+void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
     if (bsk.unfolding == 1) {
         bootstrappingKeyGenWoUnfolding(bsk, param, trgswKey, tlweKey);
     }
@@ -122,40 +122,18 @@ void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, c
 //    }
 }
 
-void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey, const TlweKey& tlweKey) {
+void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
     const auto n = bsk.n;
     for (auto i = 0; i < n; i++) {
         Trgsw& trgsw = bsk.bsk[i];
         TrgswDft& trgswDft = bsk.bskDft[i];
-//        initTrgswDftSample(trgswDft, param);
-//        initTrgswSample(trgsw, param);
-        trgswEncZero(trgsw, trgswDft, param, trgswKey);
+        trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey);
         // const Integer message = tlweKey.s[i];
-        //tGswAddMuIntH(result //trgsw, message, key->params);
+//        trgswAddMu(trgswDft, tlweKey.s[i], param); // todo: unfinished bskey creation
     }
 }
 
-// trgsw(0)
-void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
-    const auto N = param.N;
-    const auto k = param.k;
-    const auto l = param.l;
-    const auto kpl = (k + 1) * l;
-    const auto sigma = param.lweStdDev;
-    for (auto i = 0; i < k + 1; i++) {
-        for (auto j = 0; j < l; j++) {
-            Trlwe& trlweSample = trgsw.trlweSamples[i][j];
-            TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[i][j];
-            initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, N, sigma); // init b
-            applyNtt(trlweDftSample.b, trlweSample.b);
-            for (auto m = 0; m < k; m++) {
-                initCoeffsViaUniformDistribution(trlweSample.a[m].coeffs, N); // init a
-                applyNtt(trlweDftSample.a[m], trlweSample.a[m]);
-                calModularInnerProductNtt(trlweDftSample.b, trlweDftSample.a[m], trgswKey.trlweKey.s[m], N);
-            }
-        }
-    }
-}
+
 
 
 

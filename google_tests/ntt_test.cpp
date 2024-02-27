@@ -6,6 +6,28 @@
 #include "yatfhe/polynomial.h"
 #include "yautil/numeric_functions.h"
 #include "yautil/time_counter.h"
+#include "yautil/tool.h"
+
+TEST(NttAddConstantTest, NttAddConstantTest) {
+    const int N = 1024;
+    LagrangePolynomial a(N);
+    LagrangePolynomial b(N);
+    LagrangePolynomial resNtt(N);
+    TorusPolynomial poly(N);
+    TorusPolynomial c(N);
+    TorusPolynomial res(N);
+    for (int i = 0; i < a.N; i++) {
+        poly.coeffs[i] = i;
+    }
+    c.coeffs[0] = 77;
+    applyNtt(a, poly);
+    applyNtt(b, c);
+    for (int i = 0; i < a.N; i++) {
+        resNtt.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
+    }
+    applyIntt(res, resNtt);
+    printArray(res.coeffs, "res");
+}
 
 TEST(NttTest, X) {
     COUNT_TIME("init timer", cout << endl;)

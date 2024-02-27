@@ -30,13 +30,17 @@ Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
 
 Torus int2torus(uint64_t x, int log_scale);
 
+std::vector<Torus> genPowersOfBgbit(int bgBit, int l);
+
 int32_t genOffset(int bgBit, int halfBg, int l);
 
 void gadgetDecomposition(vector<vector<IntPolynomial>>& output, const vector<TorusPolynomial>& input, const YatfheParameters& param);
 
+void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB);
+
 void modularAccumulate(vector<uint64_t>& coeffsB, const vector<uint64_t>& coeffsA, const vector<uint64_t>& coeffsS);
 
-void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const IntPolynomial& s, const int N);
+void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const LagrangePolynomial& s);
 
 void initCoeffsViaUniformDistribution(vector<Torus>& coeffs, int N);
 

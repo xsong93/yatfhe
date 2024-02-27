@@ -19,17 +19,6 @@ struct Trgsw {
             l(p.l) {};
 };
 
-struct TrgswKey {
-    TrlweKey trlweKey {};
-    int l {};
-    int bgBit {};
-
-    explicit TrgswKey(const YatfheParameters& p) :
-        l(p.l),
-        bgBit(p.bgBit),
-        trlweKey(TrlweKey(p.k, p.N)) {};
-};
-
 struct TrgswDft {
     std::vector<std::vector<TrlweDft>> trlweDftSamples; // l *  (k + 1)
     int l;
@@ -39,6 +28,19 @@ struct TrgswDft {
             trlweDftSamples(p.k + 1, std::vector<TrlweDft>(p.l, TrlweDft(p.k, p.N))),
             l(p.l) {};
 };
+
+struct TrgswKey {
+    TrlweKey trlweKey;
+    int l {};
+    int bgBit {};
+
+    explicit TrgswKey(const YatfheParameters& p) :
+        l(p.l),
+        bgBit(p.bgBit),
+        trlweKey(TrlweKey(p.k, p.N)) {};
+};
+
+void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey);
 
 //void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& param);
 //

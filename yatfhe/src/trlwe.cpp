@@ -85,7 +85,7 @@ void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, const int index) {
     out.b = in.b.coeffs[index];
 }
 
-// res = X^barai * input - input
+// res = X^a * input - input
 void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, const int a) {
     const auto size = input.a.size();
     for (auto i = 0; i < size; i++) {

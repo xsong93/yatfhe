@@ -37,11 +37,9 @@ void controlMux(Trlwe& res, const Trlwe& input, const TrgswDft& bski, const Yatf
 
 void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& param);
 
-void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
-
-void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey,
+void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey,
                                     const TlweKey& tlweKey);
 
-void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, const TrgswKey& trgswKey, const TlweKey& tlweKey);
+void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey);
 
 #endif //HLS_YATFHE_BOOTSTRAPPING_H

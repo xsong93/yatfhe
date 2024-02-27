@@ -22,27 +22,27 @@ struct Trlwe {
         k(k) {};
 };
 
-struct TrlweKey {
-    std::vector<IntPolynomial> s {}; // k
-    int k {};
-//    double sigma;
-
-    TrlweKey() : k(0), s(0) {};
-
-    explicit TrlweKey(int k, int N):
-        k(k),
-        s(k, TorusPolynomial(N)) {};
-};
-
 struct TrlweDft{
     std::vector<LagrangePolynomial> a {}; // k + 1
     LagrangePolynomial b; // 1
     int k;
 
     TrlweDft(int k, int N) :
-        a(k + 1, LagrangePolynomial(N)),
-        b(LagrangePolynomial(N)),
-        k(k) {};
+            a(k + 1, LagrangePolynomial(N)),
+            b(LagrangePolynomial(N)),
+            k(k) {};
+};
+
+struct TrlweKey {
+    std::vector<IntPolynomial> s {}; // k
+    std::vector<LagrangePolynomial> sDft {}; // k
+    int k {};
+//    double sigma;
+
+    TrlweKey(int k, int N):
+        k(k),
+        s(k, TorusPolynomial(N)),
+        sDft(k, LagrangePolynomial(N)) {};
 };
 
 //void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& param);
