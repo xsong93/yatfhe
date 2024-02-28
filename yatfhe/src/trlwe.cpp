@@ -63,14 +63,13 @@ void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const Scale
 }
 
 /**
- * res.a += accum.a
+ * accum.a += tlwe.a, accum.b += tlwe.b
  * */
-void trlweAccumulate(Trlwe& res, const Trlwe& accum) {
-    const auto k = res.k;
-    for (auto i = 0; i < k + 1; i++) {
-        polynomialAccumulate(res.a[i], accum.a[i]);
+void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe) {
+    for (auto i = 0; i < accum.a.size(); i++) {
+        polynomialAccumulate(accum.a[i], tlwe.a[i]);
     }
-//    ploynomialAccumulate(res.b, accum.b);
+    polynomialAccumulate(accum.b, tlwe.b);
 }
 
 // out = (a', b[index])
@@ -105,6 +104,39 @@ void copyTrlwe(Trlwe& target, const Trlwe& source, const bool copyA, const bool 
         }
         if (copyB) {
             target.b.coeffs[j] = source.b.coeffs[j];
+        }
+    }
+}
+
+// G^-1 * Trlwe = DecomposedTrlwe
+void gadgetDecomposition(DecomposedTrlwe& output, Trlwe& input, const YatfheParameters& param) {
+    const auto k = param.k;
+    const auto N = param.N;
+    const auto l = param.l;
+    const auto bgBit = param.bgBit;
+    const auto maskMod = param.maskMod;
+    const auto halfBg = param.halfBg;
+    const auto offset = genOffset(bgBit, halfBg, l);
+    for (auto row = 0; row < k + 1; row++) {
+        if (row < k) {
+            polynomialAddSubOffset(input.a[row], offset, true);
+        } else {
+            polynomialAddSubOffset(input.b, offset, true);
+        }
+        for (auto lvl = 0; lvl < l; lvl++) {
+            const auto decal = 32 - (lvl + 1) * bgBit;
+            for (auto j = 0; j < N; j++) {
+                if (row < k) {
+                    output.rlwes[lvl].a[row].coeffs[j] = (input.a[row].coeffs[j] >> decal) & maskMod - halfBg;
+                } else {
+                    output.rlwes[lvl].b.coeffs[j] = (input.b.coeffs[j] >> decal) & maskMod - halfBg;
+                }
+            }
+        }
+        if (row < k) {
+            polynomialAddSubOffset(input.a[row], offset, false);
+        } else {
+            polynomialAddSubOffset(input.b, offset, false);
         }
     }
 }

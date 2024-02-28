@@ -11,9 +11,20 @@
 #include "torus.h"
 #include "polynomial.h"
 
+struct Rlwe {
+    std::vector<IntPolynomial> a {}; // k
+    IntPolynomial b {}; // 1
+    int k;
+
+    Rlwe(int k, int N) :
+            a(k, IntPolynomial(N)),
+            b(IntPolynomial(N)),
+            k(k) {};
+};
+
 struct Trlwe {
-    std::vector<TorusPolynomial> a {}; // k
-    TorusPolynomial b {}; // 1
+    std::vector<TorusPolynomial> a; // k
+    TorusPolynomial b; // 1
     int k;
 
     Trlwe(int k, int N) :
@@ -23,20 +34,32 @@ struct Trlwe {
 };
 
 struct TrlweDft{
-    std::vector<LagrangePolynomial> a {}; // k + 1
+    std::vector<LagrangePolynomial> a; // k
     LagrangePolynomial b; // 1
     int k;
 
     TrlweDft(int k, int N) :
-            a(k + 1, LagrangePolynomial(N)),
+            a(k, LagrangePolynomial(N)),
             b(LagrangePolynomial(N)),
             k(k) {};
 };
 
+
+struct DecomposedTrlwe {
+    std::vector<Rlwe> rlwes; // l
+    std::vector<TrlweDft> rlweDfts; // l
+    int l;
+
+    DecomposedTrlwe(int l, int k, int N) :
+            l(l),
+            rlwes(l,  Rlwe(k, N)),
+            rlweDfts(l, TrlweDft(k, N)) {};
+};
+
 struct TrlweKey {
-    std::vector<IntPolynomial> s {}; // k
-    std::vector<LagrangePolynomial> sDft {}; // k
-    int k {};
+    std::vector<IntPolynomial> s; // k
+    std::vector<LagrangePolynomial> sDft; // k
+    int k;
 //    double sigma;
 
     TrlweKey(int k, int N):
@@ -55,7 +78,7 @@ struct TrlweKey {
 
 void trlweKeyGen(TrlweKey& key, int N, int k);
 
-void trlweAccumulate(Trlwe& res, const Trlwe& accum);
+void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
 
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);
 
@@ -64,6 +87,8 @@ void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, int a);
 void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);
 
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput);
+
+void gadgetDecomposition(DecomposedTrlwe& output, Trlwe& input, const YatfheParameters& param);
 
 //void deleteRlweKey(TrlweKey& key);
 //

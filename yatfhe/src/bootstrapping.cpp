@@ -15,7 +15,7 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const Bootstrapp
     const auto k = param.k;
     const auto N2 = N * 2;
     ScaledTlwe inputModN2(N2, n);
-    Trlwe accum(k + 1, N);
+    Trlwe accum(k, N);
     Tlwe tmp(out.n);
     rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
@@ -34,64 +34,56 @@ void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& in
     const auto n = param.n;
     const auto k = param.k;
     const auto N = param.N;
-    const auto bara = input.a;
+    const auto aBar = input.a;
     for (auto i = 0; i < n; i++) {
-        if (bara[i] == 0) {
+        if (aBar[i] == 0) {
             continue;
         }
-        Trlwe temp(k + 1, N);
-        trlweRotateMinusOne(temp, accum, bara[i]); // temp = c1 - c0 = X^barai * input - input
-        controlMux(temp, accum, bsk.bskDft[i], param); // todo:debug
-        swap(temp.a, accum.a);
+        Trlwe temp(k, N);
+        controlMux(temp, accum, aBar[i], bsk.bskDft[i], param); // todo:debug
+        swap(accum, temp); // assign the previous result to accumulator
     }
 }
 
-// res = bsk * (c1 - c0) + c0 = bski * [ X^barai * input - input] + input = bski * res + input
-void controlMux(Trlwe& res, const Trlwe& input, const TrgswDft& bski, const YatfheParameters& param) {
-    const auto k = param.k;
-
-    // res *= bski
-    accMulToBsk(res, bski, param); // todo: debug
-
-    // res += input
-    for (auto i = 0; i < k + 1; i++) {
-        polynomialAccumulate(res.a[i], input.a[i]);
-    }
+// res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input
+void controlMux(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
+    trlweRotateMinusOne(res, input, aBarI); // temp = c1 - c0 = X^aBarI * input - input
+    accMulToBsk(res, bskI, param); // res *= bskI // todo: debug
+    trlweAccumulate(res, input); // res += input
 }
 
 // accum -(GD)> decomp -(ntt)> decompDft -(mul)> accDft -(intt)> accum
-void accMulToBsk(Trlwe& accum, const TrgswDft& bski, const YatfheParameters& param) {
+void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& param) {
     const auto k = param.k;
     const auto l = param.l;
     const auto N = param.N;
-    vector<LagrangePolynomial> accDft(k + 1, LagrangePolynomial(N));
-    vector<vector<IntPolynomial>> decomp(k + 1, vector<IntPolynomial>(l, IntPolynomial(N)));
-    vector<vector<LagrangePolynomial>> decompDft(k + 1, vector<LagrangePolynomial>(l, LagrangePolynomial(N)));
+    TrlweDft accDft(k, N);
+    DecomposedTrlwe decomp(l, k, N);
 
-    // gadget decomposition, G^-1 * TGLWE, T_(N,q)^(k+1) -> Z_N^(k+1)*l
-    gadgetDecomposition(decomp , accum.a, param);
-//    printPolyMat(decomp, "decomp");
+    gadgetDecomposition(decomp, accum, param); // gadget decomposition, G^-1 * TGLWE, T_(N,q)^(k+1) -> Z_N^(k+1)*l
 
     // ntt
-    for (auto i = 0; i < k + 1; i++) {
-        for (auto p = 0; p < l; p++) {
-            applyNtt(decompDft[i][p], decomp[i][p]);
+    for (auto lvl = 0; lvl < l; lvl++) {
+        for (auto row = 0; row < k; row++) {
+            applyNtt(decomp.rlweDfts[lvl].a[row], decomp.rlwes[lvl].a[row]);
         }
+        applyNtt(decomp.rlweDfts[lvl].b, decomp.rlwes[lvl].b);
     }
 
     // accum += bsk (*) accum, point-wisely
-    for (auto i = 0; i < k + 1; i++) {
-        for (auto j = 0; j < l; j++) {
-            for (auto m = 0; m < k + 1; m++) {
-                modularAccumulate(accDft[m].coeffs, decompDft[i][j].coeffs, bski.trlweDftSamples[i][j].a[m].coeffs);
+    // <Decomp(B), BSK_k> + Σ_0^(k-1)<Decomp(A_i), BSK_i>
+    // https://www.zama.ai/post/tfhe-deep-dive-part-3
+    for (auto lvl = 0; lvl < l; lvl++) {
+        for (auto row = 0; row < k + 1; row++) {
+            for (auto col = 0; col < k; col++) {
+//                modularAccumulate(accDft[col].coeffs, decompDft[lvl][row].coeffs, bski.trlweDftSamples[lvl][row].a[col].coeffs);
+                modularAccumulate(accDft.b.coeffs, decomp.rlweDfts[lvl].a[col].coeffs, bskI.trlweDftSamples[lvl][row].a[col].coeffs);
             }
+            modularAccumulate(accDft.b.coeffs, decomp.rlweDfts[lvl].b.coeffs, bskI.trlweDftSamples[lvl][row].b.coeffs);
         }
     }
 
-    // intt
-    for (auto i = 0; i < k + 1; i++) {
-        applyIntt(accum.a[i], accDft[i]);
-    }
+    applyIntt(accum.b, accDft.b); // intt
 }
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
@@ -127,9 +119,8 @@ void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameter
     for (auto i = 0; i < n; i++) {
         Trgsw& trgsw = bsk.bsk[i];
         TrgswDft& trgswDft = bsk.bskDft[i];
-        trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey);
-        // const Integer message = tlweKey.s[i];
-//        trgswAddMu(trgswDft, tlweKey.s[i], param); // todo: unfinished bskey creation
+        trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey); // trgsw(0)
+        trgswAddIntegerNtt(trgswDft, trgsw, tlweKey.s[i], param); // s * G^T
     }
 }
 

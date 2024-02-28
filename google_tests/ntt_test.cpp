@@ -19,9 +19,11 @@ TEST(NttAddConstantTest, NttAddConstantTest) {
     for (int i = 0; i < a.N; i++) {
         poly.coeffs[i] = i;
     }
-    c.coeffs[0] = 77;
+    c.coeffs[1] = 77;
     applyNtt(a, poly);
     applyNtt(b, c);
+    printArray(c.coeffs, "cOri");
+    printArray(b.coeffs, "bNtt");
     for (int i = 0; i < a.N; i++) {
         resNtt.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
     }

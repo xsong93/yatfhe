@@ -26,6 +26,8 @@ void initTorusPolynomial(TorusPolynomial& torusPolynomial, int N);
 
 void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, int N);
 
+void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, int value, int position);
+
 void generateTestPolynomial(TorusPolynomial& v, int modP, int modQ);
 
 void torusPolynomialRotate(TorusPolynomial& out, int a, const TorusPolynomial& input);
@@ -36,7 +38,11 @@ void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const 
 
 void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);
 
+void lagrangePolynomialAccumulate(LagrangePolynomial& accum, LagrangePolynomial& poly);
+
 void polynomialAdd(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);
+
+void polynomialAddSubOffset(TorusPolynomial& poly, int offset, bool isAdd);
 
 void polynomialSub(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);
 

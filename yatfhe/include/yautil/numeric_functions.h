@@ -34,8 +34,6 @@ std::vector<Torus> genPowersOfBgbit(int bgBit, int l);
 
 int32_t genOffset(int bgBit, int halfBg, int l);
 
-void gadgetDecomposition(vector<vector<IntPolynomial>>& output, const vector<TorusPolynomial>& input, const YatfheParameters& param);
-
 void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB);
 
 void modularAccumulate(vector<uint64_t>& coeffsB, const vector<uint64_t>& coeffsA, const vector<uint64_t>& coeffsS);

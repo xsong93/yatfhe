@@ -9,57 +9,51 @@
 #include "trlwe.h"
 
 // trgsw(0)
-void trgswEncZero(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
-    const auto N = param.N;
-    const auto k = param.k;
-    const auto l = param.l;
-    const auto sigma = param.lweStdDev;
-    for (auto i = 0; i < k + 1; i++) {
-        for (auto j = 0; j < l; j++) {
-            Trlwe& trlweSample = trgsw.trlweSamples[i][j];
-            TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[i][j];
-            initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, N, sigma); // init b = 0 + e
-            for (auto m = 0; m < k; m++) {
-                initCoeffsViaUniformDistribution(trlweSample.a[m].coeffs, N); // init a
-                applyNtt(trlweDftSample.a[m], trlweSample.a[m]);
-                applyNtt(trgswKey.trlweKey.sDft[m], trgswKey.trlweKey.s[m]);
-                modularMult(trlweDftSample.b.coeffs, trlweDftSample.a[m].coeffs, trgswKey.trlweKey.sDft[m].coeffs);
-//                applyIntt(, trlweDftSample.b.coeffs);
-            }
-        }
-    }
-}
-
-// trgsw(0)
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
     const auto N = param.N;
     const auto k = param.k;
     const auto l = param.l;
     const auto sigma = param.lweStdDev;
-    for (auto i = 0; i < k + 1; i++) {
-        for (auto j = 0; j < l; j++) {
-            Trlwe& trlweSample = trgsw.trlweSamples[i][j];
-            TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[i][j];
+    for (auto lvl = 0; lvl < l; lvl++) {
+        for (auto row = 0; row < k + 1; row++) {
+            Trlwe& trlweSample = trgsw.trlweSamples[lvl][row];
+            TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[lvl][row];
             initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, N, sigma); // init b = 0 + e
             applyNtt(trlweDftSample.b, trlweSample.b);
-            for (auto m = 0; m < k; m++) {
-                initCoeffsViaUniformDistribution(trlweSample.a[m].coeffs, N); // init a
-                applyNtt(trlweDftSample.a[m], trlweSample.a[m]);
-                applyNtt(trgswKey.trlweKey.sDft[m], trgswKey.trlweKey.s[m]);
-                modularAccumulate(trlweDftSample.b.coeffs, trlweDftSample.a[m].coeffs, trgswKey.trlweKey.sDft[m].coeffs);
+            for (auto col = 0; col < k; col++) {
+                initCoeffsViaUniformDistribution(trlweSample.a[col].coeffs, N); // init a
+                applyNtt(trlweDftSample.a[col], trlweSample.a[col]);
+                applyNtt(trgswKey.trlweKey.sDft[col], trgswKey.trlweKey.s[col]);
+                modularAccumulate(trlweDftSample.b.coeffs, trlweDftSample.a[col].coeffs, trgswKey.trlweKey.sDft[col].coeffs);
             }
+            applyIntt(trlweSample.b, trlweDftSample.b);
         }
     }
 }
 
-// output += mu * H
-void trgswAddInteger(Trgsw& output, int mu, const YatfheParameters& param) {
+// output += mu * G^T
+void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, int mu, const YatfheParameters& param) {
     const auto k = param.k;
     const auto l = param.l;
     const auto g = genPowersOfBgbit(param.bgBit, l);
-    for (auto i = 0; i < k + 1; i++) {
-        for (auto j = 0; j < l; j++) {
-            output.trlweSamples[i][j].a[i].coeffs[0] += mu * g[j]; // coeffs[0]: add mu to the constant term
+
+    // add the diagonal matrix (mu * G^T)_ijk to the output
+    for (auto lvl = 0; lvl < l; lvl++) {
+        for (auto row = 0; row < k + 1; row++) {
+
+            // add to a_lii
+            if (row < k) {
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += mu * g[lvl]; // coeffs[0]: add mu to the constant polynomial term
+                applyNtt(trgswDft.trlweDftSamples[lvl][row].a[row], trgsw.trlweSamples[lvl][row].a[row]);
+                continue;
+            }
+
+            // add to b_lk
+            trgsw.trlweSamples[lvl][row].b.coeffs[0] += mu * g[lvl];
+            applyNtt(trgswDft.trlweDftSamples[lvl][row].b , trgsw.trlweSamples[lvl][row].b);
+//            LagrangePolynomial tmp(param.N);
+//            generateLagrangePolynomialWithValueAt(tmp, mu * g[layer], 0);
+//            lagrangePolynomialAccumulate(output.trlweDftSamples[layer][row].b, tmp);
         }
     }
 }
