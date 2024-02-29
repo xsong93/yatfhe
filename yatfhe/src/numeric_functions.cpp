@@ -34,6 +34,16 @@ double torus32ToDouble(const Torus in) {
     return double(in) / twoP32;
 }
 
+Torus intToTorus32(const int in) {
+    uint64_t phase64 = in * twoP32;
+    //floor to the nearest multiples of interv
+    return phase64 >> 32;
+}
+
+int32_t torus32ToInt(const Torus in) {
+    return (int32_t) in / twoP32;
+};
+
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {
     uint64_t interv = ((UINT64_C(1) << 63) / Msize) * 2; // width of each interval
     uint64_t phase64 = mu * interv;
@@ -48,11 +58,6 @@ int32_t modSwitchFromTorus32(Torus phase, int32_t Msize) {
     //floor to the nearest multiples of interv
     return phase64 / interv;
 }
-
-//Torus int2torus(uint64_t x, int log_scale) {
-//    const uint64_t bit_size = sizeof(Torus) * 8;
-//    return x << (bit_size - log_scale);
-//}
 
 // offset = Bg/2 * (2^(32-Bgbit) + 2^(32-2*Bgbit) + ... + 2^(32-l*Bgbit))
 int32_t genOffset(const int bgBit, const int halfBg, const int l) {
@@ -73,29 +78,6 @@ std::vector<Torus> genPowersOfBgbit(const int bgBit, const int l) {
     }
     return h;
 }
-
-//void gadgetDecomposition(vector<vector<IntPolynomial>>& output, const vector<TorusPolynomial>& input, const YatfheParameters& param) {
-//    const int k = param.k;
-//    const int N = param.N;
-//    const int l = param.l;
-//    const int bgBit = param.bgBit;
-//    const int maskMod = param.maskMod;
-//    const int halfBg = param.halfBg;
-//    const int offset = genOffset(bgBit, halfBg, l);
-//    vector<TorusPolynomial> buffer(input.size(), TorusPolynomial(param.N, 0));
-//    for (int row = 0; row < k; row++) {
-//        for (int j = 0; j < N; j++) {
-//            buffer[row].coeffs[j] = input[row].coeffs[j] + offset;
-//        }
-//        for (int lvl = 0; lvl < l; lvl++) {
-//            const int decal = (32 - (lvl + 1) * bgBit);
-//            for (int j = 0; j < N; j++) {
-//                int32_t temp = (buffer[row].coeffs[j] >> decal) & maskMod;
-//                output[lvl][row].coeffs[j] = temp - halfBg;
-//            }
-//        }
-//    }
-//}
 
 // output_j = aj * bj mod p
 void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {

@@ -13,9 +13,9 @@ TEST(NttAddConstantTest, NttAddConstantTest) {
     LagrangePolynomial a(N);
     LagrangePolynomial b(N);
     LagrangePolynomial resNtt(N);
-    TorusPolynomial poly(N);
-    TorusPolynomial c(N);
-    TorusPolynomial res(N);
+    IntPolynomial poly(N);
+    IntPolynomial c(N);
+    IntPolynomial res(N);
     for (int i = 0; i < a.N; i++) {
         poly.coeffs[i] = i;
     }
@@ -31,7 +31,7 @@ TEST(NttAddConstantTest, NttAddConstantTest) {
     printArray(res.coeffs, "res");
 }
 
-TEST(NttTest, X) {
+TEST(NttSamePolyTest, NttSamePolyTest) {
     COUNT_TIME("init timer", cout << endl;)
     const int N = 1024;
     LagrangePolynomial a(N);
@@ -41,13 +41,13 @@ TEST(NttTest, X) {
     LagrangePolynomial tmpSub(N);
 
     IntPolynomial poly1(N);
-    TorusPolynomial poly2(N);
-    TorusPolynomial resMul(N);
-    TorusPolynomial resAdd(N);
-    TorusPolynomial resSub(N);
-    TorusPolynomial navMul(N);
-    TorusPolynomial navAdd(N);
-    TorusPolynomial navSub(N);
+    IntPolynomial poly2(N);
+    IntPolynomial resMul(N);
+    IntPolynomial resAdd(N);
+    IntPolynomial resSub(N);
+    IntPolynomial navMul(N);
+    IntPolynomial navAdd(N);
+    IntPolynomial navSub(N);
 
     for (int i = 0; i < a.N; i++) {
         poly1.coeffs[i] = i;
@@ -73,6 +73,56 @@ TEST(NttTest, X) {
     polynomialAdd(navAdd, poly1, poly2);
     polynomialSub(navSub, poly1, poly2);
     
+    for (int i = 0; i < navMul.N; i++) {
+        EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
+        EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
+        EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
+    }
+    std::cout << ">>>>>>>> NTT test passed! <<<<<<<<" << std::endl;
+}
+
+TEST(NttDiffPolyTest, NttDiffPolyTest) {
+    COUNT_TIME("init timer", cout << endl;)
+    const int N = 1024;
+    LagrangePolynomial a(N);
+    LagrangePolynomial b(N);
+    LagrangePolynomial tmpMul(N);
+    LagrangePolynomial tmpAdd(N);
+    LagrangePolynomial tmpSub(N);
+
+    IntPolynomial poly1(N);
+    TorusPolynomial poly2(N);
+    TorusPolynomial resMul(N);
+    TorusPolynomial resAdd(N);
+    TorusPolynomial resSub(N);
+    TorusPolynomial navMul(N);
+    TorusPolynomial navAdd(N);
+    TorusPolynomial navSub(N);
+
+    for (int i = 0; i < a.N; i++) {
+        poly1.coeffs[i] = i;
+        poly2.coeffs[i] = i;
+    }
+    COUNT_TIME("NTT_MULT",
+               applyNtt(a, poly1);
+                       applyNtt(b, poly2);
+                       for (int i = 0; i < a.N; i++) {
+                           tmpMul.coeffs[i] = modMul(a.coeffs[i], b.coeffs[i]);
+                       }
+                       applyIntt(resMul, tmpMul);)
+    COUNT_TIME("NAIVE_MULT",
+               polynomialMulNaive(navMul, poly1, poly2);)
+
+    for (int i = 0; i < a.N; i++) {
+        tmpAdd.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
+        tmpSub.coeffs[i] = modSub(a.coeffs[i], b.coeffs[i]);
+    }
+    applyIntt(resAdd, tmpAdd);
+    applyIntt(resSub, tmpSub);
+
+    polynomialAdd(navAdd, poly1, poly2);
+    polynomialSub(navSub, poly1, poly2);
+
     for (int i = 0; i < navMul.N; i++) {
         EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
         EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);

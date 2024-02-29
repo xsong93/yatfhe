@@ -47,7 +47,7 @@ void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& in
 
 // res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input
 void controlMux(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
-    trlweRotateMinusOne(res, input, aBarI); // temp = c1 - c0 = X^aBarI * input - input
+    trlweRotateMinusOne(res, input, aBarI); // res = c1 - c0 = X^aBarI * input - input
     accMulToBsk(res, bskI, param); // res *= bskI // todo: debug
     trlweAccumulate(res, input); // res += input
 }
@@ -64,26 +64,24 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& par
 
     // ntt
     for (auto lvl = 0; lvl < l; lvl++) {
-        for (auto row = 0; row < k; row++) {
-            applyNtt(decomp.rlweDfts[lvl].a[row], decomp.rlwes[lvl].a[row]);
-        }
-        applyNtt(decomp.rlweDfts[lvl].b, decomp.rlwes[lvl].b);
+        applyNttForAB(decomp.rlweDfts[lvl], decomp.rlwes[lvl]);
     }
 
     // accum += bsk (*) accum, point-wisely
-    // <Decomp(B), BSK_k> + Σ_0^(k-1)<Decomp(A_i), BSK_i>
     // https://www.zama.ai/post/tfhe-deep-dive-part-3
-    for (auto lvl = 0; lvl < l; lvl++) {
-        for (auto row = 0; row < k + 1; row++) {
+    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
+    // BSK_lrc (*) D_lr = R_c
+    for (auto row = 0; row < k + 1; row++) {
+        auto& currRes = (row < k) ? accDft.a[row] : accDft.b;
+        for (auto lvl = 0; lvl < l; lvl++) {
             for (auto col = 0; col < k; col++) {
-//                modularAccumulate(accDft[col].coeffs, decompDft[lvl][row].coeffs, bski.trlweDftSamples[lvl][row].a[col].coeffs);
-                modularAccumulate(accDft.b.coeffs, decomp.rlweDfts[lvl].a[col].coeffs, bskI.trlweDftSamples[lvl][row].a[col].coeffs);
+                modularAccumulate(currRes.coeffs, decomp.rlweDfts[lvl].a[col].coeffs, bskI.trlweDftSamples[lvl][row].a[col].coeffs);
             }
-            modularAccumulate(accDft.b.coeffs, decomp.rlweDfts[lvl].b.coeffs, bskI.trlweDftSamples[lvl][row].b.coeffs);
+            modularAccumulate(currRes.coeffs, decomp.rlweDfts[lvl].b.coeffs, bskI.trlweDftSamples[lvl][row].b.coeffs);
         }
     }
 
-    applyIntt(accum.b, accDft.b); // intt
+    applyInttForAB(accum, accDft); // intt
 }
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
