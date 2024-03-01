@@ -22,6 +22,8 @@ struct LagrangePolynomial {
         coeffs(N, value) {};
 };
 
+void torusPolyToIntPoly(IntPolynomial& output, TorusPolynomial& input, int mSize);
+
 void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, int value, int position);
 
 void generateTestPolynomial(TorusPolynomial& v, int modP, int modQ);

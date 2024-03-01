@@ -14,8 +14,14 @@ int validateRotator(const int a, const int N) {
     return (aTrue < N) ? aTrue : aTrue - N;
 }
 
+void torusPolyToIntPoly(IntPolynomial& output, TorusPolynomial& input, const int mSize) {
+    for (auto i = 0; i < input.N; i++) {
+        output.coeffs[i] = modSwitchFromTorus32(input.coeffs[i], mSize);
+    }
+}
+
 void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, const int value, const int position) {
-    TorusPolynomial tmp(lagrangePolynomial.N);
+    IntPolynomial tmp(lagrangePolynomial.N);
     tmp.coeffs[position] = value;
     applyNtt(lagrangePolynomial, tmp);
 }

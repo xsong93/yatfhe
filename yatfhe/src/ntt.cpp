@@ -41,34 +41,8 @@ void applyNtt(LagrangePolynomial& out, const IntPolynomial& in) {
 }
 
 void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial& in) {
-    const vector<Torus>& input = in.coeffs;
-    vector<uint64_t>& output = out.coeffs;
-    const int32_t N = out.N;
-
-    for (int i = 0; i < N; i++) {
-        uint64_t inputValue = input[i] < 0 ? input[i] + MODULUS : input[i];
-        output[i] = modMul(inputValue, phi_normal_2[i]);
-    }
-    bitRevShuffle(output, N);
-    int32_t wbarr = 0;
-
-    // Loop for the NTT algorithm
-    for (int transSize = 2; transSize <= N; transSize *= 2) {
-        uint64_t wb = 1;
-        for (int t = 0; t < (transSize >> 1); t++) {
-            for (int trans = 0; trans < (N / transSize); trans++) {
-                int i = trans * transSize + t;
-                int j = i + (transSize >> 1);
-
-                // Perform butterfly operations
-                uint64_t a = output[i];
-                uint64_t b = (wb == 1) ? output[j] : modMul(output[j], wb);
-                output[i] = modAdd(a, b);
-                output[j] = modSub(a, b);
-            }
-            wb = wb_normal_2[wbarr++];
-        }
-    }
+//    intPoly = (in);
+//    applyNtt(out, intPoly);
 }
 
 void applyIntt(IntPolynomial& out, LagrangePolynomial& in) {
