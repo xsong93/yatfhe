@@ -30,16 +30,6 @@ void printTrlweAB(const Trlwe& in, const string& msg) {
     cout <<"]" << endl << endl;
 }
 
-void printPolyVec(const vector<IntPolynomial>& in, const string& msg) {
-    cout << msg << ": [";
-    for (int i = 0; i < in.size(); i++) {
-        for (int j = 0; j < in[0].N; j++) {
-            cout << i << "," << j << ":" << in[i].coeffs[j] <<" ";
-        }
-    }
-    cout <<"]" <<endl << endl;
-}
-
 void printPolyMat(const vector<vector<IntPolynomial>>& in, const string& msg) {
     cout << msg <<": [";
     for (int i = 0; i < in.size(); i++) {

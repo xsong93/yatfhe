@@ -26,6 +26,15 @@ void printArray(const vector<T>& in, const string& msg) {
 
 void printPolyMat(const vector<vector<IntPolynomial>>& in, const string& msg);
 
-void printPolyVec(const vector<IntPolynomial>& in, const string& msg);
+template <typename T>
+void printPolyVec(const vector<T>& in, const string& msg) {
+    cout << msg << ": [";
+    for (int i = 0; i < in.size(); i++) {
+        for (int j = 0; j < in[0].N; j++) {
+            cout << i << "," << j << ":" << in[i].coeffs[j] <<" ";
+        }
+    }
+    cout <<"]" <<endl << endl;
+}
 
 #endif //HLS_YATFHE_TOOL_H

@@ -4,15 +4,16 @@
 #include <iostream>
 #include "yatfhe/ntt.h"
 #include "yautil/ntt_constants.h"
+#include "yautil/tool.h"
 #include "yautil/numeric_functions.h"
 
 using namespace std;
 
 // Function to perform Number Theoretic Transform (NTT)
 void applyNtt(LagrangePolynomial& out, const IntPolynomial& in) {
-    const vector<int32_t>& input = in.coeffs;
-    vector<uint64_t>& output = out.coeffs;
-    const int32_t N = out.N;
+    auto& input = in.coeffs;
+    auto& output = out.coeffs;
+    const auto N = out.N;
 
     for (int i = 0; i < N; i++) {
         uint64_t inputValue = input[i] < 0 ? input[i] + MODULUS : input[i];
@@ -40,9 +41,11 @@ void applyNtt(LagrangePolynomial& out, const IntPolynomial& in) {
     }
 }
 
-void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial& in) {
-//    intPoly = (in);
-//    applyNtt(out, intPoly);
+void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial & in, const int mSize) {
+    IntPolynomial intPolynomial(in.N);
+    torusPolyToIntPoly(intPolynomial, in, mSize);
+    printArray(intPolynomial.coeffs, "intPolynomial@applyNttTorus");
+    applyNtt(out, intPolynomial);
 }
 
 void applyIntt(IntPolynomial& out, LagrangePolynomial& in) {

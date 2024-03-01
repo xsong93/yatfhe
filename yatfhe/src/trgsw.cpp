@@ -4,6 +4,7 @@
 #include <iostream>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yautil/numeric_functions.h"
+#include "yautil/tool.h"
 #include "yatfhe/ntt.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"

@@ -22,7 +22,28 @@ struct LagrangePolynomial {
         coeffs(N, value) {};
 };
 
-void torusPolyToIntPoly(IntPolynomial& output, TorusPolynomial& input, int mSize);
+struct DoublePolynomial {
+    std::vector<double> coeffs {}; // N
+    int N {};
+
+    explicit DoublePolynomial(int N) :
+            N(N),
+            coeffs(N, 0) {};
+
+    explicit DoublePolynomial(int N, uint64_t value) :
+            N(N),
+            coeffs(N, value) {};
+};
+
+void intPolyToDoublePoly(DoublePolynomial& output, const IntPolynomial & input);
+
+void torusPolyToDoublePoly(DoublePolynomial& output, const TorusPolynomial& input);
+
+void doublePolyToTorusPoly(TorusPolynomial& output, const DoublePolynomial& input);
+
+void torusPolyToIntPoly(IntPolynomial& output, const TorusPolynomial& input, int mSize);
+
+void intPolyToTorusPoly(TorusPolynomial& output, const IntPolynomial& input, int mSize);
 
 void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, int value, int position);
 

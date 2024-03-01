@@ -14,9 +14,33 @@ int validateRotator(const int a, const int N) {
     return (aTrue < N) ? aTrue : aTrue - N;
 }
 
-void torusPolyToIntPoly(IntPolynomial& output, TorusPolynomial& input, const int mSize) {
+void intPolyToDoublePoly(DoublePolynomial& output, const IntPolynomial & input) {
+    for (auto i = 0; i < output.N; i++) {
+        output.coeffs[i] = (double) input.coeffs[i];
+    }
+}
+
+void torusPolyToDoublePoly(DoublePolynomial& output, const TorusPolynomial& input) {
+    for (auto i = 0; i < output.N; i++) {
+        output.coeffs[i] = torus32ToDouble(input.coeffs[i]);
+    }
+}
+
+void doublePolyToTorusPoly(TorusPolynomial& output, const DoublePolynomial& input) {
+    for (auto i = 0; i < output.N; i++) {
+        output.coeffs[i] = doubleToTorus32(input.coeffs[i]);
+    }
+}
+
+void torusPolyToIntPoly(IntPolynomial& output, const TorusPolynomial& input, const int mSize) {
     for (auto i = 0; i < input.N; i++) {
         output.coeffs[i] = modSwitchFromTorus32(input.coeffs[i], mSize);
+    }
+}
+
+void intPolyToTorusPoly(TorusPolynomial& output, const IntPolynomial& input, const int mSize) {
+    for (auto i = 0; i < input.N; i++) {
+        output.coeffs[i] = modSwitchToTorus32(input.coeffs[i], mSize);
     }
 }
 

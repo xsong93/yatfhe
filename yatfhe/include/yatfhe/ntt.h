@@ -15,6 +15,8 @@ using namespace std;
 
 void applyNtt(LagrangePolynomial& out, const IntPolynomial& in);
 
+void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial & in, int mSize);
+
 void applyIntt(IntPolynomial& out, LagrangePolynomial& in);
 
 template <typename T, typename R>

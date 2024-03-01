@@ -9,25 +9,40 @@
 
 TEST(doubleTorusTest, doubleTorusTest) {
     int N = 100;
-    vector<double> doublePoly(N);
+    DoublePolynomial doublePoly(N);
     TorusPolynomial tPoly(N);
-    vector<double> resPoly(N);
+    TorusPolynomial t2Poly(N);
+    DoublePolynomial resPoly(N);
+
     double i = -0.5;
-    for (auto& item : doublePoly) {
+    for (auto& item : doublePoly.coeffs) {
         item = i;
         i += 0.01;
     }
-    printArray(doublePoly, "doublePoly");
+    printArray(doublePoly.coeffs, "doublePoly");
     for (auto j = 0; j < N; j++) {
-        tPoly.coeffs[j] = doubleToTorus32(doublePoly[j]);
+        tPoly.coeffs[j] = doubleToTorus32(doublePoly.coeffs[j]);
     }
     printArray(tPoly.coeffs, "torusPoly");
     for (auto j = 0; j < N; j++) {
-        resPoly[j] = torus32ToDouble(tPoly.coeffs[j]);
+        resPoly.coeffs[j] = torus32ToDouble(tPoly.coeffs[j]);
     }
-    printArray(resPoly, "resPoly");
+    printArray(resPoly.coeffs, "resPoly");
     for (auto j = 0; j < N; j++) {
-        EXPECT_NEAR(resPoly[j], doublePoly[j], 1e-3);
+        EXPECT_NEAR(resPoly.coeffs[j], doublePoly.coeffs[j], 1e-3);
+    }
+
+
+    for (auto k = 0; k < 100; k++) {
+        initCoeffsViaUniformDistribution(tPoly.coeffs, N);
+//        printArray(tPoly.coeffs, "torusPoly");
+        torusPolyToDoublePoly(resPoly, tPoly);
+//        printArray(resPoly.coeffs, "resPoly");
+        doublePolyToTorusPoly(t2Poly, resPoly);
+//        printArray(t2Poly.coeffs, "t2Poly");
+        for (auto j = 0; j < N; j++) {
+            EXPECT_EQ(tPoly.coeffs[j], t2Poly.coeffs[j]);
+        }
     }
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> Data(double/ Torus) conversion test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 }
@@ -37,21 +52,30 @@ TEST(intTorusTest, intTorusTest) {
     IntPolynomial intPoly(N);
     TorusPolynomial tPoly(N);
     IntPolynomial resPoly(N);
+    TorusPolynomial resTPoly(N);
     int i = -50;
     for (auto& item : intPoly.coeffs) {
         item = i++;
     }
     printArray(intPoly.coeffs, "intPoly");
-    for (auto j = 0; j < N; j++) {
-        tPoly.coeffs[j] = modSwitchToTorus32(intPoly.coeffs[j], N);
-    }
+    intPolyToTorusPoly(tPoly, intPoly, N);
     printArray(tPoly.coeffs, "torusPoly");
-    for (auto j = 0; j < N; j++) {
-        resPoly.coeffs[j] = modSwitchFromTorus32(tPoly.coeffs[j], N);
-    }
+    torusPolyToIntPoly(resPoly, tPoly, N);
     printArray(resPoly.coeffs, "resPoly");
     for (auto j = 0; j < N; j++) {
         EXPECT_EQ(resPoly.coeffs[j], intPoly.coeffs[j]);
+    }
+
+    for (auto k = 0; k < 100; k++) {
+        initCoeffsViaUniformDistribution(tPoly.coeffs, N);
+//        printArray(tPoly.coeffs, "torusPoly");
+        torusPolyToIntPoly(resPoly, tPoly, 2 * N);
+//        printArray(resPoly.coeffs, "resPoly");
+        intPolyToTorusPoly(resTPoly, resPoly, 2 * N);
+//        printArray(resTPoly.coeffs, "torusPoly");
+        for (auto j = 0; j < N; j++) {
+            EXPECT_NEAR(resTPoly.coeffs[j], tPoly.coeffs[j], doubleToTorus32(0.01));
+        }
     }
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> Data(Int/ Torus) conversion test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 }
