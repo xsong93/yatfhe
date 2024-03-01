@@ -78,7 +78,7 @@ TEST(NttSamePolyTest, NttSamePolyTest) {
         EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
         EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
     }
-    std::cout << ">>>>>>>> NTT test passed! <<<<<<<<" << std::endl;
+    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> NttSamePolyTest test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 }
 
 TEST(NttDiffPolyTest, NttDiffPolyTest) {
@@ -128,5 +128,5 @@ TEST(NttDiffPolyTest, NttDiffPolyTest) {
         EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
         EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
     }
-    std::cout << ">>>>>>>> NTT test passed! <<<<<<<<" << std::endl;
+    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> NTT test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 }

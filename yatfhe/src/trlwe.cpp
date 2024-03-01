@@ -3,11 +3,11 @@
 //
 #include <iostream>
 #include <random>
-#include "yatfhe_parameters.h"
-#include "tlwe.h"
-#include "trlwe.h"
-#include "polynomial.h"
-#include "numeric_functions.h"
+#include "yatfhe/yatfhe_parameters.h"
+#include "yatfhe/tlwe.h"
+#include "yatfhe/trlwe.h"
+#include "yatfhe/polynomial.h"
+#include "yautil/numeric_functions.h"
 #include "yautil/tool.h"
 
 using namespace std;

@@ -3,8 +3,8 @@
 //
 
 #include <iostream>
-#include "time_counter.h"
-#include "control_helper.h"
+#include "yautil/time_counter.h"
+#include "yautil/control_helper.h"
 
 time_point<high_resolution_clock> TimeCounter::timeGlobal = high_resolution_clock::now();
 

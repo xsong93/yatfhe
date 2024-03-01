@@ -5,9 +5,9 @@
 #ifndef HLS_YATFHE_TLWE_H
 #define HLS_YATFHE_TLWE_H
 
-#include "torus.h"
-#include "yatfhe_parameters.h"
 #include <vector>
+#include "yatfhe/torus.h"
+#include "yatfhe/yatfhe_parameters.h"
 
 struct Tlwe {
     std::vector<Torus> a {}; // n

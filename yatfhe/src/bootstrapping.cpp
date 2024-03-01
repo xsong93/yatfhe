@@ -2,10 +2,10 @@
 // Created by Xintong Song on 2023/12/25.
 //
 #include <iostream>
-#include "trlwe.h"
-#include "bootstrapping.h"
-#include "numeric_functions.h"
-#include "ntt.h"
+#include "yatfhe/trlwe.h"
+#include "yatfhe/bootstrapping.h"
+#include "yautil/numeric_functions.h"
+#include "yatfhe/ntt.h"
 #include "yautil/tool.h"
 #include "yautil/time_counter.h"
 

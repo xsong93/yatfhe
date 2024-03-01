@@ -2,9 +2,9 @@
 // Created by Xintong Song on 2023/12/8.
 //
 #include <iostream>
-#include "yatfhe_parameters.h"
-#include "tlwe.h"
-#include "numeric_functions.h"
+#include "yatfhe/yatfhe_parameters.h"
+#include "yatfhe/tlwe.h"
+#include "yautil/numeric_functions.h"
 #include "yautil/tool.h"
 
 using namespace std;

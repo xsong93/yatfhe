@@ -6,14 +6,16 @@
 #define HLS_YATFHE_NTT_H
 
 #include <vector>
-#include "torus.h"
-#include "polynomial.h"
+#include "yatfhe/torus.h"
+#include "yatfhe/polynomial.h"
+#include "yautil/numeric_functions.h"
 
 constexpr uint64_t MODULUS = 0xffffffff00000001UL;
+using namespace std;
 
-void applyNtt(LagrangePolynomial& out, const TorusPolynomial& in);
+void applyNtt(LagrangePolynomial& out, const IntPolynomial& in);
 
-void applyIntt(TorusPolynomial& out, LagrangePolynomial& in);
+void applyIntt(IntPolynomial& out, LagrangePolynomial& in);
 
 template <typename T, typename R>
 void applyNttForAB(T& out, R& in) {
@@ -38,5 +40,11 @@ uint64_t modAdd(uint64_t x, uint64_t y);
 uint64_t modSub(uint64_t x, uint64_t y);
 
 uint64_t modMul(uint64_t x, uint64_t y);
+
+void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB);
+
+void modularAccumulate(vector<uint64_t>& coeffsB, const vector<uint64_t>& coeffsA, const vector<uint64_t>& coeffsS);
+
+void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const LagrangePolynomial& s);
 
 #endif //HLS_YATFHE_NTT_H

@@ -1,10 +1,10 @@
 //
 // Created by Xintong Song on 2023/12/25.
 //
-#include "iostream"
-#include "polynomial.h"
-#include "numeric_functions.h"
-#include "ntt.h"
+#include <iostream>
+#include "yatfhe/polynomial.h"
+#include "yautil/numeric_functions.h"
+#include "yatfhe/ntt.h"
 
 int validateRotator(const int a, const int N) {
     int aTrue = a % (2 * N);

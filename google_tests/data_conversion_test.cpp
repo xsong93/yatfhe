@@ -29,7 +29,7 @@ TEST(doubleTorusTest, doubleTorusTest) {
     for (auto j = 0; j < N; j++) {
         EXPECT_NEAR(resPoly[j], doublePoly[j], 1e-3);
     }
-    std::cout << ">>>>>>>> Data(double/ Torus) conversion test passed! <<<<<<<<" << std::endl;
+    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> Data(double/ Torus) conversion test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 }
 
 TEST(intTorusTest, intTorusTest) {
@@ -53,5 +53,5 @@ TEST(intTorusTest, intTorusTest) {
     for (auto j = 0; j < N; j++) {
         EXPECT_EQ(resPoly.coeffs[j], intPoly.coeffs[j]);
     }
-    std::cout << ">>>>>>>> Data(Int/ Torus) conversion test passed! <<<<<<<<" << std::endl;
+    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> Data(Int/ Torus) conversion test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 }

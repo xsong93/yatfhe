@@ -6,10 +6,10 @@
 #define HLS_YATFHE_TRLWE_H
 
 #include <vector>
-#include "tlwe.h"
-#include "yatfhe_parameters.h"
-#include "torus.h"
-#include "polynomial.h"
+#include "yatfhe/tlwe.h"
+#include "yatfhe/yatfhe_parameters.h"
+#include "yatfhe/torus.h"
+#include "yatfhe/polynomial.h"
 
 struct Rlwe {
     std::vector<IntPolynomial> a {}; // k

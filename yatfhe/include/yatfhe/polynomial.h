@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <cstdint>
-#include "torus.h"
+#include "yatfhe/torus.h"
 
 struct LagrangePolynomial {
     std::vector<uint64_t> coeffs {}; // N

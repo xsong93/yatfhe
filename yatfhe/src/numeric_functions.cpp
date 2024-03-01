@@ -3,9 +3,8 @@
 //
 #include <random>
 #include <iostream>
-#include "numeric_functions.h"
-#include "ntt.h"
-#include "torus.h"
+#include "yautil/numeric_functions.h"
+#include "yatfhe/torus.h"
 
 using namespace std;
 random_device rd;
@@ -68,30 +67,6 @@ std::vector<Torus> genPowersOfBgbit(const int bgBit, const int l) {
         h[i] = 1 << power; // 1/(bg^(i + 1)) as Torus32: 2^32 * 2^(-b*(i+1))
     }
     return h;
-}
-
-// output_j = aj * bj mod p
-void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {
-    const auto N = output.size();
-    for (auto j = 0; j < N; j++) {
-        output[j] = modMul(coeffsA[j], coeffsB[j]);
-    }
-}
-
-// b += a * s mod p
-void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
-    const auto N = coeffsB.size();
-    for (auto j = 0; j < N; j++) {
-        auto tmp = modMul(coeffsA[j], coeffsS[j]);
-        coeffsB[j] = modAdd(coeffsB[j], tmp);
-    }
-}
-
-// b = aN * sN
-void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const LagrangePolynomial& s) {
-//    LagrangePolynomial sDft {N};
-//    applyNtt(sDft, s);
-    modularAccumulate(b.coeffs, a.coeffs, s.coeffs);
 }
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const int N) {

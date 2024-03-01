@@ -2,11 +2,11 @@
 // Created by Xintong Song on 2023/12/25.
 //
 #include <iostream>
-#include "yatfhe_parameters.h"
-#include "numeric_functions.h"
-#include "ntt.h"
-#include "trgsw.h"
-#include "trlwe.h"
+#include "yatfhe/yatfhe_parameters.h"
+#include "yautil/numeric_functions.h"
+#include "yatfhe/ntt.h"
+#include "yatfhe/trgsw.h"
+#include "yatfhe/trlwe.h"
 
 // trgsw(0)
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {

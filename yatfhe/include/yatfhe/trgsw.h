@@ -6,8 +6,8 @@
 #define HLS_YATFHE_TRGSW_H
 
 #include <vector>
-#include "yatfhe_parameters.h"
-#include "trlwe.h"
+#include "yatfhe/yatfhe_parameters.h"
+#include "yatfhe/trlwe.h"
 
 struct Trgsw {
     std::vector<std::vector<Trlwe>> trlweSamples {};

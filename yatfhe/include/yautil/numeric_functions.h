@@ -32,12 +32,6 @@ std::vector<Torus> genPowersOfBgbit(int bgBit, int l);
 
 int32_t genOffset(int bgBit, int halfBg, int l);
 
-void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB);
-
-void modularAccumulate(vector<uint64_t>& coeffsB, const vector<uint64_t>& coeffsA, const vector<uint64_t>& coeffsS);
-
-void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const LagrangePolynomial& s);
-
 void initCoeffsViaUniformDistribution(vector<Torus>& coeffs, int N);
 
 void initCoeffsWithGaussianNoise(vector<Torus>& coeffs, Torus msg, int N, double sigma);

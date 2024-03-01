@@ -2,13 +2,45 @@
 // Created by Xintong Song on 2024/1/11.
 //
 #include <iostream>
-#include "ntt.h"
-#include "ntt_constants.h"
+#include "yatfhe/ntt.h"
+#include "yautil/ntt_constants.h"
+#include "yautil/numeric_functions.h"
 
 using namespace std;
 
 // Function to perform Number Theoretic Transform (NTT)
-void applyNtt(LagrangePolynomial& out, const TorusPolynomial& in) {
+void applyNtt(LagrangePolynomial& out, const IntPolynomial& in) {
+    const vector<int32_t>& input = in.coeffs;
+    vector<uint64_t>& output = out.coeffs;
+    const int32_t N = out.N;
+
+    for (int i = 0; i < N; i++) {
+        uint64_t inputValue = input[i] < 0 ? input[i] + MODULUS : input[i];
+        output[i] = modMul(inputValue, phi_normal_2[i]);
+    }
+    bitRevShuffle(output, N);
+    int32_t wbarr = 0;
+
+    // Loop for the NTT algorithm
+    for (int transSize = 2; transSize <= N; transSize *= 2) {
+        uint64_t wb = 1;
+        for (int t = 0; t < (transSize >> 1); t++) {
+            for (int trans = 0; trans < (N / transSize); trans++) {
+                int i = trans * transSize + t;
+                int j = i + (transSize >> 1);
+
+                // Perform butterfly operations
+                uint64_t a = output[i];
+                uint64_t b = (wb == 1) ? output[j] : modMul(output[j], wb);
+                output[i] = modAdd(a, b);
+                output[j] = modSub(a, b);
+            }
+            wb = wb_normal_2[wbarr++];
+        }
+    }
+}
+
+void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial& in) {
     const vector<Torus>& input = in.coeffs;
     vector<uint64_t>& output = out.coeffs;
     const int32_t N = out.N;
@@ -39,12 +71,12 @@ void applyNtt(LagrangePolynomial& out, const TorusPolynomial& in) {
     }
 }
 
-void applyIntt(TorusPolynomial& out, LagrangePolynomial& in) {
+void applyIntt(IntPolynomial& out, LagrangePolynomial& in) {
     vector<uint64_t>& input = in.coeffs;
     int32_t N = in.N;
     LagrangePolynomial temp(N);
     vector<uint64_t>& tmp = temp.coeffs;
-    vector<Torus>& output = out.coeffs;
+    vector<int32_t>& output = out.coeffs;
     int inv = 0;
     bitRevShuffle(input, N);
     for (int transSize = 2; transSize <= N; transSize = transSize * 2) {
@@ -68,7 +100,7 @@ void applyIntt(TorusPolynomial& out, LagrangePolynomial& in) {
 
     uint64_t med = MODULUS / 2;
     for (int i = 0; i < N; i++) {
-        output[i] = (Torus)((tmp[i] & 0xffffffff) - (tmp[i] > med));
+        output[i] = (int32_t)((tmp[i] & 0xffffffff) - (tmp[i] > med));
     }
 }
 
@@ -133,4 +165,28 @@ uint64_t modMul(uint64_t x, uint64_t y) {
         return (plus - minus);
     }
     return MODULUS - minus + plus;
+}
+
+// output_j = aj * bj mod p
+void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {
+    const auto N = output.size();
+    for (auto j = 0; j < N; j++) {
+        output[j] = modMul(coeffsA[j], coeffsB[j]);
+    }
+}
+
+// b += a * s mod p
+void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
+    const auto N = coeffsB.size();
+    for (auto j = 0; j < N; j++) {
+        auto tmp = modMul(coeffsA[j], coeffsS[j]);
+        coeffsB[j] = modAdd(coeffsB[j], tmp);
+    }
+}
+
+// b = aN * sN
+void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const LagrangePolynomial& s) {
+//    LagrangePolynomial sDft {N};
+//    applyNtt(sDft, s);
+    modularAccumulate(b.coeffs, a.coeffs, s.coeffs);
 }

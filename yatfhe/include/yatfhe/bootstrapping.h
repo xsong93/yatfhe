@@ -6,9 +6,9 @@
 #define HLS_YATFHE_BOOTSTRAPPING_H
 
 #include <vector>
-#include "tlwe.h"
-#include "trgsw.h"
-#include "yatfhe_parameters.h"
+#include "yatfhe/tlwe.h"
+#include "yatfhe/trgsw.h"
+#include "yatfhe/yatfhe_parameters.h"
 
 using namespace std;
 
