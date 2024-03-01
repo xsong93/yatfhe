@@ -46,14 +46,6 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 
 void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, int mu, const YatfheParameters& param);
 
-//void trgswInitKey(TrgswKey& trgswKey, TrlweKey& trlweKey, const YatfheParameters& param);
-//
-//void initTrgswSample(Trgsw& trgsw, const YatfheParameters& param);
-//
-//void initTrgswDftSample(TrgswDft &trgswDftSample, const YatfheParameters& param);
-
 void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& param);
-
-//void deleteTrgswKey(TrgswKey& trgswKey);
 
 #endif //HLS_YATFHE_TRGSW_H

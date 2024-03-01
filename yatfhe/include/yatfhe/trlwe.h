@@ -68,14 +68,6 @@ struct TrlweKey {
         sDft(k, LagrangePolynomial(N)) {};
 };
 
-//void newBinaryTrlweKey(TrlweKey& trlweKey, const YatfheParameters& param);
-//
-//void initTrlweKey(TrlweKey& key, int N, int k);
-//
-//void initTrlweSample(Trlwe& trlwe, int k, int N);
-//
-//void initTrlweDftSample(TrlweDft& trlweDft, int k, int N);
-
 void trlweKeyGen(TrlweKey& key, int N, int k);
 
 void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
@@ -89,11 +81,5 @@ void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput);
 
 void gadgetDecomposition(DecomposedTrlwe& output, Trlwe& input, const YatfheParameters& param);
-
-//void deleteRlweKey(TrlweKey& key);
-//
-//void deleteRlweSample(Trlwe& sample);
-//
-//void deleteRlweDftSample(TrlweDft& sample);
 
 #endif //HLS_YATFHE_TRLWE_H

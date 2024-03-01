@@ -22,10 +22,6 @@ struct LagrangePolynomial {
         coeffs(N, value) {};
 };
 
-void initTorusPolynomial(TorusPolynomial& torusPolynomial, int N);
-
-void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, int N);
-
 void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, int value, int position);
 
 void generateTestPolynomial(TorusPolynomial& v, int modP, int modQ);
@@ -45,9 +41,5 @@ void polynomialAdd(TorusPolynomial& res, const IntPolynomial& poly1, const Torus
 void polynomialAddSubOffset(TorusPolynomial& poly, int offset, bool isAdd);
 
 void polynomialSub(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2);
-
-void deletePolynomial(TorusPolynomial& polynomial);
-
-void deletePolynomial(LagrangePolynomial& polynomial);
 
 #endif //HLS_YATFHE_POLYNOMIAL_H

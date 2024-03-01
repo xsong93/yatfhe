@@ -9,18 +9,6 @@
 
 using namespace std;
 
-//void initTlweKey(TlweKey& key, const int n, const double sigma) {
-//    key.n = n;
-//    key.sigma = sigma;
-////    key.bskDft = new Integer[n];
-//    key.s.resize(n);
-//}
-
-//void newBinaryTlweKey(TlweKey& key, const YatfheParameters& param) {
-//    initTlweKey(key, param.n, param.lweStdDev);
-//    lweKeyGen(key, param.n);
-//}
-
 void lweKeyGen(TlweKey& key, const int n) {
     uniform_int_distribution<int> distribution(0, 1);
     for (int i = 0; i < n; i++) {
@@ -28,11 +16,6 @@ void lweKeyGen(TlweKey& key, const int n) {
     }
 //    printArray(key.s, "TlweKey");
 }
-
-//void initTlweSample(Tlwe& tlwe, int n) {
-//    tlwe.a.resize(n);
-//    tlwe.n = n;
-//}
 
 // b = aj * sj + u + e
 void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key) {
@@ -95,8 +78,3 @@ void tlweCopy(Tlwe& output, Tlwe& input) {
     }
     output.b = input.b;
 }
-
-//void deleteLweKey(TlweKey& key) {
-////    delete key.bskDft;
-////    key.bskDft = nullptr;
-//}

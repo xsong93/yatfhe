@@ -6,16 +6,6 @@
 #include "numeric_functions.h"
 #include "ntt.h"
 
-void initTorusPolynomial(TorusPolynomial& torusPolynomial, const int N) {
-    torusPolynomial.coeffs.resize(N);
-    torusPolynomial.N = N;
-}
-
-void initLagrangePolynomial(LagrangePolynomial& lagrangePolynomial, const int N) {
-    lagrangePolynomial.coeffs.resize(N);
-    lagrangePolynomial.N = N;
-}
-
 int validateRotator(const int a, const int N) {
     int aTrue = a % (2 * N);
     if (aTrue < 0) {
@@ -117,14 +107,4 @@ void polynomialSub(TorusPolynomial& res, const IntPolynomial& poly1, const Torus
     for (int i = 0; i < N; i++) {
         res.coeffs[i] = poly1.coeffs[i] - poly2.coeffs[i];
     }
-}
-
-void deletePolynomial(TorusPolynomial& polynomial) {
-//    delete polynomial.coeffs;
-//    polynomial.coeffs = nullptr;
-}
-
-void deletePolynomial(LagrangePolynomial& polynomial) {
-//    delete polynomial.coeffs;
-//    polynomial.coeffs = nullptr;
 }

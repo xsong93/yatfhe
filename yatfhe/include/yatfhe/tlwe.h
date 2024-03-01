@@ -40,12 +40,6 @@ struct TlweKeySwitchingKey {
     //todo
 };
 
-//void initTlweKey(TlweKey& key, int n, double sigma);
-//
-//void initTlweSample(Tlwe& tlwe, int n);
-//
-//void newBinaryTlweKey(TlweKey& key, const YatfheParameters& param);
-
 void lweKeyGen(TlweKey& result, int n);
 
 void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input);
@@ -59,7 +53,5 @@ void lweKeySwitch(Tlwe& output, Tlwe& keySwitchingKey, Tlwe& input, YatfheParame
 void lweSubTo(Tlwe& output, Tlwe& input);
 
 void tlweCopy(Tlwe& output, Tlwe& input);
-
-//void deleteLweKey(TlweKey& key);
 
 #endif //HLS_YATFHE_TLWE_H
