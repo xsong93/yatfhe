@@ -2,6 +2,7 @@
 // Created by Xintong Song on 2023/12/25.
 //
 #include <random>
+#include <iostream>
 #include "numeric_functions.h"
 #include "ntt.h"
 #include "torus.h"
@@ -34,16 +35,6 @@ double torus32ToDouble(const Torus in) {
     return double(in) / twoP32;
 }
 
-Torus intToTorus32(const int in) {
-    uint64_t phase64 = in * twoP32;
-    //floor to the nearest multiples of interv
-    return phase64 >> 32;
-}
-
-int32_t torus32ToInt(const Torus in) {
-    return (int32_t) in / twoP32;
-};
-
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {
     uint64_t interv = ((UINT64_C(1) << 63) / Msize) * 2; // width of each interval
     uint64_t phase64 = mu * interv;
@@ -56,7 +47,7 @@ int32_t modSwitchFromTorus32(Torus phase, int32_t Msize) {
     uint64_t half_interval = interv / 2; // begin of the first intervall
     uint64_t phase64 = (uint64_t(phase) << 32) + half_interval;
     //floor to the nearest multiples of interv
-    return phase64 / interv;
+    return (phase >= 0) ? (phase64 / interv) : (phase64 / interv - Msize);
 }
 
 // offset = Bg/2 * (2^(32-Bgbit) + 2^(32-2*Bgbit) + ... + 2^(32-l*Bgbit))

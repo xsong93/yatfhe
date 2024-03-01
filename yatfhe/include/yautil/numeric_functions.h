@@ -26,10 +26,6 @@ Torus doubleToTorus32(double d);
 
 double torus32ToDouble(Torus in);
 
-Torus intToTorus32(int in);
-
-int32_t torus32ToInt(Torus in);
-
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
 
 std::vector<Torus> genPowersOfBgbit(int bgBit, int l);
