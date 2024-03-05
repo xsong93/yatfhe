@@ -38,7 +38,7 @@ struct TrgswKey {
 
     explicit TrgswKey(const YatfheParameters& p) :
         l(p.l),
-        bgBit(p.bgBit),
+        bgBit(p.radixBits),
         trlweKey(TrlweKey(p.k, p.N)) {};
 };
 

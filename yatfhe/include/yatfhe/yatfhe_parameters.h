@@ -38,6 +38,7 @@ struct YatfheParameters {
 #else
     // From TFHE
     // LWE params
+    int torusBits {32};
     int n {630};
     double lweStdDev {2.98023e-08}; // 2^-15
     // RLWE params
@@ -47,13 +48,13 @@ struct YatfheParameters {
     // RGSW params
     // const int l = 6, Bg_bit = 6;
     int l {3};
-    int bgBit {7};
+    int radixBits {7};
     // KS params
     int t {8}; // ks decomposition length
     int baseBit {2}; // log2(base)
-    int bg {1 << bgBit};  // decomposition base: a power of 2
-    int halfBg {bg / 2};
-    int maskMod {bg - 1};
+    int radixB {1 << radixBits};  // decomposition base: a power of 2
+    int bHalf {radixB / 2};
+    int maskMod {radixB - 1};
     int unfolding {1};
     int torusBase {8}; // p|q
 

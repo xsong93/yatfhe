@@ -49,24 +49,22 @@ int32_t modSwitchFromTorus32(Torus phase, int32_t Msize) {
     return (phase >= 0) ? (phase64 / interv) : (phase64 / interv - Msize);
 }
 
-// offset = Bg/2 * (2^(32-Bgbit) + 2^(32-2*Bgbit) + ... + 2^(32-l*Bgbit))
-int32_t genOffset(const int bgBit, const int halfBg, const int l) {
-    int32_t temp1 = 0;
-    for (int32_t i = 0; i < l; ++i) {
-        int32_t temp0 = 1 << (32 - (i + 1) * bgBit);
-        temp1 += temp0;
+// offset = B/2 * (2^(torusBits - radixBits) + 2^(torusBits - 2 * radixBits) + ... + 2^(torusBits - l * radixBits))
+int genOffset(const int radixBits, const int bHalf, const int l, const int torusBits) {
+    int res = 0;
+    for (auto i = 1; i <= l; ++i) {
+        res += 1 << (torusBits - i * radixBits);
     }
-    return temp1 * halfBg;
+    return res * bHalf;
 }
 
-// 1/B, ..., 1/B^l, B = 2^b
-std::vector<Torus> genPowersOfBgbit(const int bgBit, const int l) {
-    std::vector<Torus> h(l);
-    for (auto i = 0; i < l; i++) {
-        int power = (32 - (i + 1) * bgBit);
-        h[i] = 1 << power; // 1/(bg^(i + 1)) as Torus32: 2^32 * 2^(-b*(i+1))
+// g = (1/B, ..., 1/B^l), B = 2^radixBits
+std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int torusBits) {
+    std::vector<Torus> g(l);
+    for (auto i = 1; i <= l; i++) {
+        g[i - 1] = 1 << (torusBits - i * radixBits); // 1/(B^(i) as Torus: 2^torusBits * 2^(-radixBits*i)
     }
-    return h;
+    return g;
 }
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const int N) {

@@ -36,7 +36,7 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, int mu, const YatfheParameters& param) {
     const auto k = param.k;
     const auto l = param.l;
-    const auto g = genPowersOfBgbit(param.bgBit, l);
+    const auto g = genGadgetVector(param.radixBits, l, param.torusBits);
 
     // add the diagonal matrix (mu * G^T)_ijk to the output
     for (auto lvl = 0; lvl < l; lvl++) {

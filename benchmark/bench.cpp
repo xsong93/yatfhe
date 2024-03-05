@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     TorusPolynomial v(param.N);
     generateTestPolynomial(v, 8, 2 * param.N);
     Tlwe input(param.n);
-    Tlwe output {param.N * (param.k + 1)};
+    Tlwe output {param.N * param.k};
     symEncTlweSample(input, mu, tlweKey);
 
     cout <<"msg:"<<torus32ToDouble(mu)<<endl;

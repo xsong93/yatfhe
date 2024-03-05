@@ -64,7 +64,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& par
 
     // ntt
     for (auto lvl = 0; lvl < l; lvl++) {
-        applyNttForAB(decomp.rlweDfts[lvl], decomp.rlwes[lvl]);
+        applyNttForAB(decomp.rlweDfts[lvl], decomp.rlwes[lvl]); // todo:debug
     }
 
     // accum += bsk (*) accum, point-wisely
@@ -81,7 +81,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& par
         }
     }
 
-    applyInttForAB(accum, accDft); // intt
+    applyInttForAB(accum, accDft); // intt  // todo:debug
 }
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {

@@ -85,18 +85,18 @@ void gadgetDecomposition(DecomposedTrlwe& output, Trlwe& input, const YatfhePara
     const auto k = param.k;
     const auto N = param.N;
     const auto l = param.l;
-    const auto bgBit = param.bgBit;
+    const auto radixBits = param.radixBits;
     const auto maskMod = param.maskMod;
-    const auto halfBg = param.halfBg;
-    const auto offset = genOffset(bgBit, halfBg, l);
+    const auto bHalf = param.bHalf;
+    const auto offset = genOffset(radixBits, bHalf, l, param.torusBits);
     for (auto row = 0; row < k + 1; row++) {
         auto& currIn = (row < k) ? input.a[row] : input.b;
         polynomialAddSubOffset(currIn, offset, true);
         for (auto lvl = 0; lvl < l; lvl++) {
-            const auto decal = 32 - (lvl + 1) * bgBit;
+            const auto decal = 32 - (lvl + 1) * radixBits;
             for (auto j = 0; j < N; j++) {
                 auto& currOut = (row < k) ? output.rlwes[lvl].a[row] : output.rlwes[lvl].b;
-                currOut.coeffs[j] = (currIn.coeffs[j] >> decal) & maskMod - halfBg;
+                currOut.coeffs[j] = (currIn.coeffs[j] >> decal) & maskMod - bHalf;
             }
         }
         polynomialAddSubOffset(currIn, offset, false);

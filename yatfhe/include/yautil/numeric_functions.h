@@ -28,9 +28,9 @@ double torus32ToDouble(Torus in);
 
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
 
-std::vector<Torus> genPowersOfBgbit(int bgBit, int l);
+std::vector<Torus> genGadgetVector(int radixBits, int l, int torusBits);
 
-int32_t genOffset(int bgBit, int halfBg, int l);
+int genOffset(const int radixBits, const int bHalf, const int l, const int torusBits);
 
 void initCoeffsViaUniformDistribution(vector<Torus>& coeffs, int N);
 
