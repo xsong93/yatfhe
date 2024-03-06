@@ -50,12 +50,14 @@ void lweKeySwitch(Tlwe& output, Tlwe& keySwitchingKey, Tlwe& input, YatfheParame
     output.b = input.b; // init output as (0, ..., 0, b)
     auto n = param.n;
     auto t = param.t;
-    auto mask = param.maskMod;
-    auto precOffset = 1 << (32 - (1 + param.baseBit * t)); //precision
+    auto maskMod = param.maskMod;
+    auto torusBits = param.torusBits;
+    auto precOffset = 1 << (torusBits - (1 + param.baseBit * t)); //precision
+    auto g = genGadgetVector(param.radixBits, t, torusBits);
     for (auto i = 0; i < n; i++) {
         auto barai = input.a[i] + precOffset;
-        for (auto j = 0; j < t; j++) {
-            auto aij = (barai >> (32 - (j + 1) * param.baseBit)) & mask;
+        for (auto j = 1; j <= t; j++) {
+            auto aij = (barai >> (torusBits - j * param.baseBit)) & maskMod;
             if (aij != 0) {
                 lweSubTo(output, keySwitchingKey);
             }

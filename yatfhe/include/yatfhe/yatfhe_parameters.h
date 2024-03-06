@@ -48,11 +48,11 @@ struct YatfheParameters {
     // RGSW params
     // const int l = 6, Bg_bit = 6;
     int l {3};
-    int radixBits {7};
+    int radixBits {7}; // b
     // KS params
     int t {8}; // ks decomposition length
     int baseBit {2}; // log2(base)
-    int radixB {1 << radixBits};  // decomposition base: a power of 2
+    int radixB {1 << radixBits};  // 2^b
     int bHalf {radixB / 2};
     int maskMod {radixB - 1};
     int unfolding {1};
