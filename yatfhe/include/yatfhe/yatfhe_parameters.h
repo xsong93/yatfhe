@@ -50,11 +50,10 @@ struct YatfheParameters {
     int l {3};
     int radixBits {7}; // b
     // KS params
-    int t {8}; // ks decomposition length
-    int baseBit {2}; // log2(base)
-    int radixB {1 << radixBits};  // 2^b
-    int bHalf {radixB / 2};
-    int maskMod {radixB - 1};
+    int t {torusBits / radixBits}; // ks decomposition length
+    int radixBase {1 << radixBits};  // 2^b
+    int bHalf {radixBase / 2};
+    int digitMask {radixBase - 1};
     int unfolding {1};
     int torusBase {8}; // p|q
 

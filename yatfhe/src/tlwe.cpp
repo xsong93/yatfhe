@@ -27,7 +27,7 @@ void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key)
 }
 
 // mu = b - as
-double symDecTlweSample(Tlwe& in, TlweKey& key) {
+double symDecTlweSample(Tlwe& in, const TlweKey& key) {
     auto n = key.n;
     Torus aXs= 0;
     for (int i = 0; i < n; i++) {
@@ -46,18 +46,16 @@ void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
 }
 
 // Basically, the idea is to homomorphically cancel the secret key and re-encrypt it under a new secret key.
-void lweKeySwitch(Tlwe& output, Tlwe& keySwitchingKey, Tlwe& input, YatfheParameters& param) {
-    output.b = input.b; // init output as (0, ..., 0, b)
-    auto n = param.n;
-    auto t = param.t;
-    auto maskMod = param.maskMod;
-    auto torusBits = param.torusBits;
-    auto precOffset = 1 << (torusBits - (1 + param.baseBit * t)); //precision
-    auto g = genGadgetVector(param.radixBits, t, torusBits);
-    for (auto i = 0; i < n; i++) {
-        auto barai = input.a[i] + precOffset;
-        for (auto j = 1; j <= t; j++) {
-            auto aij = (barai >> (torusBits - j * param.baseBit)) & maskMod;
+void lweKeySwitch(Tlwe& output, const Tlwe& keySwitchingKey, Tlwe& input, const YatfheParameters& param) {
+    output.b = input.b; // init output as (0,..., 0, b)
+    auto precOffset = 1 << (param.torusBits - (1 + param.radixBits * param.t)); //precision
+    auto g = genGadgetVector(param.radixBits, param.t, param.torusBits);
+    for (auto i = 0; i < param.n; i++) {
+        uint32_t barai = input.a[i] + precOffset;
+
+        // signed decomp
+        for (auto j = 1; j <= param.t; j++) {
+            auto aij = (barai >> (param.torusBits - j * param.radixBits)) & param.digitMask;
             if (aij != 0) {
                 lweSubTo(output, keySwitchingKey);
             }
@@ -66,7 +64,7 @@ void lweKeySwitch(Tlwe& output, Tlwe& keySwitchingKey, Tlwe& input, YatfheParame
 }
 
 // output -= input
-void lweSubTo(Tlwe& output, Tlwe& input) {
+void lweSubTo(Tlwe& output, const Tlwe& input) {
     auto n = output.n;
     output.b -= input.b;
     for (auto i = 0; i < n; i++) {
@@ -74,7 +72,7 @@ void lweSubTo(Tlwe& output, Tlwe& input) {
     }
 }
 
-void tlweCopy(Tlwe& output, Tlwe& input) {
+void tlweCopy(Tlwe& output, const Tlwe& input) {
     const auto n = input.n;
     for (auto i = 0; i < n; i++) {
         output.a[i] = input.a[i];

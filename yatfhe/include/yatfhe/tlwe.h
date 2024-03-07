@@ -46,12 +46,12 @@ void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input);
 
 void symEncTlweSample(Tlwe& tlweSample, Torus message, const TlweKey& key);
 
-double symDecTlweSample(Tlwe& in, TlweKey& key);
+double symDecTlweSample(Tlwe& in, const TlweKey& key);
 
-void lweKeySwitch(Tlwe& output, Tlwe& keySwitchingKey, Tlwe& input, YatfheParameters& param);
+void lweKeySwitch(Tlwe& output, const Tlwe& keySwitchingKey, Tlwe& input, const YatfheParameters& param);
 
-void lweSubTo(Tlwe& output, Tlwe& input);
+void lweSubTo(Tlwe& output, const Tlwe& input);
 
-void tlweCopy(Tlwe& output, Tlwe& input);
+void tlweCopy(Tlwe& output, const Tlwe& input);
 
 #endif //HLS_YATFHE_TLWE_H

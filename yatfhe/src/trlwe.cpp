@@ -86,7 +86,7 @@ void gadgetDecomposition(DecomposedTrlwe& output, Trlwe& input, const YatfhePara
     const auto N = param.N;
     const auto l = param.l;
     const auto radixBits = param.radixBits;
-    const auto maskMod = param.maskMod;
+    const auto maskMod = param.digitMask;
     const auto bHalf = param.bHalf;
     const auto offset = genOffset(radixBits, bHalf, l, param.torusBits);
     for (auto row = 0; row < k + 1; row++) {

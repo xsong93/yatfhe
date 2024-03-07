@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     TorusPolynomial v(param.N);
     generateTestPolynomial(v, 8, 2 * param.N);
     Tlwe input(param.n);
-    Tlwe output {param.N * param.k};
+    Tlwe output {param.n};
     symEncTlweSample(input, mu, tlweKey);
 
     cout <<"msg:"<<torus32ToDouble(mu)<<endl;
@@ -36,9 +36,11 @@ int main(int argc, char **argv) {
 
     trgswFunctionalBootstrapping(output, input, bsKey, v, param);
 //    printTlweAB(input, "input boot");
-    printTlweAB(output, "output boot");
-    double decAft = symDecTlweSample(output, tlweKey);
-    cout <<"decAft:"<<decAft<<endl;
+//    printTlweAB(output, "output boot");
+//    double decAft = symDecTlweSample(output, tlweKey);
+//    cout <<"decAft:"<<decAft<<endl;
+
+
 //    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);
 //    TLWE_KS_Key tlwe_ksk = tlwe_new_KS_key(key_tlwe, key_tlwe_out, t, baseBit);
 //    auto * input = static_cast<Torus *>(safe_aligned_malloc(sizeof(Torus) * (_EXECS * 4 + 1)));
