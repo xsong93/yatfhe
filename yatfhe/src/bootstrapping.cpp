@@ -1,29 +1,22 @@
 //
 // Created by Xintong Song on 2023/12/25.
 //
-#include <iostream>
 #include "yatfhe/trlwe.h"
 #include "yatfhe/bootstrapping.h"
-#include "yautil/numeric_functions.h"
+#include "yatfhe/keyswitching.h"
 #include "yatfhe/ntt.h"
-#include "yautil/tool.h"
-#include "yautil/time_counter.h"
 
-void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TorusPolynomial& v, const YatfheParameters& param) {
-    const auto n = param.n;
-    const auto N = param.N;
-    const auto k = param.k;
-    const auto N2 = N * 2;
-    ScaledTlwe inputModN2(N2, n);
-    Trlwe accum(k, N);
-    Tlwe tmp(param.N * param.k);
+void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
+    ScaledTlwe inputModN2(param.N * 2, param.n);
+    Trlwe accum(param.k, param.N);
+    Tlwe tmp(ksk.nCurrKey);
     rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     blindRotate(accum, bsk, inputModN2, param);
-    extractTlweFromTrlwe(tmp, accum, 0); // out = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    extractTlweFromTrlwe(tmp, accum, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
 //    swap(tmp, out); // todo: remove this swap after complete
     // todo: keyswitching
-//    lweKeySwitch(out, bsk, tmp);
+    tlweKeySwitch(out, ksk, tmp, param);
 //    printTrlweAB(accum, "accum");
 }
 
@@ -31,16 +24,12 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const Bootstrapp
  * Multiply the accumulator by X^sum(bara_i * s_i)
  * */
 void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
-    const auto n = param.n;
-    const auto k = param.k;
-    const auto N = param.N;
-    const auto aBar = input.a;
-    for (auto i = 0; i < n; i++) {
-        if (aBar[i] == 0) {
+    for (auto i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
             continue;
         }
-        Trlwe temp(k, N);
-        controlMux(temp, accum, aBar[i], bsk.bskDft[i], param); // todo:debug
+        Trlwe temp(param.k, param.N);
+        controlMux(temp, accum, input.a[i], bsk.bskDft[i], param); // todo:debug
         swap(accum, temp); // assign the previous result to accumulator
     }
 }

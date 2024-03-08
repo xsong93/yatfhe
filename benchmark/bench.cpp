@@ -5,6 +5,7 @@
 #include "yatfhe/bootstrapping.h"
 #include "yautil/time_counter.h"
 #include "yatfhe/yatfhe_parameters.h"
+#include "yatfhe/keyswitching.h"
 #include "yautil/control_helper.h"
 #include "yautil/numeric_functions.h"
 #include "yautil/tool.h"
@@ -19,10 +20,12 @@ int main(int argc, char **argv) {
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKey bsKey {param};
+    TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
     lweKeyGen(tlweKey, param.n);
     lweKeyGen(keyTlweOut, param.n);
     trlweKeyGen(trlweKey, param.N, param.k);
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
+    //todo: ksk gen
 
     Torus mu = doubleToTorus32(1.0 / 8);
     TorusPolynomial v(param.N);
@@ -34,7 +37,7 @@ int main(int argc, char **argv) {
     cout <<"msg:"<<torus32ToDouble(mu)<<endl;
     cout <<"decPre:"<<symDecTlweSample(input, tlweKey)<<endl;
 
-    trgswFunctionalBootstrapping(output, input, bsKey, v, param);
+    trgswFunctionalBootstrapping(output, input, bsKey, ksKey, v, param);
 //    printTlweAB(input, "input boot");
 //    printTlweAB(output, "output boot");
 //    double decAft = symDecTlweSample(output, tlweKey);

@@ -45,24 +45,6 @@ void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
     }
 }
 
-// Basically, the idea is to homomorphically cancel the secret key and re-encrypt it under a new secret key.
-void lweKeySwitch(Tlwe& output, const Tlwe& keySwitchingKey, Tlwe& input, const YatfheParameters& param) {
-    output.b = input.b; // init output as (0,..., 0, b)
-    auto precOffset = 1 << (param.torusBits - (1 + param.radixBits * param.t)); //precision
-    auto g = genGadgetVector(param.radixBits, param.t, param.torusBits);
-    for (auto i = 0; i < param.n; i++) {
-        uint32_t barai = input.a[i] + precOffset;
-
-        // signed decomp
-        for (auto j = 1; j <= param.t; j++) {
-            auto aij = (barai >> (param.torusBits - j * param.radixBits)) & param.digitMask;
-            if (aij != 0) {
-                lweSubTo(output, keySwitchingKey);
-            }
-        }
-    }
-}
-
 // output -= input
 void lweSubTo(Tlwe& output, const Tlwe& input) {
     auto n = output.n;

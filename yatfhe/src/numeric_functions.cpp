@@ -67,6 +67,10 @@ std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int t
     return g;
 }
 
+void signedGadgetDecomposition(vector<Torus>& res, const Torus input) {
+    // todo
+}
+
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const int N) {
     for (int j = 0; j < N; j++) {
         coeffs[j] = uniformTorus32Distrib(rng);

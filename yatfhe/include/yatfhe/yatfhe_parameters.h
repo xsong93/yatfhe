@@ -50,7 +50,7 @@ struct YatfheParameters {
     int l {3};
     int radixBits {7}; // b
     // KS params
-    int t {torusBits / radixBits}; // ks decomposition length
+    int ksLevel {torusBits / radixBits}; // ks decomposition length
     int radixBase {1 << radixBits};  // 2^b
     int bHalf {radixBase / 2};
     int digitMask {radixBase - 1};

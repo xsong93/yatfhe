@@ -9,6 +9,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/yatfhe_parameters.h"
+#include "yatfhe/keyswitching.h"
 
 using namespace std;
 
@@ -29,7 +30,7 @@ struct BootstrappingKey {
         bskDft(parameters.n,TrgswDft(parameters)) {};
 };
 
-void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TorusPolynomial& v, const YatfheParameters& param);
+void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
 
 void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param);
 

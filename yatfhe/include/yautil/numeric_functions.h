@@ -30,6 +30,8 @@ Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
 
 std::vector<Torus> genGadgetVector(int radixBits, int l, int torusBits);
 
+void signedGadgetDecomposition(vector<Torus>& res, const Torus input);
+
 int genOffset(const int radixBits, const int bHalf, const int l, const int torusBits);
 
 void initCoeffsViaUniformDistribution(vector<Torus>& coeffs, int N);
