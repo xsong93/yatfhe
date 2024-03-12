@@ -34,8 +34,8 @@ void signedGadgetDecomposition(vector<Torus>& res, const Torus input);
 
 int genOffset(const int radixBits, const int bHalf, const int l, const int torusBits);
 
-void initCoeffsViaUniformDistribution(vector<Torus>& coeffs, int N);
+void initCoeffsViaUniformDistribution(vector<Torus>& coeffs);
 
-void initCoeffsWithGaussianNoise(vector<Torus>& coeffs, Torus msg, int N, double sigma);
+void initCoeffsWithGaussianNoise(vector<Torus>& coeffs, Torus msg, double sigma);
 
 #endif //HLS_YATFHE_NUMERIC_FUNCTIONS_H

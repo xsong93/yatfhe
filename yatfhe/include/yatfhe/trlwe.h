@@ -74,6 +74,8 @@ void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
 
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);
 
+void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey);
+
 void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, int a);
 
 void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);

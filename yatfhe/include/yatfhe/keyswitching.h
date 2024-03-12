@@ -13,17 +13,17 @@ using namespace std;
 struct TlweKeySwitchingKey {
     vector<vector<Tlwe>> decomposedKsk;
     int nCurrKey {};
-    int nNewKey {};
+    int nTargetKey {};
     int level {};
 
-    TlweKeySwitchingKey(int nCurr, int nNew, int l) :
+    TlweKeySwitchingKey(int nCurr, int nTarget, int l) :
             nCurrKey(nCurr),
-            nNewKey(nNew),
+            nTargetKey(nTarget),
             level(l),
-            decomposedKsk(nCurr, vector<Tlwe>(l, Tlwe(nNew))) {};
+            decomposedKsk(nCurr, vector<Tlwe>(l, Tlwe(nTarget))) {};
 };
 
-void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TlweKey& currKey, const TlweKey& newKey, const YatfheParameters& param);
+void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param);
 
 void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param);
 

@@ -19,10 +19,10 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
         for (auto row = 0; row < k + 1; row++) {
             Trlwe& trlweSample = trgsw.trlweSamples[lvl][row];
             TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[lvl][row];
-            initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, N, sigma); // init b = 0 + e
+            initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, sigma); // init b = 0 + e
             applyNtt(trlweDftSample.b, trlweSample.b);
             for (auto col = 0; col < k; col++) {
-                initCoeffsViaUniformDistribution(trlweSample.a[col].coeffs, N); // init a
+                initCoeffsViaUniformDistribution(trlweSample.a[col].coeffs); // init a
                 applyNtt(trlweDftSample.a[col], trlweSample.a[col]);
                 applyNtt(trgswKey.trlweKey.sDft[col], trgswKey.trlweKey.s[col]);
                 modularAccumulate(trlweDftSample.b.coeffs, trlweDftSample.a[col].coeffs, trgswKey.trlweKey.sDft[col].coeffs);

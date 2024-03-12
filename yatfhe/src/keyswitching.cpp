@@ -3,10 +3,17 @@
 //
 #include "yautil/numeric_functions.h"
 #include "yatfhe/tlwe.h"
+#include "yatfhe/trlwe.h"
 #include "yatfhe/keyswitching.h"
 
-void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TlweKey& currKey, const TlweKey& newKey, const YatfheParameters& param) {
-
+void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param) {
+    TlweKey inKey(param.k * param.N);
+    convertTrlweKeyToTlweKey(inKey, currKey);
+    vector<Torus> sampleA(inKey.n * param.ksLevel);
+    vector<Torus> sampleE(inKey.n * param.ksLevel);
+    initCoeffsViaUniformDistribution(sampleA);
+    initCoeffsWithGaussianNoise(sampleE, 0, param.lweStdDev);
+    // todo
 }
 
 // Basically, the idea is to homomorphically cancel the secret key and re-encrypt it under a new secret key.

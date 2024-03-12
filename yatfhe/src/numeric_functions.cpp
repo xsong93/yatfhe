@@ -71,14 +71,14 @@ void signedGadgetDecomposition(vector<Torus>& res, const Torus input) {
     // todo
 }
 
-void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const int N) {
-    for (int j = 0; j < N; j++) {
-        coeffs[j] = uniformTorus32Distrib(rng);
+void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {
+    for (int& coeff : coeffs) {
+        coeff = uniformTorus32Distrib(rng);
     }
 }
 
-void initCoeffsWithGaussianNoise(std::vector<Torus>& coeffs, const Torus msg, const int N, const double sigma) {
-    for (int j = 0; j < N; j++) {
-        coeffs[j] = addGaussianNoise(msg, sigma);
+void initCoeffsWithGaussianNoise(std::vector<Torus>& coeffs, const Torus msg, const double sigma) {
+    for (int & coeff : coeffs) {
+        coeff = addGaussianNoise(msg, sigma);
     }
 }

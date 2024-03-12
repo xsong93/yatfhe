@@ -56,6 +56,16 @@ void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, const int index) {
     out.b = in.b.coeffs[index];
 }
 
+// flatten a trlwe key as a tlwe key
+void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey) {
+    for (auto i = 0; i < trlweKey.k; i++) {
+        const auto N = trlweKey.s[i].N;
+        for (auto j = 0; j < N; j++) {
+            tlweKey.s[i * N + j] = trlweKey.s[i].coeffs[j];
+        }
+    }
+}
+
 // res = X^a * input - input
 void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, const int a) {
     const auto size = input.a.size();
