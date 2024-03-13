@@ -6,14 +6,27 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/keyswitching.h"
 
+/**
+ * The key switching key is a LWE encryption of decomposed current secret key under target secret key.
+ * ksk = ksk[i,j] <- TLWE_s'(s_i * B^-j), where i in [0, j*N), j in [0, ks_level)
+ * @param ksk TlweKeySwitchingKey
+ * @param currKey TrlweKey: Current key to be switched.
+ * @param targetKey TlweKey: Target key remaining afterwards.
+ * @param param YatfheParameters
+ */
 void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param) {
     TlweKey inKey(param.k * param.N);
     convertTrlweKeyToTlweKey(inKey, currKey);
-    vector<Torus> sampleA(inKey.n * param.ksLevel);
-    vector<Torus> sampleE(inKey.n * param.ksLevel);
-    initCoeffsViaUniformDistribution(sampleA);
-    initCoeffsWithGaussianNoise(sampleE, 0, param.lweStdDev);
-    // todo
+//    vector<Torus> sampleA(inKey.n * param.ksLevel * targetKey.n);
+//    vector<Torus> sampleE(inKey.n * param.ksLevel);
+//    initCoeffsViaUniformDistribution(sampleA);
+//    initCoeffsWithGaussianNoise(sampleE, 0, param.lweStdDev);
+    for (auto i = 0; i < inKey.n; i++) {
+        auto sOverB = decomposeOverB(inKey.s[i], param);
+        for (auto j = 0; j < param.ksLevel; j++) {
+            symEncTlweSample(ksk.decomposedKsk[i][j], sOverB[j], targetKey);
+        }
+    }
 }
 
 // Basically, the idea is to homomorphically cancel the secret key and re-encrypt it under a new secret key.

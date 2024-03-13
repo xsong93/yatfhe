@@ -30,9 +30,13 @@ Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
 
 std::vector<Torus> genGadgetVector(int radixBits, int l, int torusBits);
 
+UnsignedInteger recompose(const std::vector<UnsignedInteger>& digits, const YatfheParameters& param);
+
+std::vector<UnsignedInteger> decomposeOverB(const UnsignedInteger in, const YatfheParameters& param);
+
 void signedGadgetDecomposition(vector<Torus>& res, const Torus input);
 
-int genOffset(const int radixBits, const int bHalf, const int l, const int torusBits);
+int genOffset(int radixBits, int bHalf, int l, int torusBits);
 
 void initCoeffsViaUniformDistribution(vector<Torus>& coeffs);
 

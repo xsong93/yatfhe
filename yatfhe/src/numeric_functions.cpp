@@ -5,6 +5,7 @@
 #include <iostream>
 #include "yautil/numeric_functions.h"
 #include "yatfhe/torus.h"
+#include "yatfhe/yatfhe_parameters.h"
 
 using namespace std;
 random_device rd;
@@ -65,6 +66,22 @@ std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int t
         g[i - 1] = 1 << (torusBits - i * radixBits); // 1/(B^(i) as Torus: 2^torusBits * 2^(-radixBits*i)
     }
     return g;
+}
+
+UnsignedInteger recompose(const std::vector<UnsignedInteger>& digits, const YatfheParameters& param) {
+    std::vector<UnsignedInteger> shiftedDigits(digits.size());
+    for (auto i = 1; i <= digits.size(); ++i) {
+        shiftedDigits[i - 1] = digits[i] << (param.torusBits - i * param.radixBits);
+    }
+    return std::accumulate(shiftedDigits.begin(), shiftedDigits.end(), 0u);
+}
+
+std::vector<UnsignedInteger> decomposeOverB(const UnsignedInteger in, const YatfheParameters& param) {
+    std::vector<UnsignedInteger> output(param.ksLevel);
+    for (int i = 1; i <= output.size(); ++i) {
+        output[i - 1] = in << (param.torusBits - i * param.radixBits);
+    }
+    return output;
 }
 
 void signedGadgetDecomposition(vector<Torus>& res, const Torus input) {

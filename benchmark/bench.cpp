@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     lweKeyGen(keyTlweOut, param.n);
     trlweKeyGen(trlweKey, param.N, param.k);
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
-    //todo: ksk gen
+    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKey, param);
 
     Torus mu = doubleToTorus32(1.0 / 8);
     TorusPolynomial v(param.N);

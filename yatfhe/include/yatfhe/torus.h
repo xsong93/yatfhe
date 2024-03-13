@@ -9,11 +9,15 @@
 #include <vector>
 //#include <cstdint>
 
+using Binary = int16_t;
+
 //#ifdef TORUS32
 using Torus = int32_t;
+using UnsignedInteger = uint32_t;
 //#undef USE_COMPRESSED_TRLWE
 //#else
 //using Torus = uint64_t;
+//using UnsignedInteger = uint64_t;
 //#endif
 
 /* Polynomials */
@@ -32,7 +36,6 @@ struct TorusPolynomial {
             N(N) {};
 };
 
-using Binary = int16_t;
 using IntPolynomial = TorusPolynomial;
 using Integer = Torus;
 
