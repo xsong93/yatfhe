@@ -3,7 +3,7 @@
 //
 #include <iostream>
 #include "yatfhe/polynomial.h"
-#include "yautil/numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"
 
 int validateRotator(const int a, const int N) {

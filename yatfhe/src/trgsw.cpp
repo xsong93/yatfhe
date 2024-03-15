@@ -3,7 +3,8 @@
 //
 #include <iostream>
 #include "yatfhe/yatfhe_parameters.h"
-#include "yautil/numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
+#include "yatfhe/gadget_decomposition.h"
 #include "yautil/tool.h"
 #include "yatfhe/ntt.h"
 #include "yatfhe/trgsw.h"

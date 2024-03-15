@@ -9,8 +9,6 @@
 #include <vector>
 //#include <cstdint>
 
-using Binary = int16_t;
-
 //#ifdef TORUS32
 using Torus = int32_t;
 using UnsignedInteger = uint32_t;
@@ -37,6 +35,8 @@ struct TorusPolynomial {
 };
 
 using IntPolynomial = TorusPolynomial;
+using BinPolynomial = IntPolynomial;
 using Integer = Torus;
+using Binary = Integer;
 
 #endif //HLS_YATFHE_TORUS_H

@@ -57,7 +57,7 @@ struct DecomposedTrlwe {
 };
 
 struct TrlweKey {
-    std::vector<IntPolynomial> s; // k
+    std::vector<BinPolynomial> s; // k
     std::vector<LagrangePolynomial> sDft; // k
     int k;
 //    double sigma;
@@ -81,7 +81,5 @@ void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, int a);
 void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);
 
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput);
-
-void gadgetDecomposition(DecomposedTrlwe& output, Trlwe& input, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRLWE_H

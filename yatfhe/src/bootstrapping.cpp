@@ -5,6 +5,7 @@
 #include "yatfhe/bootstrapping.h"
 #include "yatfhe/keyswitching.h"
 #include "yatfhe/ntt.h"
+#include "yatfhe/gadget_decomposition.h"
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2(param.N * 2, param.n);
@@ -49,7 +50,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& par
     TrlweDft accDft(k, N);
     DecomposedTrlwe decomp(l, k, N);
 
-    gadgetDecomposition(decomp, accum, param); // gadget decomposition, G^-1 * TGLWE, T_(N,q)^(k+1) -> Z_N^(k+1)*l
+    gadgetDecomposeTrlwe(decomp, accum, param); // gadget decomposition, G^-1 * TGLWE, T_(N,q)^(k+1) -> Z_N^(k+1)*l
 
     // ntt
     for (auto lvl = 0; lvl < l; lvl++) {

@@ -4,13 +4,13 @@
 #include <iostream>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
-#include "yautil/numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
 
 using namespace std;
 
 void lweKeyGen(TlweKey& key, const int n) {
-    uniform_int_distribution<int> distribution(0, 1);
+    uniform_int_distribution<Binary> distribution(0, 1);
     for (int i = 0; i < n; i++) {
         key.s[i] = distribution(rng);
     }

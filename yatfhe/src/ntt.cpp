@@ -5,7 +5,7 @@
 #include "yatfhe/ntt.h"
 #include "yautil/ntt_constants.h"
 #include "yautil/tool.h"
-#include "yautil/numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 
 using namespace std;
 

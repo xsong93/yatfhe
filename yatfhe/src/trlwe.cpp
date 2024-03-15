@@ -7,13 +7,13 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
-#include "yautil/numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
 
 using namespace std;
 
 void trlweKeyGen(TrlweKey& key, const int N, const int k) {
-    uniform_int_distribution<int> distribution(0, 1);
+    uniform_int_distribution<Binary> distribution(0, 1);
     for (int i = 0; i < k; i++) {
         for (int j = 0; j < N; j++) {
             key.s[i].coeffs[j] = distribution(rng);
@@ -87,28 +87,5 @@ void copyTrlwe(Trlwe& target, const Trlwe& source, const bool copyA, const bool 
         if (copyB) {
             target.b.coeffs[j] = source.b.coeffs[j];
         }
-    }
-}
-
-// G^-1 * Trlwe = DecomposedTrlwe
-void gadgetDecomposition(DecomposedTrlwe& output, Trlwe& input, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto N = param.N;
-    const auto l = param.l;
-    const auto radixBits = param.radixBits;
-    const auto maskMod = param.digitMask;
-    const auto bHalf = param.bHalf;
-    const auto offset = genOffset(radixBits, bHalf, l, param.torusBits);
-    for (auto row = 0; row < k + 1; row++) {
-        auto& currIn = (row < k) ? input.a[row] : input.b;
-        polynomialAddSubOffset(currIn, offset, true);
-        for (auto lvl = 0; lvl < l; lvl++) {
-            const auto decal = 32 - (lvl + 1) * radixBits;
-            for (auto j = 0; j < N; j++) {
-                auto& currOut = (row < k) ? output.rlwes[lvl].a[row] : output.rlwes[lvl].b;
-                currOut.coeffs[j] = (currIn.coeffs[j] >> decal) & maskMod - bHalf;
-            }
-        }
-        polynomialAddSubOffset(currIn, offset, false);
     }
 }

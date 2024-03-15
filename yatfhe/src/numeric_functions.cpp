@@ -3,7 +3,7 @@
 //
 #include <random>
 #include <iostream>
-#include "yautil/numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 #include "yatfhe/torus.h"
 #include "yatfhe/yatfhe_parameters.h"
 
@@ -48,44 +48,6 @@ int32_t modSwitchFromTorus32(Torus phase, int32_t Msize) {
     uint64_t phase64 = (uint64_t(phase) << 32) + half_interval;
     //floor to the nearest multiples of interv
     return (phase >= 0) ? (phase64 / interv) : (phase64 / interv - Msize);
-}
-
-// offset = B/2 * (2^(torusBits - radixBits) + 2^(torusBits - 2 * radixBits) + ... + 2^(torusBits - l * radixBits))
-int genOffset(const int radixBits, const int bHalf, const int l, const int torusBits) {
-    int res = 0;
-    for (auto i = 1; i <= l; ++i) {
-        res += 1 << (torusBits - i * radixBits);
-    }
-    return res * bHalf;
-}
-
-// g = (1/B, ..., 1/B^l), B = 2^radixBits
-std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int torusBits) {
-    std::vector<Torus> g(l);
-    for (auto i = 1; i <= l; i++) {
-        g[i - 1] = 1 << (torusBits - i * radixBits); // 1/(B^(i) as Torus: 2^torusBits * 2^(-radixBits*i)
-    }
-    return g;
-}
-
-UnsignedInteger recompose(const std::vector<UnsignedInteger>& digits, const YatfheParameters& param) {
-    std::vector<UnsignedInteger> shiftedDigits(digits.size());
-    for (auto i = 1; i <= digits.size(); ++i) {
-        shiftedDigits[i - 1] = digits[i] << (param.torusBits - i * param.radixBits);
-    }
-    return std::accumulate(shiftedDigits.begin(), shiftedDigits.end(), 0u);
-}
-
-std::vector<UnsignedInteger> decomposeOverB(const UnsignedInteger in, const YatfheParameters& param) {
-    std::vector<UnsignedInteger> output(param.ksLevel);
-    for (int i = 1; i <= output.size(); ++i) {
-        output[i - 1] = in << (param.torusBits - i * param.radixBits);
-    }
-    return output;
-}
-
-void signedGadgetDecomposition(vector<Torus>& res, const Torus input) {
-    // todo
 }
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {

@@ -5,7 +5,7 @@
 #include "yatfhe/ntt.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/trgsw.h"
-#include "yautil/numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 

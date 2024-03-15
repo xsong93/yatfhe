@@ -7,7 +7,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/keyswitching.h"
 #include "yautil/control_helper.h"
-#include "yautil/numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
 
 int main(int argc, char **argv) {

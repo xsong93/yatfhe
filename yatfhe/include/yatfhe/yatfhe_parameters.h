@@ -52,7 +52,7 @@ struct YatfheParameters {
     // KS params
     int ksLevel {torusBits / radixBits}; // ks decomposition length
     int radixBase {1 << radixBits};  // 2^b
-    int bHalf {radixBase / 2};
+    int baseOverTwo {radixBase / 2}; // B / 2 threshold
     int digitMask {radixBase - 1};
     int unfolding {1};
     int torusBase {8}; // p|q

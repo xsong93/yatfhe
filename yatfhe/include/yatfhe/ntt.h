@@ -8,7 +8,7 @@
 #include <vector>
 #include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
-#include "yautil/numeric_functions.h"
+#include "numeric_functions.h"
 
 constexpr uint64_t MODULUS = 0xffffffff00000001UL;
 using namespace std;

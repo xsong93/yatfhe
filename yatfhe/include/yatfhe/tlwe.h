@@ -29,7 +29,7 @@ struct ScaledTlwe {
 struct TlweKey {
     int n {};
     double sigma {};
-    std::vector<Integer> s {}; // n
+    std::vector<Binary> s {}; // n
 
     explicit TlweKey(int n, double sigma) : n(n), s(n), sigma(sigma) {};
 

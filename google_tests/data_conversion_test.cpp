@@ -3,7 +3,7 @@
 //
 #include "gtest/gtest.h"
 #include "yatfhe/polynomial.h"
-#include "yautil/numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
 
 
