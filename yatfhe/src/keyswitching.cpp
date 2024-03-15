@@ -29,7 +29,13 @@ void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
     }
 }
 
-// Basically, the idea is to homomorphically cancel the secret key and re-encrypt it under a new secret key.
+/**
+ * Basically, the idea is to homomorphically cancel the current secret key and re-encrypt it under a new secret key.
+ * @param output Tlwe: Tlwe ciphertext under new key.
+ * @param ksk TlweKeySwitchingKey
+ * @param input Tlwe: Tlwe ciphertext to be keyswitched.
+ * @param param YatfheParameters
+ */
 void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param) {
     output.b = input.b; // init output as (0,..., 0, b)
     auto precOffset = 1 << (param.torusBits - (1 + param.radixBits * param.ksLevel)); //precision

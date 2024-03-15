@@ -16,7 +16,7 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const Bootstrapp
     extractTlweFromTrlwe(tmp, accum, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
 //    swap(tmp, out); // todo: remove this swap after complete
     // todo: keyswitching
-//    tlweKeySwitch(out, ksk, tmp, param);
+    tlweKeySwitch(out, ksk, tmp, param);
 //    printTrlweAB(accum, "accum");
 }
 
