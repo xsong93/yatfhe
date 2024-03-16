@@ -47,16 +47,14 @@ void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
 
 // output -= input
 void lweSubTo(Tlwe& output, const Tlwe& input) {
-    auto n = output.n;
-    output.b -= input.b;
-    for (auto i = 0; i < n; i++) {
+    for (auto i = 0; i < output.n; i++) {
         output.a[i] -= input.a[i];
     }
+    output.b -= input.b;
 }
 
 void tlweCopy(Tlwe& output, const Tlwe& input) {
-    const auto n = input.n;
-    for (auto i = 0; i < n; i++) {
+    for (auto i = 0; i < output.n; i++) {
         output.a[i] = input.a[i];
     }
     output.b = input.b;

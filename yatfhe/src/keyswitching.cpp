@@ -2,6 +2,7 @@
 // Created by Xintong Song on 2024/3/8.
 //
 #include "yatfhe/gadget_decomposition.h"
+#include "yatfhe/numeric_functions.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/keyswitching.h"
@@ -36,12 +37,14 @@ void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& inp
     output.b = input.b; // init output as (0,..., 0, b)
     for (auto i = 0; i < input.n; i++) {
         vector<Torus> aBar(param.ksLevel);
-        signedGadgetDecomposition(aBar, input.a[i], param); // todo: g-1(ai)
         Tlwe tmp(output.n);
-        // signed decomp
+        signedGadgetDecomposition(aBar, input.a[i], param); // todo: (aBar_1, ..., aBar_l) <- g^-1(ai)
         for (auto j = 1; j <= param.ksLevel; j++) {
-//            auto aij = (barai >> (param.torusBits - j * param.radixBits)) & param.digitMask;
-            // todo: dot(aij, kskij)
+            // todo: dot(aj, kskij)
+            for (auto k = 0; k < input.n; k++) {
+                tmp.a[k] += aBar[j] * ksk.decomposedKsk[i][j].a[k];
+            }
+            tmp.b += aBar[j] * ksk.decomposedKsk[i][j].b;
         }
         lweSubTo(output, tmp);
     }

@@ -16,7 +16,7 @@ UnsignedInteger recompose(const std::vector<UnsignedInteger>& digits, const Yatf
 
 std::vector<Integer> decomposeOverB(const Integer in, const YatfheParameters& param);
 
-void signedGadgetDecomposition(std::vector<Torus>& res, const Torus input, const YatfheParameters& param);
+void signedGadgetDecomposition(std::vector<Torus>& res, const Torus in, const YatfheParameters& param);
 
 int genOffset(int radixBits, int bHalf, int l, int torusBits);
 

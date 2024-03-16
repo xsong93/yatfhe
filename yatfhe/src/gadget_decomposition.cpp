@@ -57,9 +57,17 @@ std::vector<Integer> decomposeOverB(const Integer in, const YatfheParameters& pa
  * @param input The input to decompose.
  * @param param
  */
-void signedGadgetDecomposition(vector<Torus>& res, const Torus input, const YatfheParameters& param) {
-    // todo
-
+void signedGadgetDecomposition(vector<Torus>& res, const Torus in, const YatfheParameters& param) {
+    vector<Torus> tmp(param.torusBits / param.radixBits);
+    auto carry = 0u;
+    for (auto i = 0; i < tmp.size(); i++) {
+        auto unsignedDigit = ((in >> (i * param.radixBits)) & param.digitMask) + carry;
+        auto carryMask = unsignedDigit & param.baseOverTwo;
+        auto signedDigit = unsignedDigit - (carryMask << 1);
+        carry = carryMask >> (param.radixBase - 1);
+        tmp[tmp.size() - i - 1] = signedDigit;
+    }
+    copy(tmp.begin(), tmp.begin() + param.ksLevel, res.begin());
 }
 
 // G^-1 * Trlwe = DecomposedTrlwe
