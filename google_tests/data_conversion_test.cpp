@@ -34,7 +34,7 @@ TEST(doubleTorusTest, doubleTorusTest) {
 
 
     for (auto k = 0; k < 100; k++) {
-        initCoeffsViaUniformDistribution(tPoly.coeffs, N);
+        initCoeffsViaUniformDistribution(tPoly.coeffs);
 //        printArray(tPoly.coeffs, "torusPoly");
         torusPolyToDoublePoly(resPoly, tPoly);
 //        printArray(resPoly.coeffs, "resPoly");
@@ -67,7 +67,7 @@ TEST(intTorusTest, intTorusTest) {
     }
 
     for (auto k = 0; k < 100; k++) {
-        initCoeffsViaUniformDistribution(tPoly.coeffs, N);
+        initCoeffsViaUniformDistribution(tPoly.coeffs);
 //        printArray(tPoly.coeffs, "torusPoly");
         torusPolyToIntPoly(resPoly, tPoly, 2 * N);
 //        printArray(resPoly.coeffs, "resPoly");

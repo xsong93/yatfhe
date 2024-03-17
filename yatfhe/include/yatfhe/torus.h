@@ -11,7 +11,7 @@
 
 //#ifdef TORUS32
 using Torus = int32_t;
-using UnsignedInteger = uint32_t;
+using UnsignedInteger = u_int32_t;
 //#undef USE_COMPRESSED_TRLWE
 //#else
 //using Torus = uint64_t;

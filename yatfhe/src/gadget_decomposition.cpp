@@ -59,12 +59,12 @@ std::vector<Integer> decomposeOverB(const Integer in, const YatfheParameters& pa
  */
 void signedGadgetDecomposition(vector<Torus>& res, const Torus in, const YatfheParameters& param) {
     vector<Torus> tmp(param.torusBits / param.radixBits);
-    auto carry = 0u;
+    auto carry = 0;
     for (auto i = 0; i < tmp.size(); i++) {
         auto unsignedDigit = ((in >> (i * param.radixBits)) & param.digitMask) + carry;
         auto carryMask = unsignedDigit & param.baseOverTwo;
         auto signedDigit = unsignedDigit - (carryMask << 1);
-        carry = carryMask >> (param.radixBase - 1);
+        carry = carryMask >> (param.radixBits - 1);
         tmp[tmp.size() - i - 1] = signedDigit;
     }
     copy(tmp.begin(), tmp.begin() + param.ksLevel, res.begin());

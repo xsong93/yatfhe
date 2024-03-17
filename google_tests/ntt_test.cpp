@@ -50,8 +50,8 @@ TEST(NttSamePolyTest, NttSamePolyTest) {
     TorusPolynomial navAdd(N);
     TorusPolynomial navSub(N);
 
-    initCoeffsViaUniformDistribution(poly0.coeffs, N);
-    initCoeffsViaUniformDistribution(poly2.coeffs, N);
+    initCoeffsViaUniformDistribution(poly0.coeffs);
+    initCoeffsViaUniformDistribution(poly2.coeffs);
     printArray(poly0.coeffs, "poly0");
     printArray(poly2.coeffs, "poly2");
 
@@ -103,7 +103,7 @@ TEST(NttDiffPolyTest, NttDiffPolyTest) {
     }
     printArray(poly01.coeffs, "poly01");
 
-    initCoeffsViaUniformDistribution(poly0.coeffs, N);
+    initCoeffsViaUniformDistribution(poly0.coeffs);
     printArray(poly0.coeffs, "poly0");
 
     COUNT_TIME("NTT_MULT",
