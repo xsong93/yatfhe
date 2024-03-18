@@ -57,7 +57,7 @@ void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {
 }
 
 void initCoeffsWithGaussianNoise(std::vector<Torus>& coeffs, const Torus msg, const double sigma) {
-    for (int & coeff : coeffs) {
+    for (int& coeff : coeffs) {
         coeff = addGaussianNoise(msg, sigma);
     }
 }

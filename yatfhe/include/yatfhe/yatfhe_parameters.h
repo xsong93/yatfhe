@@ -48,7 +48,7 @@ struct YatfheParameters {
     // RGSW params
     // const int l = 6, Bg_bit = 6;
     int l {3};
-    int radixBits {7}; // b
+    int radixBits {4}; // b
     // KS params
     int ksLevel {torusBits / radixBits}; // ks decomposition length
     int radixBase {1 << radixBits};  // 2^b

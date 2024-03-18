@@ -8,6 +8,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/gadget_decomposition.h"
+#include "yautil/tool.h"
 
 using namespace std;
 
@@ -29,12 +30,23 @@ std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int t
     return g;
 }
 
-UnsignedInteger recompose(const std::vector<UnsignedInteger>& digits, const YatfheParameters& param) {
-    std::vector<UnsignedInteger> shiftedDigits(digits.size());
-    for (auto i = 1; i <= digits.size(); ++i) {
-        shiftedDigits[i - 1] = digits[i] << (param.torusBits - i * param.radixBits);
+void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParameters& param) {
+    out.sign = (in < 0) ? -1 : 1;
+    UnsignedInteger tmp = (out.sign == 1) ? in : -in;
+    UnsignedInteger mask = ((1 << param.radixBits) - 1) << (param.torusBits - param.radixBits);
+    for (auto i = 1; i <= param.ksLevel; i++) {
+        out.value[i - 1] = (mask & tmp) >> (param.torusBits - i * param.radixBits);
+        mask >>= param.radixBits;
     }
-    return accumulate(shiftedDigits.begin(), shiftedDigits.end(), 0u);
+}
+
+Integer recompose(const DecomposedData& digits, const YatfheParameters& param) {
+    std::vector<UnsignedInteger> shiftedDigits(digits.value.size());
+    Integer res {0};
+    for (auto i = 1; i <= digits.value.size(); ++i) {
+        res += digits.value[i - 1] << (param.torusBits - i * param.radixBits);
+    }
+    return res * digits.sign;
 }
 
 /**
@@ -43,7 +55,7 @@ UnsignedInteger recompose(const std::vector<UnsignedInteger>& digits, const Yatf
  * @param param
  * @return
  */
-std::vector<Integer> decomposeOverB(const Integer in, const YatfheParameters& param) {
+std::vector<Integer> decomposeOverB(const Binary in, const YatfheParameters& param) {
     std::vector<Integer> output(param.ksLevel);
     for (int i = 1; i <= output.size(); ++i) {
         output[i - 1] = in << (param.torusBits - i * param.radixBits);
@@ -57,17 +69,19 @@ std::vector<Integer> decomposeOverB(const Integer in, const YatfheParameters& pa
  * @param input The input to decompose.
  * @param param
  */
-void signedGadgetDecomposition(vector<Torus>& res, const Torus in, const YatfheParameters& param) {
-    vector<Torus> tmp(param.torusBits / param.radixBits);
-    auto carry = 0;
+void signedGadgetDecomposition(DecomposedData& out, const Integer in, const YatfheParameters& param) {
+    out.sign = (in < 0) ? -1 : 1;
+    UnsignedInteger unsignedIn = (out.sign == 1) ? in : -in;
+    vector<UnsignedInteger> tmp(param.torusBits / param.radixBits);
+    UnsignedInteger carry = 0;
     for (auto i = 0; i < tmp.size(); i++) {
-        auto unsignedDigit = ((in >> (i * param.radixBits)) & param.digitMask) + carry;
+        auto unsignedDigit = ((unsignedIn >> (i * param.radixBits)) & param.digitMask) + carry;
         auto carryMask = unsignedDigit & param.baseOverTwo;
         auto signedDigit = unsignedDigit - (carryMask << 1);
         carry = carryMask >> (param.radixBits - 1);
         tmp[tmp.size() - i - 1] = signedDigit;
     }
-    copy(tmp.begin(), tmp.begin() + param.ksLevel, res.begin());
+    copy(tmp.begin(), tmp.begin() + param.ksLevel, out.value.begin());
 }
 
 // G^-1 * Trlwe = DecomposedTrlwe

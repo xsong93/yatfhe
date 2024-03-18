@@ -36,15 +36,15 @@ void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
 void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param) {
     output.b = input.b; // init output as (0,..., 0, b)
     for (auto i = 0; i < input.n; i++) {
-        vector<Torus> aBar(param.ksLevel);
+        DecomposedData aBar(param.ksLevel);
         Tlwe tmp(output.n);
-        signedGadgetDecomposition(aBar, input.a[i], param); // todo: (aBar_1, ..., aBar_l) <- g^-1(ai)
-        for (auto j = 1; j <= param.ksLevel; j++) {
+        signedGadgetDecomposition(aBar, input.a[i], param); // (aBar_1, ..., aBar_l) <- g^-1(ai)
+        for (auto j = 0; j < param.ksLevel; j++) {
             // todo: dot(aj, kskij)
-            for (auto k = 0; k < input.n; k++) {
-                tmp.a[k] += aBar[j] * ksk.decomposedKsk[i][j].a[k];
+            for (auto k = 0; k < output.n; k++) {
+                tmp.a[k] += aBar.value[j] * ksk.decomposedKsk[i][j].a[k] * aBar.sign;
             }
-            tmp.b += aBar[j] * ksk.decomposedKsk[i][j].b;
+            tmp.b += aBar.value[j] * ksk.decomposedKsk[i][j].b * aBar.sign;
         }
         lweSubTo(output, tmp);
     }

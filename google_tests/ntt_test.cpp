@@ -55,13 +55,13 @@ TEST(NttSamePolyTest, NttSamePolyTest) {
     printArray(poly0.coeffs, "poly0");
     printArray(poly2.coeffs, "poly2");
 
-    COUNT_TIME("NTT_MULT",
-               applyNtt(a, poly0);
-                       applyNtt(b, poly2);
-                       for (int i = 0; i < a.N; i++) {
-                           tmpMul.coeffs[i] = modMul(a.coeffs[i], b.coeffs[i]);
-                       }
-                       applyIntt(resMul, tmpMul);)
+    COUNT_TIME("NTT_MULT", {
+                   applyNtt(a, poly0);
+                   applyNtt(b, poly2);
+                   for (int i = 0; i < a.N; i++) {
+                       tmpMul.coeffs[i] = modMul(a.coeffs[i], b.coeffs[i]);
+                   }
+                   applyIntt(resMul, tmpMul);})
     COUNT_TIME("NAIVE_MULT",
                polynomialMulNaive(navMul, poly0, poly2);)
 

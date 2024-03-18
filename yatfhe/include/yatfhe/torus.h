@@ -10,8 +10,10 @@
 //#include <cstdint>
 
 //#ifdef TORUS32
-using Torus = int32_t;
 using UnsignedInteger = u_int32_t;
+using Integer = int32_t;
+using Binary = Integer;
+using Torus = int32_t;
 //#undef USE_COMPRESSED_TRLWE
 //#else
 //using Torus = uint64_t;
@@ -36,7 +38,5 @@ struct TorusPolynomial {
 
 using IntPolynomial = TorusPolynomial;
 using BinPolynomial = IntPolynomial;
-using Integer = Torus;
-using Binary = Integer;
 
 #endif //HLS_YATFHE_TORUS_H
