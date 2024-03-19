@@ -42,7 +42,7 @@ void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input);
 
 void symEncTlweSample(Tlwe& tlweSample, Torus message, const TlweKey& key);
 
-double symDecTlweSample(Tlwe& in, const TlweKey& key);
+double symDecTlweSample(Tlwe& in, const TlweKey& key, int torusBase);
 
 void lweSubTo(Tlwe& output, const Tlwe& input);
 

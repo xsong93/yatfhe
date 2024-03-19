@@ -27,13 +27,13 @@ void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key)
 }
 
 // mu = b - as
-double symDecTlweSample(Tlwe& in, const TlweKey& key) {
+double symDecTlweSample(Tlwe& in, const TlweKey& key, const int torusBase) {
     auto n = key.n;
     Torus aXs= 0;
     for (int i = 0; i < n; i++) {
         aXs += in.a[i] * key.s[i];
     }
-    return torus32ToDouble(in.b - aXs);
+    return roundError(torus32ToDouble(in.b - aXs), torusBase);
 }
 
 void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {

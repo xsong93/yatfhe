@@ -3,6 +3,7 @@
 //
 #include <random>
 #include <iostream>
+#include <iomanip>
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/torus.h"
 #include "yatfhe/yatfhe_parameters.h"
@@ -33,6 +34,12 @@ Torus doubleToTorus32(const double d) {
 
 double torus32ToDouble(const Torus in) {
     return double(in) / twoP32;
+}
+
+double roundError(const double in, const int torusBase) {
+    auto mulP  = in * torusBase;
+    int modP = int(mulP) % torusBase;
+    return modP / double(torusBase);
 }
 
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {

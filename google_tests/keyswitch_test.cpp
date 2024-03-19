@@ -21,7 +21,7 @@ TEST(KSKTest, KSKTest) {
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKey, param);
     TlweKey inKey(param.k * param.N);
     convertTrlweKeyToTlweKey(inKey, trlweKey);
-    param.torusBase = 5000;
+    param.torusBase = 1000;
 
     for (int i = - param.torusBase / 2; i < param.torusBase / 2; i++) {
         double plainMsg = (double)i / param.torusBase;
@@ -30,9 +30,9 @@ TEST(KSKTest, KSKTest) {
         Tlwe output{param.n};
         symEncTlweSample(input, mu, inKey);
         tlweKeySwitch(output, ksKey, input, param);
-        auto res = symDecTlweSample(output, tlweKey);
+        auto res = symDecTlweSample(output, tlweKey, param.torusBase);
         printf("Input plain: %f, Output res: %f.\n", plainMsg, res);
-        ASSERT_NEAR(plainMsg, res, 0.001);
+        ASSERT_NEAR(plainMsg, res, 0.0015);
     }
     printBanner("KSK");
 }

@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     symEncTlweSample(input, mu, tlweKey);
 
     cout <<"msg:"<<torus32ToDouble(mu)<<endl;
-    cout <<"decPre:"<<symDecTlweSample(input, tlweKey)<<endl;
+    cout <<"decPre:"<<symDecTlweSample(input, tlweKey, param.torusBase)<<endl;
 
     trgswFunctionalBootstrapping(output, input, bsKey, ksKey, v, param);
 //    printTlweAB(input, "input boot");
