@@ -15,10 +15,7 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const Bootstrapp
     genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     blindRotate(accum, bsk, inputModN2, param);
     extractTlweFromTrlwe(tmp, accum, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
-//    swap(tmp, out); // todo: remove this swap after complete
-    // todo: keyswitching
     tlweKeySwitch(out, ksk, tmp, param);
-//    printTrlweAB(accum, "accum");
 }
 
 /**
@@ -103,12 +100,11 @@ void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, T
 }
 
 void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
-    const auto n = bsk.n;
-    for (auto i = 0; i < n; i++) {
+    for (auto i = 0; i < bsk.n; i++) {
         Trgsw& trgsw = bsk.bsk[i];
         TrgswDft& trgswDft = bsk.bskDft[i];
         trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey); // trgsw(0)
-        trgswAddIntegerNtt(trgswDft, trgsw, tlweKey.s[i], param); // s * G^T
+        trgswAddBinaryNtt(trgswDft, trgsw, tlweKey.s[i], param); // s * G^T
     }
 }
 

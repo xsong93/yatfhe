@@ -40,8 +40,8 @@ int main(int argc, char **argv) {
     trgswFunctionalBootstrapping(output, input, bsKey, ksKey, v, param);
 //    printTlweAB(input, "input boot");
 //    printTlweAB(output, "output boot");
-//    double decAft = symDecTlweSample(output, tlweKey);
-//    cout <<"decAft:"<<decAft<<endl;
+    double decAft = symDecTlweSample(output, tlweKey, param.torusBase);
+    cout <<"decAft:"<<decAft<<endl;
 
 
 //    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);

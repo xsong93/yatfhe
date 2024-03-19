@@ -12,17 +12,13 @@
 
 // trgsw(0)
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
-    const auto N = param.N;
-    const auto k = param.k;
-    const auto l = param.l;
-    const auto sigma = param.lweStdDev;
-    for (auto lvl = 0; lvl < l; lvl++) {
-        for (auto row = 0; row < k + 1; row++) {
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        for (auto row = 0; row < param.k + 1; row++) {
             Trlwe& trlweSample = trgsw.trlweSamples[lvl][row];
             TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[lvl][row];
-            initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, sigma); // init b = 0 + e
+            initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, param.lweStdDev); // init b = 0 + e
             applyNtt(trlweDftSample.b, trlweSample.b);
-            for (auto col = 0; col < k; col++) {
+            for (auto col = 0; col < param.k; col++) {
                 initCoeffsViaUniformDistribution(trlweSample.a[col].coeffs); // init a
                 applyNtt(trlweDftSample.a[col], trlweSample.a[col]);
                 applyNtt(trgswKey.trlweKey.sDft[col], trgswKey.trlweKey.s[col]);
@@ -34,24 +30,34 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 }
 
 // output += mu * G^T
-void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, int mu, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto l = param.l;
-    const auto g = genGadgetVector(param.radixBits, l, param.torusBits);
-
+void trgswAddBinaryNtt(TrgswDft& trgswDft, Trgsw& trgsw, Binary mu, const YatfheParameters& param) {
     // add the diagonal matrix (mu * G^T)_ijk to the output
-    for (auto lvl = 0; lvl < l; lvl++) {
-        for (auto row = 0; row < k + 1; row++) {
+    //       ( 1/B^l                         )
+    //      .                              . .
+    //    .                              .   .
+    //  ( 1/B^2                        )     .
+    // ( 1/B                         )       .
+    // (     1/B                     )       .
+    // (          .                  )       .
+    // (              .              )     .
+    // (                  .          )   .
+    // (                      .      ) .
+    // (                         1/B )
+    // ( a_0  a_1          a_k-1  b  )
+
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        for (auto row = 0; row < param.k + 1; row++) {
+            auto decomposedMu = mu << (param.torusBits - param.radixBits * lvl);
 
             // add to a_lii
-            if (row < k) {
-                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += mu * g[lvl]; // coeffs[0]: add mu to the constant polynomial term
+            if (row < param.k) {
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
                 applyNtt(trgswDft.trlweDftSamples[lvl][row].a[row], trgsw.trlweSamples[lvl][row].a[row]);
                 continue;
             }
 
             // add to b_lk
-            trgsw.trlweSamples[lvl][row].b.coeffs[0] += mu * g[lvl];
+            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
             applyNtt(trgswDft.trlweDftSamples[lvl][row].b , trgsw.trlweSamples[lvl][row].b);
 //            LagrangePolynomial tmp(param.N);
 //            generateLagrangePolynomialWithValueAt(tmp, mu * g[layer], 0);

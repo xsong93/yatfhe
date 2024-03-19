@@ -5,6 +5,7 @@
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"
+#include "yautil/tool.h"
 
 int validateRotator(const int a, const int N) {
     int aTrue = a % (2 * N);
@@ -52,13 +53,10 @@ void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomia
 
 // vj = ((pj / q) mod p) / p
 void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) {
-    const auto N = v.N;
-    for (auto i = 0; i < N; i++) {
+    for (auto i = 0; i < v.N; i++) {
         int tmp = (modP * i / modQ) % modP;
-        cout << (double) tmp / modP << " ";
         v.coeffs[i] = doubleToTorus32((double) tmp / modP);
     }
-    cout << endl;
 }
 
 // output = (X^{a}) * input

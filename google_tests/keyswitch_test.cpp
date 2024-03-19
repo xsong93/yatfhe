@@ -1,5 +1,5 @@
 //
-// Created by sweet on 2024/3/19.
+// Created by Xintong Song on 2024/3/19.
 //
 #include "gtest/gtest.h"
 #include "yatfhe/yatfhe_parameters.h"
@@ -11,12 +11,10 @@
 TEST(KSKTest, KSKTest) {
     YatfheParameters param{};
     TlweKey tlweKey{param.n, param.lweStdDev};
-    TlweKey keyTlweOut{param.n, param.lweStdDev};
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     TlweKeySwitchingKey ksKey{param.N * param.k, param.n, param.ksLevel};
     lweKeyGen(tlweKey, param.n);
-    lweKeyGen(keyTlweOut, param.n);
     trlweKeyGen(trlweKey, param.N, param.k);
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKey, param);
     TlweKey inKey(param.k * param.N);

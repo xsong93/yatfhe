@@ -44,7 +44,7 @@ struct TrgswKey {
 
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey);
 
-void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, int mu, const YatfheParameters& param);
+void trgswAddBinaryNtt(TrgswDft& trgswDft, Trgsw& trgsw, int mu, const YatfheParameters& param);
 
 void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& param);
 
