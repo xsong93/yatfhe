@@ -45,7 +45,7 @@ void intPolyToTorusPoly(TorusPolynomial& output, const IntPolynomial& input, con
 }
 
 void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, const int value, const int position) {
-    IntPolynomial tmp(lagrangePolynomial.N);
+    IntPolynomial tmp {lagrangePolynomial.N};
     tmp.coeffs[position] = value;
     applyNtt(lagrangePolynomial, tmp);
 }

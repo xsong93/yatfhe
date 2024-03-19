@@ -11,12 +11,12 @@
 
 TEST(NttAddConstantTest, NttAddConstantTest) {
     const int N = 1024;
-    LagrangePolynomial a(N);
-    LagrangePolynomial b(N);
-    LagrangePolynomial resNtt(N);
-    IntPolynomial poly(N);
-    IntPolynomial c(N);
-    IntPolynomial res(N);
+    LagrangePolynomial a{N};
+    LagrangePolynomial b{N};
+    LagrangePolynomial resNtt{N};
+    IntPolynomial poly{N};
+    IntPolynomial c{N};
+    IntPolynomial res{N};
     for (int i = 0; i < a.N; i++) {
         poly.coeffs[i] = i;
     }
@@ -35,20 +35,20 @@ TEST(NttAddConstantTest, NttAddConstantTest) {
 TEST(NttSamePolyTest, NttSamePolyTest) {
     COUNT_TIME("init timer", cout << endl;)
     const int N = 1024;
-    LagrangePolynomial a(N);
-    LagrangePolynomial b(N);
-    LagrangePolynomial tmpMul(N);
-    LagrangePolynomial tmpAdd(N);
-    LagrangePolynomial tmpSub(N);
+    LagrangePolynomial a{N};
+    LagrangePolynomial b{N};
+    LagrangePolynomial tmpMul{N};
+    LagrangePolynomial tmpAdd{N};
+    LagrangePolynomial tmpSub{N};
 
-    TorusPolynomial poly0(N);
-    TorusPolynomial poly2(N);
-    TorusPolynomial resMul(N);
-    TorusPolynomial resAdd(N);
-    TorusPolynomial resSub(N);
-    TorusPolynomial navMul(N);
-    TorusPolynomial navAdd(N);
-    TorusPolynomial navSub(N);
+    TorusPolynomial poly0{N};
+    TorusPolynomial poly2{N};
+    TorusPolynomial resMul{N};
+    TorusPolynomial resAdd{N};
+    TorusPolynomial resSub{N};
+    TorusPolynomial navMul{N};
+    TorusPolynomial navAdd{N};
+    TorusPolynomial navSub{N};
 
     initCoeffsViaUniformDistribution(poly0.coeffs);
     initCoeffsViaUniformDistribution(poly2.coeffs);
@@ -80,7 +80,7 @@ TEST(NttSamePolyTest, NttSamePolyTest) {
         EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
         EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
     }
-    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> NttSamePolyTest test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+    printBanner("NttSamePoly");
 }
 
 TEST(NttDiffPolyTest, NttDiffPolyTest) {
@@ -88,14 +88,14 @@ TEST(NttDiffPolyTest, NttDiffPolyTest) {
     const int N = 1024;
     const int mSize = 2 * N;
 
-    LagrangePolynomial a(N);
-    LagrangePolynomial b(N);
-    LagrangePolynomial tmpMul(N);
+    LagrangePolynomial a{N};
+    LagrangePolynomial b{N};
+    LagrangePolynomial tmpMul{N};
 
-    TorusPolynomial poly0(N);
-    IntPolynomial poly01(N);
-    TorusPolynomial resMul(N);
-    TorusPolynomial navMul(N);
+    TorusPolynomial poly0{N};
+    IntPolynomial poly01{N};
+    TorusPolynomial resMul{N};
+    TorusPolynomial navMul{N};
 
     uniform_int_distribution<int> distribution(0, 1);
     for (int j = 0; j < N; j++) {
@@ -119,5 +119,5 @@ TEST(NttDiffPolyTest, NttDiffPolyTest) {
     for (int i = 0; i < navMul.N; i++) {
         EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
     }
-    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> NTT test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+    printBanner("NTT");
 }

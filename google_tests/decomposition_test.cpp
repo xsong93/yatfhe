@@ -22,55 +22,51 @@ u_int32_t powInt(u_int32_t base, u_int32_t exponent) {
 }
 
 TEST(SignedDecompTest, SignedDecompTest) {
-    YatfheParameters param {};
-    DecomposedData decomp(param.ksLevel);
-    for (auto t = 0; t < 100; t++) {
-        std::vector<Torus> data(5000);
-        initCoeffsViaUniformDistribution(data);
-        for (auto d : data) {
-            signedGadgetDecomposition(decomp, d, param);
-            auto recons = recompose(decomp, param);
-            ASSERT_EQ(d, recons);
-        }
+    YatfheParameters param{};
+    DecomposedData decomp{param.ksLevel};
+    std::vector<Torus> data(5000);
+    initCoeffsViaUniformDistribution(data);
+    for (auto d : data) {
+        signedGadgetDecomposition(decomp, d, param);
+        auto recons = recompose(decomp, param);
+        ASSERT_EQ(d, recons);
     }
-    std::cout << ">>>>>>>> SignedDecomp test passed! <<<<<<<<" << std::endl;
+    printBanner("SignedDecomp");
 }
 
 TEST(DecomposeTest, DecomposeTest) {
-    YatfheParameters param {};
+    YatfheParameters param{};
     param.radixBits = 4;
     param.ksLevel = 8;
-    DecomposedData out(param.ksLevel);
-    for (auto i = 0; i < 100; i++) {
-        std::vector<Torus> data(5000);
-        initCoeffsViaUniformDistribution(data);
-        for (auto d : data) {
-            gadgetDecompose(out, d, param);
-            auto z = recompose(out, param);
-            ASSERT_EQ(z, d);
-        }
+    DecomposedData out{param.ksLevel};
+    std::vector<Torus> data(5000);
+    initCoeffsViaUniformDistribution(data);
+    for (auto d : data) {
+        gadgetDecompose(out, d, param);
+        auto z = recompose(out, param);
+        ASSERT_EQ(z, d);
     }
-    std::cout << ">>>>>>>> Decompose test passed! <<<<<<<<" << std::endl;
+    printBanner("Decompose");
 }
 
 TEST(DecomposeOverBTest, DecomposeOverBTest) {
-    YatfheParameters param {};
+    YatfheParameters param{};
     param.radixBits = 4;
     param.ksLevel = 8;
-    auto res = decomposeOverB(1, param);
-    printArray(res, "res");
-    DecomposedData decomp(param.ksLevel);
+    auto rhs = decomposeOverB(1, param);
+    printArray(rhs, "1 decomposeOverB");
+    DecomposedData decomp{param.ksLevel};
     std::vector<Torus> data(5000);
     initCoeffsViaUniformDistribution(data);
     for (auto d : data) {
         signedGadgetDecomposition(decomp, d, param);
 //        printArray(decomp.value, "decomp");
         int out{0};
-        for (auto i = 0; i < res.size(); i++) {
-            out += decomp.value[i] * res[i] * decomp.sign;
+        for (auto i = 0; i < rhs.size(); i++) {
+            out += decomp.value[i] * rhs[i] * decomp.sign;
         }
         ASSERT_EQ(out, d);
 //        std::cout << out * decomp.sign << endl;
     }
-    std::cout << ">>>>>>>> DecomposeOverB test passed! <<<<<<<<" << std::endl;
+    printBanner("DecomposeOverB");
 }

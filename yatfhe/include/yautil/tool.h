@@ -37,4 +37,6 @@ void printPolyVec(const vector<T>& in, const string& msg) {
     cout <<"]" <<endl << endl;
 }
 
+void printBanner(const string& msg);
+
 #endif //HLS_YATFHE_TOOL_H

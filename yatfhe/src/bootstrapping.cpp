@@ -8,9 +8,9 @@
 #include "yatfhe/gadget_decomposition.h"
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
-    ScaledTlwe inputModN2(param.N * 2, param.n);
-    Trlwe accum(param.k, param.N);
-    Tlwe tmp(ksk.nCurrKey);
+    ScaledTlwe inputModN2 {param.N * 2, param.n};
+    Trlwe accum {param.k, param.N};
+    Tlwe tmp {ksk.nCurrKey};
     rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     blindRotate(accum, bsk, inputModN2, param);
@@ -29,7 +29,7 @@ void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& in
         if (input.a[i] == 0) {
             continue;
         }
-        Trlwe temp(param.k, param.N);
+        Trlwe temp {param.k, param.N};
         controlMux(temp, accum, input.a[i], bsk.bskDft[i], param); // todo:debug
         swap(accum, temp); // assign the previous result to accumulator
     }
@@ -47,8 +47,8 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& par
     const auto k = param.k;
     const auto l = param.l;
     const auto N = param.N;
-    TrlweDft accDft(k, N);
-    DecomposedTrlwe decomp(l, k, N);
+    TrlweDft accDft {k, N};
+    DecomposedTrlwe decomp {l, k, N};
 
     gadgetDecomposeTrlwe(decomp, accum, param); // gadget decomposition, G^-1 * TGLWE, T_(N,q)^(k+1) -> Z_N^(k+1)*l
 

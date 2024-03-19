@@ -15,8 +15,8 @@ int main(int argc, char **argv) {
     const YatfheParameters param {};
     COUNT_TIME("init timer", std::cout << std::endl;)
 
-    TlweKey tlweKey(param.n, param.lweStdDev);
-    TlweKey keyTlweOut(param.n, param.lweStdDev);
+    TlweKey tlweKey {param.n, param.lweStdDev};
+    TlweKey keyTlweOut {param.n, param.lweStdDev};
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKey bsKey {param};
@@ -28,9 +28,9 @@ int main(int argc, char **argv) {
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKey, param);
 
     Torus mu = doubleToTorus32(1.0 / 8);
-    TorusPolynomial v(param.N);
+    TorusPolynomial v {param.N};
     generateTestPolynomial(v, 8, 2 * param.N);
-    Tlwe input(param.n);
+    Tlwe input {param.n};
     Tlwe output {param.n};
     symEncTlweSample(input, mu, tlweKey);
 

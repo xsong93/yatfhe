@@ -11,7 +11,7 @@ TEST(PolynomialTest, X) {
     int q = 32;
     int p = 4;
     int N = 32;
-    TorusPolynomial v(N);
+    TorusPolynomial v{N};
     std::vector<double> d(N);
     generateTestPolynomial(v, p, 2*N);
 //    printArray(v.coeffs, "v");

@@ -41,3 +41,18 @@ void printPolyMat(const vector<vector<IntPolynomial>>& in, const string& msg) {
     }
     cout <<"]" <<endl << endl;
 }
+
+void printBanner(const string& msg) {
+    string l = ">>>>>>>>>>>>>>>>>>>>>>>> ";
+    string r = " test passed! <<<<<<<<<<<<<<<<<<<<<<<<";
+    auto length = l.size() + r.size() + msg.size();
+    for (auto i = 0 ; i < length; i++) {
+        std::cout << "-";
+    }
+    std::cout << std::endl;
+    std::cout << l + msg + r << std::endl;
+    for (auto i = 0 ; i < length; i++) {
+        std::cout << "-";
+    }
+    std::cout << std::endl;
+}

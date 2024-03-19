@@ -9,10 +9,10 @@
 
 TEST(doubleTorusTest, doubleTorusTest) {
     int N = 100;
-    DoublePolynomial doublePoly(N);
-    TorusPolynomial tPoly(N);
-    TorusPolynomial t2Poly(N);
-    DoublePolynomial resPoly(N);
+    DoublePolynomial doublePoly{N};
+    TorusPolynomial tPoly{N};
+    TorusPolynomial t2Poly{N};
+    DoublePolynomial resPoly{N};
 
     double i = -0.5;
     for (auto& item : doublePoly.coeffs) {
@@ -44,15 +44,15 @@ TEST(doubleTorusTest, doubleTorusTest) {
             EXPECT_EQ(tPoly.coeffs[j], t2Poly.coeffs[j]);
         }
     }
-    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> Data(double/ Torus) conversion test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+    printBanner("Data(double / Torus) conversion");
 }
 
 TEST(intTorusTest, intTorusTest) {
     int N = 100;
-    IntPolynomial intPoly(N);
-    TorusPolynomial tPoly(N);
-    IntPolynomial resPoly(N);
-    TorusPolynomial resTPoly(N);
+    IntPolynomial intPoly{N};
+    TorusPolynomial tPoly{N};
+    IntPolynomial resPoly{N};
+    TorusPolynomial resTPoly{N};
     int i = -50;
     for (auto& item : intPoly.coeffs) {
         item = i++;
@@ -77,5 +77,6 @@ TEST(intTorusTest, intTorusTest) {
             EXPECT_NEAR(resTPoly.coeffs[j], tPoly.coeffs[j], doubleToTorus32(0.01));
         }
     }
-    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>> Data(Int/ Torus) conversion test passed! <<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+    printBanner("Data(Int / Torus) conversion");
+
 }

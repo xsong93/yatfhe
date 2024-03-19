@@ -16,7 +16,7 @@
  * @param param YatfheParameters
  */
 void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param) {
-    TlweKey inKey(param.k * param.N);
+    TlweKey inKey {param.k * param.N};
     convertTrlweKeyToTlweKey(inKey, currKey);
     for (auto i = 0; i < inKey.n; i++) {
         auto sOverB = decomposeOverB(inKey.s[i], param); // s_i * B^-j
@@ -36,11 +36,10 @@ void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
 void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param) {
     output.b = input.b; // init output as (0,..., 0, b)
     for (auto i = 0; i < input.n; i++) {
-        DecomposedData aBar(param.ksLevel);
-        Tlwe tmp(output.n);
+        DecomposedData aBar {param.ksLevel};
+        Tlwe tmp {output.n};
         signedGadgetDecomposition(aBar, input.a[i], param); // (aBar_1, ..., aBar_l) <- g^-1(ai)
         for (auto j = 0; j < param.ksLevel; j++) {
-            // todo: dot(aj, kskij)
             for (auto k = 0; k < output.n; k++) {
                 tmp.a[k] += aBar.value[j] * ksk.decomposedKsk[i][j].a[k] * aBar.sign;
             }
