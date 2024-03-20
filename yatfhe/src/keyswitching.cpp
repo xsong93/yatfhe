@@ -15,7 +15,7 @@
  * @param targetKey TlweKey: Target key remaining afterwards.
  * @param param YatfheParameters
  */
-void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param) {
+void tlweKeySwitchingKeyGen(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param) {
     TlweKey inKey {param.k * param.N};
     convertTrlweKeyToTlweKey(inKey, currKey);
     for (auto i = 0; i < inKey.n; i++) {

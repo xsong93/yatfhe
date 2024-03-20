@@ -39,7 +39,7 @@ double torus32ToDouble(const Torus in) {
 double roundError(const double in, const int torusBase) {
     int mulP  = round(in * torusBase);
     int modP = mulP % torusBase;
-//    printf("in: %f, mulP: %d, modP: %d\n", in, mulP, modP);
+    printf("yatfhe/src/numeric_functions.cpp@roundError. in: %f, mulP: %d, modP: %d\n", in, mulP, modP);
     return modP / double(torusBase);
 }
 
@@ -50,12 +50,12 @@ Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {
     return phase64 >> 32;
 }
 
-int32_t modSwitchFromTorus32(Torus in, int32_t Msize) {
-    uint64_t interv = ((UINT64_C(1) << 63) / Msize) * 2; // width of each interval
+int32_t modSwitchFromTorus32(Torus in, int32_t newMod) {
+    uint64_t interv = ((UINT64_C(1) << 63) / newMod) * 2; // width of each interval
     uint64_t half_interval = interv / 2; // begin of the first intervall
     uint64_t phase64 = (uint64_t(in) << 32) + half_interval;
     //floor to the nearest multiples of interv
-    return (in >= 0) ? (phase64 / interv) : (phase64 / interv - Msize);
+    return (in >= 0) ? (phase64 / interv) : (phase64 / interv - newMod);
 }
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {

@@ -16,7 +16,7 @@ TEST(KSKTest, KSKTest) {
     TlweKeySwitchingKey ksKey{param.N * param.k, param.n, param.ksLevel};
     lweKeyGen(tlweKey, param.n);
     trlweKeyGen(trlweKey, param.N, param.k);
-    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKey, param);
+    tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);
     TlweKey inKey(param.k * param.N);
     convertTrlweKeyToTlweKey(inKey, trlweKey);
     param.torusBase = 1 << 8;

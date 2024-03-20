@@ -20,7 +20,7 @@ static const int64_t twoP32 = INT64_C(1) << 32; // 2^32
 
 Torus addGaussianNoise(Torus message, double sigma);
 
-int32_t modSwitchFromTorus32(Torus in, int32_t Msize);
+int32_t modSwitchFromTorus32(Torus in, int32_t newMod);
 
 Torus doubleToTorus32(double d);
 

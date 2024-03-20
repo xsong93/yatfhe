@@ -25,9 +25,9 @@ int main(int argc, char **argv) {
     lweKeyGen(keyTlweOut, param.n);
     trlweKeyGen(trlweKey, param.N, param.k);
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
-    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKey, param);
+    tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);
 
-    Torus mu = doubleToTorus32(1.0 / 8);
+    Torus mu = doubleToTorus32(1.0 / param.torusBase);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, 8, 2 * param.N);
     Tlwe input {param.n};
@@ -35,7 +35,8 @@ int main(int argc, char **argv) {
     symEncTlweSample(input, mu, tlweKey);
 
     cout <<"msg:"<<torus32ToDouble(mu)<<endl;
-    cout <<"decPre:"<<symDecTlweSample(input, tlweKey, param.torusBase)<<endl;
+    auto decPre = symDecTlweSample(input, tlweKey, param.torusBase);
+    cout <<"decPre:"<< decPre <<endl;
 
     trgswFunctionalBootstrapping(output, input, bsKey, ksKey, v, param);
 //    printTlweAB(input, "input boot");
