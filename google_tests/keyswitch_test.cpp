@@ -19,18 +19,17 @@ TEST(KSKTest, KSKTest) {
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKey, param);
     TlweKey inKey(param.k * param.N);
     convertTrlweKeyToTlweKey(inKey, trlweKey);
-    param.torusBase = 1000;
-
-    for (int i = - param.torusBase / 2; i < param.torusBase / 2; i++) {
+    param.torusBase = 1 << 8;
+    for (int i = - param.torusBase / 2 + 1; i < param.torusBase / 2; i++) {
         double plainMsg = (double)i / param.torusBase;
         Torus mu = doubleToTorus32(plainMsg);
-        Tlwe input{param.N * param.k};
-        Tlwe output{param.n};
+        Tlwe input {param.N * param.k};
+        Tlwe output {param.n};
         symEncTlweSample(input, mu, inKey);
         tlweKeySwitch(output, ksKey, input, param);
         auto res = symDecTlweSample(output, tlweKey, param.torusBase);
         printf("Input plain: %f, Output res: %f.\n", plainMsg, res);
-        ASSERT_NEAR(plainMsg, res, 0.0015);
+        ASSERT_EQ(plainMsg * param.torusBase, res * param.torusBase);
     }
     printBanner("KSK");
 }
