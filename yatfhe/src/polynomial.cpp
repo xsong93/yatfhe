@@ -7,12 +7,23 @@
 #include "yatfhe/ntt.h"
 #include "yautil/tool.h"
 
+/**
+ * For a random rotator input, this method converts the rotator to a value within the range of polynomial length.
+ * Besides, in order to correctly show the negacyclic property, use a bit indicator to keep track of the negative signs after rotation.
+ * For example. N = 5
+ * if a = 3, a0 + x^1 * a1 + x^2 * a2 + x^3* a3 + x^4 * a4 ---> x^3 * a0 + x^4 * a1 - a2 - x * a3 - x^2 * a4 -> (-a2, -a3, -a4, a0, a1)
+ * if a = -1, a0 + x^1 * a1 + x^2 * a2 + x^3* a3 + x^4 * a4 ---> -x^4 * a0 + a1 + x * a2 + x^2 * a3 + x^3 * a4 -> (a1, a2, a3, a4, -a0) <=> a = 9 <=> -1 * (a = 4)
+ * @param aTrue Minimized rotator a.
+ * @param isWrap 1: no wrap. -1: wrap around.
+ * @param a Original rotator.
+ * @param N Polynomial length,
+ */
 void validateRotator(int& aTrue, int& isWrap, const int a, const int N) {
     aTrue = a % (2 * N);
     if (aTrue < 0) {
         aTrue += 2 * N;
     }
-    isWrap = (aTrue < N) ? 1 : -1; // 1: no wrap; -1:wrap around
+    isWrap = (aTrue < N) ? 1 : -1;
     aTrue = (aTrue < N) ? aTrue : aTrue - N;
 }
 
@@ -61,9 +72,6 @@ void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) 
 }
 
 // output = (X^{a}) * input
-// for example. N = 5
-// if a = 3, a0 + x^1 * a1 + x^2 * a2 + x^3* a3 + x^4 * a4 ---> x^3 * a0 + x^4 * a1 - a2 - x * a3 - x^2 * a4 -> (-a2, -a3, -a4, a0, a1)
-// if a = -1, a0 + x^1 * a1 + x^2 * a2 + x^3* a3 + x^4 * a4 ---> -x^4 * a0 + a1 + x * a2 + x^2 * a3 + x^3 * a4 -> (a1, a2, a3, a4, -a0) <=> a = 9 <=> -1 * (a = 4)
 void torusPolynomialRotate(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
     const auto N = input.N;
     int aTrue, isWrap;

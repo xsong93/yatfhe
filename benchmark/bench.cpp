@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 
     Torus mu = doubleToTorus32(1.0 / param.torusBase);
     TorusPolynomial v {param.N};
-    generateTestPolynomial(v, 8, 2 * param.N);
+    generateTestPolynomial(v, param.torusBase, 2 * param.N);
     Tlwe input {param.n};
     Tlwe output {param.n};
     symEncTlweSample(input, mu, tlweKey);

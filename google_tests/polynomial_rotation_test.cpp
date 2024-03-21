@@ -7,6 +7,14 @@
 #include "yatfhe/polynomial.h"
 #include "yautil/tool.h"
 
+std::vector<Torus> vecSub(const std::vector<Torus>& a, const std::vector<Torus>& b) {
+    std::vector<Torus> tmp (a.size());
+    for (auto i = 0; i < a.size(); i++) {
+        tmp[i] = a[i] - b[i];
+    }
+    return tmp;
+}
+
 TEST(PolyRotTest, PolyRotTest) {
     int N = 4;
     std::vector<Torus> m7 {-4,1,2,3};
@@ -17,15 +25,15 @@ TEST(PolyRotTest, PolyRotTest) {
     std::vector<Torus> m2 {3,4,-1,-2};
     std::vector<Torus> m1 {2,3,4,-1};
     std::vector<Torus> zo {1,2,3,4};
-    std::vector<std::vector<Torus>> dic (N * 2, std::vector<Torus> (N));
-    dic[0] = zo; dic[8] = zo; dic[16] = zo;
-    dic[1] = m7; dic[9] = m7;
-    dic[2] = m6; dic[10] = m6;
-    dic[3] = m5; dic[11] = m5;
-    dic[4] = m4; dic[12] = m4;
-    dic[5] = m3; dic[13] = m3;
-    dic[6] = m2; dic[14] = m2;
-    dic[7] = m1; dic[15] = m1;
+    std::vector<std::vector<Torus>> rotatedVec (N * 2, std::vector<Torus> (N));
+    rotatedVec[0] = zo; rotatedVec[8] = zo; rotatedVec[16] = zo;
+    rotatedVec[1] = m7; rotatedVec[9] = m7;
+    rotatedVec[2] = m6; rotatedVec[10] = m6;
+    rotatedVec[3] = m5; rotatedVec[11] = m5;
+    rotatedVec[4] = m4; rotatedVec[12] = m4;
+    rotatedVec[5] = m3; rotatedVec[13] = m3;
+    rotatedVec[6] = m2; rotatedVec[14] = m2;
+    rotatedVec[7] = m1; rotatedVec[15] = m1;
     TorusPolynomial a {N};
     TorusPolynomial b {N};
     for (auto i = 0; i < N ; i++) {
@@ -35,6 +43,11 @@ TEST(PolyRotTest, PolyRotTest) {
     for (auto i = - N * 2; i <= N * 2; i++) {
         torusPolynomialRotate(b, i, a);
         printArray(b.coeffs, "b " + to_string(i));
-        ASSERT_EQ(b.coeffs, dic[i + N * 2]);
+        ASSERT_EQ(b.coeffs, rotatedVec[i + N * 2]);
+    }
+    for (auto i = - N * 2; i <= N * 2; i++) {
+        torusPolynomialRotateMinusOne(b, i, a);
+        printArray(b.coeffs, "b-1 " + to_string(i));
+        ASSERT_EQ(b.coeffs, vecSub(rotatedVec[i + N * 2], a.coeffs));
     }
 }
