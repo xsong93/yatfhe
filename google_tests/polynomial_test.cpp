@@ -7,14 +7,14 @@
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
 
-TEST(PolynomialTest, X) {
+TEST(PolynomialTest, PolynomialTest) {
     int q = 32;
-    int p = 4;
+    int p = 8;
     int N = 32;
     TorusPolynomial v{N};
     std::vector<double> d(N);
-    generateTestPolynomial(v, p, 2*N);
-//    printArray(v.coeffs, "v");
+    generateTestPolynomial(v, p, 2 * N);
+    printArray(v.coeffs, "v");
     for (int i = 0; i < v.N; i++) {
         d[i] = torus32ToDouble(v.coeffs[i]);
     }

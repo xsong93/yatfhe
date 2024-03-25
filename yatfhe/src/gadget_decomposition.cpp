@@ -41,7 +41,6 @@ void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParamete
 }
 
 Integer recompose(const DecomposedData& digits, const YatfheParameters& param) {
-    std::vector<UnsignedInteger> shiftedDigits(digits.value.size());
     Integer res {0};
     for (auto i = 1; i <= digits.value.size(); ++i) {
         res += digits.value[i - 1] << (param.torusBits - i * param.radixBits);
@@ -92,17 +91,41 @@ void gadgetDecomposeTrlwe(DecomposedTrlwe& output, Trlwe& input, const YatfhePar
     const auto radixBits = param.radixBits;
     const auto maskMod = param.digitMask;
     const auto baseOverTwo = param.baseOverTwo;
-    const auto offset = genOffset(radixBits, baseOverTwo, l, param.torusBits);
+//    const auto offset = genOffset(radixBits, baseOverTwo, l, param.torusBits);
     for (auto row = 0; row < k + 1; row++) {
         auto& currIn = (row < k) ? input.a[row] : input.b;
-        polynomialAddSubOffset(currIn, offset, true);
+//        polynomialAddSubOffset(currIn, offset, true);
         for (auto lvl = 0; lvl < l; lvl++) {
-            const auto decal = param.torusBits - (lvl + 1) * radixBits;
+//            const auto decal = param.torusBits - (lvl + 1) * radixBits;
             for (auto j = 0; j < N; j++) {
                 auto& currOut = (row < k) ? output.rlwes[lvl].a[row] : output.rlwes[lvl].b;
-                currOut.coeffs[j] = (currIn.coeffs[j] >> decal) & maskMod - baseOverTwo;
+//                currOut.coeffs[j] = (currIn.coeffs[j] >> decal) & maskMod - baseOverTwo;
+//                signedGadgetDecomposition(, currIn.coeffs[j], param);
             }
         }
-        polynomialAddSubOffset(currIn, offset, false);
+//        polynomialAddSubOffset(currIn, offset, false);
     }
 }
+
+//// G^-1 * Trlwe = DecomposedTrlwe
+//void gadgetDecomposeTrlwe(DecomposedTrlwe& output, Trlwe& input, const YatfheParameters& param) {
+//    const auto k = param.k;
+//    const auto N = param.N;
+//    const auto l = param.l;
+//    const auto radixBits = param.radixBits;
+//    const auto maskMod = param.digitMask;
+//    const auto baseOverTwo = param.baseOverTwo;
+//    const auto offset = genOffset(radixBits, baseOverTwo, l, param.torusBits);
+//    for (auto row = 0; row < k + 1; row++) {
+//        auto& currIn = (row < k) ? input.a[row] : input.b;
+//        polynomialAddSubOffset(currIn, offset, true);
+//        for (auto lvl = 0; lvl < l; lvl++) {
+//            const auto decal = param.torusBits - (lvl + 1) * radixBits;
+//            for (auto j = 0; j < N; j++) {
+//                auto& currOut = (row < k) ? output.rlwes[lvl].a[row] : output.rlwes[lvl].b;
+//                currOut.coeffs[j] = (currIn.coeffs[j] >> decal) & maskMod - baseOverTwo;
+//            }
+//        }
+//        polynomialAddSubOffset(currIn, offset, false);
+//    }
+//}

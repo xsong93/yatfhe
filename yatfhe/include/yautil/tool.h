@@ -15,6 +15,8 @@ void printTlweAB(const Tlwe& in, const string& msg);
 
 void printTrlweAB(const Trlwe& in, const string& msg);
 
+void printDecomposedTrlweAB(const DecomposedTrlwe& in, const string& msg);
+
 template <typename T>
 void printArray(const vector<T>& in, const string& msg) {
     cout << msg <<": [";

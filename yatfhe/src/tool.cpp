@@ -17,17 +17,39 @@ void printTlweAB(const Tlwe& in, const string& msg) {
 }
 
 void printTrlweAB(const Trlwe& in, const string& msg) {
-    cout << msg<< ": a: [";
+    cout << msg<< ": a: ";
     for (int i = 0; i < in.k; i++) {
+        cout << "[";
         for (int j = 0; j < in.b.N; j++) {
-            cout << i << "," << j << ":" << in.a[i].coeffs[j] <<" ";
+            printf("%d,%d: %d  ", i, j, in.a[i].coeffs[j]);
         }
+        cout <<"] ";
     }
-    cout <<"]" << endl << "b: [";
+    cout << endl << "b: [";
     for (int j = 0; j < in.b.N; j++) {
-        cout << j << ":" << in.b.coeffs[j] <<" ";
+        printf("%d: %d  ", j, in.b.coeffs[j]);
     }
     cout <<"]" << endl << endl;
+}
+
+void printDecomposedTrlweAB(const DecomposedTrlwe& in, const string& msg) {
+    cout << msg<< ": ";
+    for (auto l = 0; l < in.l; l++) {
+        printf("level %d: a: ", l);
+        for (int i = 0; i < in.rlwes[l].k; i++) {
+            cout << "[";
+            for (int j = 0; j < in.rlwes[l].b.N; j++) {
+                printf("%d,%d: %d  ", i, j, in.rlwes[l].a[i].coeffs[j]);
+            }
+            cout << "] ";
+        }
+        cout << endl << "b: [";
+        for (int j = 0; j < in.rlwes[l].b.N; j++) {
+            printf("%d: %d  ", j, in.rlwes[l].b.coeffs[j]);
+
+        }
+        cout << "]" << endl << endl;
+    }
 }
 
 void printPolyMat(const vector<vector<IntPolynomial>>& in, const string& msg) {
