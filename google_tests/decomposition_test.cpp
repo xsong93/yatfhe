@@ -79,8 +79,8 @@ TEST(DecomposeTrlweTest, DecomposeTrlweTest) {
     param.radixBits = 4;
     param.ksLevel = 8;
     Trlwe in {2, 4};
-    in.a[0].coeffs = {1,2,3,4};
-    in.a[1].coeffs = {2,2,2,2};
+    in.a[0].coeffs = {-1,-2,-3,-4};
+    in.a[1].coeffs = {2,2,-2,-2};
     in.b.coeffs = {1<<24, 1<<16, 1<<8, 1};
     printTrlweAB(in, "in");
     DecomposedTrlwe out {param.ksLevel, 2, 4};
