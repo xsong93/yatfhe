@@ -34,4 +34,11 @@ void initCoeffsViaUniformDistribution(vector<Torus>& coeffs);
 
 void initCoeffsWithGaussianNoise(vector<Torus>& coeffs, Torus msg, double sigma);
 
+template <typename T>
+void setCoeffsValue(vector<T> coeffs, T val) {
+    for (auto i = 0; i < coeffs.size(); i++) {
+        coeffs[i] = val;
+    }
+}
+
 #endif //HLS_YATFHE_NUMERIC_FUNCTIONS_H

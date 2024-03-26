@@ -16,13 +16,13 @@ int main(int argc, char **argv) {
     COUNT_TIME("init timer", std::cout << std::endl;)
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-    TlweKey keyTlweOut {param.n, param.lweStdDev};
+//    TlweKey keyTlweOut {param.n, param.lweStdDev};
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKey bsKey {param};
     TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
     lweKeyGen(tlweKey, param.n);
-    lweKeyGen(keyTlweOut, param.n);
+//    lweKeyGen(keyTlweOut, param.n);
     trlweKeyGen(trlweKey, param.N, param.k);
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
     tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);

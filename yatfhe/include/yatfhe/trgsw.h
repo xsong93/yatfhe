@@ -42,10 +42,10 @@ struct TrgswKey {
         trlweKey(TrlweKey(p.k, p.N)) {};
 };
 
+void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey, Integer mu);
+
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey);
 
-void trgswAddBinaryNtt(TrgswDft& trgswDft, Trgsw& trgsw, int mu, const YatfheParameters& param);
-
-void genNoiselessTrgswSample(Trgsw &trgswSample, Torus msg, const YatfheParameters& param);
+void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

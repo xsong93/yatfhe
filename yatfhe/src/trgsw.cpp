@@ -10,6 +10,11 @@
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"
 
+void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey, const Integer mu) {
+    trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey);
+    trgswAddIntegerNtt(trgswDft, trgsw, mu, param);
+}
+
 // trgsw(0)
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
     for (auto lvl = 0; lvl < param.l; lvl++) {
@@ -30,7 +35,7 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 }
 
 // output += mu * G^T
-void trgswAddBinaryNtt(TrgswDft& trgswDft, Trgsw& trgsw, Binary mu, const YatfheParameters& param) {
+void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const YatfheParameters& param) {
     // add the diagonal matrix (mu * G^T)_ijk to the output
     //       ( 1/B^l                         )
     //      .                              . .
@@ -47,7 +52,7 @@ void trgswAddBinaryNtt(TrgswDft& trgswDft, Trgsw& trgsw, Binary mu, const Yatfhe
 
     for (auto lvl = 0; lvl < param.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
-            auto decomposedMu = mu << (param.torusBits - param.radixBits * lvl);
+            auto decomposedMu = mu << (param.torusBits - param.radixBits * (lvl + 1));
 
             // add to a_lii
             if (row < param.k) {

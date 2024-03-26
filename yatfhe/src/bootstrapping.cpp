@@ -51,7 +51,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& par
 
     // ntt
     for (auto lvl = 0; lvl < l; lvl++) {
-        applyNttForAB(decomp.rlweDfts[lvl], decomp.rlwes[lvl]); // todo:debug
+        applyNttForAB(decomp.rlweDfts[lvl], decomp.rlwes[lvl]);
     }
 
     // accum += bsk (*) accum, point-wisely
@@ -68,7 +68,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& par
         }
     }
 
-    applyInttForAB(accum, accDft); // intt  // todo:debug
+    applyInttForAB(accum, accDft); // intt
 }
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
@@ -103,8 +103,7 @@ void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameter
     for (auto i = 0; i < bsk.n; i++) {
         Trgsw& trgsw = bsk.bsk[i];
         TrgswDft& trgswDft = bsk.bskDft[i];
-        trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey); // trgsw(0)
-        trgswAddBinaryNtt(trgswDft, trgsw, tlweKey.s[i], param); // s * G^T
+        trgswEncrypt(trgsw, trgswDft, param, trgswKey, tlweKey.s[i]);
     }
 }
 
