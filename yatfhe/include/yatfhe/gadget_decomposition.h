@@ -24,7 +24,7 @@ void gadgetDecompose(DecomposedData& out, Integer in, const YatfheParameters& pa
 
 Integer recompose(const DecomposedData& digits, const YatfheParameters& param);
 
-std::vector<Integer> decomposeOverB(Binary in, const YatfheParameters& param);
+std::vector<Integer> decomposeOverB(Integer in, const YatfheParameters& param);
 
 void signedGadgetDecomposition(DecomposedData& res, Integer in, const YatfheParameters& param);
 

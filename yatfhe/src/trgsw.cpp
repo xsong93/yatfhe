@@ -10,11 +10,6 @@
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"
 
-void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey, const Integer mu) {
-    trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey);
-    trgswAddIntegerNtt(trgswDft, trgsw, mu, param);
-}
-
 // trgsw(0)
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
     for (auto lvl = 0; lvl < param.l; lvl++) {
@@ -51,8 +46,8 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const Yatf
     // ( a_0  a_1          a_k-1  b  )
 
     for (auto lvl = 0; lvl < param.l; lvl++) {
+        auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
         for (auto row = 0; row < param.k + 1; row++) {
-            auto decomposedMu = mu << (param.torusBits - param.radixBits * (lvl + 1));
 
             // add to a_lii
             if (row < param.k) {
@@ -71,7 +66,23 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const Yatf
     }
 }
 
+/**
+ * To encrypt a message as a trgsw ct, there are two steps: 1) generate a trgsw ct with each level and row is a rlwe
+ * encryption of zero. 2) add mu * G^T to the above trgsw ct
+ * @param trgsw Trgsw encryption of message.
+ * @param trgswDft Trgsw encryption of message under ntt domain.
+ * @param param YatfheParameters
+ * @param trgswKey TrgswKey
+ * @param mu Message.
+ */
+void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey, const Integer mu) {
+    trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey);
+    trgswAddIntegerNtt(trgswDft, trgsw, mu, param);
+}
 
+void trgswDecrypt(Trgsw& trgsw, const YatfheParameters& param, TrgswKey& trgswKey) {
+
+}
 
 
 

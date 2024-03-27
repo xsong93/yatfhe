@@ -28,13 +28,15 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};
     trgswEncrypt(trgsw, trgswDft, param, trgswKey, 1);
+
+    // test identity for trgsw and trgswDft value
     for (auto i = 0; i < trgsw.l; i++) {
         for (auto j = 0; j < trgsw.trlweSamples[i].size(); j++) {
-            IntPolynomial ip {trgswDft.trlweDftSamples[i][j].b.N};
+            TorusPolynomial ip {trgswDft.trlweDftSamples[i][j].b.N};
             applyIntt(ip, trgswDft.trlweDftSamples[i][j].b);
-//            printTrlweAB(trgsw.trlweSamples[i][j], "trgsw.trlweSamples");
-            printArray(trgsw.trlweSamples[i][j].b.coeffs, "ori");
-            printArray(ip.coeffs, "ntt");
+            ASSERT_EQ(ip.coeffs, trgsw.trlweSamples[i][j].b.coeffs);
         }
     }
+
+
 }

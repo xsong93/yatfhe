@@ -17,7 +17,7 @@ void applyNtt(LagrangePolynomial& out, const IntPolynomial& in);
 
 void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial & in, int mSize);
 
-void applyIntt(IntPolynomial& out, LagrangePolynomial& in);
+void applyIntt(IntPolynomial& out, const LagrangePolynomial& in);
 
 template <typename T, typename R>
 void applyNttForAB(T& out, R& in) {

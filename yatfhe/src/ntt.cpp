@@ -48,8 +48,9 @@ void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial & in, const in
     applyNtt(out, intPolynomial);
 }
 
-void applyIntt(IntPolynomial& out, LagrangePolynomial& in) {
-    vector<uint64_t>& input = in.coeffs;
+void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
+    vector<uint64_t> input(in.coeffs.size());
+    copy(in.coeffs.begin(), in.coeffs.end(), input.begin());
     int32_t N = in.N;
     LagrangePolynomial temp {N};
     vector<uint64_t>& tmp = temp.coeffs;

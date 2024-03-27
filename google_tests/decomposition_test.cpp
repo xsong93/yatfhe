@@ -56,7 +56,8 @@ TEST(DecomposeOverBTest, DecomposeOverBTest) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;
-    auto rhs = decomposeOverB(1, param);
+    int mult = 5;
+    auto rhs = decomposeOverB(mult, param);
     printArray(rhs, "1 decomposeOverB");
     DecomposedData decomp {param.ksLevel};
     std::vector<Torus> data(10);
@@ -69,7 +70,7 @@ TEST(DecomposeOverBTest, DecomposeOverBTest) {
         for (auto i = 0; i < rhs.size(); i++) {
             out += decomp.value[i] * rhs[i] * decomp.sign;
         }
-        ASSERT_EQ(out, d);
+        ASSERT_EQ(out, d * mult);
     }
     printBanner("DecomposeOverB");
 }

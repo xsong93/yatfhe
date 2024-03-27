@@ -24,8 +24,8 @@ int genOffset(const int radixBits, const int bHalf, const int l, const int torus
 // g = (1/B, ..., 1/B^l), B = 2^radixBits
 std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int torusBits) {
     std::vector<Torus> g(l);
-    for (auto i = 1; i <= l; i++) {
-        g[i - 1] = 1 << (torusBits - i * radixBits); // 1/(B^(i) as Torus: 2^torusBits * 2^(-radixBits*i)
+    for (auto i = 0; i < l; i++) {
+        g[i] = 1 << (torusBits - (i + 1) * radixBits); // 1/(B^(i) as Torus: 2^torusBits * 2^(-radixBits*i)
     }
     return g;
 }
@@ -34,16 +34,16 @@ void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParamete
     out.sign = (in < 0) ? -1 : 1;
     UnsignedInteger tmp = (out.sign == 1) ? in : -in;
     UnsignedInteger mask = ((1 << param.radixBits) - 1) << (param.torusBits - param.radixBits);
-    for (auto i = 1; i <= param.ksLevel; i++) {
-        out.value[i - 1] = (mask & tmp) >> (param.torusBits - i * param.radixBits);
+    for (auto i = 0; i < param.ksLevel; i++) {
+        out.value[i] = (mask & tmp) >> (param.torusBits - (i + 1) * param.radixBits);
         mask >>= param.radixBits;
     }
 }
 
 Integer recompose(const DecomposedData& digits, const YatfheParameters& param) {
     Integer res {0};
-    for (auto i = 1; i <= digits.value.size(); ++i) {
-        res += digits.value[i - 1] << (param.torusBits - i * param.radixBits);
+    for (auto i = 0; i < digits.value.size(); ++i) {
+        res += digits.value[i] << (param.torusBits - (i + 1) * param.radixBits);
     }
     return res * digits.sign;
 }
@@ -54,10 +54,10 @@ Integer recompose(const DecomposedData& digits, const YatfheParameters& param) {
  * @param param
  * @return
  */
-std::vector<Integer> decomposeOverB(const Binary in, const YatfheParameters& param) {
+std::vector<Integer> decomposeOverB(const Integer in, const YatfheParameters& param) {
     std::vector<Integer> output(param.ksLevel);
-    for (int i = 1; i <= output.size(); ++i) {
-        output[i - 1] = in << (param.torusBits - i * param.radixBits);
+    for (int i = 0; i < output.size(); ++i) {
+        output[i] = in << (param.torusBits - (i + 1) * param.radixBits);
     }
     return output;
 }
@@ -80,7 +80,7 @@ void signedGadgetDecomposition(DecomposedData& out, const Integer in, const Yatf
         carry = carryMask >> (param.radixBits - 1);
         tmp[tmp.size() - i - 1] = signedDigit;
     }
-    copy(tmp.begin(), tmp.begin() + param.ksLevel, out.value.begin());
+    copy(tmp.begin(), tmp.begin() + out.value.size(), out.value.begin());
 }
 
 // G^-1 * Trlwe = DecomposedTrlwe
