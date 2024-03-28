@@ -47,8 +47,7 @@ void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe) {
 // out = (a', b[index])
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, const int index) {
     const auto N = in.b.N;
-    const auto size = in.a.size();
-    for (auto i = 0; i < size; i++) {
+    for (auto i = 0; i < in.k; i++) {
         for (auto j = 0; j < N; j++) {
             out.a[i * N + j] = (j <= index) ? (in.a[i].coeffs[index - j]) : (-in.a[i].coeffs[N + index - j]);
         }
