@@ -67,7 +67,8 @@ void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomia
 void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) {
     for (auto i = 0; i < v.N; i++) {
         int tmp = (modP * i / modQ) % modP;
-        v.coeffs[i] = doubleToTorus32((double) tmp / modP);
+//        v.coeffs[i] = doubleToTorus32((double) tmp / modP);
+        v.coeffs[i] = doubleToTorus32(1.0 / modP); //todo: debug
     }
 }
 

@@ -37,6 +37,6 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
             ASSERT_EQ(ip.coeffs, trgsw.trlweSamples[i][j].b.coeffs);
         }
     }
-
+    //todo: test on cmux
 
 }

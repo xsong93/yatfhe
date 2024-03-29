@@ -92,7 +92,7 @@ void gadgetDecomposeTrlwe(DecomposedTrlwe& output, Trlwe& input, const YatfhePar
         auto& currIn = (row < k) ? input.a[row] : input.b;
         for (auto j = 0; j < N; j++) {
             DecomposedData d {l};
-            signedGadgetDecomposition(d ,currIn.coeffs[j] ,param);
+            signedGadgetDecomposition(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < l; lvl++) {
                 auto& currOut = (row < k) ? output.rlwes[lvl].a[row] : output.rlwes[lvl].b;
                 currOut.coeffs[j] = d.value[lvl] * d.sign;
