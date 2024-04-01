@@ -14,6 +14,8 @@ using UnsignedInteger = u_int32_t;
 using Integer = int32_t;
 using Binary = Integer;
 using Torus = int32_t;
+const Integer TorusMax = INT32_MAX;
+const Integer TorusMin = INT32_MIN;
 //#undef USE_COMPRESSED_TRLWE
 //#else
 //using Torus = uint64_t;

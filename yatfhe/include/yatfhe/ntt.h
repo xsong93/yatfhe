@@ -43,10 +43,12 @@ uint64_t modSub(uint64_t x, uint64_t y);
 
 uint64_t modMul(uint64_t x, uint64_t y);
 
+void lagrangePolynomialSub(LagrangePolynomial& output, const LagrangePolynomial& input1, const LagrangePolynomial& input2);
+
 void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB);
 
 void modularAccumulate(vector<uint64_t>& coeffsB, const vector<uint64_t>& coeffsA, const vector<uint64_t>& coeffsS);
 
-void calModularInnerProductNtt(LagrangePolynomial& b, LagrangePolynomial& a, const LagrangePolynomial& s);
+void calModularInnerProductNtt(LagrangePolynomial& b, const vector<LagrangePolynomial>& a, const vector<LagrangePolynomial>& s);
 
 #endif //HLS_YATFHE_NTT_H

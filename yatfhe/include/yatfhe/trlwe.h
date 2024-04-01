@@ -70,6 +70,12 @@ struct TrlweKey {
 
 void trlweKeyGen(TrlweKey& key, int N, int k);
 
+void symEncTrlweSingleSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, Torus mu, double sigma);
+
+void symEncTrlweMultiSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const std::vector<Torus>& mu, double sigma);
+
+void symDecTrlwe(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key);
+
 void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
 
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);

@@ -5,6 +5,7 @@
 #include <vector>
 #include "yautil/tool.h"
 #include "yatfhe/trlwe.h"
+#include "yatfhe/trgsw.h"
 
 using namespace std;
 
@@ -30,6 +31,15 @@ void printTrlweAB(const Trlwe& in, const string& msg) {
         printf("%d:%s%d%s  ", j, ANSI_COLOR_YELLOW, in.b.coeffs[j], ANSI_COLOR_RESET);
     }
     cout <<"]" << endl << endl;
+}
+
+void printTrgsw(const Trgsw& in , const string& msg) {
+    cout << msg << ": ";
+    for (auto i = 0; i < in.l; i++) {
+        for (auto j = 0 ; j < in.trlweSamples[i].size(); j++) {
+            printTrlweAB(in.trlweSamples[i][j], "l:" + to_string(i) + ", k:" + to_string(j));
+        }
+    }
 }
 
 void printDecomposedTrlweAB(const DecomposedTrlwe& in, const string& msg) {

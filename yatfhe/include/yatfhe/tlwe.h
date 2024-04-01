@@ -44,6 +44,10 @@ void symEncTlweSample(Tlwe& tlweSample, Torus message, const TlweKey& key);
 
 double symDecTlweSample(Tlwe& in, const TlweKey& key, int torusBase);
 
+void lweAdd(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
+
+void lweSub(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
+
 void lweSubTo(Tlwe& output, const Tlwe& input);
 
 void tlweCopy(Tlwe& output, const Tlwe& input);

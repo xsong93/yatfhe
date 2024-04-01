@@ -11,7 +11,8 @@
 using namespace std;
 random_device rd;
 mt19937 rng(rd());
-uniform_int_distribution<Torus> uniformTorus32Distrib(INT32_MIN, INT32_MAX);
+uniform_int_distribution<Binary> binaryDistrib(0, 1);
+uniform_int_distribution<Torus> uniformTorusDistrib(TorusMin, TorusMax);
 
 // Gaussian sample centered in message, with standard deviation sigma
 Torus addGaussianNoise(Torus message, const double sigma) {
@@ -60,12 +61,18 @@ int32_t modSwitchFromTorus32(Torus in, int32_t newMod) {
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {
     for (int& coeff : coeffs) {
-        coeff = uniformTorus32Distrib(rng);
+        coeff = uniformTorusDistrib(rng);
     }
 }
 
-void initCoeffsWithGaussianNoise(std::vector<Torus>& coeffs, const Torus msg, const double sigma) {
+void initCoeffsWithGaussianNoiseSingleSample(std::vector<Torus>& coeffs, const Torus msg, const double sigma) {
     for (int& coeff : coeffs) {
         coeff = addGaussianNoise(msg, sigma);
+    }
+}
+
+void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, const double sigma) {
+    for (auto i = 0; i < coeffs.size(); i++) {
+        coeffs[i] = addGaussianNoise(msg[i], sigma);
     }
 }

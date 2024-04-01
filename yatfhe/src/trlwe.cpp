@@ -8,18 +8,57 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
+#include "yatfhe/ntt.h"
 #include "yautil/tool.h"
 
 using namespace std;
 
+void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, double sigma) {
+    initCoeffsWithGaussianNoiseSingleSample(trlwe.b.coeffs, mu, sigma);
+    for (auto i = 0 ; i < trlwe.k; i++) {
+        initCoeffsViaUniformDistribution(trlwe.a[i].coeffs);
+    }
+}
+
+void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
+    initCoeffsWithGaussianNoiseMultiSample(trlwe.b.coeffs, mu, sigma);
+    for (auto i = 0 ; i < trlwe.k; i++) {
+        initCoeffsViaUniformDistribution(trlwe.a[i].coeffs);
+    }
+}
+
+void symEncTrlwe(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key) {
+    applyNttForAB(trlweDft, trlwe);
+    calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
+    applyIntt(trlwe.b, trlweDft.b);
+}
+
 void trlweKeyGen(TrlweKey& key, const int N, const int k) {
-    uniform_int_distribution<Binary> distribution(0, 1);
     for (int i = 0; i < k; i++) {
         for (int j = 0; j < N; j++) {
-            key.s[i].coeffs[j] = distribution(rng);
+            key.s[i].coeffs[j] = binaryDistrib(rng);
         }
+        applyNtt(key.sDft[i], key.s[i]);
     }
 //    printPolyVec(key.s, "TrlweKey");
+}
+
+void symEncTrlweSingleSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const Torus mu, double sigma) {
+    initTrlweSingleSample(trlwe, mu, sigma);
+    symEncTrlwe(trlwe, trlweDft, key);
+}
+
+void symEncTrlweMultiSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu, double sigma) {
+    initTrlweMultiSample(trlwe, mu, sigma);
+    symEncTrlwe(trlwe, trlweDft, key);
+}
+
+void symDecTrlwe(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key) {
+    LagrangePolynomial innerProduct {trlweDft.b.N};
+    LagrangePolynomial res {trlweDft.b.N};
+    calModularInnerProductNtt(innerProduct, trlweDft.a, key.sDft);
+    lagrangePolynomialSub(res, trlweDft.b, innerProduct);
+    applyIntt(output, res);
 }
 
 // Trlwe: (X^-b) * (0,...,0,v)

@@ -10,21 +10,21 @@
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"
 
-// trgsw(0)
+// trgsw(0): [trlwe(0)]  (k+1)l rows
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
     for (auto lvl = 0; lvl < param.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
-            Trlwe& trlweSample = trgsw.trlweSamples[lvl][row];
-            TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[lvl][row];
-            initCoeffsWithGaussianNoise(trlweSample.b.coeffs, 0, param.lweStdDev); // init b = 0 + e
-            applyNtt(trlweDftSample.b, trlweSample.b);
-            for (auto col = 0; col < param.k; col++) {
-                initCoeffsViaUniformDistribution(trlweSample.a[col].coeffs); // init a
-                applyNtt(trlweDftSample.a[col], trlweSample.a[col]);
-                applyNtt(trgswKey.trlweKey.sDft[col], trgswKey.trlweKey.s[col]);
-                modularAccumulate(trlweDftSample.b.coeffs, trlweDftSample.a[col].coeffs, trgswKey.trlweKey.sDft[col].coeffs);
-            }
-            applyIntt(trlweSample.b, trlweDftSample.b);
+//            Trlwe& trlweSample = trgsw.trlweSamples[lvl][row];
+//            TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[lvl][row];
+//            initCoeffsWithGaussianNoiseSingleSample(trlweSample.b.coeffs, 0, param.lweStdDev); // init b = 0 + e
+//            applyNtt(trlweDftSample.b, trlweSample.b);
+//            for (auto col = 0; col < param.k; col++) {
+//                initCoeffsViaUniformDistribution(trlweSample.a[col].coeffs); // init a
+//                applyNtt(trlweDftSample.a[col], trlweSample.a[col]);
+//                modularAccumulate(trlweDftSample.b.coeffs, trlweDftSample.a[col].coeffs, trgswKey.trlweKey.sDft[col].coeffs);
+//            }
+//            applyIntt(trlweSample.b, trlweDftSample.b);
+            symEncTrlweSingleSample(trgsw.trlweSamples[lvl][row], trgswDft.trlweDftSamples[lvl][row], trgswKey.trlweKey, 0, param.lweStdDev);
         }
     }
 }
@@ -81,9 +81,11 @@ void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& para
 }
 
 void trgswDecrypt(Trgsw& trgsw, const YatfheParameters& param, TrgswKey& trgswKey) {
-
+    // todo
 }
 
-
+void trgswExternalProduct(Trlwe& output, Trgsw& input1, Trlwe& input2) {
+    // todo
+}
 
 

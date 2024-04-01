@@ -15,7 +15,8 @@ using namespace std;
 
 extern random_device rd;
 extern mt19937 rng;
-extern uniform_int_distribution<Torus> uniformTorus32Distrib;
+extern uniform_int_distribution<Binary> binaryDistrib;
+extern uniform_int_distribution<Torus> uniformTorusDistrib;
 static const int64_t twoP32 = INT64_C(1) << 32; // 2^32
 
 Torus addGaussianNoise(Torus message, double sigma);
@@ -32,7 +33,9 @@ Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
 
 void initCoeffsViaUniformDistribution(vector<Torus>& coeffs);
 
-void initCoeffsWithGaussianNoise(vector<Torus>& coeffs, Torus msg, double sigma);
+void initCoeffsWithGaussianNoiseSingleSample(vector<Torus>& coeffs, Torus msg, double sigma);
+
+void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, double sigma);
 
 template <typename T>
 void setCoeffsValue(vector<T> coeffs, T val) {
