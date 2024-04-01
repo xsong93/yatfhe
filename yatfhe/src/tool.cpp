@@ -21,13 +21,13 @@ void printTrlweAB(const Trlwe& in, const string& msg) {
     for (int i = 0; i < in.k; i++) {
         cout << "[";
         for (int j = 0; j < in.b.N; j++) {
-            printf("%d,%d: %d  ", i, j, in.a[i].coeffs[j]);
+            printf("%d,%d:%s%d%s  " , i, j, ANSI_COLOR_YELLOW, in.a[i].coeffs[j], ANSI_COLOR_RESET);
         }
         cout <<"] ";
     }
     cout << endl << "b: [";
     for (int j = 0; j < in.b.N; j++) {
-        printf("%d: %d  ", j, in.b.coeffs[j]);
+        printf("%d:%s%d%s  ", j, ANSI_COLOR_YELLOW, in.b.coeffs[j], ANSI_COLOR_RESET);
     }
     cout <<"]" << endl << endl;
 }
@@ -69,12 +69,11 @@ void printBanner(const string& msg) {
     string r = " test passed! <<<<<<<<<<<<<<<<<<<<<<<<";
     auto length = l.size() + r.size() + msg.size();
     for (auto i = 0 ; i < length; i++) {
-        std::cout << "-";
+        std::cout << ANSI_COLOR_GREEN << "-";
     }
-    std::cout << std::endl;
-    std::cout << l + msg + r << std::endl;
+    std::cout << std::endl << ANSI_COLOR_GREEN << l + msg + r << std::endl;
     for (auto i = 0 ; i < length; i++) {
-        std::cout << "-";
+        std::cout << ANSI_COLOR_GREEN << "-";
     }
     std::cout << std::endl;
 }

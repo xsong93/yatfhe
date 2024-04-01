@@ -8,6 +8,7 @@
 #include <iostream>
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
+#include "yautil/ansi_color.h"
 
 using namespace std;
 
@@ -21,7 +22,7 @@ template <typename T>
 void printArray(const vector<T>& in, const string& msg) {
     cout << msg <<": [";
     for (int i = 0; i < in.size(); i++) {
-        cout << i << ":" << in[i] <<" ";
+        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] <<ANSI_COLOR_RESET <<" ";
     }
     cout <<"]" <<endl << endl;
 }

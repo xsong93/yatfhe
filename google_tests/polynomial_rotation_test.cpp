@@ -50,4 +50,5 @@ TEST(PolyRotTest, PolyRotTest) {
         printArray(b.coeffs, "b-1 " + to_string(i));
         ASSERT_EQ(b.coeffs, vecSub(rotatedVec[i + N * 2], a.coeffs));
     }
+    printBanner("PolyRotTest");
 }
