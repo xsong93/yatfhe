@@ -60,21 +60,22 @@ struct TrlweKey {
     std::vector<BinPolynomial> s; // k
     std::vector<LagrangePolynomial> sDft; // k
     int k;
-//    double sigma;
+    int N;
 
     TrlweKey(int k, int N):
         k(k),
+        N(N),
         s(k, TorusPolynomial(N)),
         sDft(k, LagrangePolynomial(N)) {};
 };
 
-void trlweKeyGen(TrlweKey& key, int N, int k);
+void trlweKeyGen(TrlweKey& key);
 
 void symEncTrlweSingleSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, Torus mu, double sigma);
 
 void symEncTrlweMultiSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const std::vector<Torus>& mu, double sigma);
 
-void symDecTrlwe(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key);
+void symDecTrlwe(DoublePolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, int torusBase);
 
 void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
 

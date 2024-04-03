@@ -57,6 +57,12 @@ void intPolyToTorusPoly(TorusPolynomial& output, const IntPolynomial& input, con
     }
 }
 
+void roundErrorPoly(DoublePolynomial& target, const int torusBase) {
+    for (auto i = 0 ; i < target.N; i++) {
+        target.coeffs[i] = roundError(target.coeffs[i], torusBase);
+    }
+}
+
 void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, const int value, const int position) {
     IntPolynomial tmp {lagrangePolynomial.N};
     tmp.coeffs[position] = value;

@@ -11,7 +11,7 @@ TEST(EncDecTest, EncDecTest) {
     const YatfheParameters param {};
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey, param.n);
+    lweKeyGen(tlweKey);
 
     Torus mu = doubleToTorus32(1.0 / param.torusBase);
     Tlwe input {param.n};
@@ -27,7 +27,7 @@ TEST(AddSubTest, AddSubTest) {
     const YatfheParameters param {};
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey, param.n);
+    lweKeyGen(tlweKey);
 
     Torus mu1 = doubleToTorus32(1.0 / param.torusBase);
     Torus mu2 = doubleToTorus32(2.0 / param.torusBase);

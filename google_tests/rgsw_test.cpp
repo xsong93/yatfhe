@@ -19,9 +19,9 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKey bsKey {param};
     TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
-    lweKeyGen(tlweKey, param.n);
+    lweKeyGen(tlweKey);
     setCoeffsValue(tlweKey.s, 0); // todo: remove this
-    trlweKeyGen(trlweKey, param.N, param.k);
+    trlweKeyGen(trlweKey);
     for (auto i = 0; i < trlweKey.k; i++) {
         setCoeffsValue(trlweKey.s[i].coeffs, 0); // todo: remove this
     }
@@ -61,8 +61,8 @@ TEST(RgswMultTest, RgswMultTest) {
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKey bsKey {param};
     TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
-    lweKeyGen(tlweKey, param.n);
-    trlweKeyGen(trlweKey, param.N, param.k);
+    lweKeyGen(tlweKey);
+    trlweKeyGen(trlweKey);
 
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};

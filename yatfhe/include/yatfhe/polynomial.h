@@ -45,6 +45,8 @@ void torusPolyToIntPoly(IntPolynomial& output, const TorusPolynomial& input, int
 
 void intPolyToTorusPoly(TorusPolynomial& output, const IntPolynomial& input, int mSize);
 
+void roundErrorPoly(DoublePolynomial& target, int torusBase);
+
 void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, int value, int position);
 
 void generateTestPolynomial(TorusPolynomial& v, int modP, int modQ);

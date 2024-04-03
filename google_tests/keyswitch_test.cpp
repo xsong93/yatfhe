@@ -14,8 +14,8 @@ TEST(KSKTest, KSKTest) {
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     TlweKeySwitchingKey ksKey{param.N * param.k, param.n, param.ksLevel};
-    lweKeyGen(tlweKey, param.n);
-    trlweKeyGen(trlweKey, param.N, param.k);
+    lweKeyGen(tlweKey);
+    trlweKeyGen(trlweKey);
     tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);
     TlweKey inKey(param.k * param.N);
     convertTrlweKeyToTlweKey(inKey, trlweKey);

@@ -40,7 +40,7 @@ double torus32ToDouble(const Torus in) {
 double roundError(const double in, const int torusBase) {
     int mulP  = round(in * torusBase);
     int modP = mulP % torusBase;
-    printf("yatfhe/src/numeric_functions.cpp@roundError. in: %f, mulP: %d, modP: %d\n", in, mulP, modP);
+//    printf("yatfhe/src/numeric_functions.cpp@roundError. in: %f, mulP: %d, modP: %d\n", in, mulP, modP);
     return modP / double(torusBase);
 }
 

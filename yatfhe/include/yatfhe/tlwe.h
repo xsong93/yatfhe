@@ -36,7 +36,7 @@ struct TlweKey {
     explicit TlweKey(int n) : n(n), s(n), sigma(0) {};
 };
 
-void lweKeyGen(TlweKey& result, int n);
+void lweKeyGen(TlweKey& key);
 
 void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input);
 

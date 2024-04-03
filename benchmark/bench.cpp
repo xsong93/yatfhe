@@ -21,9 +21,9 @@ int main(int argc, char **argv) {
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKey bsKey {param};
     TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
-    lweKeyGen(tlweKey, param.n);
+    lweKeyGen(tlweKey);
 //    lweKeyGen(keyTlweOut, param.n);
-    trlweKeyGen(trlweKey, param.N, param.k);
+    trlweKeyGen(trlweKey);
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
     tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);
 

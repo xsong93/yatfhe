@@ -10,8 +10,8 @@
 
 using namespace std;
 
-void lweKeyGen(TlweKey& key, const int n) {
-    for (auto i = 0; i < n; i++) {
+void lweKeyGen(TlweKey& key) {
+    for (auto i = 0; i < key.n; i++) {
         key.s[i] = binaryDistrib(rng);
     }
 //    printArray(key.s, "TlweKey");

@@ -33,9 +33,9 @@ void symEncTrlwe(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key) {
     applyIntt(trlwe.b, trlweDft.b);
 }
 
-void trlweKeyGen(TrlweKey& key, const int N, const int k) {
-    for (int i = 0; i < k; i++) {
-        for (int j = 0; j < N; j++) {
+void trlweKeyGen(TrlweKey& key) {
+    for (int i = 0; i < key.k; i++) {
+        for (int j = 0; j < key.N; j++) {
             key.s[i].coeffs[j] = binaryDistrib(rng);
         }
         applyNtt(key.sDft[i], key.s[i]);
@@ -53,12 +53,15 @@ void symEncTrlweMultiSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& ke
     symEncTrlwe(trlwe, trlweDft, key);
 }
 
-void symDecTrlwe(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key) {
+void symDecTrlwe(DoublePolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, const int torusBase) {
+    TorusPolynomial tmp {output.N};
     LagrangePolynomial innerProduct {trlweDft.b.N};
     LagrangePolynomial res {trlweDft.b.N};
     calModularInnerProductNtt(innerProduct, trlweDft.a, key.sDft);
     lagrangePolynomialSub(res, trlweDft.b, innerProduct);
-    applyIntt(output, res);
+    applyIntt(tmp, res);
+    torusPolyToDoublePoly(output, tmp);
+    roundErrorPoly(output, torusBase);
 }
 
 // Trlwe: (X^-b) * (0,...,0,v)
