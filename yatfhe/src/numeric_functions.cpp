@@ -14,11 +14,20 @@ mt19937 rng(rd());
 uniform_int_distribution<Binary> binaryDistrib(0, 1);
 uniform_int_distribution<Torus> uniformTorusDistrib(TorusMin, TorusMax);
 
+Integer genIntUniformDist(const int lowerBound, const int upperBound) {
+    uniform_int_distribution<Integer> uniformIntDistrib(lowerBound, upperBound);
+    return uniformIntDistrib(rng);
+}
+
 // Gaussian sample centered in message, with standard deviation sigma
 Torus addGaussianNoise(Torus message, const double sigma) {
     normal_distribution<double> normalDistribution(0.0, sigma);
-    double err = normalDistribution(rng);
-    return message + doubleToTorus32(err);
+    Torus err = doubleToTorus32(normalDistribution(rng));
+    Torus tmp = message + err;
+    if ((message > 0 && tmp < 0) || (message < 0 && tmp > 0)) { // handle overflow
+        return message - err;
+    }
+    return message + err;
 }
 
 // Convert double to Torus32, d in [-0.5, 0.5)
