@@ -77,6 +77,8 @@ void symEncTrlweMultiSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& ke
 
 void symDecTrlwe(DoublePolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, int torusBase);
 
+void symDecTrlweWoRounding(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, int torusBase);
+
 void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
 
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);

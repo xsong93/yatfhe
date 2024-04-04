@@ -53,6 +53,10 @@ double roundError(const double in, const int torusBase) {
     return modP / double(torusBase);
 }
 
+Torus roundErrorForShiftedTorus(const Torus in, const double sigma) {
+    return in + 20 * doubleToTorus32(sigma);
+}
+
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {
     uint64_t interv = ((UINT64_C(1) << 63) / Msize) * 2; // width of each interval
     uint64_t phase64 = mu * interv;

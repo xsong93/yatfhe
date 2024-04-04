@@ -80,8 +80,13 @@ void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& para
     trgswAddIntegerNtt(trgswDft, trgsw, mu, param);
 }
 
-void trgswDecrypt(Trgsw& trgsw, const YatfheParameters& param, TrgswKey& trgswKey) {
-    // todo
+// To decrypt, it is sufficient to decrypt the last GLev ciphertext. The last row of Trgsw is a Trlwe encryption of m/B^l.
+Integer trgswDecrypt(TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
+    const auto firstLevel = 0;
+    const auto lastRow = param.k;
+    TorusPolynomial tmp {param.N};
+    symDecTrlweWoRounding(tmp, trgswDft.trlweDftSamples[firstLevel][lastRow], trgswKey.trlweKey, param.torusBase);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.lweStdDev) >> (param.torusBits - param.radixBits);
 }
 
 void trgswExternalProduct(Trlwe& output, Trgsw& input1, Trlwe& input2) {

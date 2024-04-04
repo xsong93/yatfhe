@@ -29,6 +29,8 @@ Torus doubleToTorus32(double d);
 
 double roundError(double in, int torusBase);
 
+Torus roundErrorForShiftedTorus(Torus in, double sigma);
+
 double torus32ToDouble(Torus in);
 
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize);

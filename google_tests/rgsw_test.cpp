@@ -20,15 +20,13 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
     BootstrappingKey bsKey {param};
     TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
     lweKeyGen(tlweKey);
-    setCoeffsValue(tlweKey.s, 0); // todo: remove this
     trlweKeyGen(trlweKey);
-    for (auto i = 0; i < trlweKey.k; i++) {
-        setCoeffsValue(trlweKey.s[i].coeffs, 0); // todo: remove this
-    }
+
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};
-    trgswEncrypt(trgsw, trgswDft, param, trgswKey, 0);
-    printTrgsw(trgsw, "trgsw");
+    Integer plain  = 7;
+    trgswEncrypt(trgsw, trgswDft, param, trgswKey, plain);
+//    printTrgsw(trgsw, "trgsw");
 
     // test identity for trgsw and trgswDft value
     for (auto i = 0; i < trgsw.l; i++) {
@@ -38,19 +36,10 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
             ASSERT_EQ(ip.coeffs, trgsw.trlweSamples[i][j].b.coeffs);
         }
     }
-    //todo: test on cmux
-    Trlwe in {param.k, param.N};
-    Trlwe out {param.k, param.N};
-    for (auto j = 0; j < in.b.N; j++) {
-        for (auto i = 0; i < in.k; i++) {
-            in.a[i].coeffs[j] = j;
-        }
-        in.b.coeffs[j] = j;
-    }
-    controlMux(out, in, 1, trgswDft, param);
-    printTrlweAB(in, "in");
-    printTrlweAB(out, "out");
-
+    Torus dec = trgswDecrypt(trgswDft, param, trgswKey);
+    cout << "plain: " << plain << endl;
+    cout << "dec: " << dec << endl;
+    ASSERT_EQ(plain, dec);
 }
 
 TEST(RgswMultTest, RgswMultTest) {
@@ -69,14 +58,6 @@ TEST(RgswMultTest, RgswMultTest) {
     trgswEncrypt(trgsw, trgswDft, param, trgswKey, doubleToTorus32(1.0 / param.torusBase));
 //    printTrgsw(trgsw, "trgsw");
 
-    // test identity for trgsw and trgswDft value
-    for (auto i = 0; i < trgsw.l; i++) {
-        for (auto j = 0; j < trgsw.trlweSamples[i].size(); j++) {
-            TorusPolynomial ip {trgswDft.trlweDftSamples[i][j].b.N};
-            applyIntt(ip, trgswDft.trlweDftSamples[i][j].b);
-            ASSERT_EQ(ip.coeffs, trgsw.trlweSamples[i][j].b.coeffs);
-        }
-    }
     Trlwe in2 {param.k, param.N};
     Trlwe out {param.k, param.N};
     // todo: mult

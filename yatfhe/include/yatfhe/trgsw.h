@@ -44,6 +44,8 @@ struct TrgswKey {
 
 void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey, Integer mu);
 
+Integer trgswDecrypt(TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
+
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey);
 
 void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const YatfheParameters& param);

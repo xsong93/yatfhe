@@ -64,6 +64,15 @@ void symDecTrlwe(DoublePolynomial& output, const TrlweDft& trlweDft, const Trlwe
     roundErrorPoly(output, torusBase);
 }
 
+void symDecTrlweWoRounding(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, const int torusBase) {
+    DoublePolynomial tmp {output.N};
+    LagrangePolynomial innerProduct {trlweDft.b.N};
+    LagrangePolynomial res {trlweDft.b.N};
+    calModularInnerProductNtt(innerProduct, trlweDft.a, key.sDft);
+    lagrangePolynomialSub(res, trlweDft.b, innerProduct);
+    applyIntt(output, res);
+}
+
 // Trlwe: (X^-b) * (0,...,0,v)
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput) {
     const auto barb = scaledInput.b;

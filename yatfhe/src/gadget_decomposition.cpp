@@ -50,7 +50,8 @@ Integer recompose(const DecomposedData& digits, const YatfheParameters& param) {
 
 /**
  * Calculate in * B^-j.
- * @param in The input to decompose.
+ * @param in The input to decompose. Bit length should be less than (maxIntegerBitLength - (torusBits - radixBits)).
+ * i.e. (32 - (32 - 4)) = 4. Therefore, max in should be less than 2^3.
  * @param param
  * @return
  */
