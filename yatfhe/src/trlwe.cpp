@@ -85,6 +85,34 @@ void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const Scale
     printArray(t, "b:");
 }
 
+void trlweAdd(Trlwe& output, const Trlwe& input1, const Trlwe& input2) {
+    for (auto i = 0; i < output.a.size(); i++) {
+        polynomialAdd(output.a[i], input1.a[i], input2.a[i]);
+    }
+    polynomialAdd(output.b, input1.b, input2.b);
+}
+
+void trlweSub(Trlwe& output, const Trlwe& input1, const Trlwe& input2) {
+    for (auto i = 0; i < output.a.size(); i++) {
+        polynomialSub(output.a[i], input1.a[i], input2.a[i]);
+    }
+    polynomialSub(output.b, input1.b, input2.b);
+}
+
+void trlweAddNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2) {
+    for (auto i = 0; i < output.a.size(); i++) {
+        lagrangePolynomialAdd(output.a[i], input1.a[i], input2.a[i]);
+    }
+    lagrangePolynomialAdd(output.b, input1.b, input2.b);
+}
+
+void trlweSubNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2) {
+    for (auto i = 0; i < output.a.size(); i++) {
+        lagrangePolynomialSub(output.a[i], input1.a[i], input2.a[i]);
+    }
+    lagrangePolynomialSub(output.b, input1.b, input2.b);
+}
+
 /**
  * accum.a += tlwe.a, accum.b += tlwe.b
  * */

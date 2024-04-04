@@ -56,3 +56,64 @@ TEST(TrlweEncDecMultiSampleTest, TrlweEncDecMultiSampleTest) {
     }
     printBanner("TrlweEncDecMultiSampleTest");
 }
+
+TEST(TrlweAddSubMultiSampleTest, TrlweAddSubMultiSampleTest) {
+    YatfheParameters param {};
+    param.torusBase = 1 << 28;
+
+    TrlweKey trlweKey {param.k, param.N};
+    Trlwe trlwe1 {param.k, param.N};
+    Trlwe trlwe2 {param.k, param.N};
+    Trlwe trlwe3 {param.k, param.N};
+    TrlweDft trlweDft1 {param.k, param.N};
+    TrlweDft trlweDft2 {param.k, param.N};
+    TrlweDft trlweDft3 {param.k, param.N};
+
+    trlweKeyGen(trlweKey);
+
+    std::vector<double> plain1(param.N);
+    std::vector<double> plain2(param.N);
+    std::vector<Torus> in1(param.N);
+    std::vector<Torus> in2(param.N);
+    for (auto i = 0; i < in1.size(); i++) {
+        plain1[i] = (double) genIntUniformDist(-param.torusBase / 4 + 1, param.torusBase / 4 - 1) / param.torusBase;
+        plain2[i] = (double) genIntUniformDist(-param.torusBase / 4 + 1, param.torusBase / 4 - 1) / param.torusBase;
+        in1[i] = doubleToTorus32(plain1[i]);
+        in2[i] = doubleToTorus32(plain2[i]);
+    }
+    printArray(plain1, "plain1");
+    printArray(plain2, "plain2");
+
+    symEncTrlweMultiSample(trlwe1, trlweDft1, trlweKey, in1, param.lweStdDev);
+    symEncTrlweMultiSample(trlwe2, trlweDft2, trlweKey, in2, param.lweStdDev);
+
+    DoublePolynomial output {param.N};
+    TorusPolynomial torusOutput(param.N);
+    DoublePolynomial  plainOutput(param.N);
+
+    vectorAdd(torusOutput.coeffs, in1, in2);
+    torusPolyToDoublePoly(plainOutput, torusOutput);
+    printArray(plainOutput.coeffs, "plainOutput Add");
+
+    trlweAddNtt(trlweDft3, trlweDft1, trlweDft2);
+    symDecTrlwe(output, trlweDft3, trlweKey, param.torusBase);
+    printArray(output.coeffs, "output Add");
+
+    for (auto i = 0; i < plainOutput.N; i++) {
+        ASSERT_NEAR(plainOutput.coeffs[i], output.coeffs[i], 0.001);
+    }
+
+    vectorSub(torusOutput.coeffs, in1, in2);
+    torusPolyToDoublePoly(plainOutput, torusOutput);
+    printArray(plainOutput.coeffs, "plainOutput Sub");
+
+    trlweSubNtt(trlweDft3, trlweDft1, trlweDft2);
+    symDecTrlwe(output, trlweDft3, trlweKey, param.torusBase);
+    printArray(output.coeffs, "output Sub");
+
+    for (auto i = 0; i < plainOutput.N; i++) {
+        ASSERT_NEAR(plainOutput.coeffs[i], output.coeffs[i], 0.001);
+    }
+
+    printBanner("TrlweAddSubMultiSampleTest");
+}

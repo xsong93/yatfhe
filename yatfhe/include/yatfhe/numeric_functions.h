@@ -48,4 +48,18 @@ void setCoeffsValue(vector<T> coeffs, T val) {
     }
 }
 
+template <typename T>
+void vectorAdd(vector<T>& output, vector<T>& input1, vector<T>& input2) {
+    for (auto i = 0; i < output.size(); i++) {
+        output[i] = input1[i] + input2[i];
+    }
+}
+
+template <typename T>
+void vectorSub(vector<T>& output, vector<T>& input1, vector<T>& input2) {
+    for (auto i = 0; i < output.size(); i++) {
+        output[i] = input1[i] - input2[i];
+    }
+}
+
 #endif //HLS_YATFHE_NUMERIC_FUNCTIONS_H

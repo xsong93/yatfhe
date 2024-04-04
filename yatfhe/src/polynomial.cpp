@@ -63,12 +63,6 @@ void roundErrorPoly(DoublePolynomial& target, const int torusBase) {
     }
 }
 
-void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, const int value, const int position) {
-    IntPolynomial tmp {lagrangePolynomial.N};
-    tmp.coeffs[position] = value;
-    applyNtt(lagrangePolynomial, tmp);
-}
-
 // vj = ((pj / q) mod p) / p
 void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) {
     for (auto i = 0; i < v.N; i++) {
@@ -117,14 +111,6 @@ void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum) {
     }
 }
 
-// accum += poly
-void lagrangePolynomialAccumulate(LagrangePolynomial& accum, LagrangePolynomial& poly) {
-    const auto N = accum.N;
-    for (auto i = 0; i < N; i++) {
-        accum.coeffs[i] += modAdd(accum.coeffs[i], poly.coeffs[i]);
-    }
-}
-
 // res = poly1 + poly2
 void polynomialAdd(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
@@ -150,5 +136,31 @@ void polynomialSub(TorusPolynomial& res, const IntPolynomial& poly1, const Torus
     const int N = res.N;
     for (int i = 0; i < N; i++) {
         res.coeffs[i] = poly1.coeffs[i] - poly2.coeffs[i];
+    }
+}
+
+void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, const int value, const int position) {
+    IntPolynomial tmp {lagrangePolynomial.N};
+    tmp.coeffs[position] = value;
+    applyNtt(lagrangePolynomial, tmp);
+}
+
+// accum += poly
+void lagrangePolynomialAccumulate(LagrangePolynomial& accum, LagrangePolynomial& poly) {
+    const auto N = accum.N;
+    for (auto i = 0; i < N; i++) {
+        accum.coeffs[i] += modAdd(accum.coeffs[i], poly.coeffs[i]);
+    }
+}
+
+void lagrangePolynomialAdd(LagrangePolynomial& output, const LagrangePolynomial& input1, const LagrangePolynomial& input2) {
+    for (auto i = 0; i < input1.N; i++) {
+        output.coeffs[i] = modAdd(input1.coeffs[i], input2.coeffs[i]);
+    }
+}
+
+void lagrangePolynomialSub(LagrangePolynomial& output, const LagrangePolynomial& input1, const LagrangePolynomial& input2) {
+    for (auto i = 0; i < input1.N; i++) {
+        output.coeffs[i] = modSub(input1.coeffs[i], input2.coeffs[i]);
     }
 }

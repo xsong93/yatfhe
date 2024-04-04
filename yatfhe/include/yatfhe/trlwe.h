@@ -79,6 +79,14 @@ void symDecTrlwe(DoublePolynomial& output, const TrlweDft& trlweDft, const Trlwe
 
 void symDecTrlweWoRounding(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, int torusBase);
 
+void trlweAdd(Trlwe& output, const Trlwe& input1, const Trlwe& input2);
+
+void trlweSub(Trlwe& output, const Trlwe& input1, const Trlwe& input2);
+
+void trlweAddNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2);
+
+void trlweSubNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2);
+
 void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
 
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);

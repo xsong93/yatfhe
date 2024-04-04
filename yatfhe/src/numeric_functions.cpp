@@ -30,7 +30,9 @@ Torus addGaussianNoise(Torus message, const double sigma) {
     return message + err;
 }
 
-// Convert double to Torus32, d in [-0.5, 0.5)
+// Convert double to Torus32, d in [-0.5, 0.5).
+// Generally, d shouldn't be taken as near as the boundary values, since in lwe-like cryptology schemes, a random error
+// will be added for security considerations. An input value near boundary will very likely produce the add zero overflow issue.
 Torus doubleToTorus32(const double d) {
     auto frac = d - (int64_t) d; // get the fraction part of d
     if (frac >= 0.5) {

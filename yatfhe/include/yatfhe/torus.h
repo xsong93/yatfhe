@@ -7,7 +7,7 @@
 
 #include <cstdlib>
 #include <vector>
-//#include <cstdint>
+#include <cstdint>
 
 //#ifdef TORUS32
 using UnsignedInteger = u_int32_t;

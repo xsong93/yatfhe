@@ -80,7 +80,7 @@ void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& para
     trgswAddIntegerNtt(trgswDft, trgsw, mu, param);
 }
 
-// To decrypt, it is sufficient to decrypt the last GLev ciphertext. The last row of Trgsw is a Trlwe encryption of m/B^l.
+// To decrypt, it is sufficient to decrypt the last GLev ciphertext, which is a Glev encryption of m/B^l.
 Integer trgswDecrypt(TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
     const auto firstLevel = 0;
     const auto lastRow = param.k;
@@ -91,6 +91,7 @@ Integer trgswDecrypt(TrgswDft& trgswDft, const YatfheParameters& param, const Tr
 
 void trgswExternalProduct(Trlwe& output, Trgsw& input1, Trlwe& input2) {
     // todo
+
 }
 
 

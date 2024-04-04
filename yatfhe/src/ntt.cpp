@@ -145,12 +145,6 @@ uint64_t modMul(uint64_t x, uint64_t y) {
     return MODULUS - minus + plus;
 }
 
-void lagrangePolynomialSub(LagrangePolynomial& output, const LagrangePolynomial& input1, const LagrangePolynomial& input2) {
-    for (auto i = 0; i < input1.N; i++) {
-        output.coeffs[i] = modSub(input1.coeffs[i], input2.coeffs[i]);
-    }
-}
-
 // output_j = aj * bj mod p
 void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {
     const auto N = output.size();
