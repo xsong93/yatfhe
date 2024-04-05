@@ -65,4 +65,5 @@ TEST(RgswMultTest, RgswMultTest) {
     Trlwe out {param.k, param.N};
     symEncTrlweSingleSample(in2, in2Dft, trlweKey, mu2, param.lweStdDev);
     // todo: mult
+    trgswExternalProduct(out, trgswDft, in2, param);
 }

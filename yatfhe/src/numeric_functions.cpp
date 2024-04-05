@@ -55,6 +55,9 @@ double roundError(const double in, const int torusBase) {
     return modP / double(torusBase);
 }
 
+// To compensate the possible negative gaussian error, add sufficient sigma to the value so that it stops at the
+// positive side of the nearest desired shift scale. The original integer value can then be restored after a proper right
+// shift operation.
 Torus roundErrorForShiftedTorus(const Torus in, const double sigma) {
     return in + 20 * doubleToTorus32(sigma);
 }

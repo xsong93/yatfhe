@@ -44,10 +44,12 @@ struct TrgswKey {
 
 void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey, Integer mu);
 
-Integer trgswDecrypt(TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
+Integer trgswDecrypt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey);
 
 void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const YatfheParameters& param);
+
+void trgswExternalProduct(Trlwe& output, TrgswDft& trgswInput, Trlwe& trlweInput, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H
