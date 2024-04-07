@@ -78,13 +78,13 @@ int32_t modSwitchFromTorus32(Torus in, int32_t newMod) {
 }
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {
-    for (int& coeff : coeffs) {
+    for (auto& coeff : coeffs) {
         coeff = uniformTorusDistrib(rng);
     }
 }
 
 void initCoeffsWithGaussianNoiseSingleSample(std::vector<Torus>& coeffs, const Torus msg, const double sigma) {
-    for (int& coeff : coeffs) {
+    for (auto& coeff : coeffs) {
         coeff = addGaussianNoise(msg, sigma);
     }
 }

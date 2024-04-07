@@ -54,7 +54,7 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
     int32_t N = in.N;
     LagrangePolynomial temp {N};
     vector<uint64_t>& tmp = temp.coeffs;
-    vector<int32_t>& output = out.coeffs;
+    vector<Integer>& output = out.coeffs;
     int inv = 0;
     bitRevShuffle(input, N);
     for (int transSize = 2; transSize <= N; transSize = transSize * 2) {

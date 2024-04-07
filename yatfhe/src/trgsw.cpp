@@ -66,6 +66,51 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const Yatf
     }
 }
 
+//// trgsw(0): [trlwe(0)]  (k+1)l rows
+//void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
+//    for (auto lvl = 0; lvl < param.lDft; lvl++) {
+//        for (auto row = 0; row < param.k + 1; row++) {
+//            symEncTrlweSingleSample(trgsw.trlweSamples[lvl][row], trgswDft.trlweDftSamples[lvl][row], trgswKey.trlweKey, 0, param.lweStdDev);
+//        }
+//    }
+//}
+//
+//// output += mu * G^T
+//void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, int64_t mu, const YatfheParameters& param) {
+//    // add the diagonal matrix (mu * G^T)_ijk to the output
+//    //       ( 1/B^l                         )
+//    //      .                              . .
+//    //    .                              .   .
+//    //  ( 1/B^2                        )     .
+//    // ( 1/B                         )       .
+//    // (     1/B                     )       .
+//    // (          .                  )       .
+//    // (              .              )     .
+//    // (                  .          )   .
+//    // (                      .      ) .
+//    // (                         1/B )
+//    // ( a_0  a_1          a_k-1  b  )
+//
+//    for (auto lvl = 0; lvl < param.lDft; lvl++) {
+//        auto decomposedMu = mu << (param.dftBits -  (lvl + 1) * param.radixBits);
+//        cout << decomposedMu << endl;
+//        LagrangePolynomial tmp(param.N, decomposedMu);
+//        for (auto row = 0; row < param.k + 1; row++) {
+//
+//            // add to a_lii
+//            if (row < param.k) {
+//                lagrangePolynomialAdd(trgswDft.trlweDftSamples[lvl][row].a[row], trgswDft.trlweDftSamples[lvl][row].a[row], tmp);
+//                applyIntt(trgsw.trlweSamples[lvl][row].a[row], trgswDft.trlweDftSamples[lvl][row].a[row]);
+//                continue;
+//            }
+//
+//            // add to b_lk
+//            lagrangePolynomialAdd(trgswDft.trlweDftSamples[lvl][row].b, trgswDft.trlweDftSamples[lvl][row].b, tmp);
+//            applyIntt(trgsw.trlweSamples[lvl][row].b, trgswDft.trlweDftSamples[lvl][row].b);
+//        }
+//    }
+//}
+
 /**
  * To encrypt a message as a trgsw ct, there are two steps: 1) generate a trgsw ct with each level and row a rlwe
  * encryption of zero. 2) add mu * G^T to the above trgsw ct
@@ -85,7 +130,7 @@ Integer trgswDecrypt(const TrgswDft& trgswDft, const YatfheParameters& param, co
     const auto firstLevel = 0;
     const auto lastRow = param.k;
     TorusPolynomial tmp {param.N};
-    symDecTrlweWoRounding(tmp, trgswDft.trlweDftSamples[firstLevel][lastRow], trgswKey.trlweKey, param.torusBase);
+    symDecTrlweWoRounding(tmp, trgswDft.trlweDftSamples[firstLevel][lastRow], trgswKey.trlweKey);
     return roundErrorForShiftedTorus(tmp.coeffs[0], param.lweStdDev) >> (param.torusBits - param.radixBits);
 }
 

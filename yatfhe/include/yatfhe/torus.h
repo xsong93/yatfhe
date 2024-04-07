@@ -9,20 +9,24 @@
 #include <vector>
 #include <cstdint>
 
-//#ifdef TORUS32
+#define TORUS32
+
+#ifdef TORUS32
+using Torus = int32_t;
 using UnsignedInteger = uint32_t;
 using Integer = int32_t;
 using Binary = Integer;
-using Torus = int32_t;
 const Integer TorusMax = INT32_MAX;
 const Integer TorusMin = INT32_MIN;
-//#undef USE_COMPRESSED_TRLWE
-//#else
-//using Torus = uint64_t;
-//using UnsignedInteger = uint64_t;
-//#endif
+#else
+using Torus = int64_t;
+using UnsignedInteger = uint64_t;
+using Integer = int64_t;
+using Binary = Integer;
+const Integer TorusMax = INT64_MAX;
+const Integer TorusMin = INT64_MIN;
+#endif
 
-/* Polynomials */
 struct TorusPolynomial {
     std::vector<Torus> coeffs {}; // N
     int N {};

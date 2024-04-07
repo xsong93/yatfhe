@@ -7,7 +7,7 @@
 struct YatfheParameters {
 // Parameters
 // Note: BR Unfolding requires n to be divisible by the unfolding value.
-#ifdef TORUS32
+#ifdef TORUS_32
     // LWE params
     const int n = 632;
     const double lweStdDev = 3.0517578125e-05; // 2^-15
@@ -39,6 +39,7 @@ struct YatfheParameters {
     // From TFHE
     // LWE params
     int torusBits {32};
+    int dftBits {64};
     int n {630};
     double lweStdDev {2.98023e-08}; // 2^-15
     // RLWE params
@@ -47,7 +48,8 @@ struct YatfheParameters {
     double rlweStdDev {5.684341886080802e-14}; // 2^-44
     // RGSW params
     // const int l = 6, Bg_bit = 6;
-    int l {6};
+    int l {8};
+    int lDft {l * 2};
     int radixBits {4}; // b
     // KS params
     int ksLevel {torusBits / radixBits}; // ks decomposition length
