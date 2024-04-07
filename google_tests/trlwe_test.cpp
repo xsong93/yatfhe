@@ -5,13 +5,17 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric_functions.h"
+#include "yatfhe/ntt.h"
 #include "yautil/tool.h"
 
 TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
-    const YatfheParameters param {};
+    YatfheParameters param {};
+    param.k = 5;
+    param.N = 1024;
 
     TrlweKey trlweKey {param.k, param.N};
     Trlwe trlwe {param.k, param.N};
+    Trlwe intt {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
     trlweKeyGen(trlweKey);
 
@@ -20,6 +24,9 @@ TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
 
     DoublePolynomial output {param.N};
     symEncTrlweSingleSample(trlwe, trlweDft, trlweKey, mu, param.lweStdDev);
+    printTrlweAB(trlwe, "trlwe");
+    applyInttForAB(intt, trlweDft);
+    printTrlweAB(intt, "intt");
     symDecTrlwe(output, trlweDft, trlweKey, param.torusBase);
 
     cout << "mu:" << plain <<endl;

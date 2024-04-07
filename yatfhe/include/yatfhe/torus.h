@@ -10,7 +10,7 @@
 #include <cstdint>
 
 //#ifdef TORUS32
-using UnsignedInteger = u_int32_t;
+using UnsignedInteger = uint32_t;
 using Integer = int32_t;
 using Binary = Integer;
 using Torus = int32_t;

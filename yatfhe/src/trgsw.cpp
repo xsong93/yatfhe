@@ -90,9 +90,9 @@ Integer trgswDecrypt(const TrgswDft& trgswDft, const YatfheParameters& param, co
 }
 
 void trgswExternalProduct(Trlwe& output, TrgswDft& trgswInput, Trlwe& trlweInput, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto l = param.l;
-    const auto N = param.N;
+    const auto k = trlweInput.k;
+    const auto l = trgswInput.l;
+    const auto N = trlweInput.b.N;
     TrlweDft outputDft {k, N};
     DecomposedTrlwe decomposedTrlwe {l, k, N};
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);

@@ -9,6 +9,22 @@
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 
+TEST(NttInttTest, NttInttTest) {
+    const int N = 1024;
+    LagrangePolynomial resNtt{N};
+    TorusPolynomial a1{N};
+    TorusPolynomial resIntt{N};
+    initCoeffsViaUniformDistribution(a1.coeffs);
+    applyNtt(resNtt, a1);
+    applyIntt(resIntt, resNtt);
+    printArray(a1.coeffs, "a1");
+    printArray(resIntt.coeffs, "resIntt");
+    for (auto i = 0; i < a1.N; i++) {
+        ASSERT_EQ(a1.coeffs[i], resIntt.coeffs[i]);
+    }
+    printBanner("NttInttTest");
+}
+
 TEST(NttAddConstantTest, NttAddConstantTest) {
     const int N = 1024;
     LagrangePolynomial a{N};

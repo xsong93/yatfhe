@@ -47,13 +47,15 @@ struct TrlweDft{
 
 struct DecomposedTrlwe {
     std::vector<Rlwe> rlwes; // l
-    std::vector<TrlweDft> rlweDfts; // l
+    std::vector<TrlweDft> rlweDfts; // 2l
     int l;
+    int lDft;
 
     DecomposedTrlwe(int l, int k, int N) :
             l(l),
+            lDft(l * 2),
             rlwes(l,  Rlwe(k, N)),
-            rlweDfts(l, TrlweDft(k, N)) {};
+            rlweDfts(l * 2, TrlweDft(k, N)) {};
 };
 
 struct TrlweKey {

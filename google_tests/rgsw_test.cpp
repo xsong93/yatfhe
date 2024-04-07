@@ -14,17 +14,15 @@
 TEST(RgswEncDecTest, RgswEncDecTest) {
     const YatfheParameters param {};
 
-    TlweKey tlweKey {param.n, param.lweStdDev};
+    // ken gen
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    BootstrappingKey bsKey {param};
-    TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
-    lweKeyGen(tlweKey);
     trlweKeyGen(trlweKey);
 
+    // trgsw enc
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};
-    Integer plain  = 7;
+    Integer plain = 7;
     trgswEncrypt(trgsw, trgswDft, param, trgswKey, plain);
 //    printTrgsw(trgsw, "trgsw");
 
@@ -36,6 +34,8 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
             ASSERT_EQ(ip.coeffs, trgsw.trlweSamples[i][j].b.coeffs);
         }
     }
+
+    // trgsw dec
     Torus dec = trgswDecrypt(trgswDft, param, trgswKey);
     cout << "plain: " << plain << endl;
     cout << "dec: " << dec << endl;
@@ -45,25 +45,36 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
 TEST(RgswMultTest, RgswMultTest) {
     const YatfheParameters param {};
 
-    TlweKey tlweKey {param.n, param.lweStdDev};
+    // ken gen
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    BootstrappingKey bsKey {param};
-    TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
-    lweKeyGen(tlweKey);
     trlweKeyGen(trlweKey);
 
+    // trgsw enc
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};
-    Torus mu1 = doubleToTorus32(1.0 / param.torusBase);
+    Integer mu1 = 1;
     trgswEncrypt(trgsw, trgswDft, param, trgswKey, mu1);
-//    printTrgsw(trgsw, "trgsw");
+    printf( "trgsw: %d.\n", trgswDecrypt(trgswDft, param, trgswKey));
 
+    // trlwe enc
     Trlwe in2 {param.k, param.N};
     TrlweDft in2Dft {param.k, param.N};
     Torus mu2 = doubleToTorus32(1.0 / param.torusBase);
     Trlwe out {param.k, param.N};
+    DoublePolynomial dec {param.N};
     symEncTrlweSingleSample(in2, in2Dft, trlweKey, mu2, param.lweStdDev);
-    // todo: mult
+    printTrlweAB(in2, "in2");
+
+    // trlwe dec pre-mult
+    symDecTrlwe(dec, in2Dft, trlweKey, param.torusBase);
+    printArray(dec.coeffs, "decPre");
+
+    // trgsw mult
     trgswExternalProduct(out, trgswDft, in2, param);
+    applyNttForAB(in2Dft, out);
+
+    // trlwe dec aft-mult
+    symDecTrlwe(dec, in2Dft, trlweKey, param.torusBase);
+    printArray(dec.coeffs, "decAft");
 }

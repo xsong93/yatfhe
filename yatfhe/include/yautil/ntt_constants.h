@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-
+// todo: adapt ntt/intt to arbitrary polynomial length
 
 extern uint64_t phi_normal_2[1024];
 extern uint64_t phi_inverse_2[1024];
