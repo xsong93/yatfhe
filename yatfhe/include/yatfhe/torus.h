@@ -14,6 +14,7 @@
 #ifdef TORUS32
 using Torus = int32_t;
 using UnsignedInteger = uint32_t;
+using NttType = uint64_t;
 using Integer = int32_t;
 using Binary = Integer;
 const Integer TorusMax = INT32_MAX;

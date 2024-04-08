@@ -35,7 +35,7 @@ void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParamete
     out.sign = (in < 0) ? -1 : 1;
     UnsignedInteger tmp = (out.sign == 1) ? in : -in;
     UnsignedInteger mask = ((1 << param.radixBits) - 1) << (param.torusBits - param.radixBits);
-    for (auto i = 0; i < param.ksLevel; i++) {
+    for (auto i = 0; i < out.l; i++) {
         out.value[i] = (mask & tmp) >> (param.torusBits - (i + 1) * param.radixBits);
         mask >>= param.radixBits;
     }
@@ -45,6 +45,16 @@ void gadgetDecomposeNtt(DecomposedDataDft& out, const uint64_t in, const YatfheP
     uint64_t mask = ((1 << param.radixBits) - 1) << (64 - param.radixBits);
     for (auto i = 0; i < out.l; i++) {
         out.value[i] = (mask & in) >> (64 - (i + 1) * param.radixBits);
+        mask >>= param.radixBits;
+    }
+}
+
+void gadgetDecompose2(DecomposedData& out, const Integer in, const int msgBitLength, const YatfheParameters& param) {
+    out.sign = (in < 0) ? -1 : 1;
+    UnsignedInteger tmp = (out.sign == 1) ? in : -in;
+    UnsignedInteger mask = ((1 << param.radixBits) - 1) << (msgBitLength - param.radixBits);
+    for (auto i = 0; i < out.l; i++) {
+        out.value[i] = (mask & tmp) >> (msgBitLength - (i + 1) * param.radixBits);
         mask >>= param.radixBits;
     }
 }
@@ -149,6 +159,7 @@ void recomposeTrlwe(Trlwe& output, DecomposedTrlwe& input, const YatfheParameter
     const auto k = output.k;
     const auto N = output.b.coeffs.size();
     const auto l = input.l;
+    trlweSetZero(output.a, output.b);
     for (auto lvl = 0; lvl < l; lvl++) {
         for (auto row = 0; row < k + 1; row++) {
             auto& currIn = (row < k) ? input.rlwes[lvl].a[row] : input.rlwes[lvl].b;
@@ -165,6 +176,7 @@ void recomposeTrlweNtt(TrlweDft& output, DecomposedTrlwe& input, const YatfhePar
     const auto k = output.k;
     const auto N = output.b.coeffs.size();
     const auto l = input.lDft;
+    trlweSetZero(output.a, output.b);
     for (auto lvl = 0; lvl < l; lvl++) {
         for (auto row = 0; row < k + 1; row++) {
             auto& currIn = (row < k) ? input.rlweDfts[lvl].a[row] : input.rlweDfts[lvl].b;

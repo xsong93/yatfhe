@@ -45,7 +45,7 @@ void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& par
     const auto l = param.l;
     const auto N = param.N;
     TrlweDft accDft {k, N};
-    DecomposedTrlwe decomp {l, k, N};
+    DecomposedTrlwe decomp {param};
 
     gadgetDecomposeTrlwe(decomp, accum, param); // gadget decomposition, G^-1 * TGLWE, T_(N,q)^(k+1) -> Z_N^(k+1)*l
 

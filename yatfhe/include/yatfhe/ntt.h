@@ -10,7 +10,7 @@
 #include "yatfhe/polynomial.h"
 #include "numeric_functions.h"
 
-constexpr uint64_t MODULUS = 0xffffffff00000001UL;
+constexpr NttType MODULUS = 0xffffffff00000001UL;
 using namespace std;
 
 void applyNtt(LagrangePolynomial& out, const IntPolynomial& in);
@@ -35,17 +35,17 @@ void applyInttForAB(T& out, R& in) {
     applyIntt(out.b, in.b);
 }
 
-void bitRevShuffle(std::vector<uint64_t>& x, int N);
+void bitRevShuffle(std::vector<NttType>& x, int N);
 
-uint64_t modAdd(uint64_t x, uint64_t y);
+NttType modAdd(NttType x, NttType y);
 
-uint64_t modSub(uint64_t x, uint64_t y);
+NttType modSub(NttType x, NttType y);
 
-uint64_t modMul(uint64_t x, uint64_t y);
+NttType modMul(NttType x, NttType y);
 
-void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB);
+void modularMult(std::vector<NttType>& output, const std::vector<NttType>& coeffsA, const std::vector<NttType>& coeffsB);
 
-void modularAccumulate(vector<uint64_t>& coeffsB, const vector<uint64_t>& coeffsA, const vector<uint64_t>& coeffsS);
+void modularAccumulate(vector<NttType>& coeffsB, const vector<NttType>& coeffsA, const vector<NttType>& coeffsS);
 
 void calModularInnerProductNtt(LagrangePolynomial& b, const vector<LagrangePolynomial>& a, const vector<LagrangePolynomial>& s);
 

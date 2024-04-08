@@ -43,7 +43,10 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
 }
 
 TEST(RgswMultTest, RgswMultTest) {
-    const YatfheParameters param {};
+    YatfheParameters param {};
+    param.radixBits = 4;
+    param.l = 8;
+    param.k = 1;
 
     // ken gen
     TrgswKey trgswKey {param};
@@ -62,19 +65,23 @@ TEST(RgswMultTest, RgswMultTest) {
     TrlweDft in2Dft {param.k, param.N};
     Torus mu2 = doubleToTorus32(1.0 / param.torusBase);
     Trlwe out {param.k, param.N};
-    DoublePolynomial dec {param.N};
+    DoublePolynomial decPre {param.N};
+    DoublePolynomial decAft {param.N};
     symEncTrlweSingleSample(in2, in2Dft, trlweKey, mu2, param.lweStdDev);
     printTrlweAB(in2, "in2");
 
     // trlwe dec pre-mult
-    symDecTrlwe(dec, in2Dft, trlweKey, param.torusBase);
-    printArray(dec.coeffs, "decPre");
+    symDecTrlwe(decPre, in2Dft, trlweKey, param.torusBase);
+    printArray(decPre.coeffs, "decPre");
 
     // trgsw mult
     trgswExternalProduct(out, trgswDft, in2, param);
     applyNttForAB(in2Dft, out);
 
     // trlwe dec aft-mult
-    symDecTrlwe(dec, in2Dft, trlweKey, param.torusBase);
-    printArray(dec.coeffs, "decAft");
+    symDecTrlwe(decAft, in2Dft, trlweKey, param.torusBase);
+    printArray(decAft.coeffs, "decAft");
+    for (auto i = 0 ; i < decAft.N; i++) {
+        ASSERT_EQ(decPre.coeffs[i], decAft.coeffs[i]);
+    }
 }

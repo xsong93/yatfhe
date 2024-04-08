@@ -10,14 +10,14 @@
 #include "yatfhe/torus.h"
 
 struct LagrangePolynomial {
-    std::vector<uint64_t> coeffs {}; // N
+    std::vector<NttType> coeffs {}; // N
     int N {};
 
     explicit LagrangePolynomial(int N) :
         N(N),
         coeffs(N, 0) {};
 
-    explicit LagrangePolynomial(int N, uint64_t value) :
+    explicit LagrangePolynomial(int N, NttType value) :
         N(N),
         coeffs(N, value) {};
 };
@@ -30,7 +30,7 @@ struct DoublePolynomial {
             N(N),
             coeffs(N, 0) {};
 
-    explicit DoublePolynomial(int N, uint64_t value) :
+    explicit DoublePolynomial(int N, NttType value) :
             N(N),
             coeffs(N, value) {};
 };

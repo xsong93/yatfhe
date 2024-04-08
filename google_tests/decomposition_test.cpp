@@ -104,7 +104,7 @@ TEST(DecomposeTrlweTest, DecomposeTrlweTest) {
     applyInttForAB(intt, inDft);
 
     // decompose
-    DecomposedTrlwe out {param.l, param.k, param.N};
+    DecomposedTrlwe out {param};
     gadgetDecomposeTrlwe(out, in, param);
     gadgetDecomposeTrlweNtt(out, inDft, param);
 //    printDecomposedTrlweAB(out, "out");

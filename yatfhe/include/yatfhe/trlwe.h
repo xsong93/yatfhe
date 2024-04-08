@@ -51,11 +51,11 @@ struct DecomposedTrlwe {
     int l;
     int lDft;
 
-    DecomposedTrlwe(int l, int k, int N) :
-            l(l),
-            lDft(l * 2),
-            rlwes(l,  Rlwe(k, N)),
-            rlweDfts(l * 2, TrlweDft(k, N)) {};
+    DecomposedTrlwe(YatfheParameters param) :
+            l(param.l),
+            lDft(param.l * (param.dftBits / param.torusBits)),
+            rlwes(param.l,  Rlwe(param.k, param.N)),
+            rlweDfts(param.l * (param.dftBits / param.torusBits), TrlweDft(param.k, param.N)) {};
 };
 
 struct TrlweKey {
@@ -70,6 +70,12 @@ struct TrlweKey {
         s(k, TorusPolynomial(N)),
         sDft(k, LagrangePolynomial(N)) {};
 };
+
+template <typename T>
+void trlweSetZero(std::vector<T>& a, T& b) {
+    std::fill(a.begin(), a.end(), T(b.N, 0));
+    std::fill(b.coeffs.begin(), b.coeffs.end(), 0);
+}
 
 void trlweKeyGen(TrlweKey& key);
 

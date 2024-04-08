@@ -138,30 +138,52 @@ void trgswExternalProduct(Trlwe& output, TrgswDft& trgswInput, Trlwe& trlweInput
     const auto k = trlweInput.k;
     const auto l = trgswInput.l;
     const auto N = trlweInput.b.N;
-    TrlweDft outputDft {k, N};
-    DecomposedTrlwe decomposedTrlwe {l, k, N};
-    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+    TrlweDft trlweDft {k, N};
+    DecomposedTrlwe decomposedTrlwe {param};
 
-    // ntt
-    for (auto lvl = 0; lvl < l; lvl++) {
-        applyNttForAB(decomposedTrlwe.rlweDfts[lvl], decomposedTrlwe.rlwes[lvl]);
-    }
+//    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+//    // ntt
+//    for (auto lvl = 0; lvl < l; lvl++) {
+//        applyNttForAB(decomposedTrlwe.rlweDfts[lvl], decomposedTrlwe.rlwes[lvl]);
+//    }
+////    // accum += bsk (*) accum, point-wisely
+////    // https://www.zama.ai/post/tfhe-deep-dive-part-3
+////    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
+////    // BSK_lrc (*) D_lr = R_c
+////    for (auto lvl = 0; lvl < l; lvl++) {
+////        for (auto row = 0; row < k + 1; row++) {
+////            auto& currRes = (row < k) ? decomposedTrlwe.rlweDfts[lvl].a[row] : decomposedTrlwe.rlweDfts[lvl].b;
+////            for (auto col = 0; col < k; col++) {
+////                modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].a[col].coeffs, trgswInput.trlweDftSamples[lvl][row].a[col].coeffs);
+////            }
+////            modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].b.coeffs, trgswInput.trlweDftSamples[lvl][row].b.coeffs);
+////        }
+////    }
+//    // intt
+//    for (auto lvl = 0; lvl < l; lvl++) {
+//        applyInttForAB(decomposedTrlwe.rlwes[lvl], decomposedTrlwe.rlweDfts[lvl]);
+//    }
+//    recomposeTrlwe(output, decomposedTrlwe, param);
 
-    // accum += bsk (*) accum, point-wisely
-    // https://www.zama.ai/post/tfhe-deep-dive-part-3
-    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
-    // BSK_lrc (*) D_lr = R_c
-    for (auto row = 0; row < k + 1; row++) {
-        auto& currRes = (row < k) ? outputDft.a[row] : outputDft.b;
-        for (auto lvl = 0; lvl < l; lvl++) {
-            for (auto col = 0; col < k; col++) {
-                modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].a[col].coeffs, trgswInput.trlweDftSamples[lvl][row].a[col].coeffs);
-            }
-            modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].b.coeffs, trgswInput.trlweDftSamples[lvl][row].b.coeffs);
-        }
-    }
+    applyNttForAB(trlweDft, trlweInput);
+    gadgetDecomposeTrlweNtt(decomposedTrlwe, trlweDft, param);
 
-    applyInttForAB(output, outputDft); // intt
+    //    // accum += bsk (*) accum, point-wisely
+//    // https://www.zama.ai/post/tfhe-deep-dive-part-3
+//    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
+//    // BSK_lrc (*) D_lr = R_c
+//    for (auto lvl = 0; lvl < l; lvl++) {
+//        for (auto row = 0; row < k + 1; row++) {
+//            auto& currRes = (row < k) ? decomposedTrlwe.rlweDfts[lvl].a[row] : decomposedTrlwe.rlweDfts[lvl].b;
+//            for (auto col = 0; col < k; col++) {
+//                modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].a[col].coeffs, trgswInput.trlweDftSamples[lvl][row].a[col].coeffs);
+//            }
+//            modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].b.coeffs, trgswInput.trlweDftSamples[lvl][row].b.coeffs);
+//        }
+//    }
+
+    recomposeTrlweNtt(trlweDft, decomposedTrlwe, param);
+    applyInttForAB(output, trlweDft);
 }
 
 
