@@ -65,13 +65,10 @@ void symDecTrlwe(DoublePolynomial& output, const TrlweDft& trlweDft, const Trlwe
 }
 
 void symDecTrlweWoRounding(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key) {
-    DoublePolynomial tmp {output.N};
-    LagrangePolynomial innerProduct {trlweDft.b.N};
-    LagrangePolynomial res {trlweDft.b.N};
-    calModularInnerProductNtt(innerProduct, trlweDft.a, key.sDft);
-    lagrangePolynomialSub(res, trlweDft.b, innerProduct);
-    printArray(res.coeffs, "res");
-    applyIntt(output, res);
+    LagrangePolynomial tmp {trlweDft.b.N};
+    calModularInnerProductNtt(tmp, trlweDft.a, key.sDft);
+    lagrangePolynomialSub(tmp, trlweDft.b, tmp);
+    applyIntt(output, tmp);
 }
 
 // Trlwe: (X^-b) * (0,...,0,v)

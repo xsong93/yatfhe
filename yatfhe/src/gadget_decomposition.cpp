@@ -41,20 +41,10 @@ void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParamete
     }
 }
 
-void gadgetDecomposeNtt(DecomposedDataDft& out, const uint64_t in, const YatfheParameters& param) {
-    uint64_t mask = ((1 << param.radixBits) - 1) << (64 - param.radixBits);
+void gadgetDecomposeNtt(DecomposedDataDft& out, const NttType in, const YatfheParameters& param) {
+    uint64_t mask = ((1 << param.radixBits) - 1) << (param.dftBits - param.radixBits);
     for (auto i = 0; i < out.l; i++) {
-        out.value[i] = (mask & in) >> (64 - (i + 1) * param.radixBits);
-        mask >>= param.radixBits;
-    }
-}
-
-void gadgetDecompose2(DecomposedData& out, const Integer in, const int msgBitLength, const YatfheParameters& param) {
-    out.sign = (in < 0) ? -1 : 1;
-    UnsignedInteger tmp = (out.sign == 1) ? in : -in;
-    UnsignedInteger mask = ((1 << param.radixBits) - 1) << (msgBitLength - param.radixBits);
-    for (auto i = 0; i < out.l; i++) {
-        out.value[i] = (mask & tmp) >> (msgBitLength - (i + 1) * param.radixBits);
+        out.value[i] = (mask & in) >> (param.dftBits - (i + 1) * param.radixBits);
         mask >>= param.radixBits;
     }
 }
@@ -104,9 +94,9 @@ void signedGadgetDecomposition(DecomposedData& out, const Integer in, const Yatf
 }
 
 // todo: incorrect, need fix
-void signedGadgetDecompositionNtt(DecomposedDataDft& out, const uint64_t in, const YatfheParameters& param) {
-    vector<uint64_t> tmp(64 / param.radixBits);
-    uint64_t carry = 0;
+void signedGadgetDecompositionNtt(DecomposedDataDft& out, const NttType in, const YatfheParameters& param) {
+    vector<NttType> tmp(param.dftBits / param.radixBits);
+    UnsignedInteger carry = 0;
     for (auto i = 0; i < tmp.size(); i++) {
         auto unsignedDigit = ((in >> (i * param.radixBits)) & param.digitMask) + carry;
         auto carryMask = unsignedDigit & param.baseOverTwo;
@@ -118,7 +108,7 @@ void signedGadgetDecompositionNtt(DecomposedDataDft& out, const uint64_t in, con
 }
 
 // G^-1 * Trlwe = DecomposedTrlwe
-void gadgetDecomposeTrlwe(DecomposedTrlwe& output, Trlwe& input, const YatfheParameters& param) {
+void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param) {
     const auto k = input.k;
     const auto N = input.b.coeffs.size();
     const auto l = output.l;
@@ -136,7 +126,7 @@ void gadgetDecomposeTrlwe(DecomposedTrlwe& output, Trlwe& input, const YatfhePar
 }
 
 // G^-1 * Trlwe = DecomposedTrlwe
-void gadgetDecomposeTrlweNtt(DecomposedTrlwe& output, TrlweDft& input, const YatfheParameters& param) {
+void gadgetDecomposeTrlweNtt(DecomposedTrlwe& output, const TrlweDft& input, const YatfheParameters& param) {
     const auto k = input.k;
     const auto N = input.b.coeffs.size();
     const auto l = output.lDft;
@@ -155,7 +145,7 @@ void gadgetDecomposeTrlweNtt(DecomposedTrlwe& output, TrlweDft& input, const Yat
 }
 
 // Combine l decomposed Trlwe a & b into one.
-void recomposeTrlwe(Trlwe& output, DecomposedTrlwe& input, const YatfheParameters& param) {
+void recomposeTrlwe(Trlwe& output, const DecomposedTrlwe& input, const YatfheParameters& param) {
     const auto k = output.k;
     const auto N = output.b.coeffs.size();
     const auto l = input.l;
@@ -172,7 +162,7 @@ void recomposeTrlwe(Trlwe& output, DecomposedTrlwe& input, const YatfheParameter
 }
 
 // Combine l decomposed TrlweDft a & b into one.
-void recomposeTrlweNtt(TrlweDft& output, DecomposedTrlwe& input, const YatfheParameters& param) {
+void recomposeTrlweNtt(TrlweDft& output, const DecomposedTrlwe& input, const YatfheParameters& param) {
     const auto k = output.k;
     const auto N = output.b.coeffs.size();
     const auto l = input.lDft;

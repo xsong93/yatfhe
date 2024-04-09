@@ -16,8 +16,8 @@ struct Trgsw {
 
     explicit Trgsw(const YatfheParameters& p) :
 //            trlweSamples(p.k + 1, std::vector<Trlwe>(p.l, Trlwe(p.k, p.N))),
-            trlweSamples(p.lDft, std::vector<Trlwe>(p.k + 1, Trlwe(p.k, p.N))),
-            l(p.lDft) {};
+            trlweSamples(p.l, std::vector<Trlwe>(p.k + 1, Trlwe(p.k, p.N))),
+            l(p.l) {};
 };
 
 struct TrgswDft {
@@ -27,8 +27,8 @@ struct TrgswDft {
 
     explicit TrgswDft(const YatfheParameters& p) :
 //            trlweDftSamples(p.k + 1, std::vector<TrlweDft>(p.l, TrlweDft(p.k, p.N))),
-            trlweDftSamples(p.lDft, std::vector<TrlweDft>(p.k + 1, TrlweDft(p.k, p.N))),
-            l(p.lDft) {};
+            trlweDftSamples(p.l, std::vector<TrlweDft>(p.k + 1, TrlweDft(p.k, p.N))),
+            l(p.l) {};
 };
 
 struct TrgswKey {
@@ -46,6 +46,6 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 
 void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, int64_t mu, const YatfheParameters& param);
 
-void trgswExternalProduct(Trlwe& output, TrgswDft& trgswInput, Trlwe& trlweInput, const YatfheParameters& param);
+void trgswExternalProduct(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H
