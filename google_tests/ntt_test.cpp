@@ -43,6 +43,9 @@ TEST(NttInttTest, NttInttTest) {
     printArray(a1.coeffs, "a0");
     printArray(resIntt.coeffs, "a1");
     for (auto i = 0; i < a1.N; i++) {
+        if (a1.coeffs[i] != resIntt.coeffs[i]) {
+            printf("NE at index %d\n",i);
+        }
         ASSERT_EQ(a1.coeffs[i], resIntt.coeffs[i]);
     }
     printBanner("NttInttTest");
