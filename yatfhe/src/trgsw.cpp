@@ -134,41 +134,24 @@ Integer trgswDecrypt(const TrgswDft& trgswDft, const YatfheParameters& param, co
     return roundErrorForShiftedTorus(tmp.coeffs[0], param.lweStdDev) >> (param.torusBits - param.radixBits);
 }
 
-void trgswExternalProduct(Trlwe& output, TrgswDft& trgswInput, Trlwe& trlweInput, const YatfheParameters& param) {
+void trgswExternalProduct(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto l = trgswInput.l;
     const auto N = trlweInput.b.N;
     TrlweDft trlweDft {k, N};
     DecomposedTrlwe decomposedTrlwe {param};
 
-//    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
-//    // ntt
-//    for (auto lvl = 0; lvl < l; lvl++) {
-//        applyNttForAB(decomposedTrlwe.rlweDfts[lvl], decomposedTrlwe.rlwes[lvl]);
-//    }
-////    // accum += bsk (*) accum, point-wisely
-////    // https://www.zama.ai/post/tfhe-deep-dive-part-3
-////    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
-////    // BSK_lrc (*) D_lr = R_c
-////    for (auto lvl = 0; lvl < l; lvl++) {
-////        for (auto row = 0; row < k + 1; row++) {
-////            auto& currRes = (row < k) ? decomposedTrlwe.rlweDfts[lvl].a[row] : decomposedTrlwe.rlweDfts[lvl].b;
-////            for (auto col = 0; col < k; col++) {
-////                modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].a[col].coeffs, trgswInput.trlweDftSamples[lvl][row].a[col].coeffs);
-////            }
-////            modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].b.coeffs, trgswInput.trlweDftSamples[lvl][row].b.coeffs);
-////        }
-////    }
-//    // intt
-//    for (auto lvl = 0; lvl < l; lvl++) {
-//        applyInttForAB(decomposedTrlwe.rlwes[lvl], decomposedTrlwe.rlweDfts[lvl]);
-//    }
-//    recomposeTrlwe(output, decomposedTrlwe, param);
+    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
-    applyNttForAB(trlweDft, trlweInput);
-    gadgetDecomposeTrlweNtt(decomposedTrlwe, trlweDft, param);
-
-    //    // accum += bsk (*) accum, point-wisely
+    // ntt
+    for (auto lvl = 0; lvl < l; lvl++) {
+        applyNttForAB(decomposedTrlwe.rlweDfts[lvl], decomposedTrlwe.rlwes[lvl]);
+        printArray(decomposedTrlwe.rlwes[lvl].b.coeffs, "b0");
+//        printArray(decomposedTrlwe.rlweDfts[lvl].b.coeffs, "bNtt");
+        applyInttForAB(decomposedTrlwe.rlwes[lvl], decomposedTrlwe.rlweDfts[lvl]);
+        printArray(decomposedTrlwe.rlwes[lvl].b.coeffs, "b1");
+    }
+//    // accum += bsk (*) accum, point-wisely
 //    // https://www.zama.ai/post/tfhe-deep-dive-part-3
 //    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
 //    // BSK_lrc (*) D_lr = R_c
@@ -181,9 +164,33 @@ void trgswExternalProduct(Trlwe& output, TrgswDft& trgswInput, Trlwe& trlweInput
 //            modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].b.coeffs, trgswInput.trlweDftSamples[lvl][row].b.coeffs);
 //        }
 //    }
+//    // intt
+//    for (auto lvl = 0; lvl < l; lvl++) {
+//        applyInttForAB(decomposedTrlwe.rlwes[lvl], decomposedTrlwe.rlweDfts[lvl]);
+//    }
+    recomposeTrlwe(output, decomposedTrlwe, param);
 
-    recomposeTrlweNtt(trlweDft, decomposedTrlwe, param);
-    applyInttForAB(output, trlweDft);
+
+
+//    applyNttForAB(trlweDft, trlweInput);
+//    gadgetDecomposeTrlweNtt(decomposedTrlwe, trlweDft, param);
+//
+//    //    // accum += bsk (*) accum, point-wisely
+////    // https://www.zama.ai/post/tfhe-deep-dive-part-3
+////    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
+////    // BSK_lrc (*) D_lr = R_c
+////    for (auto lvl = 0; lvl < l; lvl++) {
+////        for (auto row = 0; row < k + 1; row++) {
+////            auto& currRes = (row < k) ? decomposedTrlwe.rlweDfts[lvl].a[row] : decomposedTrlwe.rlweDfts[lvl].b;
+////            for (auto col = 0; col < k; col++) {
+////                modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].a[col].coeffs, trgswInput.trlweDftSamples[lvl][row].a[col].coeffs);
+////            }
+////            modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].b.coeffs, trgswInput.trlweDftSamples[lvl][row].b.coeffs);
+////        }
+////    }
+//
+//    recomposeTrlweNtt(trlweDft, decomposedTrlwe, param);
+//    applyInttForAB(output, trlweDft);
 }
 
 

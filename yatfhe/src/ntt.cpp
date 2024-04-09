@@ -49,11 +49,11 @@ void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial & in, const in
 }
 
 void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
-    vector<uint64_t> input(in.coeffs.size());
+    vector<NttType> input(in.coeffs.size());
     copy(in.coeffs.begin(), in.coeffs.end(), input.begin());
     int32_t N = in.N;
     LagrangePolynomial temp {N};
-    vector<uint64_t>& tmp = temp.coeffs;
+    vector<NttType>& tmp = temp.coeffs;
     vector<Integer>& output = out.coeffs;
     int inv = 0;
     bitRevShuffle(input, N);
@@ -82,7 +82,7 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
     }
 }
 
-void bitRevShuffle(std::vector<uint64_t>& x, int N) {
+void bitRevShuffle(std::vector<NttType>& x, int N) {
     int j = 0;
     int b = 0;
 
@@ -96,7 +96,7 @@ void bitRevShuffle(std::vector<uint64_t>& x, int N) {
 
         // Swap elements if the bit-reversed index is greater than the current index
         if (j > i) {
-            uint64_t temp = x[j];
+            NttType temp = x[j];
             x[j] = x[i];
             x[i] = temp;
         }
