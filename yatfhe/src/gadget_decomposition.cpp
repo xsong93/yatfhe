@@ -42,7 +42,7 @@ void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParamete
 }
 
 void gadgetDecomposeNtt(DecomposedDataDft& out, const NttType in, const YatfheParameters& param) {
-    uint64_t mask = ((1 << param.radixBits) - 1) << (param.dftBits - param.radixBits);
+    NttType mask = ((1 << param.radixBits) - 1) << (param.dftBits - param.radixBits);
     for (auto i = 0; i < out.l; i++) {
         out.value[i] = (mask & in) >> (param.dftBits - (i + 1) * param.radixBits);
         mask >>= param.radixBits;

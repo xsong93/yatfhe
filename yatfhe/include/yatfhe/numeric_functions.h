@@ -41,6 +41,10 @@ void initCoeffsWithGaussianNoiseSingleSample(vector<Torus>& coeffs, Torus msg, d
 
 void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, double sigma);
 
+Integer modPow(Integer x, Integer y, Integer mod);
+
+Integer reciprocal(Integer a, Integer mod);
+
 template <typename T>
 void setCoeffsValue(vector<T> coeffs, T val) {
     for (auto i = 0; i < coeffs.size(); i++) {

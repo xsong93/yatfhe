@@ -94,3 +94,43 @@ void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const st
         coeffs[i] = addGaussianNoise(msg[i], sigma);
     }
 }
+
+// (x^y) % mod
+Integer modPow(Integer x, Integer y, Integer mod) {
+    Integer res = 1;
+    while(y != 0) {
+        if ((y & 1) != 0) {
+            res = (Integer)(((long long)res * x) % mod);
+        }
+        x = (Integer)(((long long)x * x) % mod);
+        y >>= 1;
+    }
+    return res;
+}
+
+// Calculate the modular multiplicative inverse of 'a' modulo 'mod'
+Integer reciprocal(Integer a, Integer mod) {
+    Integer m0 = mod, t, q;
+    Integer x0 = 0, x1 = 1;
+
+    if (mod == 1) {
+        return 0;
+    }
+
+    while (a > 1) {
+        q = a / mod; // q is quotient
+        t = mod;
+        mod = a % mod; // m is remainder now, process same as Euclid's algorithm
+        a = t;
+        t = x0;
+        x0 = x1 - q * x0;
+        x1 = t;
+    }
+
+    // Make x1 positive
+    if (x1 < 0) {
+        x1 += m0;
+    }
+
+    return x1;
+}

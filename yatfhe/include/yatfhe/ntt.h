@@ -15,6 +15,10 @@ using namespace std;
 
 void applyNtt(LagrangePolynomial& out, const IntPolynomial& in);
 
+void applyNtt32(IntPolynomial& output, const IntPolynomial& input, int root, int mod);
+
+void applyIntt32(IntPolynomial& output, IntPolynomial& input, int root, int mod);
+
 void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial & in, int mSize);
 
 void applyIntt(IntPolynomial& out, const LagrangePolynomial& in);
