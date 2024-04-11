@@ -45,6 +45,12 @@ Integer modPow(Integer x, Integer y, Integer mod);
 
 Integer reciprocal(Integer a, Integer mod);
 
+bool isPrime(int num);
+
+void uniquePrimeFactors(std::vector<int>& result, int n);
+
+int sqrtFloor(int x);
+
 template <typename T>
 void setCoeffsValue(vector<T> coeffs, T val) {
     for (auto i = 0; i < coeffs.size(); i++) {

@@ -134,3 +134,44 @@ Integer reciprocal(Integer a, Integer mod) {
 
     return x1;
 }
+
+bool isPrime(int num) {
+    if (num <= 1) {
+        return false;
+    }
+    for (int i = 2; i <= sqrt(num); i++) {
+        if (num % i == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void uniquePrimeFactors(std::vector<int>& result, int n) {
+    if (n < 1) { throw std::invalid_argument("Invalid input"); }
+
+    for (int i = 2, end = sqrtFloor(n); i <= end; i++) {
+        if (n % i == 0) {
+            result.push_back(i);
+            do {
+                n /= i;
+            } while (n % i == 0);
+            end = sqrtFloor(n);
+        }
+    }
+    if (n > 1) { result.push_back(n); }
+}
+
+// floor(sqrt(x))
+int sqrtFloor(int x) {
+    if (x < 0)
+        throw std::invalid_argument("Invalid input");
+
+    int y = 0;
+    for (int i = 1 << 15; i != 0; i >>= 1) {
+        y |= i;
+        if (y > 46340 || y * y > x)
+            y ^= i;
+    }
+    return y;
+}
