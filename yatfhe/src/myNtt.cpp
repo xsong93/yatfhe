@@ -35,7 +35,7 @@ void doNTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_TW& TW_pa
                 tw_index = l>>j;
                 temp_add = modADD(out[k*gap*2 + l], out[k*gap*2 + gap + l]);
                 temp_sub = modSUB(out[k*gap*2 + l], out[k*gap*2 + gap + l]);
-                temp_mult = modMULT(temp_sub, tw[tw_index]);
+                temp_mult = modMULT(temp_sub, tw[l*tw_index]);
                 out[k*gap*2 + l] = temp_add;
                 out[k*gap*2 + gap + l] = temp_mult;
             }
@@ -44,12 +44,53 @@ void doNTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_TW& TW_pa
     }
 }
 
+
+void doINTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_iTW& iTW_param) {
+    const auto N = in.N;
+    auto lvl = clog2(in.N);
+    auto gap = 0;
+    auto itw_index = 0;
+    auto block = 0;
+    auto& out = res.coeffs;
+    const auto& tw = iTW_param.itw_factor;
+    Ntt32 temp_add, temp_sub, temp_mult;
+    for (auto i = 0; i < N; i = i+2) {
+        temp_mult = modMULT(in.coeffs[i+1], tw[i]);
+        temp_add = modADD(in.coeffs[i], temp_mult);
+        temp_sub = modSUB(in.coeffs[i], temp_mult);
+
+        out[i] = temp_add;
+        out[i + 1] = temp_mult;
+    }
+    for (auto j = 1; j < lvl; j++) {
+        gap = 1<<(j);
+        block = N>>(j+1);
+//        std::cout<<"gap = "<<gap<<"; block = "<<block<<std::endl;
+        for (auto k = 0; k < block; k++) {
+            for (auto l = 0; l < gap ; l++) {
+//                std::cout<<"k:l="<<k<<","<<l<<std::endl;
+                itw_index = N>>(j+1);
+                temp_mult = modMULT(out[k*gap*2 + gap + l], tw[l*itw_index]);
+                temp_add = modADD(out[k*gap*2 + l], temp_mult);
+                temp_sub = modSUB(out[k*gap*2 + l], temp_mult);
+
+                out[k*gap*2 + l] = temp_add;
+                out[k*gap*2 + gap + l] = temp_sub;
+            }
+//            std::cout<<std::endl;
+        }
+    }
+}
 void print_myNtt(const Ntt32_TW& TW, const Ntt32_iTW& iTW) {
     std::cout<<"modulus is "<<MOD<<std::endl;
     std::cout<<"tw_factor: Q is "<<TW.Q<<std::endl;
     std::cout<<"itw_factor: Q is "<<iTW.Q<<std::endl;
     for (auto i = 0; i < TW.N; i++) {
         std::cout<<i<<":"<<TW.tw_factor[i]<<" ";
+    }
+    std::cout<<std::endl;
+    for (auto i = 0; i < iTW.N; i++) {
+        std::cout<<i<<":"<<iTW.itw_factor[i]<<" ";
     }
     std::cout<<std::endl;
 
@@ -102,13 +143,13 @@ void geniTW(Ntt32_iTW& iTW, const Ntt32_TW& TW) {
 }
 Ntt32 modADD(Ntt32 a, Ntt32 b) {
     int64_t temp;
-    temp = a + b;
+    temp = int64_t(a) + int64_t(b);
     temp = temp > MOD ? temp - MOD : temp;
     return Ntt32(temp);
 }
 Ntt32 modSUB(Ntt32 a, Ntt32 b) {
-    int64_t temp;
-    temp = a - b;
+    int64_t temp = 0;
+    temp = int64_t(a) - int64_t(b);
     temp = temp >= 0 ? temp : temp + MOD;
     return Ntt32(temp);
 }

@@ -10,19 +10,29 @@
 #include "yautil/tool.h"
 
 TEST(MYNTT_TEST,test_init) {
-    Ntt32_TW TW(512);
-    Ntt32_iTW iTW(512);
-    Ntt32 test_res = POW(7,10000,MOD);
-    std::cout<<test_res<<std::endl;
-    std::cout<<clog2(1024)<<std::endl;
+    int N = 4;
+    Ntt32_TW TW(N>>1);
+    Ntt32_iTW iTW(N>>1);
+    std::cout<<MOD<<std::endl;
     genTW(TW);
     geniTW(iTW, TW);
     print_myNtt(TW,iTW);
-    NttPolynomial a{1024},b {1024};
-    for (int i = 0; i < 1024; i++) {
+    NttPolynomial a{N},b {N}, res{N};
+    for (int i = 0; i < N; i++) {
         a.coeffs[i] = i;
     }
     std::cout<<"a:N = "<<a.N<<"; b:N = "<<b.N<<std::endl;
     doNTT32(b,a,TW);
     printNttPoly(b);
+    doINTT32(res, b, iTW);
+    printNttPoly(res);
+}
+
+TEST(MYNTT_TEST, modSUB_test){
+    Ntt32 a = 0, b = 1;
+    std::cout<<modSUB(a,b)<<std::endl;
+}
+TEST(MYNTT_TEST, modADD_test){
+    Ntt32 a = 4293918719, b = 74203740;
+    std::cout<<modADD(a,b)<<std::endl;
 }

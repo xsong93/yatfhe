@@ -21,9 +21,9 @@ struct Ntt32_TW {
     Ntt32 Q {};
     Ntt32_TW() : tw_factor(), N(), Q() {};
     explicit Ntt32_TW(int N) :
-            tw_factor(N, 0), N(N), Q(Ntt32((MOD - 1) / N)) {};
+            tw_factor(N, 0), N(N), Q(Ntt32((MOD - 1) / (N<<1))) {};
     explicit Ntt32_TW(int N, Ntt32 val):
-            tw_factor(N, val), N(N), Q(Ntt32((MOD - 1) / N)) {};
+            tw_factor(N, val), N(N), Q(Ntt32((MOD - 1) / (N<<1))) {};
 };
 struct Ntt32_iTW {
     std::vector<Ntt32> itw_factor {};
@@ -31,9 +31,9 @@ struct Ntt32_iTW {
     Ntt32 Q {};
     Ntt32_iTW() : itw_factor(), N(), Q() {};
     explicit Ntt32_iTW(int N):
-            itw_factor(N, 0), N(N), Q(Ntt32((MOD - 1) / N)) {};
+            itw_factor(N, 0), N(N), Q(Ntt32((MOD - 1) / (N<<1))) {};
     explicit Ntt32_iTW(int N, Ntt32 val):
-            itw_factor(N, val), N(N), Q(Ntt32((MOD - 1) / N)) {};
+            itw_factor(N, val), N(N), Q(Ntt32((MOD - 1) / (N<<1))) {};
 };
 void print_myNtt(const Ntt32_TW& TW, const Ntt32_iTW& iTW);
 void printNttPoly(const NttPolynomial& in);
