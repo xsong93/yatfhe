@@ -13,6 +13,7 @@
 
 #ifdef TORUS32
 using Torus = int32_t;
+using Ntt32 = uint32_t;
 using UnsignedInteger = uint32_t;
 using NttType = uint64_t;
 using Integer = int32_t;
@@ -42,7 +43,20 @@ struct TorusPolynomial {
             coeffs(N, value),
             N(N) {};
 };
+struct NttPolynomial {
+    std::vector<Ntt32> coeffs {}; // N
+    int N {};
 
+    NttPolynomial() : coeffs(), N() {};
+
+    explicit NttPolynomial(int N) :
+            coeffs(N, 0),
+            N(N) {};
+
+    explicit NttPolynomial(int N, Ntt32 value) :
+            coeffs(N, value),
+            N(N) {};
+};
 using IntPolynomial = TorusPolynomial;
 using BinPolynomial = IntPolynomial;
 
