@@ -10,7 +10,7 @@
 #include "yautil/tool.h"
 
 TEST(MYNTT_TEST,test_init) {
-    int N = 4;
+    int N = 1024;
     Ntt32_TW TW(N>>1);
     Ntt32_iTW iTW(N>>1);
     std::cout<<MOD<<std::endl;
@@ -35,4 +35,19 @@ TEST(MYNTT_TEST, modSUB_test){
 TEST(MYNTT_TEST, modADD_test){
     Ntt32 a = 4293918719, b = 74203740;
     std::cout<<modADD(a,b)<<std::endl;
+}
+
+TEST(MYNTT_TEST, mod_inv_test) {
+    int N = 4;
+    Ntt32_TW TW(N>>1);
+    Ntt32_iTW iTW(N>>1);
+    std::cout<<MOD<<std::endl;
+    genTW(TW);
+    geniTW(iTW, TW);
+    print_myNtt(TW,iTW);
+}
+
+TEST(MYNTT_TEST, modMULT_test) {
+    Ntt32 a = 4293918719, b = 37101870;
+    std::cout<< modMULT(a,b)<<std::endl;
 }

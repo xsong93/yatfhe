@@ -17,10 +17,12 @@ void doNTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_TW& TW_pa
     auto interval = 0;
     auto& out = res.coeffs;
     const auto& tw = TW_param.tw_factor;
+    Ntt32 tw_flag = 0;
     Ntt32 temp_add, temp_sub, temp_mult;
     for (auto i = 0; i < (N>>1); i++) {
         temp_add = modADD(in.coeffs[i], in.coeffs[i+(N>>1)]);
         temp_sub = modSUB(in.coeffs[i], in.coeffs[i+(N>>1)]);
+        tw_flag = tw[i];
         temp_mult = modMULT(temp_sub, tw[i]);
         out[i] = temp_add;
         out[i + (N>>1)] = temp_mult;
@@ -32,7 +34,8 @@ void doNTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_TW& TW_pa
         for (auto k = 0; k < interval; k++) {
             for (auto l = 0; l < gap ; l++) {
 //                std::cout<<"k:l="<<k<<","<<l<<std::endl;
-                tw_index = l>>j;
+                tw_index = 1<<j;//
+                tw_flag = tw[l*tw_index];
                 temp_add = modADD(out[k*gap*2 + l], out[k*gap*2 + gap + l]);
                 temp_sub = modSUB(out[k*gap*2 + l], out[k*gap*2 + gap + l]);
                 temp_mult = modMULT(temp_sub, tw[l*tw_index]);
@@ -52,15 +55,16 @@ void doINTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_iTW& iTW
     auto itw_index = 0;
     auto block = 0;
     auto& out = res.coeffs;
-    const auto& tw = iTW_param.itw_factor;
+    const auto& itw = iTW_param.itw_factor;
     Ntt32 temp_add, temp_sub, temp_mult;
     for (auto i = 0; i < N; i = i+2) {
-        temp_mult = modMULT(in.coeffs[i+1], tw[i]);
+        Ntt32 debug1 = in.coeffs[i+1], debug2 = itw[0];
+        temp_mult = modMULT(in.coeffs[i+1], itw[0]);
         temp_add = modADD(in.coeffs[i], temp_mult);
         temp_sub = modSUB(in.coeffs[i], temp_mult);
 
         out[i] = temp_add;
-        out[i + 1] = temp_mult;
+        out[i + 1] = temp_sub;
     }
     for (auto j = 1; j < lvl; j++) {
         gap = 1<<(j);
@@ -70,7 +74,7 @@ void doINTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_iTW& iTW
             for (auto l = 0; l < gap ; l++) {
 //                std::cout<<"k:l="<<k<<","<<l<<std::endl;
                 itw_index = N>>(j+1);
-                temp_mult = modMULT(out[k*gap*2 + gap + l], tw[l*itw_index]);
+                temp_mult = modMULT(out[k*gap*2 + gap + l], itw[l*itw_index]);
                 temp_add = modADD(out[k*gap*2 + l], temp_mult);
                 temp_sub = modSUB(out[k*gap*2 + l], temp_mult);
 
@@ -144,7 +148,7 @@ void geniTW(Ntt32_iTW& iTW, const Ntt32_TW& TW) {
 Ntt32 modADD(Ntt32 a, Ntt32 b) {
     int64_t temp;
     temp = int64_t(a) + int64_t(b);
-    temp = temp > MOD ? temp - MOD : temp;
+    temp = temp >= MOD ? temp - MOD : temp;
     return Ntt32(temp);
 }
 Ntt32 modSUB(Ntt32 a, Ntt32 b) {
