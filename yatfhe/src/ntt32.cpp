@@ -2,6 +2,7 @@
 // Created by Xintong Song on 2024/4/8.
 //
 
+#include <stdexcept>
 #include "yatfhe/ntt.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/polynomial.h"

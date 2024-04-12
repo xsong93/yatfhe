@@ -32,7 +32,7 @@ TEST(SignedDecompTest, SignedDecompTest) {
         signedGadgetDecomposition(decomp, d, param);
         printf("in: %d, ", d);
         printArray(decomp.value, "decomp");
-        auto recons = recompose(decomp, param);
+        auto recons = selfRecompose(decomp, param);
         ASSERT_EQ(d, recons);
     }
     printBanner("SignedDecomp");
@@ -49,13 +49,13 @@ TEST(DecomposeTest, DecomposeTest) {
         gadgetDecompose(out, d, param);
         printf("in: %d, ", d);
         printArray(out.value, "decomp");
-        auto z = recompose(out, param);
+        auto z = selfRecompose(out, param);
         ASSERT_EQ(z, d);
     }
     printBanner("Decompose");
 }
 
-TEST(DecomposeOverBTest, DecomposeOverBTest) {
+TEST(DecomposeOverBSingleStage, DecomposeOverBSingleStage) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;
@@ -66,17 +66,60 @@ TEST(DecomposeOverBTest, DecomposeOverBTest) {
     std::vector<Torus> data(10);
     initCoeffsViaUniformDistribution(data);
     for (auto d : data) {
-        signedGadgetDecomposition(decomp, d, param); // both correct
-//        gadgetDecompose(decomp, d, param); // both correct
+//        signedGadgetDecomposition(decomp, d, param); // both correct
+        gadgetDecompose(decomp, d, param); // both correct
         printf("in: %d, ", d);
         printArray(decomp.value, "decomp");
-        int out {0};
-        for (auto i = 0; i < rhs.size(); i++) {
-            out += decomp.value[i] * rhs[i] * decomp.sign;
-        }
+        auto out = recomposeTwoParts(decomp, rhs);
         ASSERT_EQ(out, d * mult);
     }
-    printBanner("DecomposeOverB");
+    printBanner("DecomposeOverBSingleStage");
+}
+
+TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
+    YatfheParameters param {};
+    param.radixBits = 4;
+    param.ksLevel = 8;
+    int mult = -5;
+
+    // first decomp
+    auto rhs = decomposeOverB(mult, param);
+    printArray(rhs, to_string(mult) + " decomposeOverB");
+
+    // second decomp
+    vector<DecomposedData> decompRhs {rhs.size(), DecomposedData(param.ksLevel)};
+    for (auto i = 0; i < rhs.size(); i++) {
+        gadgetDecompose(decompRhs[i], rhs[i], param);
+        printArray(decompRhs[i].value, "rhs level " + to_string(i));
+    }
+
+    // recomp second decomposed data test
+    vector<Integer> recompRhs(rhs.size());
+    for (auto i = 0; i < decompRhs.size(); i++) {
+        recompRhs[i] = selfRecompose(decompRhs[i], param);
+        ASSERT_EQ(recompRhs[i], rhs[i]);
+    }
+    printArray(recompRhs, "recompRhs");
+
+    DecomposedData decompL1 {param.ksLevel};
+    DecomposedData recompL1 {param.ksLevel};
+    Torus data = genIntUniformDist(TorusMin, TorusMax);
+
+//  signedGadgetDecomposition(decomp, data, param); // both correct
+    gadgetDecompose(decompL1, data, param); // both correct
+    printf("in: %d, ", data);
+    printArray(decompL1.value, "decomp");
+
+    // recomp first level
+    recomposeFirstHalf(recompL1, decompL1, decompRhs);
+    printArray(recompL1.value, "recompL1");
+
+    // recomp second level
+    auto out = selfRecompose(recompL1, param);
+    printf("out = %d, data * mult = %d\n", out, data * mult);
+    ASSERT_EQ(out, data * mult);
+
+    printBanner("DecomposeOverBMultiStages");
 }
 
 TEST(DecomposeTrlweTest, DecomposeTrlweTest) {

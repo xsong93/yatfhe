@@ -49,12 +49,29 @@ void gadgetDecomposeNtt(DecomposedDataDft& out, const NttType in, const YatfhePa
     }
 }
 
-Integer recompose(const DecomposedData& digits, const YatfheParameters& param) {
+Integer selfRecompose(const DecomposedData& digits, const YatfheParameters& param) {
     Integer res {0};
     for (auto i = 0; i < digits.value.size(); ++i) {
         res += digits.value[i] << (param.torusBits - (i + 1) * param.radixBits);
     }
     return res * digits.sign;
+}
+
+void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const std::vector<DecomposedData>& mid) {
+    for (auto j = 0; j < lhs.l; j++) {
+        for (auto l = 0; l < mid[0].l; l++) {
+            output.value[j] += lhs.value[j] * mid[j].value[l];
+            output.sign = lhs.sign * mid[j].sign;
+        }
+    }
+}
+
+Integer recomposeTwoParts(const DecomposedData& lhs, const std::vector<Integer>& rhs) {
+    int out {0};
+    for (auto i = 0; i < rhs.size(); i++) {
+        out += lhs.value[i] * rhs[i] * lhs.sign;
+    }
+    return out;
 }
 
 /**
