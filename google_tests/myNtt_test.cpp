@@ -54,9 +54,9 @@ TEST(MYNTT_TEST, modMULT_test) {
 }
 
 TEST(MYNTT_TEST,construct_test){
-    int N = 1024;
-    Ntt32_PARAM ntt_param(N);
-    cout<<"N = "<<ntt_param.N<<endl;
-    cout<<"tw_N = "<<ntt_param.tw_N<<endl;
-    cout<<"phi_N = "<<ntt_param.phi_N<<endl;
+    int N = 16;
+    ROM rom(N);
+    cout<<"ntt_rom : {N, TW_N, PHI_N} = {"<<rom.ntt_rom.N<<", "<<rom.ntt_rom.tw_N<<", "<<rom.ntt_rom.phi_N<<"}"<<endl;
+    genROM(rom);
+    printROM(rom);
 }

@@ -146,26 +146,6 @@ void geniTW(Ntt32_iTW& iTW, const Ntt32_TW& TW) {
     }
 }
 
-//----------------------------------------------------------------------------
-
-void genNTT32_PARAM(Ntt32_PARAM& ntt_param) {
-    auto tw_n = ntt_param.tw_N;
-    auto phi_n = ntt_param.phi_N;
-    for (auto i = 0; i < tw_n; i++) {
-        ntt_param.tw_factor[i] = POW(PRIM_ROOT, Ntt32(), MOD);
-    }
-}
-
-
-
-
-
-
-
-
-//----------------------------------------------------------------------------
-
-
 
 Ntt32 modADD(Ntt32 a, Ntt32 b) {
     int64_t temp;
@@ -222,5 +202,82 @@ int clog2(int N) {
     return res;
 }
 
+
+//----------------------------------------------------------------------------
+
+void genNTT32_PARAM(Ntt32_PARAM& ntt_param) {
+    auto tw_n = ntt_param.tw_N;
+    auto phi_n = ntt_param.phi_N;
+    Ntt32 tw_q = Ntt32((MOD-1)/ntt_param.N);
+    Ntt32 phi_q = Ntt32((MOD - 1)/(ntt_param.N << 1));
+    for (auto i = 0; i < tw_n; i++) {
+        ntt_param.tw_factor[i] = POW(PRIM_ROOT, Ntt32(i*tw_q), MOD);
+    }
+    for (auto j = 0; j < phi_n; j++) {
+        ntt_param.phi_factor[j] = POW(PRIM_ROOT, Ntt32(j*phi_q),MOD);
+    }
+}
+void genROM(ROM& rom){
+    auto w_n = rom.N;
+    auto phi_n = rom.N * 2;
+    Ntt32 w_q = Ntt32((MOD - 1)/w_n);
+    Ntt32 phi_q = Ntt32((MOD - 1)/phi_n);
+    for (auto i = 0; i < w_n; i++) {
+        rom.ntt_rom.tw_factor[i] = POW(PRIM_ROOT, Ntt32(i*w_q), MOD);
+        rom.intt_rom.inv_tw_factor[i] = modINV(rom.ntt_rom.tw_factor[i]);
+    }
+    for (auto j = 0; j < phi_n; j++) {
+        rom.ntt_rom.phi_factor[j] = POW(PRIM_ROOT, j*phi_q, MOD);
+        rom.intt_rom.inv_phi_factor[j] = modINV(rom.ntt_rom.phi_factor[j]);
+    }
+}
+
+void NWC_NTT32(NttPolynomial& res, const NttPolynomial& in, const Ntt32_PARAM& ntt_param) {
+
+}
+
+void pre_process(NttPolynomial& in, const Ntt32_PARAM& para) {
+    auto N = para.phi_N;
+    auto& res = in.coeffs;
+    auto& coeff = para.phi_factor;
+    for (auto i = 0; i < N; i++) {
+        res[i] = modMULT(res[i], coeff[i]);
+    }
+}
+
+
+
+
+
+
+
+
+//----------------------------------------------------------------------------
+
+void printROM(ROM& rom) {
+    auto w_n = rom.N;
+    auto phi_n = rom.N * 2;
+    std::cout<<"ntt rom:"<<std::endl;
+    std::cout<<"ntt tw:"<<std::endl;
+    for (auto i = 0; i < w_n; i++) {
+        std::cout<<i<<":"<<rom.ntt_rom.tw_factor[i]<<" ";
+    }
+    std::cout<<std::endl;
+    std::cout<<"ntt phi:"<<std::endl;
+    for (auto j = 0; j < phi_n; j++) {
+        std::cout << j << ":" << rom.ntt_rom.phi_factor[j] << " ";
+    }
+    std::cout<<std::endl;
+    std::cout<<"intt rom:"<<std::endl;
+    std::cout<<"intt inv_tw:"<<std::endl;
+    for (auto k = 0; k < w_n; k++) {
+        std::cout << k << ":" << rom.intt_rom.inv_tw_factor[k] << " ";
+    }
+    std::cout<<std::endl;
+    std::cout<<"intt inv_phi:"<<std::endl;
+    for (auto l = 0; l < phi_n; l++) {
+        std::cout << l << ":" << rom.intt_rom.inv_phi_factor[l] << " ";
+    }
+}
 
 

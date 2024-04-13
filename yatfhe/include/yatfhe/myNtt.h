@@ -33,24 +33,30 @@ struct Ntt32_PARAM {
     int phi_N {};
 
     Ntt32_PARAM() : tw_factor(), phi_factor(), N(), tw_N(), phi_N() {};
-    explicit Ntt32_PARAM(int n) :
-            tw_factor(tw_N, 0), phi_factor(phi_N, 0), tw_N(N>>1), phi_N(N), N(n){};
-    explicit Ntt32_PARAM(int n, Ntt32 val):
-            tw_factor(tw_N, val), phi_factor(phi_N, val), tw_N(N>>1), phi_N(N), N(n) {};
+    explicit Ntt32_PARAM(int n, int tw_n, int phi_n) :
+//            tw_factor(tw_N, 0), phi_factor(phi_N, 0), tw_N(N>>1), phi_N(N), N(n){};
+            tw_factor(tw_N, 0), phi_factor(phi_N, 0), tw_N(tw_n), phi_N(phi_n), N(n){};
+
 };
 
 struct INtt32_PARAM {
-    std::vector<Ntt32> itw_factor {};
-    std::vector<Ntt32> iphi_factor {};
+    std::vector<Ntt32> inv_tw_factor {};
+    std::vector<Ntt32> inv_phi_factor {};
     int N {};
-    int itw_N {};
-    int iphi_N {};
+    int inv_tw_N {};
+    int inv_phi_N {};
 
-    INtt32_PARAM() : itw_factor(), iphi_factor(), N(), itw_N(), iphi_N() {};
-    explicit INtt32_PARAM(int n) :
-            itw_factor(itw_N, 0), iphi_factor(iphi_N, 0), itw_N(N>>1), iphi_N(N), N(n) {};
-    explicit INtt32_PARAM(int n, Ntt32 val):
-            itw_factor(itw_N, val), iphi_factor(iphi_N, val), itw_N(N>>1), iphi_N(N), N(n) {};
+    INtt32_PARAM() : inv_tw_factor(), inv_phi_factor(), N(), inv_tw_N(), inv_phi_N() {};
+    explicit INtt32_PARAM(int n, int inv_tw_n, int inv_phi_n) :
+            inv_tw_factor(inv_tw_N, 0), inv_phi_factor(inv_phi_N, 0), inv_tw_N(inv_tw_n), inv_phi_N(inv_phi_n), N(n) {};
+};
+
+struct ROM {
+    Ntt32_PARAM ntt_rom;
+    INtt32_PARAM intt_rom;
+    int N {};
+    explicit ROM(int n) :
+       N(n), ntt_rom(n, n, n*2), intt_rom(n, n, n*2) {};
 };
 
 struct Ntt32_iTW {
@@ -70,6 +76,8 @@ void NWC_NTT32(NttPolynomial& res, const NttPolynomial& in, const Ntt32_PARAM& n
 void NWC_INTT32(NttPolynomial& res, const NttPolynomial& in, const INtt32_PARAM& intt_param);
 void genNTT32_PARAM(Ntt32_PARAM& ntt_param);
 void genINTT32_PARAM(INtt32_PARAM& intt_param, const Ntt32_PARAM& ntt_param);
+void genROM(ROM& rom);
+void pre_process(NttPolynomial& in, const Ntt32_PARAM& para);
 
 //--------------------------------------------------------------------------------
 
@@ -88,4 +96,9 @@ void genTW(Ntt32_TW& TW);
 void geniTW(Ntt32_iTW& iTW, const Ntt32_TW& TW);
 void doNTT32(NttPolynomial& res, const NttPolynomial& in, const Ntt32_TW& TW_param);
 void doINTT32(NttPolynomial& res, const NttPolynomial& in, const Ntt32_iTW& iTW_param);
+
+
+
+void printPARAM(Ntt32_PARAM& ntt_param, INtt32_PARAM& intt_param);
+void printROM(ROM& rom);
 #endif //HLS_YATFHE_MYNTT_H
