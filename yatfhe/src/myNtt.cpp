@@ -64,23 +64,23 @@ void doINTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_iTW& iTW
         temp_sub = modSUB(in.coeffs[i], temp_mult);
 
         out[i] = temp_add;
-        out[i + 1] = temp_sub;
-    }
-    for (auto j = 1; j < lvl; j++) {
-        gap = 1<<(j);
-        block = N>>(j+1);
+            out[i + 1] = temp_sub;
+        }
+        for (auto j = 1; j < lvl; j++) {
+            gap = 1<<(j);
+            block = N>>(j+1);
 //        std::cout<<"gap = "<<gap<<"; block = "<<block<<std::endl;
-        for (auto k = 0; k < block; k++) {
-            for (auto l = 0; l < gap ; l++) {
+            for (auto k = 0; k < block; k++) {
+                for (auto l = 0; l < gap ; l++) {
 //                std::cout<<"k:l="<<k<<","<<l<<std::endl;
-                itw_index = N>>(j+1);
-                temp_mult = modMULT(out[k*gap*2 + gap + l], itw[l*itw_index]);
-                temp_add = modADD(out[k*gap*2 + l], temp_mult);
-                temp_sub = modSUB(out[k*gap*2 + l], temp_mult);
+                    itw_index = N>>(j+1);
+                    temp_mult = modMULT(out[k*gap*2 + gap + l], itw[l*itw_index]);
+                    temp_add = modADD(out[k*gap*2 + l], temp_mult);
+                    temp_sub = modSUB(out[k*gap*2 + l], temp_mult);
 
-                out[k*gap*2 + l] = temp_add;
-                out[k*gap*2 + gap + l] = temp_sub;
-            }
+                    out[k*gap*2 + l] = temp_add;
+                    out[k*gap*2 + gap + l] = temp_sub;
+                }
 //            std::cout<<std::endl;
         }
     }
@@ -153,14 +153,10 @@ Ntt32 modADD(Ntt32 a, Ntt32 b) {
     temp = temp >= MOD ? temp - MOD : temp;
     return Ntt32(temp);
 }
-Ntt32 modADDscale(Ntt32 a, Ntt32 b, bool isINTT) {
+Ntt32 modADDscale(Ntt32 a, Ntt32 b) {
     int64_t temp;
-    temp = int64_t(a) + int64_t(b);
-    if (isINTT){
-        temp = (temp>>1) >= MOD ? (temp>>1) - MOD : temp>>1;
-    } else {
-        temp = temp >= MOD ? temp - MOD : temp;
-    }
+    temp = (int64_t(a) + int64_t(b))/2;
+    temp = (temp) >= MOD ? (temp) - MOD : temp;
     return Ntt32(temp);
 }
 Ntt32 modSUB(Ntt32 a, Ntt32 b) {
@@ -169,14 +165,10 @@ Ntt32 modSUB(Ntt32 a, Ntt32 b) {
     temp = temp >= 0 ? temp : temp + MOD;
     return Ntt32(temp);
 }
-Ntt32 modSUBscale(Ntt32 a, Ntt32 b, bool isINTT){
+Ntt32 modSUBscale(Ntt32 a, Ntt32 b){
     int64_t temp = 0;
-    temp = (int64_t(a) - int64_t(b));
-    if (isINTT) {
-        temp = temp >= 0 ? temp/2 : temp/2 + MOD;
-    } else {
-        temp = temp >= 0 ? temp : temp + MOD;
-    }
+    temp = (int64_t(a) - int64_t(b))/2;
+    temp = temp >= 0 ? temp : temp + MOD;
     return Ntt32(temp);
 }
 
@@ -232,8 +224,79 @@ void genROM(ROM& rom){
     }
 }
 
-void NWC_NTT32(NttPolynomial& res, const NttPolynomial& in, const Ntt32_PARAM& ntt_param) {
-
+void NWC_NTT32(NttPolynomial& RES, const NttPolynomial& IN, const Ntt32_PARAM& ntt_param) {
+    auto& res = RES.coeffs;
+    const auto& in = IN.coeffs;
+    const auto& tw = ntt_param.tw_factor;
+    const auto& phi = ntt_param.phi_factor;
+    const auto N = IN.N;
+    const auto lvl = clog2(N);
+    auto gap = 0;
+    auto block = 0;
+    auto tw_index = 0;
+    Ntt32 temp_add, temp_sub, temp_mult = 0;
+    Ntt32 pre_a, pre_b = 0;
+    for (auto i = 0; i < N; i += 2) {
+        pre_a = modMULT(in[i], phi[i]);
+        pre_b = modMULT(in[i+1], phi[i+1]);
+        temp_mult = modMULT(pre_b,tw[0]);
+        temp_add = modADD(pre_a,temp_mult);
+        temp_sub = modSUB(pre_a, temp_mult);
+        res[i] = temp_add;
+        res[i+1] = temp_sub;
+    }
+    for (auto j = 0; j < lvl; j++) {
+        gap = 1<<(j);
+        block = N>>(j+1);
+        for (auto k = 0; k < block; k++) {
+            for (auto l = 0; l < gap; l++) {
+                tw_index = block;
+                temp_mult = modMULT(res[k*gap*2 + gap + l],tw[l*tw_index]);
+                temp_add = modADD(res[k*gap*2 + l], temp_mult);
+                temp_sub = modSUB(res[k*gap*2 + l], temp_mult);
+                res[k*gap*2 + l] = temp_add;
+                res[k*gap*2 + gap + l] = temp_sub;
+            }
+        }
+    }
+}
+void NWC_INTT32(NttPolynomial& RES, const NttPolynomial& IN, const INtt32_PARAM& intt_param) {
+    const auto& in= IN.coeffs;
+    auto& res = RES.coeffs;
+    const auto& inv_tw = intt_param.inv_tw_factor;
+    const auto& inv_phi = intt_param.inv_phi_factor;
+    const auto N = IN.N;
+    const auto lvl = clog2(N);
+    auto gap = 0;
+    auto block = 0;
+    auto inv_tw_index = 0;
+    Ntt32 temp_add, temp_sub, temp_mult = 0;
+//    Ntt32 pre_a, pre_b = 0;
+    for (auto i = 0; i < (N>>1); i++) {
+        temp_add = modADDscale(in[i],in[i + (N>>1)]);
+        temp_sub = modSUBscale(in[i],in[i + (N>>1)]);
+        temp_mult = modMULT(temp_sub, inv_tw[i]);
+        res[i] = temp_add;
+        res[i + (N>>1)] = temp_sub;
+    }
+    for (auto j = 0; j < lvl; j++) {
+        gap = N>>(j+1);
+        block = 1<<j;
+        for (auto k = 0; k < block; k++) {
+            for (auto l = 0; l < gap; l++) {
+                inv_tw_index = block;
+                temp_add = modADDscale(res[k*gap*2 + l], res[k*gap*2 + gap + l]);
+                temp_sub = modSUBscale(res[k*gap*2 + l], res[k*gap*2 + gap + l]);
+                temp_mult = modMULT(temp_sub, inv_tw[l*inv_tw_index]);
+                res[k*gap*2 + l] = temp_add;
+                res[k*gap*2 + gap + l] = temp_mult;
+            }
+        }
+    }
+    for (auto m = 0; m < N>>1; m++) {
+        res[m] = modMULT(res[m],inv_phi[m]);
+        res[m + (N>>1)] = modMULT(res[m + (N>>1)], inv_phi[m + (N>>1)]);
+    }
 }
 
 void pre_process(NttPolynomial& in, const Ntt32_PARAM& para) {

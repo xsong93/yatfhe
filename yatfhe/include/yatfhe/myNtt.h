@@ -72,8 +72,8 @@ struct Ntt32_iTW {
 
 //--------------------------------------------------------------------------------
 
-void NWC_NTT32(NttPolynomial& res, const NttPolynomial& in, const Ntt32_PARAM& ntt_param);
-void NWC_INTT32(NttPolynomial& res, const NttPolynomial& in, const INtt32_PARAM& intt_param);
+void NWC_NTT32(NttPolynomial& RES, const NttPolynomial& IN, const Ntt32_PARAM& ntt_param);
+void NWC_INTT32(NttPolynomial& RES, const NttPolynomial& IN, const INtt32_PARAM& intt_param);
 void genNTT32_PARAM(Ntt32_PARAM& ntt_param);
 void genINTT32_PARAM(INtt32_PARAM& intt_param, const Ntt32_PARAM& ntt_param);
 void genROM(ROM& rom);
@@ -88,8 +88,8 @@ Ntt32 find_primitive_root(Ntt32 P);
 Ntt32 POW(Ntt32 base, Ntt32 exp, Ntt32 mod);
 Ntt32 modINV(Ntt32 in);
 Ntt32 modADD(Ntt32 a, Ntt32 b);
-Ntt32 modADDscale(Ntt32 a, Ntt32 b, bool isINTT);
-Ntt32 modSUBscale(Ntt32 a, Ntt32 b, bool isINTT);
+Ntt32 modADDscale(Ntt32 a, Ntt32 b);
+Ntt32 modSUBscale(Ntt32 a, Ntt32 b);
 Ntt32 modSUB(Ntt32 a, Ntt32 b);
 Ntt32 modMULT(Ntt32 a, Ntt32 b);
 void genTW(Ntt32_TW& TW);
