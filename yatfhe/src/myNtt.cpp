@@ -22,7 +22,7 @@ void doNTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_TW& TW_pa
     for (auto i = 0; i < (N>>1); i++) {
         temp_add = modADD(in.coeffs[i], in.coeffs[i+(N>>1)]);
         temp_sub = modSUB(in.coeffs[i], in.coeffs[i+(N>>1)]);
-        tw_flag = tw[i];
+//        tw_flag = tw[i];
         temp_mult = modMULT(temp_sub, tw[i]);
         out[i] = temp_add;
         out[i + (N>>1)] = temp_mult;
@@ -35,7 +35,7 @@ void doNTT32 (NttPolynomial& res, const NttPolynomial& in, const Ntt32_TW& TW_pa
             for (auto l = 0; l < gap ; l++) {
 //                std::cout<<"k:l="<<k<<","<<l<<std::endl;
                 tw_index = 1<<j;//
-                tw_flag = tw[l*tw_index];
+//                tw_flag = tw[l*tw_index];
                 temp_add = modADD(out[k*gap*2 + l], out[k*gap*2 + gap + l]);
                 temp_sub = modSUB(out[k*gap*2 + l], out[k*gap*2 + gap + l]);
                 temp_mult = modMULT(temp_sub, tw[l*tw_index]);
@@ -145,10 +145,42 @@ void geniTW(Ntt32_iTW& iTW, const Ntt32_TW& TW) {
         iTW.itw_factor[i] = modINV(TW.tw_factor[i]);
     }
 }
+
+//----------------------------------------------------------------------------
+
+void genNTT32_PARAM(Ntt32_PARAM& ntt_param) {
+    auto tw_n = ntt_param.tw_N;
+    auto phi_n = ntt_param.phi_N;
+    for (auto i = 0; i < tw_n; i++) {
+        ntt_param.tw_factor[i] = POW(PRIM_ROOT, Ntt32(), MOD);
+    }
+}
+
+
+
+
+
+
+
+
+//----------------------------------------------------------------------------
+
+
+
 Ntt32 modADD(Ntt32 a, Ntt32 b) {
     int64_t temp;
     temp = int64_t(a) + int64_t(b);
     temp = temp >= MOD ? temp - MOD : temp;
+    return Ntt32(temp);
+}
+Ntt32 modADDscale(Ntt32 a, Ntt32 b, bool isINTT) {
+    int64_t temp;
+    temp = int64_t(a) + int64_t(b);
+    if (isINTT){
+        temp = (temp>>1) >= MOD ? (temp>>1) - MOD : temp>>1;
+    } else {
+        temp = temp >= MOD ? temp - MOD : temp;
+    }
     return Ntt32(temp);
 }
 Ntt32 modSUB(Ntt32 a, Ntt32 b) {
@@ -157,6 +189,17 @@ Ntt32 modSUB(Ntt32 a, Ntt32 b) {
     temp = temp >= 0 ? temp : temp + MOD;
     return Ntt32(temp);
 }
+Ntt32 modSUBscale(Ntt32 a, Ntt32 b, bool isINTT){
+    int64_t temp = 0;
+    temp = (int64_t(a) - int64_t(b));
+    if (isINTT) {
+        temp = temp >= 0 ? temp/2 : temp/2 + MOD;
+    } else {
+        temp = temp >= 0 ? temp : temp + MOD;
+    }
+    return Ntt32(temp);
+}
+
 Ntt32 modMULT(Ntt32 a, Ntt32 b) {
     mpz_t A, B, TEMP, P;
     mpz_init(A);
@@ -178,4 +221,6 @@ int clog2(int N) {
     }
     return res;
 }
+
+
 

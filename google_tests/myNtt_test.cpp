@@ -8,6 +8,7 @@
 #include "yautil/time_counter.h"
 #include <gmp.h>
 #include "yautil/tool.h"
+using namespace std;
 
 TEST(MYNTT_TEST,test_init) {
     int N = 1024;
@@ -50,4 +51,12 @@ TEST(MYNTT_TEST, mod_inv_test) {
 TEST(MYNTT_TEST, modMULT_test) {
     Ntt32 a = 4293918719, b = 37101870;
     std::cout<< modMULT(a,b)<<std::endl;
+}
+
+TEST(MYNTT_TEST,construct_test){
+    int N = 1024;
+    Ntt32_PARAM ntt_param(N);
+    cout<<"N = "<<ntt_param.N<<endl;
+    cout<<"tw_N = "<<ntt_param.tw_N<<endl;
+    cout<<"phi_N = "<<ntt_param.phi_N<<endl;
 }
