@@ -9,6 +9,7 @@
 #include "yatfhe/ntt.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"
+#include "yatfhe/polynomial.h"
 
 // trgsw(0): [trlwe(0)]  (k+1)l rows
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
@@ -47,6 +48,7 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const Yatf
 
     for (auto lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
+        // todo: decompose on second level
         for (auto row = 0; row < param.k + 1; row++) {
 
             // add to a_lii
@@ -134,7 +136,34 @@ Integer trgswDecrypt(const TrgswDft& trgswDft, const YatfheParameters& param, co
     return roundErrorForShiftedTorus(tmp.coeffs[0], param.lweStdDev) >> (param.torusBits - param.radixBits);
 }
 
-void trgswExternalProduct(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
+void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
+    const auto k = trlweInput.k;
+    const auto l = trgswInput.l;
+    DecomposedTrlwe decomposedTrlwe {param};
+    DecomposedTrlwe tmp {param};
+
+    printTrlweAB(trlweInput, "trlweInput");
+    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+
+    // accum += bsk (*) accum, point-wisely
+    // https://www.zama.ai/post/tfhe-deep-dive-part-3
+    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
+    // BSK_lrc (*) D_lc = R_r
+    for (auto lvl = 0; lvl < l; lvl++) {
+        for (auto row = 0; row < k + 1; row++) {
+            auto& acc = (row < k) ? tmp.rlwes[lvl].a[row] : tmp.rlwes[lvl].b;
+            for (auto col = 0; col < k; col++) {
+                polynomialMulAccNaive(acc, decomposedTrlwe.rlwes[lvl].a[col], trgswInput.trlweSamples[lvl][row].a[col]);
+            }
+            polynomialMulAccNaive(acc, decomposedTrlwe.rlwes[lvl].b, trgswInput.trlweSamples[lvl][row].b);
+        }
+    }
+    printDecomposedTrlweAB(tmp, "tmp");
+
+    recomposeTrlwe(output, tmp, param);
+}
+
+void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto l = trgswInput.l;
     const auto N = trlweInput.b.N;

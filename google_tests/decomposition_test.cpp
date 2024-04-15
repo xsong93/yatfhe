@@ -61,7 +61,7 @@ TEST(DecomposeOverBSingleStage, DecomposeOverBSingleStage) {
     param.ksLevel = 8;
     int mult = 5;
     auto rhs = decomposeOverB(mult, param);
-    printArray(rhs, "1 decomposeOverB");
+    printArray(rhs, to_string(mult) + " decomposeOverB");
     DecomposedData decomp {param.ksLevel};
     std::vector<Torus> data(10);
     initCoeffsViaUniformDistribution(data);
@@ -115,7 +115,7 @@ TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
     printArray(recompL1.value, "recompL1");
 
     // recomp second level
-    auto out = selfRecompose(recompL1, param);
+    auto out = selfRecompose(recompL1, param); // equivalent to recomposeTwoParts(recompL1, decompOneOverR)
     printf("out = %d, data * mult = %d\n", out, data * mult);
     ASSERT_EQ(out, data * mult);
 

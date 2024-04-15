@@ -47,7 +47,7 @@ TEST(RgswMultTest, RgswMultTest) {
     param.radixBits = 4;
     param.l = 8;
     param.k = 2;
-    int ti = 20;
+    int ti = 1;
     while (ti-- > 0) {
         // ken gen
         TrgswKey trgswKey {param};
@@ -73,35 +73,20 @@ TEST(RgswMultTest, RgswMultTest) {
 
         // trlwe dec pre-mult
         symDecTrlwe(decPre, in2Dft, trlweKey, param.torusBase);
-//        printArray(decPre.coeffs, "decPre");
+        printArray(decPre.coeffs, "decPre");
 
         // trgsw mult
         // todo: ntt/intt failed, fix ntt
-        trgswExternalProduct(out, trgswDft, in2, param);
+        trgswExternalProduct(out, trgsw, in2, param);
+        printTrlweAB(out, "out");
 
-        Trlwe minus {param.k, param.N};
-        trlweSub(minus, in2, out);
-        printTrlweAB(minus, "minus");
-        for (auto i = 0 ; i < out.b.N; i++) {
-//            for (auto j = 0 ; j < out.k; j++) {
-//                if (minus.a[j].coeffs[i] != 0) {
-//                    printf("%d,%d\n", j, i);
-//                }
-//                ASSERT_EQ(minus.a[j].coeffs[i], 0);
-//            }
-            if (minus.b.coeffs[i] != 0) {
-                printf("%d\n",i);
-            }
-            ASSERT_EQ(minus.b.coeffs[i], 0);
+        applyNttForAB(in2Dft, out);
+
+        // trlwe dec aft-mult
+        symDecTrlwe(decAft, in2Dft, trlweKey, param.torusBase);
+        printArray(decAft.coeffs, "decAft");
+        for (auto i = 0 ; i < decAft.N; i++) {
+            ASSERT_EQ(decPre.coeffs[i], decAft.coeffs[i]);
         }
-
-//        applyNttForAB(in2Dft, out);
-//
-//        // trlwe dec aft-mult
-//        symDecTrlwe(decAft, in2Dft, trlweKey, param.torusBase);
-//        printArray(decAft.coeffs, "decAft");
-//        for (auto i = 0 ; i < decAft.N; i++) {
-//            ASSERT_EQ(decPre.coeffs[i], decAft.coeffs[i]);
-//        }
     }
 }

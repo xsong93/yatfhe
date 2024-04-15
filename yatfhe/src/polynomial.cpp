@@ -92,14 +92,25 @@ void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const Toru
     }
 }
 
-void polynomialMulNaive(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2) {
+void polynomialMulNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
-    for (int i = 0; i < N; i++) {
+    for (auto i = 0; i < N; i++) {
         Torus tmp {0};
-        for (int j = 0; j < N; j++) {
+        for (auto j = 0; j < N; j++) {
             tmp = (j <= i) ? (tmp + poly1.coeffs[j] * poly2.coeffs[i - j]) : (tmp - poly1.coeffs[j] * poly2.coeffs[N + i - j]);
         }
         res.coeffs[i] = tmp;
+    }
+}
+
+void polynomialMulAccNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
+    const int N = res.N;
+    for (auto i = 0; i < N; i++) {
+        Torus tmp {0};
+        for (auto j = 0; j < N; j++) {
+            tmp = (j <= i) ? (tmp + poly1.coeffs[j] * poly2.coeffs[i - j]) : (tmp - poly1.coeffs[j] * poly2.coeffs[N + i - j]);
+        }
+        res.coeffs[i] += tmp;
     }
 }
 
@@ -112,7 +123,7 @@ void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum) {
 }
 
 // res = poly1 + poly2
-void polynomialAdd(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2) {
+void polynomialAdd(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
         res.coeffs[i] = poly1.coeffs[i] + poly2.coeffs[i];
@@ -132,7 +143,7 @@ void polynomialAddSubOffset(TorusPolynomial& poly, const int offset, const bool 
 }
 
 // res = poly1 - poly2
-void polynomialSub(TorusPolynomial& res, const IntPolynomial& poly1, const TorusPolynomial& poly2) {
+void polynomialSub(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
         res.coeffs[i] = poly1.coeffs[i] - poly2.coeffs[i];
