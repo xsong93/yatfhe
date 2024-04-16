@@ -12,7 +12,7 @@
 #define TORUS32
 
 #ifdef TORUS32
-using Torus = int32_t;
+using Torus = int32_t; // use 32-bit int as torus to handle overflow naturally
 using UnsignedInteger = uint32_t;
 using NttType = uint64_t;
 using Integer = int32_t;

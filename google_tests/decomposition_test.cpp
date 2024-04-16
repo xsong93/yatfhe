@@ -59,7 +59,7 @@ TEST(DecomposeOverBSingleStage, DecomposeOverBSingleStage) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;
-    int mult = 5;
+    int mult = genIntUniformDist(TorusMin, TorusMax);
     std::vector<Integer> rhs(param.ksLevel);
     decomposeOverB(rhs, mult, param);
     printArray(rhs, to_string(mult) + " decomposeOverB");
@@ -213,4 +213,45 @@ TEST(DecomposedAddSub, DecomposedAddSub) {
         printf("a - b: a: %d, b: %d. decomp: %d, ori: %d\n", a, b, z, a - b);
     }
     printBanner("DecomposedAddSub");
+}
+
+
+// Actually, identical logic with DecomposeOverB test.
+TEST(DecomposedMult, DecomposedMult) {
+    YatfheParameters param {};
+    param.radixBits = 4;
+    param.ksLevel = 8;
+    DecomposedData da {param.ksLevel};
+    DecomposedData db {param.ksLevel};
+    DecomposedData dr {param.ksLevel};
+    Torus a;
+    Torus b;
+    int t = 2000;
+    while (t-- > 0) {
+        std::cout << "iter: " << t << endl;
+        a = genIntUniformDist(TorusMin, TorusMax);
+        b = genIntUniformDist(TorusMin, TorusMax);
+
+        gadgetDecompose(da, a, param);
+        printArray(da.value, "da");
+
+        std::vector<Integer> bOb(param.ksLevel);
+        decomposeOverB(bOb, b, param);
+        printArray(bOb, "bOb");
+
+        auto z = recomposeTwoParts(da, bOb);
+        DecomposedData dz {param.ksLevel};
+        gadgetDecompose(dz, z, param);
+        printArray(dz.value, "dz");
+
+//        auto r = (int)(((int64_t)a * (int64_t)b) % (param.q));
+        auto r = a * b;
+        DecomposedData dt {param.ksLevel};
+        gadgetDecompose(dt, r, param);
+        printArray(dt.value, "dt");
+
+        printf("a * b: a: %d, b: %d. decomp: %d, ori: %d\n\n\n", a, b, z, r);
+        ASSERT_EQ(z, r);
+    }
+    printBanner("DecomposedMult");
 }
