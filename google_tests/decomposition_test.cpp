@@ -59,7 +59,7 @@ TEST(DecomposeOverBSingleStage, DecomposeOverBSingleStage) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;
-    int mult = genIntUniformDist(TorusMin, TorusMax);
+    Torus mult = genIntUniformDist(TorusMin, TorusMax);
     std::vector<Integer> rhs(param.ksLevel);
     decomposeOverB(rhs, mult, param);
     printArray(rhs, to_string(mult) + " decomposeOverB");
@@ -81,7 +81,9 @@ TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;
-    int mult = -5;
+
+    //todo: how to support torus overflow?
+    Torus mult = 5;
 
     // first decomp
     std::vector<Integer> rhs(param.ksLevel);
@@ -105,7 +107,8 @@ TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
 
     DecomposedData decompL1 {param.ksLevel};
     DecomposedData recompL1 {param.ksLevel};
-    Torus data = genIntUniformDist(TorusMin, TorusMax);
+//    Torus data = genIntUniformDist(TorusMin, TorusMax);
+    Torus data = INT_MAX - 3;
 
 //  signedGadgetDecomposition(decomp, data, param); // both correct
     gadgetDecompose(decompL1, data, param); // both correct
@@ -119,6 +122,11 @@ TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
     // recomp second level
     auto out = selfRecompose(recompL1, param); // equivalent to recomposeTwoParts(recompL1, decompOneOverR)
     printf("out = %d, data * mult = %d\n", out, data * mult);
+
+    for (auto i = 0; i < param.ksLevel; i++) {
+        cout << decompL1.value[i] * rhs[i] << ", "<< ((decompL1.value[i] * rhs[i]) >> (32 - 4* (i+1))) << endl;
+    }
+
     ASSERT_EQ(out, data * mult);
 
     printBanner("DecomposeOverBMultiStages");
