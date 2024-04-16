@@ -14,9 +14,9 @@
 struct DecomposedData {
     std::vector<Integer> value; // l
     int l {};
-    Integer sign {};
+    Integer sign {1}; // set default to 1 as positive sign
 
-    explicit DecomposedData(int size) : sign(1), l(size), value(size, 0) {};
+    explicit DecomposedData(int size) : l(size), value(size, 0) {};
 };
 
 struct DecomposedDataDft {
@@ -38,7 +38,7 @@ void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const
 
 Integer recomposeTwoParts(const DecomposedData& lhs, const std::vector<Integer>& rhs);
 
-std::vector<Integer> decomposeOverB(Integer in, const YatfheParameters& param);
+void decomposeOverB(std::vector<Integer>& output, Integer in, const YatfheParameters& param);
 
 void signedGadgetDecomposition(DecomposedData& res, Integer in, const YatfheParameters& param);
 

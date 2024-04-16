@@ -19,7 +19,8 @@ void tlweKeySwitchingKeyGen(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
     TlweKey inKey {param.k * param.N};
     convertTrlweKeyToTlweKey(inKey, currKey);
     for (auto i = 0; i < inKey.n; i++) {
-        auto sOverB = decomposeOverB(inKey.s[i], param); // s_i * B^-j
+        std::vector<Integer> sOverB(param.ksLevel);
+        decomposeOverB(sOverB, inKey.s[i], param); // s_i * B^-j
         for (auto j = 0; j < param.ksLevel; j++) {
             symEncTlweSample(ksk.decomposedKsk[i][j], sOverB[j], targetKey); // encrypt decomposed s under target secret key, no need to map it to Torus, since it's either 0 or 1
         }

@@ -60,7 +60,8 @@ TEST(DecomposeOverBSingleStage, DecomposeOverBSingleStage) {
     param.radixBits = 4;
     param.ksLevel = 8;
     int mult = 5;
-    auto rhs = decomposeOverB(mult, param);
+    std::vector<Integer> rhs(param.ksLevel);
+    decomposeOverB(rhs, mult, param);
     printArray(rhs, to_string(mult) + " decomposeOverB");
     DecomposedData decomp {param.ksLevel};
     std::vector<Torus> data(10);
@@ -83,7 +84,8 @@ TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
     int mult = -5;
 
     // first decomp
-    auto rhs = decomposeOverB(mult, param);
+    std::vector<Integer> rhs(param.ksLevel);
+    decomposeOverB(rhs, mult, param);
     printArray(rhs, to_string(mult) + " decomposeOverB");
 
     // second decomp
@@ -182,4 +184,33 @@ TEST(DecomposeTrlweTest, DecomposeTrlweTest) {
         ASSERT_EQ(in.b.coeffs[j], intt.b.coeffs[j]);
     }
     printBanner("DecomposeTrlweTest");
+}
+
+TEST(DecomposedAddSub, DecomposedAddSub) {
+    YatfheParameters param {};
+    param.radixBits = 4;
+    param.ksLevel = 8;
+    DecomposedData da {param.ksLevel};
+    DecomposedData db {param.ksLevel};
+    DecomposedData dr {param.ksLevel};
+    int a;
+    int b;
+    int t = 5000;
+    while (t-- > 0) {
+        a = genIntUniformDist(INT_MIN, INT_MAX);
+        b = genIntUniformDist(INT_MIN, INT_MAX);
+        gadgetDecompose(da, a, param);
+        gadgetDecompose(db, b, param);
+        for (auto i = 0; i < param.ksLevel; i++) {
+            dr.value[i] = da.value[i] * da.sign + db.value[i] * db.sign;
+        }
+        auto z = selfRecompose(dr, param);
+        printf("a + b: a: %d, b: %d. decomp: %d, ori: %d\n", a, b, z, a + b);
+        for (auto i = 0; i < param.ksLevel; i++) {
+            dr.value[i] = da.value[i] * da.sign - db.value[i] * db.sign;
+        }
+        z = selfRecompose(dr, param);
+        printf("a - b: a: %d, b: %d. decomp: %d, ori: %d\n", a, b, z, a - b);
+    }
+    printBanner("DecomposedAddSub");
 }

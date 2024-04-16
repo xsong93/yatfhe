@@ -60,8 +60,7 @@ Integer selfRecompose(const DecomposedData& digits, const YatfheParameters& para
 void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const std::vector<DecomposedData>& mid) {
     for (auto j = 0; j < lhs.l; j++) {
         for (auto l = 0; l < mid[0].l; l++) {
-            output.value[j] += lhs.value[j] * mid[j].value[l];
-            output.sign = lhs.sign * mid[j].sign;
+            output.value[j] += (lhs.value[j] * lhs.sign) * (mid[j].value[l] * mid[j].sign);
         }
     }
 }
@@ -81,12 +80,10 @@ Integer recomposeTwoParts(const DecomposedData& lhs, const std::vector<Integer>&
  * @param param
  * @return
  */
-std::vector<Integer> decomposeOverB(const Integer in, const YatfheParameters& param) {
-    std::vector<Integer> output(param.ksLevel);
+void decomposeOverB(std::vector<Integer>& output, const Integer in, const YatfheParameters& param) {
     for (int i = 0; i < output.size(); ++i) {
         output[i] = in << (param.torusBits - (i + 1) * param.radixBits);
     }
-    return output;
 }
 
 /**

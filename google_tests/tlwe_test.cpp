@@ -23,13 +23,15 @@ TEST(EncDecTest, EncDecTest) {
     printBanner("EncDecTest");
 }
 
+// handles overflow naturally in 32-bits signed int field
 TEST(AddSubTest, AddSubTest) {
-    const YatfheParameters param {};
+    YatfheParameters param {};
+    param.torusBase = 8;
 
     TlweKey tlweKey {param.n, param.lweStdDev};
     lweKeyGen(tlweKey);
 
-    Torus mu1 = doubleToTorus32(1.0 / param.torusBase);
+    Torus mu1 = doubleToTorus32(3.0 / param.torusBase);
     Torus mu2 = doubleToTorus32(2.0 / param.torusBase);
 
     Tlwe input1 {param.n};
@@ -40,14 +42,14 @@ TEST(AddSubTest, AddSubTest) {
     symEncTlweSample(input2, mu2, tlweKey);
 
     lweAdd(output, input1, input2);
-    cout << "plain arithmetic: " << torus32ToDouble(mu1) + torus32ToDouble(mu2) <<endl;
+    cout << "plain arithmetic: " << torus32ToDouble(mu1 + mu2) <<endl;
     cout << "dec res: " << symDecTlweSample(output, tlweKey, param.torusBase) << endl;
-    ASSERT_FLOAT_EQ(torus32ToDouble(mu1) + torus32ToDouble(mu2), symDecTlweSample(output, tlweKey, param.torusBase));
+    ASSERT_FLOAT_EQ(torus32ToDouble(mu1 + mu2), symDecTlweSample(output, tlweKey, param.torusBase));
 
     lweSub(output, input1, input2);
-    cout << "plain arithmetic: " << torus32ToDouble(mu1) - torus32ToDouble(mu2) <<endl;
+    cout << "plain arithmetic: " << torus32ToDouble(mu1 - mu2) <<endl;
     cout << "dec res: " << symDecTlweSample(output, tlweKey, param.torusBase) << endl;
-    ASSERT_FLOAT_EQ(torus32ToDouble(mu1) - torus32ToDouble(mu2), symDecTlweSample(output, tlweKey, param.torusBase));
+    ASSERT_FLOAT_EQ(torus32ToDouble(mu1 - mu2), symDecTlweSample(output, tlweKey, param.torusBase));
 
     printBanner("AddSubTest");
 }
