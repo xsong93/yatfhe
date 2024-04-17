@@ -17,6 +17,22 @@ void printTlweAB(const Tlwe& in, const string& msg) {
     cout <<"]" << endl << "b: [" << in.b << "]" << endl << endl;
 }
 
+void printRlweAB(const Rlwe& in, const string& msg) {
+    cout << msg<< ": a: ";
+    for (int i = 0; i < in.k; i++) {
+        cout << "[";
+        for (int j = 0; j < in.b.N; j++) {
+            printf("%d,%d:%s%d%s  " , i, j, ANSI_COLOR_YELLOW, in.a[i].coeffs[j], ANSI_COLOR_RESET);
+        }
+        cout <<"] ";
+    }
+    cout << endl << "b: [";
+    for (int j = 0; j < in.b.N; j++) {
+        printf("%d:%s%d%s  ", j, ANSI_COLOR_YELLOW, in.b.coeffs[j], ANSI_COLOR_RESET);
+    }
+    cout <<"]" << endl << endl;
+}
+
 void printTrlweAB(const Trlwe& in, const string& msg) {
     cout << msg<< ": a: ";
     for (int i = 0; i < in.k; i++) {

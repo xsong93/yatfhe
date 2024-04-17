@@ -15,6 +15,8 @@ using namespace std;
 
 void printTlweAB(const Tlwe& in, const string& msg);
 
+void printRlweAB(const Rlwe& in, const string& msg);
+
 void printTrlweAB(const Trlwe& in, const string& msg);
 
 void printTrlweDftAB(const TrlweDft& in, const string& msg);

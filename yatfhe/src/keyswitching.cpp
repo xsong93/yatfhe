@@ -22,7 +22,7 @@ void tlweKeySwitchingKeyGen(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
         std::vector<Integer> sOverB(param.ksLevel);
         decomposeOverB(sOverB, inKey.s[i], param); // s_i * B^-j
         for (auto j = 0; j < param.ksLevel; j++) {
-            symEncTlweSample(ksk.decomposedKsk[i][j], sOverB[j], targetKey); // encrypt decomposed s under target secret key, no need to map it to Torus, since it's either 0 or 1
+            symEncTlweSample(ksk.decomposedKsk[i][j], sOverB[j], targetKey);
         }
     }
 }
@@ -39,7 +39,8 @@ void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& inp
     for (auto i = 0; i < input.n; i++) {
         DecomposedData aBar {param.ksLevel};
         Tlwe tmp {output.n};
-        signedGadgetDecomposition(aBar, input.a[i], param); // (aBar_1, ..., aBar_l) <- g^-1(ai)
+//        signedGadgetDecomposition(aBar, input.a[i], param); // (aBar_1, ..., aBar_l) <- g^-1(ai)
+        gadgetDecompose(aBar, input.a[i], param);
         for (auto j = 0; j < param.ksLevel; j++) {
             for (auto k = 0; k < output.n; k++) {
                 tmp.a[k] += aBar.value[j] * ksk.decomposedKsk[i][j].a[k] * aBar.sign;

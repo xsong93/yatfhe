@@ -94,8 +94,9 @@ void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const Toru
 
 void polynomialMulNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
+    Torus tmp;
     for (auto i = 0; i < N; i++) {
-        Torus tmp {0};
+        tmp = 0;
         for (auto j = 0; j < N; j++) {
             tmp = (j <= i) ? (tmp + poly1.coeffs[j] * poly2.coeffs[i - j]) : (tmp - poly1.coeffs[j] * poly2.coeffs[N + i - j]);
         }
@@ -105,8 +106,9 @@ void polynomialMulNaive(TorusPolynomial& res, const TorusPolynomial& poly1, cons
 
 void polynomialMulAccNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
+    Torus tmp;
     for (auto i = 0; i < N; i++) {
-        Torus tmp {0};
+        tmp = 0;
         for (auto j = 0; j < N; j++) {
             tmp = (j <= i) ? (tmp + poly1.coeffs[j] * poly2.coeffs[i - j]) : (tmp - poly1.coeffs[j] * poly2.coeffs[N + i - j]);
         }

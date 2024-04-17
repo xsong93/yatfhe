@@ -31,7 +31,7 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 }
 
 // output += mu * G^T
-void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const YatfheParameters& param) {
+void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
     // add the diagonal matrix (mu * G^T)_ijk to the output
     //       ( 1/B^l                         )
     //      .                              . .
@@ -140,27 +140,18 @@ void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& t
     const auto k = trlweInput.k;
     const auto l = trgswInput.l;
     DecomposedTrlwe decomposedTrlwe {param};
-    DecomposedTrlwe tmp {param};
 
-    printTrlweAB(trlweInput, "trlweInput");
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
-    // accum += bsk (*) accum, point-wisely
-    // https://www.zama.ai/post/tfhe-deep-dive-part-3
-    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
-    // BSK_lrc (*) D_lc = R_r
-    for (auto lvl = 0; lvl < l; lvl++) {
-        for (auto row = 0; row < k + 1; row++) {
-            auto& acc = (row < k) ? tmp.rlwes[lvl].a[row] : tmp.rlwes[lvl].b;
+    // todo: fix overflow issue
+    for (auto row = 0; row < k + 1; row++) {
+        for (auto lvl = 0; lvl < l; lvl++) {
             for (auto col = 0; col < k; col++) {
-                polynomialMulAccNaive(acc, decomposedTrlwe.rlwes[lvl].a[col], trgswInput.trlweSamples[lvl][row].a[col]);
+                polynomialMulAccNaive(output.a[col], decomposedTrlwe.rlwes[lvl].a[col], trgswInput.trlweSamples[lvl][row].a[col]);
             }
-            polynomialMulAccNaive(acc, decomposedTrlwe.rlwes[lvl].b, trgswInput.trlweSamples[lvl][row].b);
+            polynomialMulAccNaive(output.b, decomposedTrlwe.rlwes[lvl].b, trgswInput.trlweSamples[lvl][row].b);
         }
     }
-    printDecomposedTrlweAB(tmp, "tmp");
-
-    recomposeTrlwe(output, tmp, param);
 }
 
 void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {

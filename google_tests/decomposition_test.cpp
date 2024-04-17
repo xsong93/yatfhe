@@ -64,15 +64,16 @@ TEST(DecomposeOverBSingleStage, DecomposeOverBSingleStage) {
     decomposeOverB(rhs, mult, param);
     printArray(rhs, to_string(mult) + " decomposeOverB");
     DecomposedData decomp {param.ksLevel};
-    std::vector<Torus> data(10);
-    initCoeffsViaUniformDistribution(data);
-    for (auto d : data) {
-//        signedGadgetDecomposition(decomp, d, param); // both correct
-        gadgetDecompose(decomp, d, param); // both correct
-        printf("in: %d, ", d);
+    int ti = 0;
+    while (ti++ < 10) {
+        Torus data = genIntUniformDist(TorusMin, TorusMax);
+//        signedGadgetDecomposition(decomp, data, param); // both correct
+        gadgetDecompose(decomp, data, param); // both correct
+        printf("iter: %d, in: %d, ", ti, data);
         printArray(decomp.value, "decomp");
         auto out = recomposeTwoParts(decomp, rhs);
-        ASSERT_EQ(out, d * mult);
+        printf("out: %d, data * mult: %d\n\n", out, data * mult);
+        ASSERT_EQ(out, data * mult);
     }
     printBanner("DecomposeOverBSingleStage");
 }

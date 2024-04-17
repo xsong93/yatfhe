@@ -57,19 +57,19 @@ TEST(RgswMultTest, RgswMultTest) {
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
-        Integer mu1 = 1;
+        Integer mu1 = 0;
         trgswEncrypt(trgsw, trgswDft, param, trgswKey, mu1);
-        printf( "trgsw: %d.\n", trgswDecrypt(trgswDft, param, trgswKey));
+        printf( "trgsw dec: %d.\n", trgswDecrypt(trgswDft, param, trgswKey));
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
         TrlweDft in2Dft {param.k, param.N};
-        Torus mu2 = doubleToTorus32(1.0 / param.torusBase);
+        Torus mu2 = doubleToTorus32(0.0 / param.torusBase);
         Trlwe out {param.k, param.N};
         DoublePolynomial decPre {param.N};
         DoublePolynomial decAft {param.N};
         symEncTrlweSingleSample(in2, in2Dft, trlweKey, mu2, param.lweStdDev);
-//        printTrlweAB(in2, "in2");
+        printTrlweAB(in2, "trlwe");
 
         // trlwe dec pre-mult
         symDecTrlwe(decPre, in2Dft, trlweKey, param.torusBase);
@@ -80,7 +80,16 @@ TEST(RgswMultTest, RgswMultTest) {
         trgswExternalProduct(out, trgsw, in2, param);
         printTrlweAB(out, "out");
 
+        // intt and test
         applyNttForAB(in2Dft, out);
+        Trlwe out2 {param.k, param.N};
+        applyInttForAB(out2, in2Dft);
+        for (auto i = 0; i < out2.b.N; i++) {
+            for (auto j = 0; j < out2.k; j++) {
+                ASSERT_EQ(out2.a[j].coeffs[i], out.a[j].coeffs[i]);
+            }
+            ASSERT_EQ(out2.b.coeffs[i], out.b.coeffs[i]);
+        }
 
         // trlwe dec aft-mult
         symDecTrlwe(decAft, in2Dft, trlweKey, param.torusBase);

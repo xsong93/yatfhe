@@ -44,14 +44,13 @@ struct TrlweDft{
             k(k) {};
 };
 
-
 struct DecomposedTrlwe {
     std::vector<Rlwe> rlwes; // l
     std::vector<TrlweDft> rlweDfts; // 2l
     int l;
     int lDft;
 
-    DecomposedTrlwe(YatfheParameters param) :
+    explicit DecomposedTrlwe(YatfheParameters param) :
             l(param.l),
             lDft(param.l * (param.dftBits / param.torusBits)),
             rlwes(param.l,  Rlwe(param.k, param.N)),

@@ -39,6 +39,7 @@ struct YatfheParameters {
     // From TFHE
     // LWE params
     int torusBits {32};
+    long q {2147483648};
     int dftBits {64};
     int n {630};
     double lweStdDev {2.98023e-08}; // 2^-15
@@ -49,6 +50,7 @@ struct YatfheParameters {
     // RGSW params
     // const int l = 6, Bg_bit = 6;
     int l {8};
+    int l2 {8};
     int lDft {l * 2};
     int radixBits {4}; // b
     // KS params

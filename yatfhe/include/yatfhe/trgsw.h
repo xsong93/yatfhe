@@ -20,6 +20,16 @@ struct Trgsw {
             l(p.l) {};
 };
 
+struct DecomposedTrgsw {
+    std::vector<Trgsw> trgswSamples {};
+    int l;
+
+    explicit DecomposedTrgsw(const YatfheParameters& p) :
+//            trlweSamples(p.k + 1, std::vector<Trlwe>(p.l, Trlwe(p.k, p.N))),
+            trgswSamples(p.l2, Trgsw(p)),
+            l(p.l2) {};
+};
+
 struct TrgswDft {
     std::vector<std::vector<TrlweDft>> trlweDftSamples; // l *  (k + 1)
     int l;
@@ -44,7 +54,7 @@ Integer trgswDecrypt(const TrgswDft& trgswDft, const YatfheParameters& param, co
 
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey);
 
-void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, int64_t mu, const YatfheParameters& param);
+void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const YatfheParameters& param);
 
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
