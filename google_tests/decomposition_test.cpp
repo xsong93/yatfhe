@@ -109,7 +109,7 @@ TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
     DecomposedData decompL1 {param.ksLevel};
     DecomposedData recompL1 {param.ksLevel};
 //    Torus data = genIntUniformDist(TorusMin, TorusMax);
-    Torus data = INT_MAX - 3;
+    Torus data = TorusMax - 3;
 
 //  signedGadgetDecomposition(decomp, data, param); // both correct
     gadgetDecompose(decompL1, data, param); // both correct
@@ -206,8 +206,8 @@ TEST(DecomposedAddSub, DecomposedAddSub) {
     int b;
     int t = 5000;
     while (t-- > 0) {
-        a = genIntUniformDist(INT_MIN, INT_MAX);
-        b = genIntUniformDist(INT_MIN, INT_MAX);
+        a = genIntUniformDist(INT32_MIN, INT32_MAX);
+        b = genIntUniformDist(INT32_MIN, INT32_MAX);
         gadgetDecompose(da, a, param);
         gadgetDecompose(db, b, param);
         for (auto i = 0; i < param.ksLevel; i++) {
