@@ -27,7 +27,13 @@ void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
     }
 }
 
-void symEncTrlwe(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key) {
+void symEncTrlwe(Trlwe& trlwe, const TrlweKey& key) {
+    for (auto i = 0; i < trlwe.k; i++) {
+        polynomialMulAccNaive(trlwe.b, trlwe.a[i], key.s[i]);
+    }
+}
+
+void symEncTrlweNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key) {
     applyNttForAB(trlweDft, trlwe);
     calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
     applyIntt(trlwe.b, trlweDft.b);
@@ -43,17 +49,45 @@ void trlweKeyGen(TrlweKey& key) {
 //    printPolyVec(key.s, "TrlweKey");
 }
 
-void symEncTrlweSingleSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const Torus mu, double sigma) {
+void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, const Torus mu, double sigma) {
     initTrlweSingleSample(trlwe, mu, sigma);
-    symEncTrlwe(trlwe, trlweDft, key);
+    symEncTrlwe(trlwe, key);
 }
 
-void symEncTrlweMultiSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu, double sigma) {
+void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu, double sigma) {
     initTrlweMultiSample(trlwe, mu, sigma);
-    symEncTrlwe(trlwe, trlweDft, key);
+    symEncTrlwe(trlwe, key);
 }
 
-void symDecTrlwe(DoublePolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, const int torusBase) {
+void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const Torus mu, double sigma) {
+    initTrlweSingleSample(trlwe, mu, sigma);
+    symEncTrlweNtt(trlwe, trlweDft, key);
+}
+
+void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu, double sigma) {
+    initTrlweMultiSample(trlwe, mu, sigma);
+    symEncTrlweNtt(trlwe, trlweDft, key);
+}
+
+void symDecTrlwe(DoublePolynomial& output, const Trlwe& trlwe, const TrlweKey& key, const int torusBase) {
+    TorusPolynomial tmp {output.N};
+    TorusPolynomial innerProduct {output.N};
+    for (auto i = 0; i < trlwe.k; i++) {
+        polynomialMulAccNaive(innerProduct, trlwe.a[i], key.s[i]);
+    }
+    polynomialSub(tmp, trlwe.b, innerProduct);
+    torusPolyToDoublePoly(output, tmp);
+    roundErrorPoly(output, torusBase);
+}
+
+void symDecTrlweWoRounding(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key) {
+    for (auto i = 0; i < trlwe.k; i++) {
+        polynomialMulAccNaive(output, trlwe.a[i], key.s[i]);
+    }
+    polynomialSub(output, trlwe.b, output);
+}
+
+void symDecTrlweNtt(DoublePolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, const int torusBase) {
     TorusPolynomial tmp {output.N};
     LagrangePolynomial innerProduct {trlweDft.b.N};
     LagrangePolynomial res {trlweDft.b.N};
@@ -64,7 +98,7 @@ void symDecTrlwe(DoublePolynomial& output, const TrlweDft& trlweDft, const Trlwe
     roundErrorPoly(output, torusBase);
 }
 
-void symDecTrlweWoRounding(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key) {
+void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key) {
     LagrangePolynomial tmp {trlweDft.b.N};
     calModularInnerProductNtt(tmp, trlweDft.a, key.sDft);
     lagrangePolynomialSub(tmp, trlweDft.b, tmp);

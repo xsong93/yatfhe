@@ -12,7 +12,49 @@
 #include "yatfhe/polynomial.h"
 
 // trgsw(0): [trlwe(0)]  (k+1)l rows
-void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
+void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        for (auto row = 0; row < param.k + 1; row++) {
+            symEncTrlweSingleSample(trgsw.trlweSamples[lvl][row], trgswKey.trlweKey, 0, param.rlweStdDev);
+        }
+    }
+}
+
+// output += mu * G^T
+void trgswAddInteger(Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
+    // add the diagonal matrix (mu * G^T)_ijk to the output
+    //       ( 1/B^l                         )
+    //      .                              . .
+    //    .                              .   .
+    //  ( 1/B^2                        )     .
+    // ( 1/B                         )       .
+    // (     1/B                     )       .
+    // (          .                  )       .
+    // (              .              )     .
+    // (                  .          )   .
+    // (                      .      ) .
+    // (                         1/B )
+    // ( a_0  a_1          a_k-1  b  )
+
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
+        // todo: decompose on second level
+        for (auto row = 0; row < param.k + 1; row++) {
+
+            // add to a_lii
+            if (row < param.k) {
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
+                continue;
+            }
+
+            // add to b_lk
+            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
+        }
+    }
+}
+
+// trgsw(0): [trlwe(0)]  (k+1)l rows
+void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
     for (auto lvl = 0; lvl < param.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
 //            Trlwe& trlweSample = trgsw.trlweSamples[lvl][row];
@@ -25,7 +67,7 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 //                modularAccumulate(trlweDftSample.b.coeffs, trlweDftSample.a[col].coeffs, trgswKey.trlweKey.sDft[col].coeffs);
 //            }
 //            applyIntt(trlweSample.b, trlweDftSample.b);
-            symEncTrlweSingleSample(trgsw.trlweSamples[lvl][row], trgswDft.trlweDftSamples[lvl][row], trgswKey.trlweKey, 0, param.lweStdDev);
+            symEncTrlweSingleSampleNtt(trgsw.trlweSamples[lvl][row], trgswDft.trlweDftSamples[lvl][row], trgswKey.trlweKey, 0, param.rlweStdDev);
         }
     }
 }
@@ -113,6 +155,11 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, cons
 //    }
 //}
 
+void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
+    trgswEncZero(trgsw, param, trgswKey);
+    trgswAddInteger(trgsw, mu, param);
+}
+
 /**
  * To encrypt a message as a trgsw ct, there are two steps: 1) generate a trgsw ct with each level and row a rlwe
  * encryption of zero. 2) add mu * G^T to the above trgsw ct
@@ -122,18 +169,27 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, cons
  * @param trgswKey TrgswKey
  * @param mu Message.
  */
-void trgswEncrypt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey, const Integer mu) {
+void trgswEncryptNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
     trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey);
     trgswAddIntegerNtt(trgswDft, trgsw, mu, param);
 }
 
 // To decrypt, it is sufficient to decrypt the last GLev ciphertext, which is a GLev encryption of m/B^l.
-Integer trgswDecrypt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
+Integer trgswDecrypt(const Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
     const auto firstLevel = 0;
     const auto lastRow = param.k;
     TorusPolynomial tmp {param.N};
-    symDecTrlweWoRounding(tmp, trgswDft.trlweDftSamples[firstLevel][lastRow], trgswKey.trlweKey);
-    return roundErrorForShiftedTorus(tmp.coeffs[0], param.lweStdDev) >> (param.torusBits - param.radixBits);
+    symDecTrlweWoRounding(tmp, trgsw.trlweSamples[firstLevel][lastRow], trgswKey.trlweKey);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev) >> (param.torusBits - param.radixBits);
+}
+
+// To decrypt, it is sufficient to decrypt the last GLev ciphertext, which is a GLev encryption of m/B^l.
+Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
+    const auto firstLevel = 0;
+    const auto lastRow = param.k;
+    TorusPolynomial tmp {param.N};
+    symDecTrlweWoRoundingNtt(tmp, trgswDft.trlweDftSamples[firstLevel][lastRow], trgswKey.trlweKey);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev) >> (param.torusBits - param.radixBits);
 }
 
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {

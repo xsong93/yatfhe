@@ -153,7 +153,7 @@ TEST(DecomposeTrlweTest, DecomposeTrlweTest) {
     Torus mu = doubleToTorus32(1.0 / param.torusBase);
     TrlweKey trlweKey {param.k, param.N};
     trlweKeyGen(trlweKey);
-    symEncTrlweSingleSample(in, inDft, trlweKey, mu, param.lweStdDev);
+    symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu, param.lweStdDev);
     Trlwe intt {param.k, param.N};
     applyInttForAB(intt, inDft);
 

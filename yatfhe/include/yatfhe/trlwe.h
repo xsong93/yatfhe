@@ -91,13 +91,21 @@ void trlweSetZero(std::vector<T>& a, T& b) {
 
 void trlweKeyGen(TrlweKey& key);
 
-void symEncTrlweSingleSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, Torus mu, double sigma);
+void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu, double sigma);
 
-void symEncTrlweMultiSample(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const std::vector<Torus>& mu, double sigma);
+void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const std::vector<Torus>& mu, double sigma);
 
-void symDecTrlwe(DoublePolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, int torusBase);
+void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, Torus mu, double sigma);
 
-void symDecTrlweWoRounding(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key);
+void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const std::vector<Torus>& mu, double sigma);
+
+void symDecTrlwe(DoublePolynomial& output, const Trlwe& trlwe, const TrlweKey& key, int torusBase);
+
+void symDecTrlweWoRounding(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key);
+
+void symDecTrlweNtt(DoublePolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, int torusBase);
+
+void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key);
 
 void trlweAdd(Trlwe& output, const Trlwe& input1, const Trlwe& input2);
 

@@ -101,7 +101,7 @@ void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, T
 
 void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
     for (auto i = 0; i < bsk.n; i++) {
-        trgswEncrypt(bsk.bsk[i], bsk.bskDft[i], param, trgswKey, tlweKey.s[i]);
+        trgswEncryptNtt(bsk.bsk[i], bsk.bskDft[i], param, trgswKey, tlweKey.s[i]);
     }
 }
 
