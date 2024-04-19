@@ -29,7 +29,11 @@ Torus doubleToTorus32(double d);
 
 double roundError(double in, int torusBase);
 
+Torus roundTorusError(Torus in, int torusBase);
+
 Torus roundErrorForShiftedTorus(Torus in, double sigma);
+
+int intModP(int a, int p);
 
 double torus32ToDouble(Torus in);
 
@@ -55,6 +59,13 @@ template <typename T>
 void setCoeffsValue(vector<T> coeffs, T val) {
     for (auto i = 0; i < coeffs.size(); i++) {
         coeffs[i] = val;
+    }
+}
+
+template <typename T, typename R>
+void vectorMultConst(vector<T>& output, vector<T>& input1, R num) {
+    for (auto i = 0; i < output.size(); i++) {
+        output[i] = (T) (input1[i] * num);
     }
 }
 

@@ -24,7 +24,7 @@ TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
     Torus mu = doubleToTorus32(plain);
 
     DoublePolynomial output {param.N};
-    symEncTrlweSingleSample(trlwe, trlweDft, trlweKey, mu, param.lweStdDev);
+    symEncTrlweSingleSample(trlwe, trlweDft, trlweKey, mu, param.rlweStdDev);
     printTrlweAB(trlwe, "trlwe");
     applyInttForAB(intt, trlweDft);
     printTrlweAB(intt, "intt");
@@ -55,7 +55,7 @@ TEST(TrlweEncDecMultiSampleTest, TrlweEncDecMultiSampleTest) {
     printArray(plain, "plain");
 
     DoublePolynomial output {param.N};
-    symEncTrlweMultiSample(trlwe, trlweDft, trlweKey, in, param.lweStdDev);
+    symEncTrlweMultiSample(trlwe, trlweDft, trlweKey, in, param.rlweStdDev);
     symDecTrlwe(output, trlweDft, trlweKey, param.torusBase);
 
     printArray(output.coeffs, "output");
@@ -92,8 +92,8 @@ TEST(TrlweAddSubMultiSampleTest, TrlweAddSubMultiSampleTest) {
     printArray(plain1, "plain1");
     printArray(plain2, "plain2");
 
-    symEncTrlweMultiSample(trlwe1, trlweDft1, trlweKey, in1, param.lweStdDev);
-    symEncTrlweMultiSample(trlwe2, trlweDft2, trlweKey, in2, param.lweStdDev);
+    symEncTrlweMultiSample(trlwe1, trlweDft1, trlweKey, in1, param.rlweStdDev);
+    symEncTrlweMultiSample(trlwe2, trlweDft2, trlweKey, in2, param.rlweStdDev);
 
     DoublePolynomial output {param.N};
     TorusPolynomial torusOutput(param.N);
@@ -145,7 +145,7 @@ TEST(TrlweMultConstant, TrlweMultConstant) {
     }
 
     // enc
-    symEncTrlweMultiSample(trlwe, trlweDft, trlweKey, in1, param.lweStdDev);
+    symEncTrlweMultiSample(trlwe, trlweDft, trlweKey, in1, param.rlweStdDev);
     printTrlweAB(trlwe, "trlwe");
 
     // decomp trlwe
@@ -220,4 +220,80 @@ TEST(TrlweMultConstant, TrlweMultConstant) {
     printArray(tv.coeffs, "p1");
 
     printBanner("TrlweMultConstant");
+}
+
+TEST(TrlweMultLargeConstant, TrlweMultLargeConstant) {
+    YatfheParameters param {};
+    param.torusBase = 1 << 3;
+
+    TrlweKey trlweKey {param.k, param.N};
+    Trlwe trlwe {param.k, param.N};
+    TrlweDft trlweDft {param.k, param.N};
+
+    trlweKeyGen(trlweKey);
+
+    // data gen
+    IntPolynomial plain {param.N}; // Z/pZ
+    TorusPolynomial plainT {param.N};
+    vector<vector<Torus>> inOverR(param.l, vector<Torus>(param.N));
+    for (auto i = 0; i < plain.N; i++) {
+        plain.coeffs[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
+        plainT.coeffs[i] = modSwitchToTorus32(plain.coeffs[i], param.torusBase);
+        for (auto l = 0; l < inOverR.size(); l++) {
+            inOverR[l][i] = plainT.coeffs[i] << (param.torusBits - (l + 1) * param.radixBits);
+        }
+    }
+
+    // enc
+    Tglev tglev {param};
+    for (auto i = 0; i < tglev.l; i++) {
+        symEncTrlweMultiSample(tglev.trlwes[i], tglev.trlweDfts[i], trlweKey, inOverR[i], param.rlweStdDev);
+    }
+
+    // first decomp
+    Integer y = 1111111;
+    DecomposedData dy {param.l};
+    gadgetDecompose(dy, y, param);
+    printArray(dy.value, "dy");
+
+    // first recomp
+    Trlwe recomp {param.k, param.N};
+//    DecomposedTrlwe recomp1 {param};
+    for (auto j = 0; j < param.N; j++) {
+        for (auto r = 0; r < param.k; r++) {
+            for (auto l1 = 0; l1 < dy.l; l1++) {
+                recomp.a[r].coeffs[j] += tglev.trlwes[l1].a[r].coeffs[j] * dy.value[l1] * dy.sign;
+            }
+        }
+        for (auto l1 = 0; l1 < dy.l; l1++) {
+            recomp.b.coeffs[j] += tglev.trlwes[l1].b.coeffs[j] * dy.value[l1] * dy.sign;
+        }
+    }
+
+    // dec
+    TorusPolynomial res {param.N};
+    TorusPolynomial rounded {param.N};
+    IntPolynomial resP {param.N};
+    applyNttForAB(trlweDft, recomp);
+    symDecTrlweWoRounding(res, trlweDft, trlweKey);
+
+    for (auto i = 0 ; i < res.N; i++) {
+        rounded.coeffs[i] = roundTorusError(res.coeffs[i], param.torusBase);
+        resP.coeffs[i] = modSwitchFromTorus32(rounded.coeffs[i], param.torusBase);
+    }
+
+    printArray(plainT.coeffs, "plainT");
+    vectorMultConst(plainT.coeffs, plainT.coeffs, y);
+    printArray(plainT.coeffs, "p0");
+    printArray(res.coeffs, "re");
+    printArray(rounded.coeffs, "rd");
+
+    printArray(plain.coeffs, "plain");
+    printArray(resP.coeffs, "p1");
+
+    for (auto i = 0 ; i < res.N; i++) {
+        ASSERT_EQ(intModP(plain.coeffs[i] * y, param.torusBase), resP.coeffs[i]);
+    }
+
+    printBanner("TrlweMultLargeConstant");
 }

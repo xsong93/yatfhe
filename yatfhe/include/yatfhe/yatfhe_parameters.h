@@ -46,7 +46,7 @@ struct YatfheParameters {
     // RLWE params
     int N {1024};
     int k {1};
-    double rlweStdDev {5.684341886080802e-14}; // 2^-44
+    double rlweStdDev {2.98023223876953e-8}; // 2^-25
     // RGSW params
     // const int l = 6, Bg_bit = 6;
     int l {8};
