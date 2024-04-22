@@ -34,7 +34,9 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const Bootstrapp
 
 void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param);
 
-void controlMux(Trlwe& res, const Trlwe& input, int aBarI, const TrgswDft& bskI, const YatfheParameters& param);
+void controlMux(Trlwe& res, const Trlwe& input, int aBarI, const Trgsw& bskI, const YatfheParameters& param);
+
+void controlMuxNtt(Trlwe& res, const Trlwe& input, int aBarI, const TrgswDft& bskI, const YatfheParameters& param);
 
 void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& param);
 

@@ -27,18 +27,27 @@ void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& in
             continue;
         }
         Trlwe temp {param.k, param.N};
-        controlMux(temp, accum, input.a[i], bsk.bskDft[i], param); // todo:debug
+        controlMux(temp, accum, input.a[i], bsk.bsk[i], param); // todo:debug
         swap(accum, temp); // assign the previous result to accumulator
     }
 }
 
 // res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input
-void controlMux(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
+void controlMux(Trlwe& res, const Trlwe& input, const int aBarI, const Trgsw& bskI, const YatfheParameters& param) {
+    trlweRotateMinusOne(res, input, aBarI); // res = c1 - c0 = X^aBarI * input - input
+    trgswExternalProduct(res, bskI, res, param); // res *= bskI
+    trlweAccumulate(res, input); // res += input
+}
+
+// todo: need fix
+// res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input
+void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
     trlweRotateMinusOne(res, input, aBarI); // res = c1 - c0 = X^aBarI * input - input
     accMulToBsk(res, bskI, param); // res *= bskI // todo: debug
     trlweAccumulate(res, input); // res += input
 }
 
+// todo: need fix
 // accum -(GD)> decomp -(ntt)> decompDft -(mul)> accDft -(intt)> accum
 void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& param) {
     const auto k = param.k;

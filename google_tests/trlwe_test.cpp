@@ -31,7 +31,7 @@ TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
 //    applyInttForAB(intt, trlweDft);
 //    printTrlweAB(intt, "intt");
 //    symDecTrlweNtt(output, trlweDft, trlweKey, param.torusBase);
-    symDecTrlwe(output, trlwe, trlweKey, param.torusBase);
+    symDecTrlweToDouble(output, trlwe, trlweKey, param.torusBase);
 
     cout << "mu:" << plain <<endl;
     printArray(output.coeffs, "output");
@@ -61,7 +61,7 @@ TEST(TrlweEncDecMultiSampleTest, TrlweEncDecMultiSampleTest) {
 //    symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in, param.rlweStdDev);
 //    symDecTrlweNtt(output, trlweDft, trlweKey, param.torusBase);
     symEncTrlweMultiSample(trlwe, trlweKey, in, param.rlweStdDev);
-    symDecTrlwe(output, trlwe, trlweKey, param.torusBase);
+    symDecTrlweToDouble(output, trlwe, trlweKey, param.torusBase);
 
     printArray(output.coeffs, "output");
     for (auto i = 0; i < plain.size(); i++) {
@@ -113,7 +113,7 @@ TEST(TrlweAddSubMultiSampleTest, TrlweAddSubMultiSampleTest) {
 //    trlweAddNtt(trlweDft3, trlweDft1, trlweDft2);
 //    symDecTrlweNtt(output, trlweDft3, trlweKey, param.torusBase);
     trlweAdd(trlwe3, trlwe1, trlwe2);
-    symDecTrlwe(output, trlwe3, trlweKey, param.torusBase);
+    symDecTrlweToDouble(output, trlwe3, trlweKey, param.torusBase);
     printArray(output.coeffs, "output Add");
 
     for (auto i = 0; i < plainOutput.N; i++) {
@@ -127,7 +127,7 @@ TEST(TrlweAddSubMultiSampleTest, TrlweAddSubMultiSampleTest) {
 //    trlweSubNtt(trlweDft3, trlweDft1, trlweDft2);
 //    symDecTrlweNtt(output, trlweDft3, trlweKey, param.torusBase);
     trlweSub(trlwe3, trlwe1, trlwe2);
-    symDecTrlwe(output, trlwe3, trlweKey, param.torusBase);
+    symDecTrlweToDouble(output, trlwe3, trlweKey, param.torusBase);
     printArray(output.coeffs, "output Sub");
 
     for (auto i = 0; i < plainOutput.N; i++) {

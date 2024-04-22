@@ -70,7 +70,7 @@ void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey&
     symEncTrlweNtt(trlwe, trlweDft, key);
 }
 
-void symDecTrlwe(DoublePolynomial& output, const Trlwe& trlwe, const TrlweKey& key, const int torusBase) {
+void symDecTrlweToDouble(DoublePolynomial& output, const Trlwe& trlwe, const TrlweKey& key, const int torusBase) {
     TorusPolynomial tmp {output.N};
     TorusPolynomial innerProduct {output.N};
     for (auto i = 0; i < trlwe.k; i++) {
@@ -79,6 +79,22 @@ void symDecTrlwe(DoublePolynomial& output, const Trlwe& trlwe, const TrlweKey& k
     polynomialSub(tmp, trlwe.b, innerProduct);
     torusPolyToDoublePoly(output, tmp);
     roundErrorPoly(output, torusBase);
+}
+
+void symDecTrlweToTorus(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key, const int torusBase) {
+    symDecTrlweWoRounding(output, trlwe, key);
+    for (auto i = 0 ; i < output.N; i++) {
+        output.coeffs[i] = roundTorusError(output.coeffs[i], torusBase);
+    }
+}
+
+void symDecTrlweToInt(IntPolynomial& output, const Trlwe& trlwe, const TrlweKey& key, const int torusBase) {
+    TorusPolynomial tmp {output.N};
+    symDecTrlweWoRounding(tmp, trlwe, key);
+    for (auto i = 0 ; i < tmp.N; i++) {
+        tmp.coeffs[i] = roundTorusError(tmp.coeffs[i], torusBase);
+        output.coeffs[i] = modSwitchFromTorus32(tmp.coeffs[i], torusBase);
+    }
 }
 
 void symDecTrlweWoRounding(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key) {

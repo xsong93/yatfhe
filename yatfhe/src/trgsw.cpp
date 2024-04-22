@@ -194,18 +194,34 @@ Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
 
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
-    const auto l = trgswInput.l;
-    DecomposedTrlwe decomposedTrlwe {param};
+    const auto level = trgswInput.l;
+    DecomposedTrlwe decomposedTrlwe{param};
 
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
-    // todo: fix overflow issue
-    for (auto row = 0; row < k + 1; row++) {
-        for (auto lvl = 0; lvl < l; lvl++) {
-            for (auto col = 0; col < k; col++) {
-                polynomialMulAccNaive(output.a[col], decomposedTrlwe.rlwes[lvl].a[col], trgswInput.trlweSamples[lvl][row].a[col]);
+    // todo: combine into one
+
+    // <Decomp(B), C_k^bar>
+    for (auto lvl = 0; lvl < level; lvl++) {
+        auto& curr = decomposedTrlwe.rlwes[lvl].b;
+        for (auto col2 = 0; col2 < k + 1; col2++) {
+            auto& out = (col2 < k) ? output.a[col2] : output.b;
+            auto& curr2 = (col2 < k) ? trgswInput.trlweSamples[lvl][k].a[col2]
+                                     : trgswInput.trlweSamples[lvl][k].b;
+            polynomialMulAccNaive(out, curr, curr2);
+        }
+    }
+
+    // Σ_(0,k-1)<Decomp(A_i), C_i^bar>
+    for (auto lvl = 0; lvl < level; lvl++) {
+        for (auto col = 0; col < k; col++) {
+            auto& curr = decomposedTrlwe.rlwes[lvl].a[col];
+            for (auto col2 = 0; col2 < k + 1; col2++) {
+                auto& out = (col2 < k) ? output.a[col2] : output.b;
+                auto& curr2 = (col2 < k) ? trgswInput.trlweSamples[lvl][col].a[col2]
+                                         : trgswInput.trlweSamples[lvl][col].b;
+                polynomialMulAccNaive(out, curr, curr2);
             }
-            polynomialMulAccNaive(output.b, decomposedTrlwe.rlwes[lvl].b, trgswInput.trlweSamples[lvl][row].b);
         }
     }
 }

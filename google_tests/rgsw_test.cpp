@@ -46,7 +46,7 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
 
 TEST(RgswMultTest, RgswMultTest) {
     YatfheParameters param {};
-    param.N = 1;
+    param.N = 1024;
     param.radixBits = 4;
     param.l = 8;
     param.k = 2;
@@ -60,22 +60,25 @@ TEST(RgswMultTest, RgswMultTest) {
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
-        Integer mu1 = 1;
+        Integer mu1 = 2;
         trgswEncrypt(trgsw, param, trgswKey, mu1);
         printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
-        Torus mu2 = doubleToTorus32(1.0 / param.torusBase);
+        Integer mu2p = 3;
+        Torus mu2 = modSwitchToTorus32(mu2p, param.torusBase);
         Trlwe out {param.k, param.N};
-        DoublePolynomial decPre {param.N};
-        DoublePolynomial decAft {param.N};
+//        DoublePolynomial decPre {param.N};
+//        DoublePolynomial decAft {param.N};
+        IntPolynomial decPreP {param.N};
+        IntPolynomial decAftP {param.N};
         symEncTrlweSingleSample(in2, trlweKey, mu2, param.rlweStdDev);
         printTrlweAB(in2, "trlwe");
 
         // trlwe dec pre-mult
-        symDecTrlwe(decPre, in2, trlweKey, param.torusBase);
-        printArray(decPre.coeffs, "decPre");
+        symDecTrlweToInt(decPreP, in2, trlweKey, param.torusBase);
+        printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult
         // todo: ntt/intt failed, fix ntt
@@ -94,10 +97,10 @@ TEST(RgswMultTest, RgswMultTest) {
 //        }
 
         // trlwe dec aft-mult
-        symDecTrlwe(decAft, out, trlweKey, param.torusBase);
-        printArray(decAft.coeffs, "decAft");
-        for (auto i = 0 ; i < decAft.N; i++) {
-            ASSERT_EQ(decPre.coeffs[i], decAft.coeffs[i]);
+        symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
+        printArray(decAftP.coeffs, "decAftP");
+        for (auto i = 0 ; i < decAftP.N; i++) {
+            ASSERT_EQ(intModP(mu1 * mu2p, param.torusBase), decAftP.coeffs[i]);
         }
     }
 }
