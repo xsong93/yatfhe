@@ -8,7 +8,6 @@
 #include <iostream>
 #include <vector>
 #include "yatfhe/torus.h"
-#include "yatfhe/trlwe.h"
 #include "yatfhe/yatfhe_parameters.h"
 
 struct DecomposedData {
@@ -45,13 +44,5 @@ void signedGadgetDecomposition(DecomposedData& res, Integer in, const YatfhePara
 void signedGadgetDecompositionNtt(DecomposedDataDft& out, NttType in, const YatfheParameters& param);
 
 int genOffset(int radixBits, int bHalf, int l, int torusBits);
-
-void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param);
-
-void gadgetDecomposeTrlweNtt(DecomposedTrlwe& output, const TrlweDft& input, const YatfheParameters& param);
-
-void recomposeTrlwe(Trlwe& output, const DecomposedTrlwe& input, const YatfheParameters& param);
-
-void recomposeTrlweNtt(TrlweDft& output, const DecomposedTrlwe& input, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_GADGET_DECOMPOSITION_H

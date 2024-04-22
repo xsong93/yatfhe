@@ -7,6 +7,7 @@
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"
 #include "yatfhe/gadget_decomposition.h"
+#include "yatfhe/tglev.h"
 #include "yautil/tool.h"
 
 TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
@@ -247,41 +248,20 @@ TEST(TrlweMultLargeConstant, TrlweMultLargeConstant) {
     // data gen
     IntPolynomial plain {param.N}; // Z/pZ
     TorusPolynomial plainT {param.N};
-    vector<vector<Torus>> inOverR(param.l, vector<Torus>(param.N));
     for (auto i = 0; i < plain.N; i++) {
         plain.coeffs[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
         plainT.coeffs[i] = modSwitchToTorus32(plain.coeffs[i], param.torusBase);
-        for (auto l = 0; l < inOverR.size(); l++) {
-            inOverR[l][i] = plainT.coeffs[i] << (param.torusBits - (l + 1) * param.radixBits);
-        }
     }
 
     // enc
     Tglev tglev {param};
-    for (auto i = 0; i < tglev.l; i++) {
-//        symEncTrlweMultiSampleNtt(tglev.trlwes[i], tglev.trlweDfts[i], trlweKey, inOverR[i], param.rlweStdDev);
-        symEncTrlweMultiSample(tglev.trlwes[i], trlweKey, inOverR[i], param.rlweStdDev);
-    }
+    tglevEncMultiSample(tglev, trlweKey, plainT, param);
 
-    // first decomp
-    Integer y = 1111111;
-    DecomposedData dy {param.l};
-    gadgetDecompose(dy, y, param);
-    printArray(dy.value, "dy");
+    Integer y = 4341547;
 
-    // first recomp
+    // recomp
     Trlwe recomp {param.k, param.N};
-//    DecomposedTrlwe recomp1 {param};
-    for (auto j = 0; j < param.N; j++) {
-        for (auto r = 0; r < param.k; r++) {
-            for (auto l1 = 0; l1 < dy.l; l1++) {
-                recomp.a[r].coeffs[j] += tglev.trlwes[l1].a[r].coeffs[j] * dy.value[l1] * dy.sign;
-            }
-        }
-        for (auto l1 = 0; l1 < dy.l; l1++) {
-            recomp.b.coeffs[j] += tglev.trlwes[l1].b.coeffs[j] * dy.value[l1] * dy.sign;
-        }
-    }
+    tglevMultConst(recomp, tglev, y, param);
 
     // dec
     TorusPolynomial res {param.N};
@@ -326,49 +306,25 @@ TEST(TrlweMultLargeConstantMultiLvl, TrlweMultLargeConstantMultiLvl) {
     // data gen
     IntPolynomial plain {param.N}; // Z/pZ
     TorusPolynomial plainT {param.N};
-    vector<vector<Torus>> inOverR(param.l, vector<Torus>(param.N));
     for (auto i = 0; i < plain.N; i++) {
         plain.coeffs[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
         plainT.coeffs[i] = modSwitchToTorus32(plain.coeffs[i], param.torusBase);
-        for (auto l = 0; l < inOverR.size(); l++) {
-            inOverR[l][i] = plainT.coeffs[i] << (param.torusBits - (l + 1) * param.radixBits);
-        }
     }
 
     // enc
     Tglev tglev {param};
-    for (auto i = 0; i < tglev.l; i++) {
-        symEncTrlweMultiSampleNtt(tglev.trlwes[i], tglev.trlweDfts[i], trlweKey, inOverR[i], param.rlweStdDev);
-    }
+    tglevEncMultiSample(tglev, trlweKey, plainT, param);
 
-    // todo: second decomp
+    Integer y = 4341547;
 
-    // first decomp
-    Integer y = 1111111;
-    DecomposedData dy {param.l};
-    gadgetDecompose(dy, y, param);
-    printArray(dy.value, "dy");
-
-    // first recomp
-    Trlwe recomp {param.k, param.N};
-//    DecomposedTrlwe recomp1 {param};
-    for (auto j = 0; j < param.N; j++) {
-        for (auto r = 0; r < param.k; r++) {
-            for (auto l1 = 0; l1 < dy.l; l1++) {
-                recomp.a[r].coeffs[j] += tglev.trlwes[l1].a[r].coeffs[j] * dy.value[l1] * dy.sign;
-            }
-        }
-        for (auto l1 = 0; l1 < dy.l; l1++) {
-            recomp.b.coeffs[j] += tglev.trlwes[l1].b.coeffs[j] * dy.value[l1] * dy.sign;
-        }
-    }
+    Trlwe recomp2 {param.k, param.N};
+    decomposedTglevMultConst(recomp2, tglev, y, param);
 
     // dec
     TorusPolynomial res {param.N};
     TorusPolynomial rounded {param.N};
     IntPolynomial resP {param.N};
-    applyNttForAB(trlweDft, recomp);
-    symDecTrlweWoRoundingNtt(res, trlweDft, trlweKey);
+    symDecTrlweWoRounding(res, recomp2, trlweKey);
 
     for (auto i = 0 ; i < res.N; i++) {
         rounded.coeffs[i] = roundTorusError(res.coeffs[i], param.torusBase);

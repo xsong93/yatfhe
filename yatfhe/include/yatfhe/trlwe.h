@@ -10,6 +10,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
+#include "yatfhe/gadget_decomposition.h"
 
 struct Rlwe {
     std::vector<IntPolynomial> a {}; // k
@@ -55,19 +56,6 @@ struct DecomposedTrlwe {
             lDft(param.l * (param.dftBits / param.torusBits)),
             rlwes(param.l,  Rlwe(param.k, param.N)),
             rlweDfts(param.l * (param.dftBits / param.torusBits), TrlweDft(param.k, param.N)) {};
-};
-
-struct Tglev {
-    std::vector<Trlwe> trlwes; // l
-    std::vector<TrlweDft> trlweDfts; // 2l
-    int l;
-    int lDft;
-
-    explicit Tglev(YatfheParameters param) :
-            l(param.l),
-            lDft(param.l * (param.dftBits / param.torusBits)),
-            trlwes(param.l,  Trlwe(param.k, param.N)),
-            trlweDfts(param.l * (param.dftBits / param.torusBits), TrlweDft(param.k, param.N)) {};
 };
 
 struct TrlweKey {
@@ -116,6 +104,14 @@ void trlweAddNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input
 void trlweSubNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2);
 
 void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
+
+void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param);
+
+void gadgetDecomposeTrlweNtt(DecomposedTrlwe& output, const TrlweDft& input, const YatfheParameters& param);
+
+void recomposeTrlwe(Trlwe& output, const DecomposedTrlwe& input, const YatfheParameters& param);
+
+void recomposeTrlweNtt(TrlweDft& output, const DecomposedTrlwe& input, const YatfheParameters& param);
 
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);
 
