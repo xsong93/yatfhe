@@ -25,8 +25,8 @@ void tglevEncSingleSample(Tglev& output, const TrlweKey& trlweKey, Torus input, 
 
 void tglevEncMultiSample(Tglev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param);
 
-void tglevMultConst(Trlwe& output, const Tglev& input, int num, const YatfheParameters& param);
+void tglevMultConst(Trlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
 
-void decomposedTglevMultConst(Trlwe& output, const Tglev& input, int num, const YatfheParameters& param);
+void decomposedTglevMultConst(Trlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TGLEV_H

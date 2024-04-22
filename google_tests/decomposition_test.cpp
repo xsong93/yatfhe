@@ -83,7 +83,6 @@ TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
     param.radixBits = 4;
     param.ksLevel = 8;
 
-    //todo: how to support torus overflow?
     Torus mult = 5;
 
     // first decomp

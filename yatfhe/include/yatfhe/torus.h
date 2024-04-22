@@ -17,8 +17,10 @@ using UnsignedInteger = uint32_t;
 using NttType = uint64_t;
 using Integer = int32_t;
 using Binary = Integer;
-const Integer TorusMax = INT32_MAX;
-const Integer TorusMin = INT32_MIN;
+const Integer IntMax = INT32_MAX;
+const Integer IntMin = INT32_MIN;
+const Integer TorusMax = IntMax;
+const Integer TorusMin = IntMin;
 #else
 using Torus = int64_t;
 using UnsignedInteger = uint64_t;

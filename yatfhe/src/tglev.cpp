@@ -25,7 +25,7 @@ void tglevEncMultiSample(Tglev& output, const TrlweKey& trlweKey, const TorusPol
     }
 }
 
-void tglevMultConst(Trlwe& output, const Tglev& input, const int num, const YatfheParameters& param) {
+void tglevMultConst(Trlwe& output, const Tglev& input, const Integer num, const YatfheParameters& param) {
     auto N = output.b.N;
     auto k = output.k;
     DecomposedData d {input.l};
@@ -41,7 +41,7 @@ void tglevMultConst(Trlwe& output, const Tglev& input, const int num, const Yatf
     }
 }
 
-void decomposedTglevMultConst(Trlwe& output, const Tglev& input, const int num, const YatfheParameters& param) {
+void decomposedTglevMultConst(Trlwe& output, const Tglev& input, const Integer num, const YatfheParameters& param) {
     const auto N = output.b.N;
     const auto k = output.k;
     const auto lvl0 = input.l;
