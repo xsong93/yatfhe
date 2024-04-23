@@ -126,12 +126,6 @@ void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft,
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput) {
     const auto barb = scaledInput.b;
     torusPolynomialRotate(accum.b, -barb, v);
-
-    std::vector<double> t(accum.b.coeffs.size());
-    for (int i = 0; i < accum.b.N; i++) {
-        t[i] = torus32ToDouble(accum.b.coeffs[i]);
-    }
-    printArray(t, "b:");
 }
 
 void trlweAdd(Trlwe& output, const Trlwe& input1, const Trlwe& input2) {

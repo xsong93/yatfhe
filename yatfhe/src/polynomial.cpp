@@ -66,9 +66,8 @@ void roundErrorPoly(DoublePolynomial& target, const int torusBase) {
 // vj = ((pj / q) mod p) / p
 void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) {
     for (auto i = 0; i < v.N; i++) {
-        int tmp = (modP * i / modQ) % modP;
-//        v.coeffs[i] = doubleToTorus32((double) tmp / modP);
-        v.coeffs[i] = doubleToTorus32(1.0 / modP); //todo: debug
+        int tmp = intModP((int)std::round(modP * i / modQ), modP);
+        v.coeffs[i] = modSwitchToTorus32(tmp, modP);
     }
 }
 
