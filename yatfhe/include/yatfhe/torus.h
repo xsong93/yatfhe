@@ -12,7 +12,7 @@
 #define TORUS32
 
 #ifdef TORUS32
-using Torus = int32_t; // use 32-bit int as torus to handle overflow naturally
+using Torus = int32_t; // use 32-bit int as torus to handle modular arithmetic naturally
 using UnsignedInteger = uint32_t;
 using NttType = uint64_t;
 using Integer = int32_t;
@@ -34,13 +34,11 @@ struct TorusPolynomial {
     std::vector<Torus> coeffs {}; // N
     int N {};
 
-    TorusPolynomial() : coeffs(), N() {};
-
     explicit TorusPolynomial(int N) :
         coeffs(N, 0),
         N(N) {};
 
-    explicit TorusPolynomial(int N, Torus value) :
+    TorusPolynomial(int N, Torus value) :
             coeffs(N, value),
             N(N) {};
 };

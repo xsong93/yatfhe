@@ -14,7 +14,7 @@
 
 struct Rlwe {
     std::vector<IntPolynomial> a {}; // k
-    IntPolynomial b {}; // 1
+    IntPolynomial b; // 1
     int k;
 
     Rlwe(int k, int N) :
@@ -51,7 +51,7 @@ struct DecomposedTrlwe {
     int l;
     int lDft;
 
-    explicit DecomposedTrlwe(YatfheParameters param) :
+    explicit DecomposedTrlwe(const YatfheParameters& param) :
             l(param.l),
             lDft(param.l * (param.dftBits / param.torusBits)),
             rlwes(param.l,  Rlwe(param.k, param.N)),
@@ -63,10 +63,19 @@ struct TrlweKey {
     std::vector<LagrangePolynomial> sDft; // k
     int k;
     int N;
+    double sigma {};
 
-    TrlweKey(int k, int N):
+    explicit TrlweKey(const YatfheParameters& param):
+            k(param.k),
+            N(param.N),
+            sigma(param.rlweStdDev),
+            s(param.k, TorusPolynomial(param.N)),
+            sDft(param.k, LagrangePolynomial(param.N)) {};
+
+    TrlweKey(int k, int N, double sigma):
         k(k),
         N(N),
+        sigma(sigma),
         s(k, TorusPolynomial(N)),
         sDft(k, LagrangePolynomial(N)) {};
 };
@@ -79,13 +88,13 @@ void trlweSetZero(std::vector<T>& a, T& b) {
 
 void trlweKeyGen(TrlweKey& key);
 
-void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu, double sigma);
+void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu);
 
-void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const std::vector<Torus>& mu, double sigma);
+void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const std::vector<Torus>& mu);
 
-void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, Torus mu, double sigma);
+void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, Torus mu);
 
-void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const std::vector<Torus>& mu, double sigma);
+void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const std::vector<Torus>& mu);
 
 void symDecTrlweToDouble(DoublePolynomial& output, const Trlwe& trlwe, const TrlweKey& key, int torusBase);
 

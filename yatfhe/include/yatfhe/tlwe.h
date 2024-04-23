@@ -23,7 +23,7 @@ struct ScaledTlwe {
     int n {};
     int mod {};
 
-    explicit ScaledTlwe(int mod, int n) : mod(mod), n(n), a(n), b(0) {};
+    ScaledTlwe(int mod, int n) : mod(mod), n(n), a(n), b(0) {};
 };
 
 struct TlweKey {
@@ -31,7 +31,7 @@ struct TlweKey {
     double sigma {};
     std::vector<Binary> s {}; // n
 
-    explicit TlweKey(int n, double sigma) : n(n), s(n), sigma(sigma) {};
+    TlweKey(int n, double sigma) : n(n), s(n), sigma(sigma) {};
 
     explicit TlweKey(int n) : n(n), s(n), sigma(0) {};
 };
@@ -42,7 +42,11 @@ void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input);
 
 void symEncTlweSample(Tlwe& tlweSample, Torus message, const TlweKey& key);
 
-double symDecTlweSample(Tlwe& in, const TlweKey& key, int torusBase);
+double symDecTlweSampleToDouble(Tlwe& in, const TlweKey& key, int torusBase);
+
+Torus symDecTlweSampleToTorus(Tlwe& in, const TlweKey& key, int torusBase);
+
+Integer symDecTlweSampleToInt(Tlwe& in, const TlweKey& key, int torusBase);
 
 void lweAdd(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
 

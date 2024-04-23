@@ -10,7 +10,7 @@ void tglevEncSingleSample(Tglev& output, const TrlweKey& trlweKey, const Torus i
     const auto l = output.l;
     for (auto i = 0; i < l; i++) {
         auto inOverR = input << (param.torusBits - (i + 1) * param.radixBits);
-        symEncTrlweSingleSample(output.trlwes[i], trlweKey, inOverR, param.rlweStdDev);
+        symEncTrlweSingleSample(output.trlwes[i], trlweKey, inOverR);
     }
 }
 
@@ -21,7 +21,7 @@ void tglevEncMultiSample(Tglev& output, const TrlweKey& trlweKey, const TorusPol
         for (auto j = 0; j < inputs.N; j++) {
             inputsOverR[j] = inputs.coeffs[j] << (param.torusBits - (i + 1) * param.radixBits);;
         }
-        symEncTrlweMultiSample(output.trlwes[i], trlweKey, inputsOverR, param.rlweStdDev);
+        symEncTrlweMultiSample(output.trlwes[i], trlweKey, inputsOverR);
     }
 }
 

@@ -150,9 +150,9 @@ TEST(DecomposeTrlweTest, DecomposeTrlweTest) {
 //    printTrlweAB(in, "in");
 
     Torus mu = doubleToTorus32(1.0 / param.torusBase);
-    TrlweKey trlweKey {param.k, param.N};
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     trlweKeyGen(trlweKey);
-    symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu, param.lweStdDev);
+    symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
     Trlwe intt {param.k, param.N};
     applyInttForAB(intt, inDft);
 

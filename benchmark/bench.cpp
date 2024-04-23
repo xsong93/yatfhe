@@ -20,29 +20,30 @@ int main(int argc, char **argv) {
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKey bsKey {param};
-    TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
+    TlweKeySwitchingKey ksKey {param};
     lweKeyGen(tlweKey);
 //    lweKeyGen(keyTlweOut, param.n);
     trlweKeyGen(trlweKey);
     bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
     tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);
 
-    Torus mu = doubleToTorus32(1.0 / param.torusBase);
+    Integer plain = 3;
+    Torus mu = modSwitchToTorus32(plain, param.torusBase);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
     Tlwe input {param.n};
     Tlwe output {param.n};
     symEncTlweSample(input, mu, tlweKey);
 
-    cout <<"msg:"<<torus32ToDouble(mu)<<endl;
-    auto decPre = symDecTlweSample(input, tlweKey, param.torusBase);
-    cout <<"decPre:"<< decPre <<endl;
+    cout << "msg: " << modSwitchFromTorus32(mu, param.torusBase) << endl;
+    auto decPre = symDecTlweSampleToInt(input, tlweKey, param.torusBase);
+    cout << "decPre: " << decPre << endl;
 
     trgswFunctionalBootstrapping(output, input, bsKey, ksKey, v, param);
 //    printTlweAB(input, "input boot");
 //    printTlweAB(output, "output boot");
-    double decAft = symDecTlweSample(output, tlweKey, param.torusBase);
-    cout <<"decAft:"<<decAft<<endl;
+    double decAft = symDecTlweSampleToInt(output, tlweKey, param.torusBase);
+    cout << "decAft: "<< decAft << endl;
 
 
 //    trlwe_extract_tlwe_key(key_tlwe_out, key_trlwe);

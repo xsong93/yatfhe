@@ -17,7 +17,7 @@ struct LagrangePolynomial {
         N(N),
         coeffs(N, 0) {};
 
-    explicit LagrangePolynomial(int N, NttType value) :
+    LagrangePolynomial(int N, NttType value) :
         N(N),
         coeffs(N, value) {};
 };
@@ -30,7 +30,7 @@ struct DoublePolynomial {
             N(N),
             coeffs(N, 0) {};
 
-    explicit DoublePolynomial(int N, NttType value) :
+    DoublePolynomial(int N, double value) :
             N(N),
             coeffs(N, value) {};
 };

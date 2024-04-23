@@ -16,6 +16,12 @@ struct TlweKeySwitchingKey {
     int nTargetKey {};
     int level {};
 
+    explicit TlweKeySwitchingKey(const YatfheParameters& param) :
+            nCurrKey(param.N * param.k),
+            nTargetKey(param.n),
+            level(param.ksLevel),
+            decomposedKsk(param.N * param.k, vector<Tlwe>(param.ksLevel, Tlwe(param.n))) {};
+
     TlweKeySwitchingKey(int nCurr, int nTarget, int l) :
             nCurrKey(nCurr),
             nTargetKey(nTarget),

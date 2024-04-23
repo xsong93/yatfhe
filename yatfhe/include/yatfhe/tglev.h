@@ -14,7 +14,7 @@ struct Tglev {
     int l;
     int lDft;
 
-    explicit Tglev(YatfheParameters param) :
+    explicit Tglev(const YatfheParameters& param) :
             l(param.l),
             lDft(param.l * (param.dftBits / param.torusBits)),
             trlwes(param.l,  Trlwe(param.k, param.N)),

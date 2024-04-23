@@ -50,23 +50,23 @@ void trlweKeyGen(TrlweKey& key) {
 //    printPolyVec(key.s, "TrlweKey");
 }
 
-void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, const Torus mu, double sigma) {
-    initTrlweSingleSample(trlwe, mu, sigma);
+void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, const Torus mu) {
+    initTrlweSingleSample(trlwe, mu, key.sigma);
     symEncTrlwe(trlwe, key);
 }
 
-void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu, double sigma) {
-    initTrlweMultiSample(trlwe, mu, sigma);
+void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu) {
+    initTrlweMultiSample(trlwe, mu, key.sigma);
     symEncTrlwe(trlwe, key);
 }
 
-void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const Torus mu, double sigma) {
-    initTrlweSingleSample(trlwe, mu, sigma);
+void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const Torus mu) {
+    initTrlweSingleSample(trlwe, mu, key.sigma);
     symEncTrlweNtt(trlwe, trlweDft, key);
 }
 
-void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu, double sigma) {
-    initTrlweMultiSample(trlwe, mu, sigma);
+void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu) {
+    initTrlweMultiSample(trlwe, mu, key.sigma);
     symEncTrlweNtt(trlwe, trlweDft, key);
 }
 

@@ -15,7 +15,7 @@ TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
     param.k = 5;
     param.N = 1024;
 
-    TrlweKey trlweKey {param.k, param.N};
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     Trlwe intt {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
@@ -26,7 +26,7 @@ TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
 
     DoublePolynomial output {param.N};
 //    symEncTrlweSingleSampleNtt(trlwe, trlweDft, trlweKey, mu, param.rlweStdDev);
-    symEncTrlweSingleSample(trlwe, trlweKey, mu, param.rlweStdDev);
+    symEncTrlweSingleSample(trlwe, trlweKey, mu);
 //    printTrlweAB(trlwe, "trlwe");
 //    applyInttForAB(intt, trlweDft);
 //    printTrlweAB(intt, "intt");
@@ -44,7 +44,7 @@ TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
 TEST(TrlweEncDecMultiSampleTest, TrlweEncDecMultiSampleTest) {
     const YatfheParameters param {};
 
-    TrlweKey trlweKey {param.k, param.N};
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
     trlweKeyGen(trlweKey);
@@ -60,7 +60,7 @@ TEST(TrlweEncDecMultiSampleTest, TrlweEncDecMultiSampleTest) {
     DoublePolynomial output {param.N};
 //    symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in, param.rlweStdDev);
 //    symDecTrlweNtt(output, trlweDft, trlweKey, param.torusBase);
-    symEncTrlweMultiSample(trlwe, trlweKey, in, param.rlweStdDev);
+    symEncTrlweMultiSample(trlwe, trlweKey, in);
     symDecTrlweToDouble(output, trlwe, trlweKey, param.torusBase);
 
     printArray(output.coeffs, "output");
@@ -74,7 +74,7 @@ TEST(TrlweAddSubMultiSampleTest, TrlweAddSubMultiSampleTest) {
     YatfheParameters param {};
     param.torusBase = 1 << 28;
 
-    TrlweKey trlweKey {param.k, param.N};
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe1 {param.k, param.N};
     Trlwe trlwe2 {param.k, param.N};
     Trlwe trlwe3 {param.k, param.N};
@@ -99,8 +99,8 @@ TEST(TrlweAddSubMultiSampleTest, TrlweAddSubMultiSampleTest) {
 
 //    symEncTrlweMultiSampleNtt(trlwe1, trlweDft1, trlweKey, in1, param.rlweStdDev);
 //    symEncTrlweMultiSampleNtt(trlwe2, trlweDft2, trlweKey, in2, param.rlweStdDev);
-    symEncTrlweMultiSample(trlwe1, trlweKey, in1, param.rlweStdDev);
-    symEncTrlweMultiSample(trlwe2, trlweKey, in2, param.rlweStdDev);
+    symEncTrlweMultiSample(trlwe1, trlweKey, in1);
+    symEncTrlweMultiSample(trlwe2, trlweKey, in2);
 
     DoublePolynomial output {param.N};
     TorusPolynomial torusOutput(param.N);
@@ -141,7 +141,7 @@ TEST(TrlweMultLargeConstant, TrlweMultLargeConstant) {
     YatfheParameters param {};
     param.torusBase = 1 << 3;
 
-    TrlweKey trlweKey {param.k, param.N};
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
 
@@ -199,7 +199,7 @@ TEST(TrlweMultLargeConstantMultiLvl, TrlweMultLargeConstantMultiLvl) {
     YatfheParameters param {};
     param.torusBase = 1 << 3;
 
-    TrlweKey trlweKey {param.k, param.N};
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
 

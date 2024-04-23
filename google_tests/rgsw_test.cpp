@@ -37,8 +37,8 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
 //    }
 
     // trgsw dec
-//    Torus dec = trgswDecryptNtt(trgswDft, param, trgswKey);
-    Torus dec = trgswDecrypt(trgsw, param, trgswKey);
+//    Integer dec = trgswDecryptNtt(trgswDft, param, trgswKey);
+    Integer dec = trgswDecrypt(trgsw, param, trgswKey);
     cout << "plain: " << plain << endl;
     cout << "dec: " << dec << endl;
     ASSERT_EQ(plain, dec);
@@ -73,7 +73,7 @@ TEST(RgswMultTest, RgswMultTest) {
 //        DoublePolynomial decAft {param.N};
         IntPolynomial decPreP {param.N};
         IntPolynomial decAftP {param.N};
-        symEncTrlweSingleSample(in2, trlweKey, mu2, param.rlweStdDev);
+        symEncTrlweSingleSample(in2, trlweKey, mu2);
         printTrlweAB(in2, "trlwe");
 
         // trlwe dec pre-mult

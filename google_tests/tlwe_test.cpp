@@ -18,8 +18,8 @@ TEST(EncDecTest, EncDecTest) {
     symEncTlweSample(input, mu, tlweKey);
 
     cout <<"msg:"<<torus32ToDouble(mu)<<endl;
-    cout <<"decPre:"<<symDecTlweSample(input, tlweKey, param.torusBase)<<endl;
-    ASSERT_FLOAT_EQ(torus32ToDouble(mu), symDecTlweSample(input, tlweKey, param.torusBase));
+    cout <<"decPre:"<<symDecTlweSampleToDouble(input, tlweKey, param.torusBase)<<endl;
+    ASSERT_FLOAT_EQ(torus32ToDouble(mu), symDecTlweSampleToDouble(input, tlweKey, param.torusBase));
     printBanner("EncDecTest");
 }
 
@@ -43,13 +43,13 @@ TEST(AddSubTest, AddSubTest) {
 
     lweAdd(output, input1, input2);
     cout << "plain arithmetic: " << torus32ToDouble(mu1 + mu2) <<endl;
-    cout << "dec res: " << symDecTlweSample(output, tlweKey, param.torusBase) << endl;
-    ASSERT_FLOAT_EQ(torus32ToDouble(mu1 + mu2), symDecTlweSample(output, tlweKey, param.torusBase));
+    cout << "dec res: " << symDecTlweSampleToDouble(output, tlweKey, param.torusBase) << endl;
+    ASSERT_FLOAT_EQ(torus32ToDouble(mu1 + mu2), symDecTlweSampleToDouble(output, tlweKey, param.torusBase));
 
     lweSub(output, input1, input2);
     cout << "plain arithmetic: " << torus32ToDouble(mu1 - mu2) <<endl;
-    cout << "dec res: " << symDecTlweSample(output, tlweKey, param.torusBase) << endl;
-    ASSERT_FLOAT_EQ(torus32ToDouble(mu1 - mu2), symDecTlweSample(output, tlweKey, param.torusBase));
+    cout << "dec res: " << symDecTlweSampleToDouble(output, tlweKey, param.torusBase) << endl;
+    ASSERT_FLOAT_EQ(torus32ToDouble(mu1 - mu2), symDecTlweSampleToDouble(output, tlweKey, param.torusBase));
 
     printBanner("AddSubTest");
 }

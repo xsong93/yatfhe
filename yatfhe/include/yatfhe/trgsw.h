@@ -45,7 +45,7 @@ struct TrgswKey {
     TrlweKey trlweKey;
 
     explicit TrgswKey(const YatfheParameters& p) :
-        trlweKey(TrlweKey(p.k, p.N)) {};
+        trlweKey(TrlweKey(p)) {};
 };
 
 void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
