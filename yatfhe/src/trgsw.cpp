@@ -180,7 +180,7 @@ Integer trgswDecrypt(const Trgsw& trgsw, const YatfheParameters& param, const Tr
     const auto lastRow = param.k;
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRounding(tmp, trgsw.trlweSamples[firstLevel][lastRow], trgswKey.trlweKey);
-    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev) >> (param.torusBits - param.radixBits);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
 }
 
 // To decrypt, it is sufficient to decrypt the last GLev ciphertext, which is a GLev encryption of m/B^l.
@@ -189,33 +189,20 @@ Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
     const auto lastRow = param.k;
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRoundingNtt(tmp, trgswDft.trlweDftSamples[firstLevel][lastRow], trgswKey.trlweKey);
-    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev) >> (param.torusBits - param.radixBits);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
 }
 
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto level = trgswInput.l;
-    DecomposedTrlwe decomposedTrlwe{param};
-
+    DecomposedTrlwe decomposedTrlwe {param};
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
-    // todo: combine into one
-
-    // <Decomp(B), C_k^bar>
+    // <Decomp(B), C_k^bar> + Σ_(0,k-1)<Decomp(A_i), C_i^bar>
+    // https://www.zama.ai/post/tfhe-deep-dive-part-3
     for (auto lvl = 0; lvl < level; lvl++) {
-        auto& curr = decomposedTrlwe.rlwes[lvl].b;
-        for (auto col2 = 0; col2 < k + 1; col2++) {
-            auto& out = (col2 < k) ? output.a[col2] : output.b;
-            auto& curr2 = (col2 < k) ? trgswInput.trlweSamples[lvl][k].a[col2]
-                                     : trgswInput.trlweSamples[lvl][k].b;
-            polynomialMulAccNaive(out, curr, curr2);
-        }
-    }
-
-    // Σ_(0,k-1)<Decomp(A_i), C_i^bar>
-    for (auto lvl = 0; lvl < level; lvl++) {
-        for (auto col = 0; col < k; col++) {
-            auto& curr = decomposedTrlwe.rlwes[lvl].a[col];
+        for (auto col = 0; col < k + 1; col++) {
+            auto& curr = (col < k) ? decomposedTrlwe.rlwes[lvl].a[col] : decomposedTrlwe.rlwes[lvl].b;
             for (auto col2 = 0; col2 < k + 1; col2++) {
                 auto& out = (col2 < k) ? output.a[col2] : output.b;
                 auto& curr2 = (col2 < k) ? trgswInput.trlweSamples[lvl][col].a[col2]

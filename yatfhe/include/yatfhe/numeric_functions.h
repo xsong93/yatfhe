@@ -31,7 +31,7 @@ double roundError(double in, int torusBase);
 
 Torus roundTorusError(Torus in, int torusBase);
 
-Torus roundErrorForShiftedTorus(Torus in, double sigma);
+Integer roundErrorForShiftedTorus(Torus in, double sigma, int shift);
 
 int intModP(int a, int p);
 

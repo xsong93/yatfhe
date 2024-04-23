@@ -60,7 +60,7 @@ TEST(RgswMultTest, RgswMultTest) {
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
-        Integer mu1 = 2;
+        Integer mu1 = 3;
         trgswEncrypt(trgsw, param, trgswKey, mu1);
         printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
 
