@@ -9,14 +9,6 @@
 
 using namespace std;
 
-void printTlweAB(const Tlwe& in, const string& msg) {
-    cout << msg<< ": a: [";
-    for (int i = 0; i < in.n; i++) {
-        cout << i << ":" << in.a[i] <<" ";
-    }
-    cout <<"]" << endl << "b: [" << in.b << "]" << endl << endl;
-}
-
 void printRlweAB(const Rlwe& in, const string& msg) {
     cout << msg<< ": a: ";
     for (int i = 0; i < in.k; i++) {

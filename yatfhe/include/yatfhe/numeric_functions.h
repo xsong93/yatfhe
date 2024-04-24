@@ -25,6 +25,8 @@ Torus addGaussianNoise(Torus message, double sigma);
 
 int32_t modSwitchFromTorus32(Torus in, int32_t newMod);
 
+int32_t modSwitchFromTorus32Pos(Torus in, int32_t newMod);
+
 Torus doubleToTorus32(double d);
 
 double roundError(double in, int torusBase);

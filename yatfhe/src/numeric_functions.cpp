@@ -93,6 +93,14 @@ int32_t modSwitchFromTorus32(Torus in, int32_t newMod) {
     return (in >= 0) ? (phase64 / interv) : (phase64 / interv - newMod);
 }
 
+int32_t modSwitchFromTorus32Pos(Torus in, int32_t newMod) {
+    uint64_t interv = ((UINT64_C(1) << 63) / newMod) * 2; // width of each interval
+    uint64_t half_interval = interv / 2; // begin of the first intervall
+    uint64_t phase64 = (uint64_t(in) << 32) + half_interval;
+    //floor to the nearest multiples of interv
+    return phase64 / interv;
+}
+
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {
     for (auto& coeff : coeffs) {
         coeff = uniformTorusDistrib(rng);

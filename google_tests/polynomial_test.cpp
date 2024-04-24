@@ -5,24 +5,45 @@
 #include "gtest/gtest.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
+#include "yatfhe/tlwe.h"
 #include "yautil/tool.h"
 
-TEST(PolynomialTest, PolynomialTest) {
-    int q = 32;
-    int p = 8;
-    int N = 32;
-    TorusPolynomial v{N};
-    std::vector<double> d(N);
-    generateTestPolynomial(v, p, 2 * N);
+TEST(TestPolynomial, TestPolynomial) {
+    YatfheParameters param {};
+//    param.torusBase = 32;
+    param.N = 128;
+//    param.n = 4;
+    TorusPolynomial v {param.N};
+    std::vector<Integer> d(param.N);
+    generateTestPolynomial(v, param.torusBase, 2 * param.N);
     printArray(v.coeffs, "v");
     for (int i = 0; i < v.N; i++) {
-        d[i] = torus32ToDouble(v.coeffs[i]);
+        d[i] = modSwitchFromTorus32(v.coeffs[i], param.torusBase);
     }
-    printArray(d, "d");
+    printArray(d, "p");
 
-//    dToT32Test(-3.4);
-//    dToT32Test(3.6);
-    std::cout << torus32ToDouble(doubleToTorus32(0.51));
-    std::cout << torus32ToDouble(doubleToTorus32(-0.49));
-//    std::cout << ">>>>>>>> NTT test passed! <<<<<<<<" << std::endl;
+    Integer plain = 3;
+    Torus mu = modSwitchToTorus32(plain, param.torusBase);
+    TlweKey tlweKey {param.n, 0};
+    lweKeyGen(tlweKey);
+
+    Tlwe ct {param.n};
+    symEncTlweSample(ct, mu, tlweKey);
+
+    ScaledTlwe scaledCt {2 * param.N, param.n};
+    rescaleTlweFromTorus32(scaledCt, ct);
+    printTlweAB(ct, "ct");
+    printTlweAB(scaledCt, "scaledCt");
+
+    TorusPolynomial rpT {param.N};
+    int rot = -scaledCt.b;
+    for (auto i = 0; i < scaledCt.n; i++) {
+        rot = (rot + scaledCt.a[i] * tlweKey.s[i]) % (2 * param.N);
+    }
+    cout << "-u*: " << rot << endl;
+    torusPolynomialRotate(rpT, rot, v);
+    IntPolynomial res {param.N};
+    torusPolyToIntPoly(res, rpT, param.torusBase);
+    cout << "p: " << plain << endl;
+    printArray(res.coeffs, "res");
 }

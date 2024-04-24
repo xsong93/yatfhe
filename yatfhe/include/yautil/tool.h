@@ -13,7 +13,14 @@
 
 using namespace std;
 
-void printTlweAB(const Tlwe& in, const string& msg);
+template <typename T>
+void printTlweAB(const T& in, const string& msg) {
+    cout << msg << ": a: [";
+    for (int i = 0; i < in.n; i++) {
+        cout << i << ":" << ANSI_COLOR_YELLOW << in.a[i] << ANSI_COLOR_RESET << " ";
+    }
+    cout <<"]" << endl << "b: [" << ANSI_COLOR_YELLOW << in.b << ANSI_COLOR_RESET << "]" << endl << endl;
+}
 
 void printRlweAB(const Rlwe& in, const string& msg);
 
