@@ -155,20 +155,25 @@ Ntt32 modADD(Ntt32 a, Ntt32 b) {
 }
 Ntt32 modADDscale(Ntt32 a, Ntt32 b) {
     int64_t temp;
-    temp = (int64_t(a) + int64_t(b))/2;
-    temp = (temp) >= MOD ? (temp) - MOD : temp;
+    temp = (int64_t(a) + int64_t(b)) >> 1;
     return Ntt32(temp);
 }
 Ntt32 modSUB(Ntt32 a, Ntt32 b) {
     int64_t temp = 0;
     temp = int64_t(a) - int64_t(b);
     temp = temp >= 0 ? temp : temp + MOD;
+
     return Ntt32(temp);
 }
 Ntt32 modSUBscale(Ntt32 a, Ntt32 b){
     int64_t temp = 0;
-    temp = (int64_t(a) - int64_t(b))/2;
-    temp = temp >= 0 ? temp : temp + MOD;
+    temp = int64_t(a) - int64_t(b); // debug: where minus is negative, add p first or do the div first?
+    if (temp%2) {
+        temp = temp >> 1;
+    } else {
+        temp = (temp >> 1) + half_mod;
+        temp = (temp) >= MOD ? (temp) - MOD : temp;
+    }
     return Ntt32(temp);
 }
 
@@ -212,92 +217,53 @@ void genNTT32_PARAM(Ntt32_PARAM& ntt_param) {
 void genROM(ROM& rom){
     auto w_n = rom.N;
     auto phi_n = rom.N * 2;
-    Ntt32 w_q = Ntt32((MOD - 1)/w_n);
-    Ntt32 phi_q = Ntt32((MOD - 1)/phi_n);
+    Ntt32 w_q = Ntt32((MOD - 1)/(w_n<<1));
+    Ntt32 phi_q = Ntt32((MOD - 1)/(phi_n<<1));
     for (auto i = 0; i < w_n; i++) {
         rom.ntt_rom.tw_factor[i] = POW(PRIM_ROOT, Ntt32(i*w_q), MOD);
         rom.intt_rom.inv_tw_factor[i] = modINV(rom.ntt_rom.tw_factor[i]);
     }
+    bit_rev(rom.intt_rom.inv_tw_factor);
     for (auto j = 0; j < phi_n; j++) {
         rom.ntt_rom.phi_factor[j] = POW(PRIM_ROOT, j*phi_q, MOD);
         rom.intt_rom.inv_phi_factor[j] = modINV(rom.ntt_rom.phi_factor[j]);
     }
 }
 
-void NWC_NTT32(NttPolynomial& RES, const NttPolynomial& IN, const Ntt32_PARAM& ntt_param) {
-    auto& res = RES.coeffs;
-    const auto& in = IN.coeffs;
-    const auto& tw = ntt_param.tw_factor;
-    const auto& phi = ntt_param.phi_factor;
-    const auto N = IN.N;
-    const auto lvl = clog2(N);
-    auto gap = 0;
-    auto block = 0;
-    auto tw_index = 0;
-    Ntt32 temp_add, temp_sub, temp_mult = 0;
-    Ntt32 pre_a, pre_b = 0;
-    for (auto i = 0; i < N; i += 2) {
-        pre_a = modMULT(in[i], phi[i]);
-        pre_b = modMULT(in[i+1], phi[i+1]);
-        temp_mult = modMULT(pre_b,tw[0]);
-        temp_add = modADD(pre_a,temp_mult);
-        temp_sub = modSUB(pre_a, temp_mult);
-        res[i] = temp_add;
-        res[i+1] = temp_sub;
-    }
-    for (auto j = 0; j < lvl; j++) {
-        gap = 1<<(j);
-        block = N>>(j+1);
-        for (auto k = 0; k < block; k++) {
-            for (auto l = 0; l < gap; l++) {
-                tw_index = block;
-                temp_mult = modMULT(res[k*gap*2 + gap + l],tw[l*tw_index]);
-                temp_add = modADD(res[k*gap*2 + l], temp_mult);
-                temp_sub = modSUB(res[k*gap*2 + l], temp_mult);
-                res[k*gap*2 + l] = temp_add;
-                res[k*gap*2 + gap + l] = temp_sub;
-            }
+void genDIF_ROM(DIF_ROM& rom) {
+    const auto lvl = rom.l;
+    auto w_n = 1 << (lvl-1);
+    auto phi_n = 1 << lvl;
+    auto N = 1 << lvl;
+    Ntt32 w_q = Ntt32((MOD - 1)/(w_n<<1));
+    Ntt32 phi_q = Ntt32((MOD - 1)/(phi_n<<1));
+    Ntt32 temp = 0, temp_inv = 0, scale = 0;
+    auto phi_size = 0, tw_size = 0, probe = 0;
+    for (int i = 0; i < lvl; i++) {
+        scale = 1 << i;
+        phi_size = phi_n >> i;
+        tw_size = w_n >> i;
+        for (int j = 0; j < tw_size; j++) {
+            probe = j*scale;
+            temp = POW(PRIM_ROOT, Ntt32(j*w_q*scale), MOD);
+            temp_inv = modINV(temp);
+            rom.ntt_tw.tw_factor[i].push_back(temp);
+            rom.intt_tw.tw_factor[i].push_back(temp_inv);
         }
+        bit_rev(rom.intt_tw.tw_factor[i]);
+//        for (int k = 0; k < phi_size; k++) {
+//            temp = POW(PRIM_ROOT, Ntt32(k*phi_q*scale), MOD);
+//            temp_inv = modINV(temp);
+//            rom.phi_tw.tw_factor[i].push_back(temp);
+//            rom.iphi_tw.tw_factor[i].push_back(temp_inv);
+//        }
+//        bit_rev(rom.iphi_tw.tw_factor[i]);
     }
+    temp = 0;
+
+
 }
-void NWC_INTT32(NttPolynomial& RES, const NttPolynomial& IN, const INtt32_PARAM& intt_param) {
-    const auto& in= IN.coeffs;
-    auto& res = RES.coeffs;
-    const auto& inv_tw = intt_param.inv_tw_factor;
-    const auto& inv_phi = intt_param.inv_phi_factor;
-    const auto N = IN.N;
-    const auto lvl = clog2(N);
-    auto gap = 0;
-    auto block = 0;
-    auto inv_tw_index = 0;
-    Ntt32 temp_add, temp_sub, temp_mult = 0;
-//    Ntt32 pre_a, pre_b = 0;
-    for (auto i = 0; i < (N>>1); i++) {
-        temp_add = modADDscale(in[i],in[i + (N>>1)]);
-        temp_sub = modSUBscale(in[i],in[i + (N>>1)]);
-        temp_mult = modMULT(temp_sub, inv_tw[i]);
-        res[i] = temp_add;
-        res[i + (N>>1)] = temp_sub;
-    }
-    for (auto j = 0; j < lvl; j++) {
-        gap = N>>(j+1);
-        block = 1<<j;
-        for (auto k = 0; k < block; k++) {
-            for (auto l = 0; l < gap; l++) {
-                inv_tw_index = block;
-                temp_add = modADDscale(res[k*gap*2 + l], res[k*gap*2 + gap + l]);
-                temp_sub = modSUBscale(res[k*gap*2 + l], res[k*gap*2 + gap + l]);
-                temp_mult = modMULT(temp_sub, inv_tw[l*inv_tw_index]);
-                res[k*gap*2 + l] = temp_add;
-                res[k*gap*2 + gap + l] = temp_mult;
-            }
-        }
-    }
-    for (auto m = 0; m < N>>1; m++) {
-        res[m] = modMULT(res[m],inv_phi[m]);
-        res[m + (N>>1)] = modMULT(res[m + (N>>1)], inv_phi[m + (N>>1)]);
-    }
-}
+
 
 void pre_process(NttPolynomial& in, const Ntt32_PARAM& para) {
     auto N = para.phi_N;
@@ -308,6 +274,103 @@ void pre_process(NttPolynomial& in, const Ntt32_PARAM& para) {
     }
 }
 
+
+
+void DIF_NR(NttPolynomial& RES, const NttPolynomial& IN, const Ntt32_PARAM& ntt_param) {
+    auto& res = RES.coeffs;
+    const auto& in = IN.coeffs;
+    const auto& tw = ntt_param.tw_factor;
+    const auto& N = IN.N;
+    const auto lvl = clog2(N);
+    auto gap = 0;
+    auto block = 0;
+    auto block_size = 0;
+    Ntt32 temp_add, temp_sub, temp_mult;
+    res = in;
+    for (auto i = 0; i < lvl; i++) {
+         block = 1 << i;
+         block_size = N >> i;
+         gap = N >> (i+1);
+        for (auto j = 0; j < block; j++) {
+            for (auto k = 0; k < gap; k++) {
+                temp_add = modADD(res[j*block_size + k], res[j*block_size + k + gap]);
+                temp_sub = modSUB(res[j*block_size + k], res[j*block_size + k + gap]);
+                temp_mult = modMULT(temp_sub,tw[k*block]);
+                res[j*block_size + k] = temp_add;
+                res[j*block_size + k + gap] = temp_mult;
+            }
+        }
+
+    }
+}
+
+//void DIF_RN(NttPolynomial& RES, const NttPolynomial& IN, const INtt32_PARAM& intt_param) {
+//    auto& res = RES.coeffs;
+//    const auto& in = IN.coeffs;
+//    const auto& tw = intt_param.inv_tw_factor;
+//    const auto& N = IN.N;
+//    const auto lvl = clog2(N);
+//    auto gap = 0;
+//    auto block = 0;
+//    auto block_size = 0;
+//    Ntt32 flag_a = 0, flag_b = 0, flag_tw = 0;
+//    res = in;
+//    Ntt32 temp_add, temp_sub, temp_mult;
+//    for (auto i = 0; i < lvl; i++) {
+//        block = N >> (i + 1);
+//        block_size = 1 << (i + 1);
+//        gap = 1 << i;
+//        for (auto j = 0; j < block; j++) {
+//            for (auto k = 0; k < gap; k++) {
+//                flag_a = res[j*block_size + k];
+//                flag_b = res[j*block_size + k + gap];
+//                flag_tw = tw[j];
+//                temp_add = modADDscale(res[j*block_size + k], res[j*block_size + k + gap]);
+//                temp_sub = modSUBscale(res[j*block_size + k], res[j*block_size + k + gap]);
+//                temp_mult = modMULT(temp_sub,tw[j]);
+//                res[j*block_size + k] = temp_add;
+//                res[j*block_size + k + gap] = temp_mult;
+//            }
+//        }
+//    }
+//}
+void DIF_RN(NttPolynomial& RES, const NttPolynomial& IN, const TW_PARAM& intt_param) {
+    auto& res = RES.coeffs;
+    const auto& in = IN.coeffs;
+    const auto& tw = intt_param.tw_factor;
+    const auto& N = IN.N;
+    const auto lvl = clog2(N);
+    auto gap = 0;
+    auto block = 0;
+    auto block_size = 0;
+    auto tw_index = 0;
+    Ntt32 flag_a = 0, flag_b = 0, flag_tw = 0;
+    res = in;
+    Ntt32 temp_add, temp_sub, temp_mult, pos_a, pos_b;
+    for (auto i = 0; i < lvl; i++) {
+        block = N >> (i + 1);
+        block_size = 1 << (i + 1);
+        gap = 1 << i;
+        pos_a = 0; pos_b = 0;
+
+        for (auto j = 0; j < block; j++) { //debug:tw_index overflow
+            tw_index = j;
+            for (auto k = 0; k < gap; k++) {
+                flag_a = res[j*block_size + k];
+                flag_b = res[j*block_size + k + gap];
+                flag_tw = tw[i][tw_index];
+                pos_a = j*block_size + k;
+                pos_b = j*block_size + k + gap;
+                temp_add = modADD(res[j*block_size + k], res[j*block_size + k + gap]);
+                temp_sub = modSUB(res[j*block_size + k], res[j*block_size + k + gap]);
+                temp_mult = modMULT(temp_sub,tw[i][tw_index]);
+                res[j*block_size + k] = temp_add;
+                res[j*block_size + k + gap] = temp_mult;
+
+            }
+        }
+    }
+}
 
 
 
@@ -341,6 +404,48 @@ void printROM(ROM& rom) {
     for (auto l = 0; l < phi_n; l++) {
         std::cout << l << ":" << rom.intt_rom.inv_phi_factor[l] << " ";
     }
+    std::cout<<std::endl;
 }
 
 
+void bit_rev(std::vector<Ntt32>& x) {
+    int j = 0;
+    int b = 0;
+    int N = int(x.size());
+    for (int i = 1; i < N; i++) {
+        b = N >> 1;  // Initialize b to half of N
+        while (j >= b) {
+            j -= b;  // Perform bit-reversal
+            b >>= 1;
+        }
+        j += b;  // Move to the next position
+
+        // Swap elements if the bit-reversed index is greater than the current index
+        if (j > i) {
+            NttType temp = x[j];
+            x[j] = x[i];
+            x[i] = temp;
+        }
+    }
+}
+//void bitreverse (std::vector<Ntt32>& x, int N) {
+//    int j = 0;
+//    int b = 0;
+//
+//    for (int i = 1; i < N; i++) {
+//        b = N >> 1;  // Initialize b to half of N
+//        while (j >= b) {
+//            j -= b;  // Perform bit-reversal
+//            b >>= 1;
+//        }
+//        j += b;  // Move to the next position
+//
+//        // Swap elements if the bit-reversed index is greater than the current index
+//        if (j > i) {
+//            NttType temp = x[j];
+//            x[j] = x[i];
+//            x[i] = temp;
+//        }
+//    }
+//}
+//

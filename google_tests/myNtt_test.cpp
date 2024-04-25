@@ -6,6 +6,7 @@
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/time_counter.h"
+#include <iostream>
 #include <gmp.h>
 #include "yautil/tool.h"
 using namespace std;
@@ -60,3 +61,75 @@ TEST(MYNTT_TEST,construct_test){
     genROM(rom);
     printROM(rom);
 }
+
+TEST(MYNTT_TEST, NWC_NTT_TEST) {
+    int N = 1024;
+    cout<<"MOD = "<<MOD<<endl;
+    ROM rom(N);
+    DIF_ROM dif_rom(clog2(N));
+    genROM(rom);
+    genDIF_ROM(dif_rom);
+//    printROM(rom);
+    NttPolynomial a{N}, b{N}, res{N};
+    for (int i = 0; i < N ; i++) {
+        a.coeffs[i] = i ;
+    }
+    printNttPoly(a);
+//    NWC_NTT32(b,a,rom.ntt_rom);
+    DIF_NR(b,a,rom.ntt_rom);
+    printNttPoly(b);
+//    NWC_INTT32(res, b, rom.intt_rom);
+    DIF_RN(res,b,dif_rom.intt_tw);
+    printNttPoly(res);
+}
+
+TEST(MYNTT_TEST, try_NTT_TEST) {
+    int N = 8;
+    cout<<"MOD = "<<MOD<<endl;
+    ROM rom(N);
+    genROM(rom);
+    printROM(rom);
+    NttPolynomial a{N}, b{N}, res{N};
+    for (int i = 0; i < N; i++) {
+        a.coeffs[i] = i;
+    }
+    Ntt32_TW TW(N>>1);
+    Ntt32_iTW iTW(N>>1);
+    genTW(TW);
+    geniTW(iTW, TW);
+    print_myNtt(TW,iTW);
+}
+
+TEST(MYNTT_TEST, bit_rev_test) {
+    int N = 1024;
+    std::vector<Ntt32> vec;
+    std::cout<<vec.size()<<std::endl;
+    for (int i = 0; i < N; i++) {
+        vec.push_back(Ntt32(i));
+    }
+    std::cout<<"vec size is "<<vec.size()<<std::endl;
+    std::cout<<"Vector elements:"<<std::endl;
+    for (int j = 0; j < N; j++) {
+        std::cout<<vec[j]<<" ";
+    }
+    std::cout<<std::endl;
+    bit_rev(vec);
+    std::cout<<"Vector reversed elements:"<<std::endl;
+    for (int k = 0; k < N; k++) {
+        std::cout << vec[k] << " ";
+    }
+    std::cout<<std::endl;
+
+
+}
+
+TEST(MYNTT_TEST, dif_rom_test) {
+    int N = 32;
+    N = clog2(N);
+    cout<<"MOD = "<<MOD<<endl;
+    DIF_ROM rom(N);
+    genDIF_ROM(rom);
+    std::cout<<"size of uint "<< sizeof(uint)<<std::endl;
+    std::cout<<"size of uint32 "<< sizeof(uint32_t)<<std::endl;
+}
+
