@@ -63,7 +63,7 @@ TEST(MYNTT_TEST,construct_test){
 }
 
 TEST(MYNTT_TEST, NWC_NTT_TEST) {
-    int N = 1024;
+    int N = 32;
     cout<<"MOD = "<<MOD<<endl;
     ROM rom(N);
     DIF_ROM dif_rom(clog2(N));
@@ -72,7 +72,7 @@ TEST(MYNTT_TEST, NWC_NTT_TEST) {
 //    printROM(rom);
     NttPolynomial a{N}, b{N}, res{N};
     for (int i = 0; i < N ; i++) {
-        a.coeffs[i] = i ;
+        a.coeffs[i] = (i+1)*(i+1) ;
     }
     printNttPoly(a);
 //    NWC_NTT32(b,a,rom.ntt_rom);
@@ -131,5 +131,7 @@ TEST(MYNTT_TEST, dif_rom_test) {
     genDIF_ROM(rom);
     std::cout<<"size of uint "<< sizeof(uint)<<std::endl;
     std::cout<<"size of uint32 "<< sizeof(uint32_t)<<std::endl;
+    int32_t a = -3;
+    std::cout<<"-3 >> 1 = "<<(a>>1)<<std::endl;
 }
 

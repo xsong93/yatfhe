@@ -154,25 +154,31 @@ Ntt32 modADD(Ntt32 a, Ntt32 b) {
     return Ntt32(temp);
 }
 Ntt32 modADDscale(Ntt32 a, Ntt32 b) {
-    int64_t temp;
-    temp = (int64_t(a) + int64_t(b)) >> 1;
+    int64_t temp = 0;
+    temp = (int64_t(a) + int64_t(b));
+    temp = (temp) >= MOD ? (temp - MOD) : temp;
+    if (temp%2 == 0) {
+        temp = temp >> 1;
+    } else {
+        temp = ( temp + MOD + 1) >> 1;
+    }
     return Ntt32(temp);
 }
 Ntt32 modSUB(Ntt32 a, Ntt32 b) {
     int64_t temp = 0;
     temp = int64_t(a) - int64_t(b);
-    temp = temp >= 0 ? temp : temp + MOD;
-
+    temp = (temp < 0)? temp + MOD : temp;
     return Ntt32(temp);
 }
+
 Ntt32 modSUBscale(Ntt32 a, Ntt32 b){
     int64_t temp = 0;
-    temp = int64_t(a) - int64_t(b); // debug: where minus is negative, add p first or do the div first?
-    if (temp%2) {
+    temp = (int64_t(a) - int64_t(b)); // debug: where minus is negative, add p first or do the div first?
+    temp = (temp < 0)? temp + MOD : temp;
+    if (temp%2 == 0) {
         temp = temp >> 1;
     } else {
-        temp = (temp >> 1) + half_mod;
-        temp = (temp) >= MOD ? (temp) - MOD : temp;
+        temp = (temp + MOD + 1) >> 1;
     }
     return Ntt32(temp);
 }
@@ -361,8 +367,8 @@ void DIF_RN(NttPolynomial& RES, const NttPolynomial& IN, const TW_PARAM& intt_pa
                 flag_tw = tw[i][tw_index];
                 pos_a = j*block_size + k;
                 pos_b = j*block_size + k + gap;
-                temp_add = modADD(res[j*block_size + k], res[j*block_size + k + gap]);
-                temp_sub = modSUB(res[j*block_size + k], res[j*block_size + k + gap]);
+                temp_add = modADDscale(res[j*block_size + k], res[j*block_size + k + gap]);
+                temp_sub = modSUBscale(res[j*block_size + k], res[j*block_size + k + gap]);
                 temp_mult = modMULT(temp_sub,tw[i][tw_index]);
                 res[j*block_size + k] = temp_add;
                 res[j*block_size + k + gap] = temp_mult;
