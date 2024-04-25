@@ -8,10 +8,10 @@
 #include "yatfhe/tlwe.h"
 #include "yautil/tool.h"
 
-TEST(TestPolynomial, TestPolynomial) {
+TEST(PolynomialRounding, PolynomialRounding) {
     YatfheParameters param {};
-//    param.torusBase = 32;
-    param.N = 128;
+    param.torusBase = 8;
+    param.N = 1024;
 //    param.n = 4;
     TorusPolynomial v {param.N};
     std::vector<Integer> d(param.N);
@@ -36,14 +36,15 @@ TEST(TestPolynomial, TestPolynomial) {
     printTlweAB(scaledCt, "scaledCt");
 
     TorusPolynomial rpT {param.N};
-    int rot = -scaledCt.b;
+    int rot = scaledCt.b;
     for (auto i = 0; i < scaledCt.n; i++) {
-        rot = (rot + scaledCt.a[i] * tlweKey.s[i]) % (2 * param.N);
+        rot = (rot - scaledCt.a[i] * tlweKey.s[i]) % (2 * param.N);
     }
-    cout << "-u*: " << rot << endl;
-    torusPolynomialRotate(rpT, rot, v);
+    cout << "u*: " << rot << endl;
+    torusPolynomialRotate(rpT, -rot, v);
     IntPolynomial res {param.N};
     torusPolyToIntPoly(res, rpT, param.torusBase);
-    cout << "p: " << plain << endl;
+    cout << "p: " << intModP(plain, param.torusBase) << endl;
     printArray(res.coeffs, "res");
+    printBanner("PolynomialRounding");
 }

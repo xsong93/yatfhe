@@ -46,8 +46,8 @@ int main(int argc, char **argv) {
     cout << "decPre: " << decPre << endl;
 
     trgswFunctionalBootstrapping(output, input, bsKey, ksKey, v, param);
-//    printTlweAB(input, "input boot");
-//    printTlweAB(output, "output boot");
+    printTlweAB(input, "input boot");
+    printTlweAB(output, "output boot");
     double decAft = symDecTlweSampleToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;
 
