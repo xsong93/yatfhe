@@ -6,6 +6,7 @@
 #include "yatfhe/polynomial.h"
 #include <iostream>
 #include <gmp.h>
+#include <string>
 #include <cmath>
 
 
@@ -208,6 +209,26 @@ int clog2(int N) {
 
 //----------------------------------------------------------------------------
 
+
+
+void genTW_ROM(TW_ROM& tw_rom) {
+    auto w_n = (tw_rom.N) >> 1;
+    auto phi_n = tw_rom.N;
+    Ntt32 w_q = Ntt32((MOD - 1)/(w_n<<1));
+    Ntt32 phi_q = Ntt32((MOD - 1)/(phi_n<<1));
+    Ntt32 temp = 0;
+    for (int i = 0; i < w_n; i++) {
+        temp = POW(PRIM_ROOT, Ntt32(i * w_q), MOD);
+        tw_rom.w_rom[i] = temp;
+        tw_rom.inv_w_rom[i] = modINV(temp);
+    }
+    for (int j = 0; j < phi_n; j++) {
+        temp = POW(PRIM_ROOT, Ntt32(j*phi_q),MOD);
+        tw_rom.phi_rom[j] = temp;
+        tw_rom.inv_phi_rom[j] = modINV(temp);
+    }
+
+}
 void genNTT32_PARAM(Ntt32_PARAM& ntt_param) {
     auto tw_n = ntt_param.tw_N;
     auto phi_n = ntt_param.phi_N;
@@ -235,6 +256,49 @@ void genROM(ROM& rom){
         rom.intt_rom.inv_phi_factor[j] = modINV(rom.ntt_rom.phi_factor[j]);
     }
 }
+
+void genNWCparam(TW_PARAM& nwc_tw,const int n, const TW_ROM& tw_rom, const std::string str) {
+    int lvl = clog2(n);
+    auto w_n = n >> 1;
+    auto phi_n = n;
+    Ntt32 w_q = Ntt32((MOD - 1)/(w_n<<1));
+    Ntt32 phi_q = Ntt32((MOD - 1)/(phi_n<<1));
+    Ntt32 tw_temp = 0, phi_temp = 0, nwc_temp = 0;
+    auto scale = 0, phi_size = 0, tw_size = 0, phi_probe = 0;
+    auto debug_tw = 0;
+    if (str == "NWC-DIT-NR-NNT") {
+        for (int i = 0; i < lvl; i++) {
+            tw_size = n >> (lvl - i);
+            phi_probe = n >> (i + 1);
+            scale = w_n >> i;
+            for (int j = 0; j < tw_size; j++) {
+                debug_tw = j*scale;
+                tw_temp = tw_rom.w_rom[j*scale];
+                phi_temp = tw_rom.phi_rom[phi_probe];
+                nwc_temp = modMULT(tw_temp, phi_temp);
+                nwc_tw.tw_factor[i].push_back(nwc_temp);
+            }
+            bit_rev(nwc_tw.tw_factor[i]);
+        }
+    }
+    if (str == "NWC-DIF-RN-INNT") {
+        for (int i = 0; i < lvl; i++) {
+            tw_size = 1 << (lvl - i - 1);
+            phi_probe = 1 << i;
+            scale = 1 << i;
+            for (int j = 0; j < tw_size; j++) {
+                debug_tw = j*scale;
+                tw_temp = tw_rom.inv_w_rom[j*scale];
+                phi_temp = tw_rom.inv_phi_rom[phi_probe];
+                nwc_temp = modMULT(tw_temp, phi_temp);
+                nwc_tw.tw_factor[i].push_back(nwc_temp);
+            }
+            bit_rev(nwc_tw.tw_factor[i]);
+        }
+    }
+
+}
+
 
 void genDIF_ROM(DIF_ROM& rom) {
     const auto lvl = rom.l;
@@ -281,6 +345,9 @@ void pre_process(NttPolynomial& in, const Ntt32_PARAM& para) {
 }
 
 
+void DIT_NR(NttPolynomial& RES, const NttPolynomial& IN, const TW_PARAM& ntt_param) {
+
+}
 
 void DIF_NR(NttPolynomial& RES, const NttPolynomial& IN, const Ntt32_PARAM& ntt_param) {
     auto& res = RES.coeffs;

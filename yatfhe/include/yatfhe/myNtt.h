@@ -10,6 +10,7 @@
 #include "numeric_functions.h"
 #include "yatfhe/torus.h"
 #include <vector>
+#include <string>
 #include <gmp.h>
 
 using Ntt32 = uint32_t;
@@ -75,6 +76,7 @@ struct Ntt32_iTW {
 
 struct TW_PARAM {
     std::vector<std::vector<Ntt32>> tw_factor {};
+    TW_PARAM(): tw_factor() {};
     explicit TW_PARAM(int n):
         tw_factor(n, std::vector<Ntt32>()) {};
 };
@@ -90,14 +92,30 @@ struct DIF_ROM {
         l(n), ntt_tw(n), intt_tw(n), phi_tw(n), iphi_tw(n) {};
 
 };
+
+struct TW_ROM {
+    int N {};
+    std::vector<Ntt32> w_rom {};
+    std::vector<Ntt32> inv_w_rom {};
+    std::vector<Ntt32> phi_rom {};
+    std::vector<Ntt32> inv_phi_rom {};
+    TW_ROM() : N(), w_rom(), phi_rom(), inv_w_rom(), inv_phi_rom() {};
+    explicit TW_ROM(int n) :
+        N(n), w_rom(n>>1), phi_rom(n), inv_w_rom(n>>1), inv_phi_rom(n) {};
+};
 //--------------------------------------------------------------------------------
 
 
 void genROM(ROM& rom);
 void genDIF_ROM(DIF_ROM& rom);
+void genTW_ROM(TW_ROM& tw_rom);
 void pre_process(NttPolynomial& in, const Ntt32_PARAM& para);
 void DIF_NR(NttPolynomial& RES, const NttPolynomial& IN, const Ntt32_PARAM& ntt_param);
+void NWC_DIT_NR(NttPolynomial& RES, const NttPolynomial& IN, const TW_PARAM& intt_param);
+void DIT_NR(NttPolynomial& RES, const NttPolynomial& IN, const TW_PARAM& ntt_param);
 void DIF_RN(NttPolynomial& RES, const NttPolynomial& IN, const TW_PARAM& intt_param);
+
+void genNWCparam(TW_PARAM& nwc_tw,const int n, const TW_ROM& tw_rom, const std::string str);
 
 //--------------------------------------------------------------------------------
 
@@ -112,6 +130,7 @@ Ntt32 modADDscale(Ntt32 a, Ntt32 b);
 Ntt32 modSUBscale(Ntt32 a, Ntt32 b);
 Ntt32 modSUB(Ntt32 a, Ntt32 b);
 Ntt32 modMULT(Ntt32 a, Ntt32 b);
+
 void genTW(Ntt32_TW& TW);
 void geniTW(Ntt32_iTW& iTW, const Ntt32_TW& TW);
 void doNTT32(NttPolynomial& res, const NttPolynomial& in, const Ntt32_TW& TW_param);
