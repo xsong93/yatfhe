@@ -145,3 +145,29 @@ TEST(MYNTT_TEST, nwc_rom_test) {
     genNWCparam(nwc_tw,N,tw_rom,str);
 
 }
+
+TEST(MYNTT_TEST, nwc_ntt_test) {
+    int N = 8;
+    int depth = clog2(N);
+    TW_PARAM nwc_tw(depth);
+    TW_PARAM nwc_itw(depth);
+    TW_ROM tw_rom(N);
+    genTW_ROM(tw_rom);
+    std::string str_ntt = "NWC-DIT-NR-NNT";
+    std::string str_intt = "NWC-DIF-RN-INNT";
+    genNWCparam(nwc_tw,N,tw_rom,str_ntt);
+    genNWCparam(nwc_itw,N,tw_rom,str_intt);
+    NttPolynomial a{N}, b{N}, res{N};
+    for (int i = 0; i < N ; i++) {
+        a.coeffs[i] = i ;
+    }
+    printNttPoly(a);
+//    NWC_NTT32(b,a,rom.ntt_rom);
+    DIT_NR(b,a,nwc_tw);
+    printNttPoly(b);
+//    NWC_INTT32(res, b, rom.intt_rom);
+    DIF_RN(res,b,nwc_itw);
+    printNttPoly(res);
+
+
+}
