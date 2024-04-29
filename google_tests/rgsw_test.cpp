@@ -42,6 +42,7 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
     cout << "plain: " << plain << endl;
     cout << "dec: " << dec << endl;
     ASSERT_EQ(plain, dec);
+    printBanner("RgswEncDecTest");
 }
 
 TEST(RgswMultTest, RgswMultTest) {
@@ -50,8 +51,9 @@ TEST(RgswMultTest, RgswMultTest) {
     param.radixBits = 4;
     param.l = 8;
     param.k = 2;
-    int ti = 1;
-    while (ti-- > 0) {
+    int ti = 0;
+    while (ti++ < 10) {
+        cout << "iter: " << ti << endl;
         // ken gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
@@ -60,13 +62,13 @@ TEST(RgswMultTest, RgswMultTest) {
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
-        Integer mu1 = 3;
+        Integer mu1 = genIntUniformDist(0, 1);
         trgswEncrypt(trgsw, param, trgswKey, mu1);
         printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
-        Integer mu2p = 3;
+        Integer mu2p = genIntUniformDist(INT32_MIN, INT32_MAX);
         Torus mu2 = modSwitchToTorus32(mu2p, param.torusBase);
         Trlwe out {param.k, param.N};
 //        DoublePolynomial decPre {param.N};
@@ -103,4 +105,5 @@ TEST(RgswMultTest, RgswMultTest) {
             ASSERT_EQ(intModP(mu1 * mu2p, param.torusBase), decAftP.coeffs[i]);
         }
     }
+    printBanner("RgswMultTest");
 }

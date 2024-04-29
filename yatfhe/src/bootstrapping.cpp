@@ -34,8 +34,9 @@ void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& in
 
 // res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input
 void controlMux(Trlwe& res, const Trlwe& input, const int aBarI, const Trgsw& bskI, const YatfheParameters& param) {
-    trlweRotateMinusOne(res, input, aBarI); // res = c1 - c0 = X^aBarI * input - input
-    trgswExternalProduct(res, bskI, res, param); // res *= bskI
+    Trlwe tmp {param.k, param.N};
+    trlweRotateMinusOne(tmp, input, aBarI); // res = c1 - c0 = X^aBarI * input - input
+    trgswExternalProduct(res, bskI, tmp, param); // res *= bskI
     trlweAccumulate(res, input); // res += input
 }
 

@@ -259,10 +259,16 @@ void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey) {
     }
 }
 
+void trlweRotate(Trlwe& res, const Trlwe& input, const int a) {
+    for (auto i = 0; i < input.a.size(); i++) {
+        torusPolynomialRotate(res.a[i], a, input.a[i]);
+    }
+    torusPolynomialRotate(res.b, a, input.b);
+}
+
 // res = X^a * input - input
 void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, const int a) {
-    const auto size = input.a.size();
-    for (auto i = 0; i < size; i++) {
+    for (auto i = 0; i < input.a.size(); i++) {
         torusPolynomialRotateMinusOne(res.a[i], a, input.a[i]);
     }
     torusPolynomialRotateMinusOne(res.b, a, input.b);
