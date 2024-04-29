@@ -11,21 +11,18 @@
 #include "yautil/tool.h"
 
 int main(int argc, char **argv) {
-//    TimeCounter timer {};
     const YatfheParameters param {};
     COUNT_TIME("init timer", std::cout << std::endl;)
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-//    TlweKey keyTlweOut {param.n, param.lweStdDev};
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKey bsKey {param};
     TlweKeySwitchingKey ksKey {param};
-    lweKeyGen(tlweKey);
-//    lweKeyGen(keyTlweOut, param.n);
-    trlweKeyGen(trlweKey);
-    bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);
-    tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);
+    COUNT_TIME("lweKeyGen", lweKeyGen(tlweKey);)
+    COUNT_TIME("trlweKeyGen", trlweKeyGen(trlweKey);)
+    COUNT_TIME("bootstrappingKeyGen", bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);)
+    COUNT_TIME("tlweKeySwitchingKeyGen", tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);)
 
     Integer plain = 2;
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
@@ -45,7 +42,7 @@ int main(int argc, char **argv) {
     auto decPre = symDecTlweSampleToInt(input, tlweKey, param.torusBase);
     cout << "decPre: " << decPre << endl;
 
-    trgswFunctionalBootstrapping(output, input, bsKey, ksKey, v, param);
+    COUNT_TIME("trgswFunctionalBootstrapping", trgswFunctionalBootstrapping(output, input, bsKey, ksKey, v, param);)
 
     auto decAft = symDecTlweSampleToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;

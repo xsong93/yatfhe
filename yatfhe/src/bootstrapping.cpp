@@ -5,7 +5,6 @@
 #include "yatfhe/bootstrapping.h"
 #include "yatfhe/keyswitching.h"
 #include "yatfhe/ntt.h"
-#include "yatfhe/gadget_decomposition.h"
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
