@@ -13,8 +13,8 @@ void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const Bootstrapp
     Tlwe tmp {ksk.nCurrKey};
     rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
-    blindRotate(accum, bsk, inputModN2, param); //todo:debug
-    extractTlweFromTrlwe(tmp, accum, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    blindRotate(accum, bsk, inputModN2, param);
+    extractTlweFromTrlwe(tmp, accum, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     tlweKeySwitch(out, ksk, tmp, param);
 }
 
@@ -27,7 +27,7 @@ void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& in
             continue;
         }
         Trlwe temp {param.k, param.N};
-        controlMux(temp, accum, input.a[i], bsk.bsk[i], param); // todo:debug
+        controlMux(temp, accum, input.a[i], bsk.bsk[i], param);
         swap(accum, temp); // assign the previous result to accumulator
     }
 }

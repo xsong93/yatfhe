@@ -8,11 +8,13 @@ struct YatfheParameters {
     // LWE params
     int torusBits {32};
     long q {2147483648};
+    int torusBase {8}; // p|q
     int dftBits {64};
     int n {630};
     double lweStdDev {2.98023e-08}; // 2^-15
     // RLWE params
     int N {1024};
+    int driftPhase {N / torusBase};
     int k {1};
     double rlweStdDev {2.98023223876953e-8}; // 2^-25
     // RGSW params
@@ -26,7 +28,6 @@ struct YatfheParameters {
     int baseOverTwo {radixBase / 2}; // B / 2 threshold
     int digitMask {radixBase - 1};
     int unfolding {1};
-    int torusBase {8}; // p|q
 };
 
 #endif //HLS_YATFHE_YATFHE_PARAMETERS_H

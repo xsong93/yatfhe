@@ -13,14 +13,12 @@
 TEST(Cmux, Cmux) {
     YatfheParameters param {};
     param.N = 1024;
-    param.radixBits = 4;
-    param.l = 8;
     param.k = 2;
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
 
-        // ken gen
+        // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
         trlweKeyGen(trlweKey);
@@ -48,10 +46,11 @@ TEST(Cmux, Cmux) {
         symDecTrlweToInt(decIn, in2, trlweKey, param.torusBase);
         printArray(decIn.coeffs, "decIn");
 
-        int a = -2;
+        // rotator gen
+        int a = genIntUniformDist(0, param.N * 2);;
         cout << "a: " << a << endl;
 
-        // test res
+        // test data gen
         IntPolynomial rotInP {param.N};
         Trlwe rotIn {param.k, param.N};
         if (mu1 == 1) {
@@ -60,7 +59,7 @@ TEST(Cmux, Cmux) {
             copyTrlwe(rotIn, in2, true, true);
         }
         symDecTrlweToInt(rotInP, rotIn, trlweKey, param.torusBase);
-        printArray(rotInP.coeffs, "rotInP");
+        printArray(rotInP.coeffs, "expect");
 
         // cmux
         Trlwe out {param.k, param.N};
@@ -70,7 +69,7 @@ TEST(Cmux, Cmux) {
         // dec
         IntPolynomial decP {param.N};
         symDecTrlweToInt(decP, out, trlweKey, param.torusBase);
-        printArray(decP.coeffs, "dec");
+        printArray(decP.coeffs, "real");
 
         //verify
         for (auto i = 0; i < decP.N; i++) {
