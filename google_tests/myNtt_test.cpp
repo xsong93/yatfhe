@@ -147,7 +147,7 @@ TEST(MYNTT_TEST, nwc_rom_test) {
 }
 
 TEST(MYNTT_TEST, nwc_ntt_test) {
-    int N = 64;
+    int N = 1024;
     int depth = clog2(N);
     TW_PARAM nwc_tw(depth);
     TW_PARAM nwc_itw(depth);
