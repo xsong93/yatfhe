@@ -88,3 +88,10 @@ void tlweCopy(Tlwe& output, const Tlwe& input) {
     }
     output.b = input.b;
 }
+
+void tlweCLear(Tlwe& tlwe) {
+    tlwe.b = 0;
+    for (auto& ai : tlwe.a) {
+        ai = 0;
+    }
+}

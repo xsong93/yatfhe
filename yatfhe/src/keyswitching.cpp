@@ -35,6 +35,7 @@ void tlweKeySwitchingKeyGen(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
  * @param param YatfheParameters
  */
 void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param) {
+    tlweCLear(output);
     output.b = input.b; // init output as (0,..., 0, b)
     for (auto i = 0; i < input.n; i++) {
         DecomposedData aBar {param.ksLevel};

@@ -240,6 +240,7 @@ void recomposeTrlweNtt(TrlweDft& output, const DecomposedTrlwe& input, const Yat
 
 // out = (a', b[index])
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, const int index) {
+    tlweCLear(out);
     const auto N = in.b.N;
     for (auto i = 0; i < in.k; i++) {
         for (auto j = 0; j < N; j++) {

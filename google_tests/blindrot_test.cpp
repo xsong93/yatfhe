@@ -136,6 +136,21 @@ TEST(BlindRotLut, BlindRotLut) {
     auto out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
     cout << "out: " << out << endl;
 
+    extractTlweFromTrlwe(tmp, in2, 1);
+    tlweKeySwitch(tlweKs, ksk, tmp, param);
+    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
+    cout << "out: " << out << endl;
+
+    extractTlweFromTrlwe(tmp, in2, 2);
+    tlweKeySwitch(tlweKs, ksk, tmp, param);
+    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
+    cout << "out: " << out << endl;
+
+    extractTlweFromTrlwe(tmp, in2, 3);
+    tlweKeySwitch(tlweKs, ksk, tmp, param);
+    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
+    cout << "out: " << out << endl;
+
     //verify
     for (auto i = 0; i < decP.N; i++) {
         ASSERT_NEAR(rotInP.coeffs[i], decP.coeffs[i], 1);

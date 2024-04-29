@@ -56,4 +56,6 @@ void lweSubTo(Tlwe& output, const Tlwe& input);
 
 void tlweCopy(Tlwe& output, const Tlwe& input);
 
+void tlweCLear(Tlwe& tlwe);
+
 #endif //HLS_YATFHE_TLWE_H
