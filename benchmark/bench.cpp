@@ -11,7 +11,7 @@
 #include "yautil/tool.h"
 
 int main(int argc, char **argv) {
-    const YatfheParameters param {};
+    YatfheParameters param {};
     COUNT_TIME("init timer", std::cout << std::endl;)
 
     TlweKey tlweKey {param.n, param.lweStdDev};
@@ -28,11 +28,6 @@ int main(int argc, char **argv) {
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
-
-    std::vector<Integer> t(v.N);
-    for (int i = 0; i < v.N; i++) {
-        t[i] = modSwitchFromTorus32(v.coeffs[i], param.torusBase);
-    }
 
     Tlwe input {param.n};
     Tlwe output {param.n};

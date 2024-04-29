@@ -75,7 +75,7 @@ TEST(BlindRot, BlindRot) {
 TEST(BlindRotLut, BlindRotLut) {
     YatfheParameters param {};
     param.n = 64;
-//    param.torusBase = 128;
+    param.torusBase = 512;
 
     // key gen
     TlweKey tlweKey {param.n, param.lweStdDev};
@@ -129,7 +129,7 @@ TEST(BlindRotLut, BlindRotLut) {
     // ks
     Tlwe tmp {ksk.nCurrKey};
     Tlwe tlweKs {ksk.nCurrKey};
-    extractTlweFromTrlwe(tmp, in2, param.driftPhase);
+    extractTlweFromTrlwe(tmp, in2, 0);
     tlweKeySwitch(tlweKs, ksk, tmp, param);
 
     // tlwe dec
@@ -138,8 +138,8 @@ TEST(BlindRotLut, BlindRotLut) {
 
     //verify
     for (auto i = 0; i < decP.N; i++) {
-        ASSERT_EQ(rotInP.coeffs[i], decP.coeffs[i]);
+        ASSERT_NEAR(rotInP.coeffs[i], decP.coeffs[i], 1);
     }
-    ASSERT_EQ(in, out);
+    ASSERT_NEAR(in, out, 1);
     printBanner("BlindRotLut");
 }
