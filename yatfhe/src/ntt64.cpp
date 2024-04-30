@@ -270,7 +270,7 @@ void doINTT(IntPolynomial & RES, const Ntt64Polynomial& IN, const TW_PARAM& intt
     Ntt64Polynomial res(N);
     DIF_RN(res,IN,intt_param);
     int64_t temp_ntt = 0;
-    int32_t temp_poly = 0;
+    uint32_t temp_poly = 0;
     for (int i = 0; i < N; i++) {
         if (res.coeffs[i] >= HALF_MOD64) {
             temp_ntt = int64_t(res.coeffs[i] - MOD64);
@@ -279,7 +279,7 @@ void doINTT(IntPolynomial & RES, const Ntt64Polynomial& IN, const TW_PARAM& intt
         }
         temp_poly = uint32_t(temp_ntt & mask);
         if (temp_poly >= poly_max) {
-            RES.coeffs[i] = int32_t(temp_poly - poly_max);
+            RES.coeffs[i] = int32_t(temp_poly - (poly_max<<1));
         } else {
             RES.coeffs[i] = int32_t(temp_poly);
         }

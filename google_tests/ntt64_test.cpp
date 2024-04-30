@@ -12,7 +12,7 @@
 using namespace std;
 
 TEST(ntt64_test, ntt64_test){
-    int N = 4;
+    int N = 1024;
     int depth = clog2(N);
     TW_PARAM nwc_tw(depth);
     TW_PARAM nwc_itw(depth);
@@ -35,7 +35,11 @@ TEST(ntt64_test, ntt64_test){
         mul_ntt.coeffs[i] = modMULT(a_ntt.coeffs[i], b_ntt.coeffs[i]);
     }
     doINTT(res,mul_ntt,nwc_itw);
+    for (int i = 0; i < N; i++) {
+        EXPECT_EQ(res.coeffs[i], ref.coeffs[i]);
+    }
     cout<<"breakpoint"<<endl;
+    printBanner("NTT_NWC_64");
 }
 
 TEST(ntt64_test, single_test) {
