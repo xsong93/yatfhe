@@ -57,6 +57,13 @@ struct NttPolynomial {
             coeffs(N, value),
             N(N) {};
 };
+struct Ntt64Polynomial {
+    std::vector<NttType> coeffs {};
+    int N {};
+    Ntt64Polynomial() : N(), coeffs() {};
+    explicit Ntt64Polynomial (int n):
+        coeffs(n,0), N(n) {};
+};
 using IntPolynomial = TorusPolynomial;
 using BinPolynomial = IntPolynomial;
 
