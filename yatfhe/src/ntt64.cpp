@@ -189,21 +189,22 @@ void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& ntt
     auto block = 0;
     auto block_size = 0;
     auto tw_index = 0;
-    ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
-    ntt64 temp_add, temp_sub, temp_mult, pos_a, pos_b;
+//    ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
+    ntt64 temp_add, temp_sub, temp_mult;
+//    int pos_a, pos_b;
     for (auto i = 0; i < lvl; i++) {
         block = N >> (lvl-i);
         block_size = N >> i;
         gap = block_size >> 1;
-        pos_a = 0; pos_b = 0;
+//        pos_a = 0; pos_b = 0;
         for (auto j = 0; j < block; j++) { //debug:tw_index overflow
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-                flag_a = res[j*block_size + k];
-                flag_b = res[j*block_size + k + gap];
-                flag_tw = tw[i][tw_index];
-                pos_a = j*block_size + k;
-                pos_b = j*block_size + k + gap;
+//                flag_a = res[j*block_size + k];
+//                flag_b = res[j*block_size + k + gap];
+//                flag_tw = tw[i][tw_index];
+//                pos_a = j*block_size + k;
+//                pos_b = j*block_size + k + gap;
                 temp_mult = modMULT(res[j*block_size + k + gap],tw[i][tw_index]);
                 temp_add = modADD(res[j*block_size + k], temp_mult);
                 temp_sub = modSUB(res[j*block_size + k], temp_mult);
@@ -238,23 +239,24 @@ void DIF_RN(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& int
     auto block = 0;
     auto block_size = 0;
     auto tw_index = 0;
-    ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
+//    ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
     res = in;
-    ntt64 temp_add, temp_sub, temp_mult, pos_a, pos_b;
+    ntt64 temp_add, temp_sub, temp_mult;
+//    int pos_a, pos_b;
     for (auto i = 0; i < lvl; i++) {
         block = N >> (i + 1);
         block_size = 1 << (i + 1);
         gap = 1 << i;
-        pos_a = 0;
-        pos_b = 0;
+//        pos_a = 0;
+//        pos_b = 0;
         for (auto j = 0; j < block; j++) { //debug:tw_index overflow
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-                flag_a = res[j * block_size + k];
-                flag_b = res[j * block_size + k + gap];
-                flag_tw = tw[i][tw_index];
-                pos_a = j * block_size + k;
-                pos_b = j * block_size + k + gap;
+//                flag_a = res[j * block_size + k];
+//                flag_b = res[j * block_size + k + gap];
+//                flag_tw = tw[i][tw_index];
+//                pos_a = j * block_size + k;
+//                pos_b = j * block_size + k + gap;
                 temp_add = modADDscale(res[j * block_size + k], res[j * block_size + k + gap]);
                 temp_sub = modSUBscale(res[j * block_size + k], res[j * block_size + k + gap]);
                 temp_mult = modMULT(temp_sub, tw[i][tw_index]);
