@@ -6,6 +6,7 @@
 #define HLS_YATFHE_NTT64_H
 
 #include "yatfhe/torus.h"
+#include "yatfhe/ntt.h"
 #include "yatfhe/polynomial.h"
 #include "numeric_functions.h"
 #include "yatfhe/torus.h"
@@ -52,5 +53,6 @@ ntt64 modADDscale(ntt64 a, ntt64 b);
 ntt64 modSUBscale(ntt64 a, ntt64 b);
 ntt64 modSUB(ntt64 a, ntt64 b);
 ntt64 modMULT(ntt64 a, ntt64 b);
+ntt64 modmul(ntt64 x, ntt64 y);
 void bit_rev(std::vector<ntt64>& x);
 #endif //HLS_YATFHE_NTT64_H

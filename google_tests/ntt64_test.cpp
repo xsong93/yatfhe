@@ -9,10 +9,11 @@
 #include <iostream>
 #include <gmp.h>
 #include "yautil/tool.h"
+#include "yatfhe/ntt.h"
 using namespace std;
 
 TEST(ntt64_test, ntt64_test){
-    int N = 1024;
+    int N = 4096;
     int depth = clog2(N);
     TW_PARAM nwc_tw(depth);
     TW_PARAM nwc_itw(depth);
@@ -26,7 +27,7 @@ TEST(ntt64_test, ntt64_test){
     Ntt64Polynomial a_ntt{N}, b_ntt{N}, mul_ntt{N};
     for (int i = 0; i < N; i++) {
         a.coeffs[i] = i - (N>>1);
-        b.coeffs[i] = (N>>1) - i;
+        b.coeffs[i] = i + (1<<30);
     }
     polynomialMulNaive(ref,a,b);
     doNTT(a_ntt,a,nwc_tw);
@@ -60,4 +61,21 @@ TEST(ntt64_test, single_test) {
     DIT_NR(a_ntt, a, nwc_tw);
     DIF_RN(res, a_ntt, nwc_itw);
     cout<<"breakpoint"<<endl;
+}
+
+TEST(MODMULT_TEST, test1){
+    uint64_t x = 0, y = 0;
+    uint64_t res1 = 0, res2 = 0;
+
+    int N = 4096;
+    int lvl = clog2(N);
+    for (int i = 0 ; i < N; i++ ) {
+        x += ((MOD64+1)>>lvl);
+        y = x + 1;
+        res1 = modMULT(x,y);
+        res2 = modMul(x,y);
+        EXPECT_EQ(res1, res2);
+    }
+    printBanner("modmult test");
+
 }

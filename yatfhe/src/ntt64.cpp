@@ -2,6 +2,7 @@
 // Created by ic on 24-4-29.
 //
 #include "yatfhe/ntt64.h"
+//#include "yatfhe/ntt.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/polynomial.h"
 #include <iostream>
@@ -83,6 +84,39 @@ ntt64 modMULT(ntt64 a, ntt64 b) {
     return ntt64(mpz_get_ui(TEMP));
 }
 
+ntt64 modmul(ntt64 x, ntt64 y) {
+    auto x0 = (uint32_t)x;
+    auto x1 = (uint32_t)(x >> 32);
+    auto y0 = (uint32_t)y;
+    auto y1 = (uint32_t)(y >> 32);
+
+    // Perform 64-bit multiplication
+    uint64_t x0y0 = (uint64_t)x0 * (uint64_t)y0;
+    uint64_t x0y1 = (uint64_t)x0 * (uint64_t)y1;
+    uint64_t x1y0 = (uint64_t)x1 * (uint64_t)y0;
+    uint64_t x1y1 = (uint64_t)x1 * (uint64_t)y1;
+
+    // Compute partial products and handle carry
+    auto d = (uint32_t)x0y0;
+    uint64_t pp1 = (x0y0 >> 32) + (uint32_t)(x1y0) + (uint32_t)(x0y1);
+    auto c = (uint32_t)pp1;
+    uint64_t pp2 = (x1y0 >> 32) + (x0y1 >> 32) + (uint32_t)(x1y1);
+    uint64_t pp3 = (pp1 >> 32) + (uint32_t)(pp2);
+
+    // Handle overflow and underflow
+    uint32_t a = (pp2 >> 32) + (x1y1 >> 32);
+    uint64_t bpc = (uint32_t)pp3 + (uint64_t)c;
+    bpc = ((bpc + (bpc >> 32)) << 32) - (bpc >> 32);
+    uint64_t minus = ((uint64_t)a + ((uint64_t)(uint32_t)pp3));
+    uint64_t plus = bpc + (uint64_t)d;
+
+    // Return the result modulo MODULUS
+    if (plus >= minus) {
+        return (plus - minus);
+    }
+    return MOD64 - minus + plus;
+}
+
 void bit_rev(std::vector<ntt64>& x) {
     int j = 0;
     int b = 0;
@@ -148,7 +182,7 @@ void genNWCparam(TW_PARAM& nwc_tw,const int n, const TW_ROM& tw_rom, const std::
                 debug_tw = j*scale;
                 tw_temp = tw_rom.w_rom[j*scale];
                 phi_temp = tw_rom.phi_rom[phi_probe];
-                nwc_temp = modMULT(tw_temp, phi_temp);
+                nwc_temp = modmul(tw_temp, phi_temp);
                 nwc_tw.tw_factor[i].push_back(nwc_temp);
 //                nwc_tw.tw_factor[i].push_back(tw_temp);
 
@@ -165,7 +199,7 @@ void genNWCparam(TW_PARAM& nwc_tw,const int n, const TW_ROM& tw_rom, const std::
                 debug_tw = j*scale;
                 tw_temp = tw_rom.inv_w_rom[j*scale];
                 phi_temp = tw_rom.inv_phi_rom[phi_probe];
-                nwc_temp = modMULT(tw_temp, phi_temp);
+                nwc_temp = modmul(tw_temp, phi_temp);
                 nwc_tw.tw_factor[i].push_back(nwc_temp);
 //                nwc_tw.tw_factor[i].push_back(tw_temp);
             }
@@ -205,7 +239,7 @@ void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& ntt
 //                flag_tw = tw[i][tw_index];
 //                pos_a = j*block_size + k;
 //                pos_b = j*block_size + k + gap;
-                temp_mult = modMULT(res[j*block_size + k + gap],tw[i][tw_index]);
+                temp_mult = modmul(res[j*block_size + k + gap],tw[i][tw_index]);
                 temp_add = modADD(res[j*block_size + k], temp_mult);
                 temp_sub = modSUB(res[j*block_size + k], temp_mult);
 
@@ -259,7 +293,7 @@ void DIF_RN(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& int
 //                pos_b = j * block_size + k + gap;
                 temp_add = modADDscale(res[j * block_size + k], res[j * block_size + k + gap]);
                 temp_sub = modSUBscale(res[j * block_size + k], res[j * block_size + k + gap]);
-                temp_mult = modMULT(temp_sub, tw[i][tw_index]);
+                temp_mult = modmul(temp_sub, tw[i][tw_index]);
                 res[j * block_size + k] = temp_add;
                 res[j * block_size + k + gap] = temp_mult;
             }
