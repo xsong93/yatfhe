@@ -230,3 +230,38 @@ TEST(NttDiffPolyTest, NttDiffPolyTest) {
     }
     printBanner("NTT");
 }
+//
+//TEST(NttRotTest, NttRotTest) {
+//    const int N = 1024;
+//    LagrangePolynomial a1Ntt{N};
+//    LagrangePolynomial a2Ntt{N};
+//    TorusPolynomial a1{N};
+//    TorusPolynomial a2{N};
+//    TorusPolynomial a1Intt{N};
+//    TorusPolynomial a2Intt{N};
+//    initCoeffsViaUniformDistribution(a1.coeffs);
+//    for (auto i = 0; i < N; i++) {
+//        a1.coeffs[i] = i + 1;
+//    }
+//    torusPolynomialRotate(a2, 3, a1);
+//    printArray(a1.coeffs, "a1");
+//    printArray(a2.coeffs, "a2");
+//
+//    applyNtt(a1Ntt, a1);
+//    applyNtt(a2Ntt, a2);
+//    printArray(a1Ntt.coeffs, "a1Ntt");
+//    printArray(a2Ntt.coeffs, "a2Ntt");
+//
+//    LagrangePolynomial tmp{N};
+//
+//
+//    //todo: rot
+//
+//    LagrangePolynomial sub{N};
+//    lagrangePolynomialSub(sub, a2Ntt, a1Ntt);
+//
+//    applyIntt(a1Intt, sub);
+//    printArray(a1Intt.coeffs, "a1Intt");
+//
+//    printBanner("NttRotTest");
+//}
