@@ -6,7 +6,7 @@ file(GLOB SOURCES
 )
 
 set(SOURCE_FILES ${SOURCES})
-
+find_library(GMP_LIB gmp)
 add_library(yatfhe_lib STATIC ${SOURCE_FILES})
 
 target_include_directories(yatfhe_lib PRIVATE
@@ -15,4 +15,4 @@ target_include_directories(yatfhe_lib PRIVATE
 )
 target_include_directories(yatfhe_lib PUBLIC include)
 
-#target_link_libraries(yatfhe_lib ntl_lib)
+target_link_libraries(yatfhe_lib gmp)

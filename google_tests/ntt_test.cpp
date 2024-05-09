@@ -265,3 +265,21 @@ TEST(NttDiffPolyTest, NttDiffPolyTest) {
 //
 //    printBanner("NttRotTest");
 //}
+
+TEST(NTT_TEST, bit_rev_test) {
+    int N = 32;
+    std::vector<NttType> vec(N);
+    for (int i = 0; i < N; i++) {
+        vec[i] = i;
+    }
+    for (int j = 0; j < N; j++) {
+        std::cout << j << ":" << vec[j] << " ";
+    }
+    std::cout<<std::endl;
+    bitRevShuffle(vec, N);
+    for (int k = 0; k < N; k++) {
+        std::cout << k << ":" << vec[k] << " ";
+    }
+    std::cout<<std::endl;
+
+}
