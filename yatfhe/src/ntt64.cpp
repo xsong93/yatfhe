@@ -1,18 +1,20 @@
 //
 // Created by ic on 24-4-29.
 //
-#include "yatfhe/ntt64.h"
-//#include "yatfhe/ntt.h"
-#include "yatfhe/numeric_functions.h"
-#include "yatfhe/polynomial.h"
 #include <iostream>
 #include <gmp.h>
 #include <string>
 #include <cmath>
+#include "yatfhe/ntt64.h"
+#include "yatfhe/numeric_functions.h"
+#include "yatfhe/polynomial.h"
+#include "yatfhe/yatfhe_parameters.h"
 
-ntt64 POW(ntt64 BASE, ntt64 EXP, ntt64 MODU) {
+//TW_PARAM twParam(YatfheParameters::N);
+
+Ntt64 POW(Ntt64 BASE, Ntt64 EXP, Ntt64 MODU) {
     mpz_t base, exp, modu, res;
-    ntt64 RES;
+    Ntt64 RES;
     mpz_init(base);
     mpz_init(exp);
     mpz_init(modu);
@@ -25,24 +27,24 @@ ntt64 POW(ntt64 BASE, ntt64 EXP, ntt64 MODU) {
     return RES;
 }
 
-ntt64 modINV(ntt64 in){
+Ntt64 modINV(Ntt64 in){
     mpz_t a, inv, modu;
     mpz_inits(a, inv, modu, NULL);
     mpz_set_ui(a,in);
     mpz_set_ui(modu,MOD64);
     mpz_invert(inv,a,modu);
-    ntt64 res = mpz_get_ui(inv);
+    Ntt64 res = mpz_get_ui(inv);
     return res;
 }
 
-ntt64 modADD(ntt64 a, ntt64 b) {
-    ntt64 temp = 0;
+Ntt64 modADD(Ntt64 a, Ntt64 b) {
+    Ntt64 temp = 0;
     temp = ((MOD64 - a) > b) ? (a + b) : (a + b - MOD64);
     return temp;
 }
 
-ntt64 modADDscale(ntt64 a, ntt64 b) {
-    ntt64 temp = 0;
+Ntt64 modADDscale(Ntt64 a, Ntt64 b) {
+    Ntt64 temp = 0;
     temp = ((MOD64 - a) > b) ? (a + b) : (a + b - MOD64);
 
     if (temp%2 == 0) {
@@ -50,27 +52,27 @@ ntt64 modADDscale(ntt64 a, ntt64 b) {
     } else {
         temp =  (temp>>1) + ((MOD64 + 1)>>1);
     }
-    return ntt64(temp);
+    return Ntt64(temp);
 }
-ntt64 modSUB(ntt64 a, ntt64 b) {
-    ntt64 temp = 0;
+Ntt64 modSUB(Ntt64 a, Ntt64 b) {
+    Ntt64 temp = 0;
     temp = (a >= b) ? (a - b) : (MOD64 - b + a);
     return temp;
 }
 
 
-ntt64 modSUBscale(ntt64 a, ntt64 b){
-    ntt64 temp = 0;
+Ntt64 modSUBscale(Ntt64 a, Ntt64 b){
+    Ntt64 temp = 0;
     temp = (a >= b) ? (a - b) : (MOD64 - b + a);
     if (temp%2 == 0) {
         temp = temp >> 1;
     } else {
         temp =  (temp>>1) + ((MOD64 + 1)>>1);
     }
-    return ntt64(temp);
+    return Ntt64(temp);
 }
 
-ntt64 modMULT(ntt64 a, ntt64 b) {
+Ntt64 modMULT(Ntt64 a, Ntt64 b) {
     mpz_t A, B, TEMP, P;
     mpz_init(A);
     mpz_init(B);
@@ -81,10 +83,10 @@ ntt64 modMULT(ntt64 a, ntt64 b) {
     mpz_set_ui(P,MOD64);
     mpz_mul(TEMP, A, B);
     mpz_mod(TEMP, TEMP, P);
-    return ntt64(mpz_get_ui(TEMP));
+    return Ntt64(mpz_get_ui(TEMP));
 }
 
-ntt64 modmul(ntt64 x, ntt64 y) {
+Ntt64 modmul(Ntt64 x, Ntt64 y) {
     auto x0 = (uint32_t)x;
     auto x1 = (uint32_t)(x >> 32);
     auto y0 = (uint32_t)y;
@@ -117,7 +119,7 @@ ntt64 modmul(ntt64 x, ntt64 y) {
     return MOD64 - minus + plus;
 }
 
-void bit_rev(std::vector<ntt64>& x) {
+void bit_rev(std::vector<Ntt64>& x) {
     int j = 0;
     int b = 0;
     int N = int(x.size());
@@ -149,16 +151,16 @@ int clog2(int N) {
 void genTW_ROM(TW_ROM& tw_rom) {
     auto w_n = (tw_rom.N) >> 1;
     auto phi_n = tw_rom.N;
-    ntt64 w_q = ntt64((MOD64 - 1)/(w_n<<1));
-    ntt64 phi_q = ntt64((MOD64 - 1)/(phi_n<<1));
-    ntt64 temp = 0;
+    Ntt64 w_q = Ntt64((MOD64 - 1)/(w_n<<1));
+    Ntt64 phi_q = Ntt64((MOD64 - 1)/(phi_n<<1));
+    Ntt64 temp = 0;
     for (int i = 0; i < w_n; i++) {
-        temp = POW(PRIM_ROOT64, ntt64(i * w_q), MOD64);
+        temp = POW(PRIM_ROOT64, Ntt64(i * w_q), MOD64);
         tw_rom.w_rom[i] = temp;
         tw_rom.inv_w_rom[i] = modINV(temp);
     }
     for (int j = 0; j < phi_n; j++) {
-        temp = POW(PRIM_ROOT64, ntt64(j*phi_q),MOD64);
+        temp = POW(PRIM_ROOT64, Ntt64(j*phi_q),MOD64);
         tw_rom.phi_rom[j] = temp;
         tw_rom.inv_phi_rom[j] = modINV(temp);
     }
@@ -168,9 +170,9 @@ void genNWCparam(TW_PARAM& nwc_tw,const int n, const TW_ROM& tw_rom, const std::
     int lvl = clog2(n);
     auto w_n = n >> 1;
     auto phi_n = n;
-    ntt64 w_q = ntt64((MOD64 - 1)/(w_n<<1));
-    ntt64 phi_q = ntt64((MOD64 - 1)/(phi_n<<1));
-    ntt64 tw_temp = 0, phi_temp = 0, nwc_temp = 0;
+    Ntt64 w_q = Ntt64((MOD64 - 1)/(w_n<<1));
+    Ntt64 phi_q = Ntt64((MOD64 - 1)/(phi_n<<1));
+    Ntt64 tw_temp = 0, phi_temp = 0, nwc_temp = 0;
     auto scale = 0, phi_size = 0, tw_size = 0, phi_probe = 0;
     auto debug_tw = 0;
     if (str == "NWC-DIT-NR-NNT") {
@@ -215,7 +217,7 @@ void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& ntt
     const auto& in = IN.coeffs;
     const auto& N = IN.N;
     res = in;
-//    std::vector<ntt64> in(N,0);
+//    std::vector<Ntt64> in(N,0);
 
     const auto& tw = ntt_param.tw_factor;
     const auto lvl = clog2(N);
@@ -223,8 +225,8 @@ void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& ntt
     auto block = 0;
     auto block_size = 0;
     auto tw_index = 0;
-//    ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
-    ntt64 temp_add, temp_sub, temp_mult;
+//    Ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
+    Ntt64 temp_add, temp_sub, temp_mult;
 //    int pos_a, pos_b;
     for (auto i = 0; i < lvl; i++) {
         block = N >> (lvl-i);
@@ -254,9 +256,9 @@ void doNTT(Ntt64Polynomial& RES, const IntPolynomial& IN, const TW_PARAM& ntt_pa
     Ntt64Polynomial format_input(N);
     for (int i = 0; i < N; i++) {
         if (IN.coeffs[i] >= 0){
-            format_input.coeffs[i] = ntt64(IN.coeffs[i]);
+            format_input.coeffs[i] = Ntt64(IN.coeffs[i]);
         } else {
-            format_input.coeffs[i] = ntt64(IN.coeffs[i] + MOD64);
+            format_input.coeffs[i] = Ntt64(IN.coeffs[i] + MOD64);
         }
     }
     DIT_NR(RES, format_input, ntt_param);
@@ -273,9 +275,9 @@ void DIF_RN(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& int
     auto block = 0;
     auto block_size = 0;
     auto tw_index = 0;
-//    ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
+//    Ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
     res = in;
-    ntt64 temp_add, temp_sub, temp_mult;
+    Ntt64 temp_add, temp_sub, temp_mult;
 //    int pos_a, pos_b;
     for (auto i = 0; i < lvl; i++) {
         block = N >> (i + 1);
@@ -313,9 +315,9 @@ void doINTT(IntPolynomial & RES, const Ntt64Polynomial& IN, const TW_PARAM& intt
         } else {
             temp_ntt = int64_t(res.coeffs[i]);
         }
-        temp_poly = uint32_t(temp_ntt & mask);
-        if (temp_poly >= poly_max) {
-            RES.coeffs[i] = int32_t(temp_poly - (poly_max<<1));
+        temp_poly = uint32_t(temp_ntt & NTT64_MASK);
+        if (temp_poly >= POLY_MAX) {
+            RES.coeffs[i] = int32_t(temp_poly - (POLY_MAX<<1));
         } else {
             RES.coeffs[i] = int32_t(temp_poly);
         }

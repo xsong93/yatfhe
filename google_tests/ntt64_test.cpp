@@ -19,10 +19,8 @@ TEST(ntt64_test, ntt64_test){
     TW_PARAM nwc_itw(depth);
     TW_ROM tw_rom(N);
     genTW_ROM(tw_rom);
-    std::string str_ntt = "NWC-DIT-NR-NNT";
-    std::string str_intt = "NWC-DIF-RN-INNT";
-    genNWCparam(nwc_tw,N,tw_rom,str_ntt);
-    genNWCparam(nwc_itw,N,tw_rom,str_intt);
+    genNWCparam(nwc_tw, N, tw_rom, STR_NTT);
+    genNWCparam(nwc_itw, N, tw_rom, STR_INTT);
     IntPolynomial a{N}, b{N}, res{N}, ref{N}, test{N};
     Ntt64Polynomial a_ntt{N}, b_ntt{N}, mul_ntt{N};
     for (int i = 0; i < N; i++) {

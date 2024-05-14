@@ -14,6 +14,7 @@
 #ifdef TORUS32
 using Torus = int32_t; // use 32-bit int as torus to handle modular arithmetic naturally
 using Ntt32 = uint32_t;
+using Ntt64 = uint64_t;
 using UnsignedInteger = uint32_t;
 using NttType = uint64_t;
 using Integer = int32_t;
