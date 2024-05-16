@@ -15,9 +15,9 @@ using namespace std;
 TEST(ntt64_test, ntt64_test){
     int N = 4096;
     int depth = clog2(N);
-    TW_PARAM nwc_tw(depth);
-    TW_PARAM nwc_itw(depth);
-    TW_ROM tw_rom(N);
+    TwParam nwc_tw(depth);
+    TwParam nwc_itw(depth);
+    TwRom tw_rom(N);
     genTW_ROM(tw_rom);
     genNWCparam(nwc_tw, N, tw_rom, STR_NTT);
     genNWCparam(nwc_itw, N, tw_rom, STR_INTT);
@@ -44,9 +44,9 @@ TEST(ntt64_test, ntt64_test){
 TEST(ntt64_test, single_test) {
     int N = 1024;
     int depth = clog2(N);
-    TW_PARAM nwc_tw(depth);
-    TW_PARAM nwc_itw(depth);
-    TW_ROM tw_rom(N);
+    TwParam nwc_tw(depth);
+    TwParam nwc_itw(depth);
+    TwRom tw_rom(N);
     genTW_ROM(tw_rom);
     std::string str_ntt = "NWC-DIT-NR-NNT";
     std::string str_intt = "NWC-DIF-RN-INNT";

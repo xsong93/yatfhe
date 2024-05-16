@@ -13,7 +13,7 @@ struct YatfheParameters {
     int n {630};
     double lweStdDev {2.98023e-08}; // 2^-15
     // RLWE params
-    static const int N {1024};
+    int N {1024};
     int driftPhase {N / torusBase};
     int k {1};
     double rlweStdDev {2.98023223876953e-8}; // 2^-25

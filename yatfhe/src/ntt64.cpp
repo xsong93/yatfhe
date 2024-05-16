@@ -10,7 +10,9 @@
 #include "yatfhe/polynomial.h"
 #include "yatfhe/yatfhe_parameters.h"
 
-//TW_PARAM twParam(YatfheParameters::N);
+TwParam NWC_TW64;
+TwParam NWC_ITW64;
+TwRom TW_ROM64;
 
 Ntt64 POW(Ntt64 BASE, Ntt64 EXP, Ntt64 MODU) {
     mpz_t base, exp, modu, res;
@@ -148,7 +150,7 @@ int clog2(int N) {
     return res;
 }
 
-void genTW_ROM(TW_ROM& tw_rom) {
+void genTW_ROM(TwRom& tw_rom) {
     auto w_n = (tw_rom.N) >> 1;
     auto phi_n = tw_rom.N;
     Ntt64 w_q = Ntt64((MOD64 - 1)/(w_n<<1));
@@ -166,7 +168,7 @@ void genTW_ROM(TW_ROM& tw_rom) {
     }
 }
 
-void genNWCparam(TW_PARAM& nwc_tw,const int n, const TW_ROM& tw_rom, const std::string str) {
+void genNWCparam(TwParam& nwc_tw,const int n, const TwRom& tw_rom, const std::string str) {
     int lvl = clog2(n);
     auto w_n = n >> 1;
     auto phi_n = n;
@@ -212,7 +214,7 @@ void genNWCparam(TW_PARAM& nwc_tw,const int n, const TW_ROM& tw_rom, const std::
 }
 
 
-void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& ntt_param) {
+void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TwParam& ntt_param) {
     auto& res = RES.coeffs;
     const auto& in = IN.coeffs;
     const auto& N = IN.N;
@@ -251,7 +253,48 @@ void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& ntt
         }
     }
 }
-void doNTT(Ntt64Polynomial& RES, const IntPolynomial& IN, const TW_PARAM& ntt_param) {
+
+void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial& IN) {
+    auto& res = RES.coeffs;
+    const auto& in = IN.coeffs;
+    const auto& N = IN.N;
+    res = in;
+//    std::vector<Ntt64> in(N,0);
+
+    const auto& tw = NWC_TW64.tw_factor;
+    const auto lvl = clog2(N);
+    auto gap = 0;
+    auto block = 0;
+    auto block_size = 0;
+    auto tw_index = 0;
+//    Ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
+    Ntt64 temp_add, temp_sub, temp_mult;
+//    int pos_a, pos_b;
+    for (auto i = 0; i < lvl; i++) {
+        block = N >> (lvl-i);
+        block_size = N >> i;
+        gap = block_size >> 1;
+//        pos_a = 0; pos_b = 0;
+        for (auto j = 0; j < block; j++) { //debug:tw_index overflow
+            tw_index = j;
+            for (auto k = 0; k < gap; k++) {
+//                flag_a = res[j*block_size + k];
+//                flag_b = res[j*block_size + k + gap];
+//                flag_tw = tw[i][tw_index];
+//                pos_a = j*block_size + k;
+//                pos_b = j*block_size + k + gap;
+                temp_mult = modmul(res[j*block_size + k + gap],tw[i][tw_index]);
+                temp_add = modADD(res[j*block_size + k], temp_mult);
+                temp_sub = modSUB(res[j*block_size + k], temp_mult);
+
+                res[j*block_size + k] = temp_add;
+                res[j*block_size + k + gap] = temp_sub;
+            }
+        }
+    }
+}
+
+void doNTT(Ntt64Polynomial& RES, const IntPolynomial& IN, const TwParam& ntt_param) {
     auto N = IN.N;
     Ntt64Polynomial format_input(N);
     for (int i = 0; i < N; i++) {
@@ -264,11 +307,24 @@ void doNTT(Ntt64Polynomial& RES, const IntPolynomial& IN, const TW_PARAM& ntt_pa
     DIT_NR(RES, format_input, ntt_param);
 }
 
+void doNTT(Ntt64Polynomial& RES, const IntPolynomial& IN) {
+    auto N = IN.N;
+    Ntt64Polynomial format_input(N);
+    for (int i = 0; i < N; i++) {
+        if (IN.coeffs[i] >= 0){
+            format_input.coeffs[i] = Ntt64(IN.coeffs[i]);
+        } else {
+            format_input.coeffs[i] = Ntt64(IN.coeffs[i] + MOD64);
+        }
+    }
+    DIT_NR(RES, format_input, NWC_TW64);
+}
 
-void DIF_RN(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& intt_param) {
+
+void DIF_RN(Ntt64Polynomial& RES, const Ntt64Polynomial& IN) {
     auto &res = RES.coeffs;
     const auto &in = IN.coeffs;
-    const auto &tw = intt_param.tw_factor;
+    const auto &tw = NWC_ITW64.tw_factor;
     const auto &N = IN.N;
     const auto lvl = clog2(N);
     auto gap = 0;
@@ -303,10 +359,10 @@ void DIF_RN(Ntt64Polynomial& RES, const Ntt64Polynomial& IN, const TW_PARAM& int
     }
 }
 
-void doINTT(IntPolynomial & RES, const Ntt64Polynomial& IN, const TW_PARAM& intt_param) {
+void doINTT(IntPolynomial & RES, const Ntt64Polynomial& IN) {
     auto N = IN.N;
     Ntt64Polynomial res(N);
-    DIF_RN(res,IN,intt_param);
+    DIF_RN(res,IN);
     int64_t temp_ntt = 0;
     uint32_t temp_poly = 0;
     for (int i = 0; i < N; i++) {
@@ -324,3 +380,12 @@ void doINTT(IntPolynomial & RES, const Ntt64Polynomial& IN, const TW_PARAM& intt
     }
 }
 
+void initGlobalParamsNtt64(int N) {
+    auto depth = clog2(N);
+    TwParam::initTwParam(NWC_TW64, depth);
+    TwParam::initTwParam(NWC_ITW64, depth);
+    TwRom::initTwRom(TW_ROM64, N);
+    genTW_ROM(TW_ROM64);
+    genNWCparam(NWC_TW64, N, TW_ROM64, STR_NTT);
+    genNWCparam(NWC_ITW64, N, TW_ROM64, STR_INTT);
+}
