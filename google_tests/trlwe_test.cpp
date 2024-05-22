@@ -12,6 +12,7 @@
 
 TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
     YatfheParameters param {};
+    initGlobalParamsNtt64(param.N);
     param.k = 5;
     param.N = 1024;
 
@@ -25,7 +26,7 @@ TEST(TrlweEncDecSingleSampleTest, TrlweEncDecSingleSampleTest) {
     Torus mu = doubleToTorus32(plain);
 
     DoublePolynomial output {param.N};
-//    symEncTrlweSingleSampleNtt(trlwe, trlweDft, trlweKey, mu, param.rlweStdDev);
+//    symEncTrlweSingleSampleNtt(trlwe, trlweDft, trlweKey, mu);
     symEncTrlweSingleSample(trlwe, trlweKey, mu);
 //    printTrlweAB(trlwe, "trlwe");
 //    applyInttForAB(intt, trlweDft);

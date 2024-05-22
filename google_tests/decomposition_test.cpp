@@ -22,7 +22,7 @@ UnsignedInteger powInt(UnsignedInteger base, UnsignedInteger exponent) {
     return result;
 }
 
-TEST(SignedDecompTest, SignedDecompTest) {
+TEST(DecompositionTest, SignedDecompTest) {
     YatfheParameters param {};
     DecomposedData decomp {param.ksLevel};
     std::vector<Torus> data (10);
@@ -38,7 +38,7 @@ TEST(SignedDecompTest, SignedDecompTest) {
     printBanner("SignedDecomp");
 }
 
-TEST(DecomposeTest, DecomposeTest) {
+TEST(DecompositionTest, DecomposeTest) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;
@@ -55,7 +55,7 @@ TEST(DecomposeTest, DecomposeTest) {
     printBanner("Decompose");
 }
 
-TEST(DecomposeOverBSingleStage, DecomposeOverBSingleStage) {
+TEST(DecompositionTest, DecomposeOverBSingleStage) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;
@@ -78,7 +78,7 @@ TEST(DecomposeOverBSingleStage, DecomposeOverBSingleStage) {
     printBanner("DecomposeOverBSingleStage");
 }
 
-TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
+TEST(DecompositionTest, DecomposeOverBMultiStages) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;
@@ -132,8 +132,9 @@ TEST(DecomposeOverBMultiStages, DecomposeOverBMultiStages) {
     printBanner("DecomposeOverBMultiStages");
 }
 
-TEST(DecomposeTrlweTest, DecomposeTrlweTest) {
+TEST(DecompositionTest, DecomposeTrlweTest) {
     YatfheParameters param {};
+    initGlobalParamsNtt64(param.N);
     param.radixBits = 4;
     param.l = 8;
     param.k = 2;
@@ -141,13 +142,6 @@ TEST(DecomposeTrlweTest, DecomposeTrlweTest) {
     TrlweDft inDft {param.k, param.N};
     Trlwe recomp {param.k, param.N};
     TrlweDft recompDft {param.k, param.N};
-
-//    param.N = 4;
-//    in.a[0].coeffs = {-1,-2,-3,-4};
-//    in.a[1].coeffs = {2,2,-2,-2};
-//    in.b.coeffs = {1<<24, 1<<16, 1<<8, 1};
-//    applyNttForAB(inDft, in);
-//    printTrlweAB(in, "in");
 
     Torus mu = doubleToTorus32(1.0 / param.torusBase);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
@@ -194,7 +188,7 @@ TEST(DecomposeTrlweTest, DecomposeTrlweTest) {
     printBanner("DecomposeTrlweTest");
 }
 
-TEST(DecomposedAddSub, DecomposedAddSub) {
+TEST(DecompositionTest, DecomposedAddSub) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;
@@ -225,7 +219,7 @@ TEST(DecomposedAddSub, DecomposedAddSub) {
 
 
 // Actually, identical logic with DecomposeOverB test.
-TEST(DecomposedMult, DecomposedMult) {
+TEST(DecompositionTest, DecomposedMult) {
     YatfheParameters param {};
     param.radixBits = 4;
     param.ksLevel = 8;

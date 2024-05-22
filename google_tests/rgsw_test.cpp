@@ -11,8 +11,9 @@
 #include "yautil/tool.h"
 #include "yatfhe/ntt.h"
 
-TEST(RgswEncDecTest, RgswEncDecTest) {
+TEST(RgswTest, RgswEncDecTest) {
     const YatfheParameters param {};
+    initGlobalParamsNtt64(param.N);
 
     // ken gen
     TrgswKey trgswKey {param};
@@ -25,8 +26,8 @@ TEST(RgswEncDecTest, RgswEncDecTest) {
     Integer plain = 7;
 //    trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, plain);
     trgswEncrypt(trgsw, param, trgswKey, plain);
-//    printTrgsw(trgsw, "trgsw");
 
+//
 //    // test identity for trgsw and trgswDft value
 //    for (auto i = 0; i < trgsw.l; i++) {
 //        for (auto j = 0; j < trgsw.trlweSamples[i].size(); j++) {

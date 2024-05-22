@@ -57,16 +57,6 @@ void trgswAddInteger(Trgsw& trgsw, const Integer mu, const YatfheParameters& par
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
     for (auto lvl = 0; lvl < param.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
-//            Trlwe& trlweSample = trgsw.trlweSamples[lvl][row];
-//            TrlweDft& trlweDftSample = trgswDft.trlweDftSamples[lvl][row];
-//            initCoeffsWithGaussianNoiseSingleSample(trlweSample.b.coeffs, 0, param.lweStdDev); // init b = 0 + e
-//            applyNtt(trlweDftSample.b, trlweSample.b);
-//            for (auto col = 0; col < param.k; col++) {
-//                initCoeffsViaUniformDistribution(trlweSample.a[col].coeffs); // init a
-//                applyNtt(trlweDftSample.a[col], trlweSample.a[col]);
-//                modularAccumulate(trlweDftSample.b.coeffs, trlweDftSample.a[col].coeffs, trgswKey.trlweKey.sDft[col].coeffs);
-//            }
-//            applyIntt(trlweSample.b, trlweDftSample.b);
             symEncTrlweSingleSampleNtt(trgsw.trlweSamples[lvl][row], trgswDft.trlweDftSamples[lvl][row], trgswKey.trlweKey, 0);
         }
     }
@@ -74,20 +64,6 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 
 // output += mu * G^T
 void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
-    // add the diagonal matrix (mu * G^T)_ijk to the output
-    //       ( 1/B^l                         )
-    //      .                              . .
-    //    .                              .   .
-    //  ( 1/B^2                        )     .
-    // ( 1/B                         )       .
-    // (     1/B                     )       .
-    // (          .                  )       .
-    // (              .              )     .
-    // (                  .          )   .
-    // (                      .      ) .
-    // (                         1/B )
-    // ( a_0  a_1          a_k-1  b  )
-
     for (auto lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
         // todo: decompose on second level
