@@ -3,89 +3,130 @@
 //
 #include <iostream>
 #include "yatfhe/ntt.h"
-#include "yautil/ntt_constants.h"
+#include "yatfhe/ntt64.h"
 #include "yautil/tool.h"
 #include "yatfhe/numeric_functions.h"
 
 using namespace std;
 
-// Function to perform Number Theoretic Transform (NTT)
-void applyNtt(LagrangePolynomial& out, const IntPolynomial& in) {
-    auto& input = in.coeffs;
+void DITNRLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
     auto& output = out.coeffs;
-    const auto N = out.N;
+    const auto& input = in.coeffs;
+    const auto& N = in.N;
+    output = input;
 
-    for (int i = 0; i < N; i++) {
-        uint64_t inputValue = input[i] < 0 ? input[i] + MODULUS : input[i];
-        output[i] = modMul(inputValue, phi_normal_2[i]);
-    }
-    bitRevShuffle(output, N);
-    int32_t wbarr = 0;
+    const auto& tw = NWC_TW64.tw_factor;
+    const auto lvl = clog2(N);
+    auto gap = 0;
+    auto block = 0;
+    auto block_size = 0;
+    auto tw_index = 0;
+    Ntt64 temp_add, temp_sub, temp_mult;
+    for (auto i = 0; i < lvl; i++) {
+        block = N >> (lvl-i);
+        block_size = N >> i;
+        gap = block_size >> 1;
+        for (auto j = 0; j < block; j++) {
+            tw_index = j;
+            for (auto k = 0; k < gap; k++) {
+                temp_mult = modMul(output[j*block_size + k + gap],tw[i][tw_index]);
+                temp_add = modAdd(output[j*block_size + k], temp_mult);
+                temp_sub = modSub(output[j*block_size + k], temp_mult);
 
-    // Loop for the NTT algorithm
-    for (int transSize = 2; transSize <= N; transSize *= 2) {
-        uint64_t wb = 1;
-        for (int t = 0; t < (transSize >> 1); t++) {
-            for (int trans = 0; trans < (N / transSize); trans++) {
-                int i = trans * transSize + t;
-                int j = i + (transSize >> 1);
-
-                // Perform butterfly operations
-                uint64_t a = output[i];
-                uint64_t b = (wb == 1) ? output[j] : modMul(output[j], wb);
-                output[i] = modAdd(a, b);
-                output[j] = modSub(a, b);
+                output[j*block_size + k] = temp_add;
+                output[j*block_size + k + gap] = temp_sub;
             }
-            wb = wb_normal_2[wbarr++];
         }
     }
 }
 
-void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial & in, const int mSize) {
-    IntPolynomial intPolynomial(in.N);
-    torusPolyToIntPoly(intPolynomial, in, mSize);
-    printArray(intPolynomial.coeffs, "intPolynomial@applyNttTorus");
-    applyNtt(out, intPolynomial);
+void DIFRNLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
+    auto &output = out.coeffs;
+    const auto &input = in.coeffs;
+    const auto &tw = NWC_ITW64.tw_factor;
+    const auto &N = in.N;
+    const auto lvl = clog2(N);
+    auto gap = 0;
+    auto block = 0;
+    auto block_size = 0;
+    auto tw_index = 0;
+//    Ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
+    output = input;
+    Ntt64 temp_add, temp_sub, temp_mult;
+//    int pos_a, pos_b;
+    for (auto i = 0; i < lvl; i++) {
+        block = N >> (i + 1);
+        block_size = 1 << (i + 1);
+        gap = 1 << i;
+//        pos_a = 0;
+//        pos_b = 0;
+        for (auto j = 0; j < block; j++) { //debug:tw_index overflow
+            tw_index = j;
+            for (auto k = 0; k < gap; k++) {
+//                flag_a = res[j * block_size + k];
+//                flag_b = res[j * block_size + k + gap];
+//                flag_tw = tw[i][tw_index];
+//                pos_a = j * block_size + k;
+//                pos_b = j * block_size + k + gap;
+                temp_add = modADDscale(output[j * block_size + k], output[j * block_size + k + gap]);
+                temp_sub = modSUBscale(output[j * block_size + k], output[j * block_size + k + gap]);
+                temp_mult = modMul(temp_sub, tw[i][tw_index]);
+                output[j * block_size + k] = temp_add;
+                output[j * block_size + k + gap] = temp_mult;
+            }
+        }
+    }
+}
+
+void initGlobalParamsNtt64(int N) {
+    auto depth = clog2(N);
+    TwParam::initTwParam(NWC_TW64, depth);
+    TwParam::initTwParam(NWC_ITW64, depth);
+    TwRom::initTwRom(TW_ROM64, N);
+    genTW_ROM(TW_ROM64);
+    genNWCparam(NWC_TW64, N, TW_ROM64, STR_NTT);
+    genNWCparam(NWC_ITW64, N, TW_ROM64, STR_INTT);
+}
+
+// Function to perform Number Theoretic Transform (NTT)
+void applyNtt(LagrangePolynomial& out, const IntPolynomial& in) {
+    auto N = in.N;
+    LagrangePolynomial format_input(N);
+    for (int i = 0; i < N; i++) {
+        if (in.coeffs[i] >= 0){
+            format_input.coeffs[i] = Ntt64(in.coeffs[i]);
+        } else {
+            format_input.coeffs[i] = Ntt64(in.coeffs[i] + MOD64);
+        }
+    }
+    DITNRLaPoly(out, format_input);
 }
 
 void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
-    vector<NttType> input(in.coeffs.size());
-    copy(in.coeffs.begin(), in.coeffs.end(), input.begin());
-    int32_t N = in.N;
-    LagrangePolynomial temp {N};
-    vector<NttType>& tmp = temp.coeffs;
-    vector<Integer>& output = out.coeffs;
-    int inv = 0;
-    bitRevShuffle(input, N);
-    for (int transSize = 2; transSize <= N; transSize = transSize * 2) {
-        uint64_t wb = 1;
-        for (int t = 0; t < (transSize >> 1); t++) {
-            for (int trans = 0; trans < (N / transSize); trans++) {
-                int i = trans * transSize + t;
-                int j = i + (transSize >> 1);
-                uint64_t a = input[i];
-                uint64_t b = (wb == 1) ? input[j] : modMul(input[j], wb);
-                input[i] = modAdd(a, b);
-                input[j] = modSub(a, b);
-            }
-            wb = wb_inverse_2[inv++];
+    auto N = in.N;
+    LagrangePolynomial res(N);
+    DIFRNLaPoly(res, in);
+    int64_t temp_ntt = 0;
+    uint32_t temp_poly = 0;
+    for (int i = 0; i < N; i++) {
+        if (res.coeffs[i] >= HALF_MOD64) {
+            temp_ntt = int64_t(res.coeffs[i] - MOD64);
+        } else {
+            temp_ntt = int64_t(res.coeffs[i]);
         }
-    }
-    for (int i = 0; i < N; i++) {
-        tmp[i] = modMul(input[i], scale_2);    //scale_2*phi inversev, modulus  (phi inverse sclaed)
-        tmp[i] = modMul(tmp[i], phi_inverse_2[i]);
-    }
-
-    uint64_t med = MODULUS / 2;
-    for (int i = 0; i < N; i++) {
-        output[i] = (int32_t)((tmp[i] & 0xffffffff) - (tmp[i] > med));
+        temp_poly = uint32_t(temp_ntt & NTT64_MASK);
+        if (temp_poly >= POLY_MAX) {
+            out.coeffs[i] = int32_t(temp_poly - (POLY_MAX<<1));
+        } else {
+            out.coeffs[i] = int32_t(temp_poly);
+        }
     }
 }
 
-void bitRevShuffle(std::vector<NttType>& x, int N) {
+void bitRevShuffle(std::vector<NttType>& x) {
     int j = 0;
     int b = 0;
-
+    int N = int(x.size());
     for (int i = 1; i < N; i++) {
         b = N >> 1;  // Initialize b to half of N
         while (j >= b) {
@@ -103,15 +144,15 @@ void bitRevShuffle(std::vector<NttType>& x, int N) {
     }
 }
 
-uint64_t modAdd(uint64_t x, uint64_t y) {
-    return ((MODULUS - x) > y) ? (x + y) : (x + y - MODULUS);
+Ntt64 modAdd(Ntt64 x, Ntt64 y) {
+    return ((MOD64 - x) > y) ? (x + y) : (x + y - MOD64);
 }
 
-uint64_t modSub(uint64_t x, uint64_t y) {
-    return (x >= y) ? (x - y) : (MODULUS - y + x);
+Ntt64 modSub(Ntt64 x, Ntt64 y) {
+    return (x >= y) ? (x - y) : (MOD64 - y + x);
 }
 
-uint64_t modMul(uint64_t x, uint64_t y) {
+Ntt64 modMul(Ntt64 x, Ntt64 y) {
     // Break down x and y into 32-bit components
     auto x0 = (uint32_t)x;
     auto x1 = (uint32_t)(x >> 32);
@@ -142,7 +183,7 @@ uint64_t modMul(uint64_t x, uint64_t y) {
     if (plus >= minus) {
         return (plus - minus);
     }
-    return MODULUS - minus + plus;
+    return MOD64 - minus + plus;
 }
 
 // output_j = aj * bj mod p

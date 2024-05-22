@@ -1,4 +1,5 @@
 #include <iostream>
+#include "yatfhe/ntt.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
@@ -12,6 +13,7 @@
 
 int main(int argc, char **argv) {
     YatfheParameters param {};
+    initGlobalParamsNtt64(param.N);
     COUNT_TIME("init timer", std::cout << std::endl;)
 
     TlweKey tlweKey {param.n, param.lweStdDev};

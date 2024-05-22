@@ -9,7 +9,6 @@
 #include <string>
 #include <gmp.h>
 #include "yatfhe/torus.h"
-#include "yatfhe/ntt.h"
 #include "yatfhe/polynomial.h"
 #include "numeric_functions.h"
 
@@ -54,9 +53,8 @@ extern TwParam NWC_ITW64;
 extern TwRom TW_ROM64;
 
 //----------------------------------------------------------------------------------
-void initGlobalParamsNtt64(int N);
 void genTW_ROM(TwRom& tw_rom);
-void genNWCparam(TwParam& nwc_tw,const int n, const TwRom& tw_rom, const std::string str);
+void genNWCparam(TwParam& nwc_tw,const int n, const TwRom& tw_rom, const std::string& str);
 void doNTT(Ntt64Polynomial& RES, const IntPolynomial & IN, const TwParam& ntt_param);
 void doNTT(Ntt64Polynomial& RES, const IntPolynomial& IN);
 void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial & IN, const TwParam& ntt_param);

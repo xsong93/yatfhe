@@ -19,6 +19,8 @@ bool isPrimitiveRoot(int g, int degree, int mod);
 
 int findPrimitiveRoot(int degree, int totient, int mod);
 
+void initGlobalParamsNtt64(int N);
+
 void applyNtt(LagrangePolynomial& out, const IntPolynomial& in);
 
 void applyNtt32(IntPolynomial& output, const IntPolynomial& input, int root, int mod);
@@ -28,8 +30,6 @@ void applyIntt32(IntPolynomial& output, IntPolynomial& input, int root, int mod)
 int modMul32(int in1, int in2, int mod);
 
 void circularConvolve(IntPolynomial& output, IntPolynomial& poly1, IntPolynomial& poly2, int mod);
-
-void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial & in, int mSize);
 
 void applyIntt(IntPolynomial& out, const LagrangePolynomial& in);
 
@@ -49,7 +49,7 @@ void applyInttForAB(T& out, R& in) {
     applyIntt(out.b, in.b);
 }
 
-void bitRevShuffle(std::vector<NttType>& x, int N);
+void bitRevShuffle(std::vector<NttType>& x);
 
 NttType modAdd(NttType x, NttType y);
 
