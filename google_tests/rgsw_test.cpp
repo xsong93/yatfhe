@@ -6,14 +6,13 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
-#include "yatfhe/bootstrapping.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
-#include "yatfhe/ntt.h"
+#include "yautil/initializer.h"
 
 TEST(RgswTest, RgswEncDecTest) {
-    const YatfheParameters param {};
-    initGlobalParamsNtt64(param.N);
+    YatfheParameters param {};
+    yatfheInit(param);
 
     // ken gen
     TrgswKey trgswKey {param};
@@ -24,8 +23,8 @@ TEST(RgswTest, RgswEncDecTest) {
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};
     Integer plain = 7;
-//    trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, plain);
-    trgswEncrypt(trgsw, param, trgswKey, plain);
+    trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, plain);
+//    trgswEncrypt(trgsw, param, trgswKey, plain);
 
 //
 //    // test identity for trgsw and trgswDft value
@@ -38,20 +37,21 @@ TEST(RgswTest, RgswEncDecTest) {
 //    }
 
     // trgsw dec
-//    Integer dec = trgswDecryptNtt(trgswDft, param, trgswKey);
-    Integer dec = trgswDecrypt(trgsw, param, trgswKey);
+    Integer dec = trgswDecryptNtt(trgswDft, param, trgswKey);
+//    Integer dec = trgswDecrypt(trgsw, param, trgswKey);
     cout << "plain: " << plain << endl;
     cout << "dec: " << dec << endl;
     ASSERT_EQ(plain, dec);
     printBanner("RgswEncDecTest");
 }
 
-TEST(RgswMultTest, RgswMultTest) {
+TEST(RgswTest, RgswMultTestNaive) {
     YatfheParameters param {};
     param.N = 1024;
     param.radixBits = 4;
     param.l = 8;
     param.k = 2;
+    yatfheInit(param);
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
@@ -84,7 +84,58 @@ TEST(RgswMultTest, RgswMultTest) {
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult
-        // todo: ntt/intt failed, fix ntt
+        trgswExternalProduct(out, trgsw, in2, param);
+        printTrlweAB(out, "out");
+
+        // trlwe dec aft-mult
+        symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
+        printArray(decAftP.coeffs, "decAftP");
+        for (auto i = 0 ; i < decAftP.N; i++) {
+            ASSERT_EQ(intModP(mu1 * mu2p, param.torusBase), decAftP.coeffs[i]);
+        }
+    }
+    printBanner("RgswMultTestNaive");
+}
+
+TEST(RgswTest, RgswMultTestNTT) {
+    YatfheParameters param {};
+    param.N = 1024;
+    param.radixBits = 4;
+    param.l = 8;
+    param.k = 2;
+    yatfheInit(param);
+    int ti = 0;
+    while (ti++ < 10) {
+        cout << "iter: " << ti << endl;
+        // ken gen
+        TrgswKey trgswKey {param};
+        TrlweKey& trlweKey = trgswKey.trlweKey;
+        trlweKeyGen(trlweKey);
+
+        // trgsw enc
+        Trgsw trgsw {param};
+        TrgswDft trgswDft {param};
+        Integer mu1 = genIntUniformDist(0, 1);
+        trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, mu1);
+        printf( "trgsw dec: %d.\n", trgswDecryptNtt(trgswDft, param, trgswKey));
+
+        // trlwe enc
+        Trlwe in2 {param.k, param.N};
+        TrlweDft in2Dft {param.k, param.N};
+        Integer mu2p = genIntUniformDist(INT32_MIN, INT32_MAX);
+        Torus mu2 = modSwitchToTorus32(mu2p, param.torusBase);
+        Trlwe out {param.k, param.N};
+        IntPolynomial decPreP {param.N};
+        IntPolynomial decAftP {param.N};
+        symEncTrlweSingleSampleNtt(in2, in2Dft, trlweKey, mu2);
+        printTrlweAB(in2, "trlwe");
+
+        // trlwe dec pre-mult
+        symDecTrlweToIntNtt(decPreP, in2Dft, trlweKey, param.torusBase);
+        printArray(decPreP.coeffs, "decPreP");
+
+        // trgsw mult ntt
+        // todo
         trgswExternalProduct(out, trgsw, in2, param);
         printTrlweAB(out, "out");
 
@@ -106,5 +157,5 @@ TEST(RgswMultTest, RgswMultTest) {
             ASSERT_EQ(intModP(mu1 * mu2p, param.torusBase), decAftP.coeffs[i]);
         }
     }
-    printBanner("RgswMultTest");
+    printBanner("RgswMultTestNTT");
 }

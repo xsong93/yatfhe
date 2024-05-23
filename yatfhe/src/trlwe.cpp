@@ -97,6 +97,15 @@ void symDecTrlweToInt(IntPolynomial& output, const Trlwe& trlwe, const TrlweKey&
     }
 }
 
+void symDecTrlweToIntNtt(IntPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, const int torusBase) {
+    TorusPolynomial tmp {output.N};
+    symDecTrlweWoRoundingNtt(tmp, trlweDft, key);
+    for (auto i = 0; i < tmp.N; i++) {
+        tmp.coeffs[i] = roundTorusError(tmp.coeffs[i], torusBase);
+        output.coeffs[i] = modSwitchFromTorus32(tmp.coeffs[i], torusBase);
+    }
+}
+
 void symDecTrlweWoRounding(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key) {
     for (auto i = 0; i < trlwe.k; i++) {
         polynomialMulAccNaive(output, trlwe.a[i], key.s[i]);
