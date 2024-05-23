@@ -162,8 +162,10 @@ TEST(NttTest, NttSamePolyTest) {
     TorusPolynomial navAdd{N};
     TorusPolynomial navSub{N};
 
-    initCoeffsViaUniformDistribution(poly0.coeffs);
-    initCoeffsViaUniformDistribution(poly2.coeffs);
+    for (auto j = 0; j < N; j++) {
+        poly0.coeffs[j] = genIntUniformDist(IntMin ,IntMax);
+        poly2.coeffs[j] = genIntUniformDist(0 ,1);
+    }
     printArray(poly0.coeffs, "poly0");
     printArray(poly2.coeffs, "poly2");
 
@@ -194,6 +196,50 @@ TEST(NttTest, NttSamePolyTest) {
     }
     printBanner("NttSamePoly");
 }
+
+TEST(NttTest, ConvolutionTest) {
+    COUNT_TIME("init timer", cout << endl;)
+    const int N = 1024;
+    const int k = 2;
+    initGlobalParamsNtt64(N);
+
+    vector<LagrangePolynomial> a(k, LagrangePolynomial(N));
+    vector<LagrangePolynomial> b(k, LagrangePolynomial(N));
+    LagrangePolynomial tmpMul{N};
+
+    vector<TorusPolynomial> poly0(k, TorusPolynomial(N));
+    vector<TorusPolynomial> poly2(k, TorusPolynomial(N));
+    TorusPolynomial resMul{N};
+    TorusPolynomial navMul{N};
+    for (auto i = 0 ; i < k; i++) {
+        for (auto j = 0; j < N; j++) {
+            poly0[i].coeffs[j] = genIntUniformDist(IntMin ,IntMax);
+            poly2[i].coeffs[j] = genIntUniformDist(0 ,1);
+        }
+        printArray(poly0[i].coeffs, "poly0" + to_string(i));
+        printArray(poly2[i].coeffs, "poly2" + to_string(i));
+    }
+
+    COUNT_TIME("NTT_MULT", {
+        for (auto i = 0 ; i < k; i++) {
+            applyNtt(a[i], poly0[i]);
+            applyNtt(b[i], poly2[i]);
+        }
+        calModularInnerProductNtt(tmpMul, a, b);
+        applyIntt(resMul, tmpMul);})
+    COUNT_TIME("NAIVE_MULT",
+        for (auto i = 0 ; i < k; i++) {
+            polynomialMulAccNaive(navMul, poly0[i], poly2[i]);
+        })
+    printArray(resMul.coeffs, "resMul");
+    printArray(navMul.coeffs, "navMul");
+
+    for (int i = 0; i < navMul.N; i++) {
+        EXPECT_NEAR(resMul.coeffs[i], navMul.coeffs[i], doubleToTorus32(0.01));
+    }
+    printBanner("NttSamePoly");
+}
+
 
 //
 //TEST(NttRotTest, NttRotTest) {
