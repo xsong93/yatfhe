@@ -14,7 +14,6 @@ void lweKeyGen(TlweKey& key) {
     for (auto i = 0; i < key.n; i++) {
         key.s[i] = binaryDistrib(rng);
     }
-//    printArray(key.s, "TlweKey");
 }
 
 // b = aj * sj + u + e

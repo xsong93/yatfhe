@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include "gtest/gtest.h"
 #include "yatfhe/ntt.h"
+#include "yatfhe/ntt64.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/numeric_functions.h"
@@ -170,14 +171,14 @@ TEST(NttTest, NttSamePolyTest) {
     printArray(poly2.coeffs, "poly2");
 
     COUNT_TIME("NTT_MULT", {
-                   applyNtt(a, poly0);
-                   applyNtt(b, poly2);
-                   for (int i = 0; i < a.N; i++) {
-                       tmpMul.coeffs[i] = modMul(a.coeffs[i], b.coeffs[i]);
-                   }
-                   applyIntt(resMul, tmpMul);})
+        applyNtt(a, poly0);
+        applyNtt(b, poly2);
+        for (int i = 0; i < a.N; i++) {
+           tmpMul.coeffs[i] = modMULT(a.coeffs[i], b.coeffs[i]);
+        }
+        applyIntt(resMul, tmpMul);})
     COUNT_TIME("NAIVE_MULT",
-               polynomialMulNaive(navMul, poly0, poly2);)
+        polynomialMulNaive(navMul, poly0, poly2);)
 
     for (int i = 0; i < a.N; i++) {
         tmpAdd.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
@@ -190,7 +191,7 @@ TEST(NttTest, NttSamePolyTest) {
     polynomialSub(navSub, poly0, poly2);
 
     for (int i = 0; i < navMul.N; i++) {
-        EXPECT_NEAR(resMul.coeffs[i], navMul.coeffs[i], doubleToTorus32(0.01));
+        EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
         EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
         EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
     }
@@ -200,7 +201,7 @@ TEST(NttTest, NttSamePolyTest) {
 TEST(NttTest, ConvolutionTest) {
     COUNT_TIME("init timer", cout << endl;)
     const int N = 1024;
-    const int k = 2;
+    const int k = 5;
     initGlobalParamsNtt64(N);
 
     vector<LagrangePolynomial> a(k, LagrangePolynomial(N));
@@ -235,7 +236,7 @@ TEST(NttTest, ConvolutionTest) {
     printArray(navMul.coeffs, "navMul");
 
     for (int i = 0; i < navMul.N; i++) {
-        EXPECT_NEAR(resMul.coeffs[i], navMul.coeffs[i], doubleToTorus32(0.01));
+        EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
     }
     printBanner("NttSamePoly");
 }

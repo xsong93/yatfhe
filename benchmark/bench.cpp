@@ -10,10 +10,11 @@
 #include "yautil/control_helper.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
+#include "yautil/initializer.h"
 
 int main(int argc, char **argv) {
     YatfheParameters param {};
-    initGlobalParamsNtt64(param.N);
+    yatfheInit(param);
     COUNT_TIME("init timer", std::cout << std::endl;)
 
     TlweKey tlweKey {param.n, param.lweStdDev};

@@ -9,7 +9,6 @@
 #include <random>
 #include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
-#include "yatfhe/yatfhe_parameters.h"
 
 using namespace std;
 

@@ -29,7 +29,7 @@ void DITNRLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
         for (auto j = 0; j < block; j++) {
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-                temp_mult = modMul(output[j*block_size + k + gap],tw[i][tw_index]);
+                temp_mult = modMULT(output[j*block_size + k + gap],tw[i][tw_index]);
                 temp_add = modAdd(output[j*block_size + k], temp_mult);
                 temp_sub = modSub(output[j*block_size + k], temp_mult);
 
@@ -70,7 +70,7 @@ void DIFRNLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
 //                pos_b = j * block_size + k + gap;
                 temp_add = modADDscale(output[j * block_size + k], output[j * block_size + k + gap]);
                 temp_sub = modSUBscale(output[j * block_size + k], output[j * block_size + k + gap]);
-                temp_mult = modMul(temp_sub, tw[i][tw_index]);
+                temp_mult = modMULT(temp_sub, tw[i][tw_index]);
                 output[j * block_size + k] = temp_add;
                 output[j * block_size + k + gap] = temp_mult;
             }
@@ -152,6 +152,7 @@ Ntt64 modSub(Ntt64 x, Ntt64 y) {
     return (x >= y) ? (x - y) : (MOD64 - y + x);
 }
 
+// todo: debug
 Ntt64 modMul(Ntt64 x, Ntt64 y) {
     // Break down x and y into 32-bit components
     auto x0 = (uint32_t)x;
@@ -190,7 +191,7 @@ Ntt64 modMul(Ntt64 x, Ntt64 y) {
 void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {
     const auto N = output.size();
     for (auto j = 0; j < N; j++) {
-        output[j] = modMul(coeffsA[j], coeffsB[j]);
+        output[j] = modMULT(coeffsA[j], coeffsB[j]);
     }
 }
 
@@ -198,7 +199,7 @@ void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coe
 void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
     const auto N = coeffsB.size();
     for (auto j = 0; j < N; j++) {
-        auto tmp = modMul(coeffsA[j], coeffsS[j]);
+        auto tmp = modMULT(coeffsA[j], coeffsS[j]);
         coeffsB[j] = modAdd(coeffsB[j], tmp);
     }
 }

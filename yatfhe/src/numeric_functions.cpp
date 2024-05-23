@@ -3,10 +3,8 @@
 //
 #include <random>
 #include <iostream>
-#include <iomanip>
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/torus.h"
-#include "yatfhe/yatfhe_parameters.h"
 
 using namespace std;
 random_device rd;
