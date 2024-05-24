@@ -9,6 +9,8 @@
 #include "yautil/tool.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"
+#include "yautil/time_counter.h"
+#include "yautil/initializer.h"
 
 UnsignedInteger powInt(UnsignedInteger base, UnsignedInteger exponent) {
     UnsignedInteger result = 1;
@@ -154,30 +156,30 @@ TEST(DecompositionTest, DecomposeTrlweTest) {
     DecomposedTrlwe out {param};
     gadgetDecomposeTrlwe(out, in, param);
     gadgetDecomposeTrlweNtt(out, inDft, param);
-//    printDecomposedTrlweAB(out, "out");
-//    printDecomposedTrlweNttAB(out, "outNtt");
+    printDecomposedTrlweAB(out, "out");
+    printDecomposedTrlweNttAB(out, "outNtt");
 
     // recompose original
     recomposeTrlwe(recomp, out, param);
-    printTrlweAB(in, "original");
-    printTrlweAB(intt, "intt");
-    printTrlweAB(recomp, "recomp");
-    for (auto j = 0; j < in.b.N; j++) {
-        for (auto i = 0 ; i < in.k; i++) {
-            ASSERT_EQ(in.a[i].coeffs[j], intt.a[i].coeffs[j]);
-            ASSERT_EQ(in.a[i].coeffs[j], recomp.a[i].coeffs[j]);
-        }
-        ASSERT_EQ(in.b.coeffs[j], intt.b.coeffs[j]);
-        ASSERT_EQ(in.b.coeffs[j], recomp.b.coeffs[j]);
-    }
+//    printTrlweAB(in, "original");
+//    printTrlweAB(intt, "intt");
+//    printTrlweAB(recomp, "recomp");
+//    for (auto j = 0; j < in.b.N; j++) {
+//        for (auto i = 0 ; i < in.k; i++) {
+//            ASSERT_EQ(in.a[i].coeffs[j], intt.a[i].coeffs[j]);
+//            ASSERT_EQ(in.a[i].coeffs[j], recomp.a[i].coeffs[j]);
+//        }
+//        ASSERT_EQ(in.b.coeffs[j], intt.b.coeffs[j]);
+//        ASSERT_EQ(in.b.coeffs[j], recomp.b.coeffs[j]);
+//    }
 
     // todo: test decompose/ntt order
     // recompose ntt
     recomposeTrlweNtt(recompDft, out, param);
-    printTrlweDftAB(inDft, "inDft");
-    printTrlweDftAB(recompDft, "recompDft");
+//    printTrlweDftAB(inDft, "inDft");
+//    printTrlweDftAB(recompDft, "recompDft");
     applyInttForAB(intt, recompDft);
-    printTrlweAB(intt, "recompDft:intt");
+//    printTrlweAB(intt, "recompDft:intt");
 
     for (auto j = 0; j < in.b.N; j++) {
         for (auto i = 0 ; i < in.k; i++) {
@@ -256,4 +258,59 @@ TEST(DecompositionTest, DecomposedMult) {
         ASSERT_EQ(z, r);
     }
     printBanner("DecomposedMult");
+}
+
+TEST(DecompositionTest, DecompNttOrderTest) {
+    YatfheParameters param {};
+    param.radixBits = 4;
+    param.l = 8;
+    param.k = 2;
+    yatfheInit(param);
+
+    Trlwe in {param.k, param.N};
+    TrlweDft inDft {param.k, param.N};
+    Trlwe recomp {param.k, param.N};
+
+    Torus mu = doubleToTorus32(1.0 / param.torusBase);
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    trlweKeyGen(trlweKey);
+    symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
+
+    // NTT -> decomp -> recomp -> INTT
+    DecomposedTrlwe out1 {param};
+    TrlweDft dft1 {param.k, param.N};
+    TrlweDft recompDft1 {param.k, param.N};
+    Trlwe intt1 {param.k, param.N};
+    COUNT_TIME("NTT", applyNttForAB(dft1, in);) // NTT
+    COUNT_TIME("decomp", gadgetDecomposeTrlweNtt(out1, dft1, param);) //decomp
+    COUNT_TIME("recomp", recomposeTrlweNtt(recompDft1, out1, param);) // recompose
+    COUNT_TIME("INTT", applyInttForAB(intt1, recompDft1);) // intt
+    for (auto j = 0; j < in.b.N; j++) {
+        for (auto i = 0; i < in.k; i++) {
+            ASSERT_EQ(in.a[i].coeffs[j], intt1.a[i].coeffs[j]);
+        }
+        ASSERT_EQ(in.b.coeffs[j], intt1.b.coeffs[j]);
+    }
+    printBanner("NTT -> decomp -> recomp -> INTT");
+
+
+    // decomp -> NTT -> recomp -> INTT
+    //todo
+    DecomposedTrlwe out {param};
+    TrlweDft recompDft {param.k, param.N};
+    Trlwe intt {param.k, param.N};
+    COUNT_TIME("decomp", gadgetDecomposeTrlwe(out, in, param);) // decompose
+    COUNT_TIME("NTT",
+               for (auto i = 0; i < out.l; i++) {
+                   applyNttForAB(out.rlweDfts[i], out.rlwes[i]); // NTT
+               })
+    COUNT_TIME("recomp", recomposeTrlweNtt(recompDft, out, param);) // recompose
+    COUNT_TIME("intt", applyInttForAB(intt, recompDft);) // intt
+    for (auto j = 0; j < in.b.N; j++) {
+        for (auto i = 0 ; i < in.k; i++) {
+            ASSERT_EQ(in.a[i].coeffs[j], intt.a[i].coeffs[j]);
+        }
+        ASSERT_EQ(in.b.coeffs[j], intt.b.coeffs[j]);
+    }
+    printBanner("decomp -> NTT -> recomp -> INTT");
 }

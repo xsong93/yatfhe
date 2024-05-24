@@ -210,3 +210,7 @@ void calModularInnerProductNtt(LagrangePolynomial& b, const vector<LagrangePolyn
         modularAccumulate(b.coeffs, a[i].coeffs, s[i].coeffs);
     }
 }
+
+void calModularInnerProductNtt(LagrangePolynomial& b, const LagrangePolynomial& a, const LagrangePolynomial& s) {
+    modularAccumulate(b.coeffs, a.coeffs, s.coeffs);
+}

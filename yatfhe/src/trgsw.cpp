@@ -79,57 +79,10 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, cons
             // add to b_lk
             trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
             applyNtt(trgswDft.trlweDftSamples[lvl][row].b , trgsw.trlweSamples[lvl][row].b);
-//            LagrangePolynomial tmp(param.N);
-//            generateLagrangePolynomialWithValueAt(tmp, mu * g[layer], 0);
-//            lagrangePolynomialAccumulate(output.trlweDftSamples[layer][row].b, tmp);
         }
     }
 }
 
-//// trgsw(0): [trlwe(0)]  (k+1)l rows
-//void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, TrgswKey& trgswKey) {
-//    for (auto lvl = 0; lvl < param.lDft; lvl++) {
-//        for (auto row = 0; row < param.k + 1; row++) {
-//            symEncTrlweSingleSample(trgsw.trlweSamples[lvl][row], trgswDft.trlweDftSamples[lvl][row], trgswKey.trlweKey, 0, param.lweStdDev);
-//        }
-//    }
-//}
-//
-//// output += mu * G^T
-//void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, int64_t mu, const YatfheParameters& param) {
-//    // add the diagonal matrix (mu * G^T)_ijk to the output
-//    //       ( 1/B^l                         )
-//    //      .                              . .
-//    //    .                              .   .
-//    //  ( 1/B^2                        )     .
-//    // ( 1/B                         )       .
-//    // (     1/B                     )       .
-//    // (          .                  )       .
-//    // (              .              )     .
-//    // (                  .          )   .
-//    // (                      .      ) .
-//    // (                         1/B )
-//    // ( a_0  a_1          a_k-1  b  )
-//
-//    for (auto lvl = 0; lvl < param.lDft; lvl++) {
-//        auto decomposedMu = mu << (param.dftBits -  (lvl + 1) * param.radixBits);
-//        cout << decomposedMu << endl;
-//        LagrangePolynomial tmp(param.N, decomposedMu);
-//        for (auto row = 0; row < param.k + 1; row++) {
-//
-//            // add to a_lii
-//            if (row < param.k) {
-//                lagrangePolynomialAdd(trgswDft.trlweDftSamples[lvl][row].a[row], trgswDft.trlweDftSamples[lvl][row].a[row], tmp);
-//                applyIntt(trgsw.trlweSamples[lvl][row].a[row], trgswDft.trlweDftSamples[lvl][row].a[row]);
-//                continue;
-//            }
-//
-//            // add to b_lk
-//            lagrangePolynomialAdd(trgswDft.trlweDftSamples[lvl][row].b, trgswDft.trlweDftSamples[lvl][row].b, tmp);
-//            applyIntt(trgsw.trlweSamples[lvl][row].b, trgswDft.trlweDftSamples[lvl][row].b);
-//        }
-//    }
-//}
 
 void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
     trgswEncZero(trgsw, param, trgswKey);
@@ -159,7 +112,6 @@ Integer trgswDecrypt(const Trgsw& trgsw, const YatfheParameters& param, const Tr
     return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
 }
 
-// To decrypt, it is sufficient to decrypt the last GLev ciphertext, which is a GLev encryption of m/B^l.
 Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
     const auto firstLevel = 0;
     const auto lastRow = param.k;
@@ -189,63 +141,31 @@ void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& t
     }
 }
 
-void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
+void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
-    const auto l = trgswInput.l;
+    const auto level = trgswDftInput.l;
     const auto N = trlweInput.b.N;
     TrlweDft trlweDft {k, N};
+    TrlweDft trlweDftRes {k, N};
     DecomposedTrlwe decomposedTrlwe {param};
 
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
-
-    // ntt
-    for (auto lvl = 0; lvl < l; lvl++) {
-        applyNttForAB(decomposedTrlwe.rlweDfts[lvl], decomposedTrlwe.rlwes[lvl]);
-        printArray(decomposedTrlwe.rlwes[lvl].b.coeffs, "b0");
-//        printArray(decomposedTrlwe.rlweDfts[lvl].b.coeffs, "bNtt");
-        applyInttForAB(decomposedTrlwe.rlwes[lvl], decomposedTrlwe.rlweDfts[lvl]);
-        printArray(decomposedTrlwe.rlwes[lvl].b.coeffs, "b1");
+    for (auto i = 0; i < decomposedTrlwe.l; i++) {
+        applyNttForAB(decomposedTrlwe.rlweDfts[i], decomposedTrlwe.rlwes[i]);
     }
-//    // accum += bsk (*) accum, point-wisely
-//    // https://www.zama.ai/post/tfhe-deep-dive-part-3
-//    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
-//    // BSK_lrc (*) D_lr = R_c
-//    for (auto lvl = 0; lvl < l; lvl++) {
-//        for (auto row = 0; row < k + 1; row++) {
-//            auto& currRes = (row < k) ? decomposedTrlwe.rlweDfts[lvl].a[row] : decomposedTrlwe.rlweDfts[lvl].b;
-//            for (auto col = 0; col < k; col++) {
-//                modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].a[col].coeffs, trgswInput.trlweDftSamples[lvl][row].a[col].coeffs);
-//            }
-//            modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].b.coeffs, trgswInput.trlweDftSamples[lvl][row].b.coeffs);
-//        }
-//    }
-//    // intt
-//    for (auto lvl = 0; lvl < l; lvl++) {
-//        applyInttForAB(decomposedTrlwe.rlwes[lvl], decomposedTrlwe.rlweDfts[lvl]);
-//    }
-    recomposeTrlwe(output, decomposedTrlwe, param);
 
-
-
-//    applyNttForAB(trlweDft, trlweInput);
-//    gadgetDecomposeTrlweNtt(decomposedTrlwe, trlweDft, param);
-//
-//    //    // accum += bsk (*) accum, point-wisely
-////    // https://www.zama.ai/post/tfhe-deep-dive-part-3
-////    // <Decomp(B), C_k> + Σ_0^(k-1)<Decomp(A_i), C_i>
-////    // BSK_lrc (*) D_lr = R_c
-////    for (auto lvl = 0; lvl < l; lvl++) {
-////        for (auto row = 0; row < k + 1; row++) {
-////            auto& currRes = (row < k) ? decomposedTrlwe.rlweDfts[lvl].a[row] : decomposedTrlwe.rlweDfts[lvl].b;
-////            for (auto col = 0; col < k; col++) {
-////                modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].a[col].coeffs, trgswInput.trlweDftSamples[lvl][row].a[col].coeffs);
-////            }
-////            modularAccumulate(currRes.coeffs, decomposedTrlwe.rlweDfts[lvl].b.coeffs, trgswInput.trlweDftSamples[lvl][row].b.coeffs);
-////        }
-////    }
-//
-//    recomposeTrlweNtt(trlweDft, decomposedTrlwe, param);
-//    applyInttForAB(output, trlweDft);
+    for (auto lvl = 0; lvl < level; lvl++) {
+        for (auto col = 0; col < k + 1; col++) {
+            auto& curr = (col < k) ? decomposedTrlwe.rlweDfts[lvl].a[col] : decomposedTrlwe.rlweDfts[lvl].b;
+            for (auto col2 = 0; col2 < k + 1; col2++) {
+                auto& out = (col2 < k) ? trlweDftRes.a[col2] : trlweDftRes.b;
+                auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][col].a[col2]
+                                         : trgswDftInput.trlweDftSamples[lvl][col].b;
+                calModularInnerProductNtt(out, curr, curr2);
+            }
+        }
+    }
+    applyInttForAB(output, trlweDftRes);
 }
 
 

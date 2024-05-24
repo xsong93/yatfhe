@@ -1,5 +1,4 @@
 #include <iostream>
-#include "yatfhe/ntt.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
@@ -15,7 +14,6 @@
 int main(int argc, char **argv) {
     YatfheParameters param {};
     yatfheInit(param);
-    COUNT_TIME("init timer", std::cout << std::endl;)
 
     TlweKey tlweKey {param.n, param.lweStdDev};
     TrgswKey trgswKey {param};

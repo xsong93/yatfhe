@@ -63,4 +63,6 @@ void modularAccumulate(vector<NttType>& coeffsB, const vector<NttType>& coeffsA,
 
 void calModularInnerProductNtt(LagrangePolynomial& b, const vector<LagrangePolynomial>& a, const vector<LagrangePolynomial>& s);
 
+void calModularInnerProductNtt(LagrangePolynomial& b, const LagrangePolynomial& a, const LagrangePolynomial& s);
+
 #endif //HLS_YATFHE_NTT_H

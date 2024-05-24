@@ -9,6 +9,7 @@
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
+#include "yautil/time_counter.h"
 
 TEST(RgswTest, RgswEncDecTest) {
     YatfheParameters param {};
@@ -84,7 +85,7 @@ TEST(RgswTest, RgswMultTestNaive) {
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult
-        trgswExternalProduct(out, trgsw, in2, param);
+        COUNT_TIME("trgswExternalProduct", trgswExternalProduct(out, trgsw, in2, param);)
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -136,19 +137,8 @@ TEST(RgswTest, RgswMultTestNTT) {
 
         // trgsw mult ntt
         // todo
-        trgswExternalProduct(out, trgsw, in2, param);
+        COUNT_TIME("trgswExternalProductNtt", trgswExternalProductNtt(out, trgswDft, in2, param);)
         printTrlweAB(out, "out");
-
-//        // intt and test
-//        applyNttForAB(in2Dft, out);
-//        Trlwe out2 {param.k, param.N};
-//        applyInttForAB(out2, in2Dft);
-//        for (auto i = 0; i < out2.b.N; i++) {
-//            for (auto j = 0; j < out2.k; j++) {
-//                ASSERT_EQ(out2.a[j].coeffs[i], out.a[j].coeffs[i]);
-//            }
-//            ASSERT_EQ(out2.b.coeffs[i], out.b.coeffs[i]);
-//        }
 
         // trlwe dec aft-mult
         symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
