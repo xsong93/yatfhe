@@ -4,24 +4,34 @@
 #ifndef HLS_YATFHE_YATFHE_PARAMETERS_H
 #define HLS_YATFHE_YATFHE_PARAMETERS_H
 
+#include "yautil/control_helper.h"
+
 struct YatfheParameters {
+#ifdef PAR_SET1 // 128-bit
+    int n {586};
+    int k {2};
+    int N {512};
+    int radixBits {8}; // b
+    int l {2};
+#else //110-bit
+    int n {500};
+    int k {1};
+    int N {1024};
+    int radixBits {10}; // b
+    int l {2};
+#endif
     // LWE params
     int torusBits {32};
     long q {1 << 31};
     int torusBase {8}; // p|q
     int dftBits {64};
-    int n {630};
     double lweStdDev {2.98023e-08}; // 2^-15
     // RLWE params
-    int N {1024};
     int driftPhase {N / torusBase};
-    int k {1};
     double rlweStdDev {2.98023223876953e-8}; // 2^-25
     // RGSW params
-    int l {8};
     int l2 {8};
     int lDft {l * 2};
-    int radixBits {4}; // b
     // KS params
     int ksLevel {torusBits / radixBits}; // ks decomposition length
     int radixBase {1 << radixBits};  // 2^b

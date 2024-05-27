@@ -200,7 +200,7 @@ TEST(NttTest, NttSamePolyTest) {
 
 TEST(NttTest, ConvolutionTest) {
     COUNT_TIME("init timer", cout << endl;)
-    const int N = 1024;
+    const int N = 512;
     const int k = 5;
     initGlobalParamsNtt64(N);
 

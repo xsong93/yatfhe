@@ -48,10 +48,10 @@ TEST(RgswTest, RgswEncDecTest) {
 
 TEST(RgswTest, RgswMultTestNaive) {
     YatfheParameters param {};
-    param.N = 1024;
-    param.radixBits = 4;
-    param.l = 8;
-    param.k = 2;
+//    param.N = 1024;
+//    param.radixBits = 4;
+//    param.l = 3;
+//    param.k = 1;
     yatfheInit(param);
     int ti = 0;
     while (ti++ < 10) {
@@ -100,10 +100,7 @@ TEST(RgswTest, RgswMultTestNaive) {
 
 TEST(RgswTest, RgswMultTestNTT) {
     YatfheParameters param {};
-    param.N = 1024;
-    param.radixBits = 4;
-    param.l = 8;
-    param.k = 2;
+    printf("n:%d, k:%d, N:%d, b:%d, l:%d", param.n, param.k, param.N, param.radixBits, param.l);
     yatfheInit(param);
     int ti = 0;
     while (ti++ < 10) {

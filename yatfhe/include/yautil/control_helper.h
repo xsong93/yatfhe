@@ -6,5 +6,7 @@
 #define HLS_YATFHE_CONTROL_HELPER_H
 
 #define ENABLE_TIMER
+#define PAR_SET1
+//#define PAR_SET2
 
 #endif //HLS_YATFHE_CONTROL_HELPER_H

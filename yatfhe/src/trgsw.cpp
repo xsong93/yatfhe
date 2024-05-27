@@ -150,7 +150,6 @@ void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, const
     DecomposedTrlwe decomposedTrlwe {param};
     DecomposedTrlweDft decomposedTrlweDft {param, param.l};
 
-
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
     for (auto i = 0; i < decomposedTrlwe.l; i++) {
         applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.rlwes[i]);

@@ -14,6 +14,8 @@
 int main(int argc, char **argv) {
     YatfheParameters param {};
     yatfheInit(param);
+    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
+
 
     TlweKey tlweKey {param.n, param.lweStdDev};
     TrgswKey trgswKey {param};
@@ -25,7 +27,7 @@ int main(int argc, char **argv) {
     COUNT_TIME("bootstrappingKeyGen", bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);)
     COUNT_TIME("tlweKeySwitchingKeyGen", tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);)
 
-    Integer plain = 2;
+    Integer plain = 1;
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
@@ -38,7 +40,7 @@ int main(int argc, char **argv) {
     auto decPre = symDecTlweSampleToInt(input, tlweKey, param.torusBase);
     cout << "decPre: " << decPre << endl;
 
-    COUNT_TIME("trgswFunctionalBootstrapping", trgswFunctionalBootstrapping(output, input, bsKey, ksKey, v, param);)
+    COUNT_TIME("trgswFunctionalBootstrapping", trgswFunctionalBootstrappingNtt(output, input, bsKey, ksKey, v, param);)
 
     auto decAft = symDecTlweSampleToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;
