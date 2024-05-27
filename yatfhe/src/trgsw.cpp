@@ -148,15 +148,17 @@ void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, const
     TrlweDft trlweDft {k, N};
     TrlweDft trlweDftRes {k, N};
     DecomposedTrlwe decomposedTrlwe {param};
+    DecomposedTrlweDft decomposedTrlweDft {param, param.l};
+
 
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
     for (auto i = 0; i < decomposedTrlwe.l; i++) {
-        applyNttForAB(decomposedTrlwe.rlweDfts[i], decomposedTrlwe.rlwes[i]);
+        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.rlwes[i]);
     }
 
     for (auto lvl = 0; lvl < level; lvl++) {
         for (auto col = 0; col < k + 1; col++) {
-            auto& curr = (col < k) ? decomposedTrlwe.rlweDfts[lvl].a[col] : decomposedTrlwe.rlweDfts[lvl].b;
+            auto& curr = (col < k) ? decomposedTrlweDft.rlweDfts[lvl].a[col] : decomposedTrlweDft.rlweDfts[lvl].b;
             for (auto col2 = 0; col2 < k + 1; col2++) {
                 auto& out = (col2 < k) ? trlweDftRes.a[col2] : trlweDftRes.b;
                 auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][col].a[col2]

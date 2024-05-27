@@ -195,10 +195,10 @@ void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const Yat
 }
 
 // G^-1 * Trlwe = DecomposedTrlwe
-void gadgetDecomposeTrlweNtt(DecomposedTrlwe& output, const TrlweDft& input, const YatfheParameters& param) {
+void gadgetDecomposeTrlweNtt(DecomposedTrlweDft& output, const TrlweDft& input, const YatfheParameters& param) {
     const auto k = input.k;
     const auto N = input.b.coeffs.size();
-    const auto l = output.lDft;
+    const auto l = output.l;
     for (auto row = 0; row < k + 1; row++) {
         auto& currIn = (row < k) ? input.a[row] : input.b;
         for (auto j = 0; j < N; j++) {
@@ -231,17 +231,17 @@ void recomposeTrlwe(Trlwe& output, const DecomposedTrlwe& input, const YatfhePar
 }
 
 // Combine l decomposed TrlweDft a & b into one.
-void recomposeTrlweNtt(TrlweDft& output, const DecomposedTrlwe& input, const YatfheParameters& param) {
+void recomposeTrlweNtt(TrlweDft& output, const DecomposedTrlweDft& input, const YatfheParameters& param) {
     const auto k = output.k;
     const auto N = output.b.coeffs.size();
-    const auto l = input.lDft;
+    const auto l = input.l;
     trlweSetZero(output.a, output.b);
     for (auto lvl = 0; lvl < l; lvl++) {
         for (auto row = 0; row < k + 1; row++) {
             auto& currIn = (row < k) ? input.rlweDfts[lvl].a[row] : input.rlweDfts[lvl].b;
             auto& currOut = (row < k) ? output.a[row] : output.b;
             for (auto j = 0; j < N; j++) {
-                currOut.coeffs[j] = modAdd(currOut.coeffs[j], currIn.coeffs[j] << (64 - (lvl + 1) * param.radixBits));
+                currOut.coeffs[j] = modAdd(currOut.coeffs[j], currIn.coeffs[j] << (param.dftBits - (lvl + 1) * param.radixBits));
             }
         }
     }

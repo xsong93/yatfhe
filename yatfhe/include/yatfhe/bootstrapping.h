@@ -38,8 +38,6 @@ void controlMux(Trlwe& res, const Trlwe& input, int aBarI, const Trgsw& bskI, co
 
 void controlMuxNtt(Trlwe& res, const Trlwe& input, int aBarI, const TrgswDft& bskI, const YatfheParameters& param);
 
-void accMulToBsk(Trlwe& accum, const TrgswDft& bskI, const YatfheParameters& param);
-
 void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey,
                                     const TlweKey& tlweKey);
 

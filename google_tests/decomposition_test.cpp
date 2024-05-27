@@ -154,10 +154,11 @@ TEST(DecompositionTest, DecomposeTrlweTest) {
 
     // decompose
     DecomposedTrlwe out {param};
+    DecomposedTrlweDft outDft {param, param.lDft};
     gadgetDecomposeTrlwe(out, in, param);
-    gadgetDecomposeTrlweNtt(out, inDft, param);
+    gadgetDecomposeTrlweNtt(outDft, inDft, param);
     printDecomposedTrlweAB(out, "out");
-    printDecomposedTrlweNttAB(out, "outNtt");
+    printDecomposedTrlweNttAB(outDft, "outNtt");
 
     // recompose original
     recomposeTrlwe(recomp, out, param);
@@ -175,7 +176,7 @@ TEST(DecompositionTest, DecomposeTrlweTest) {
 
     // todo: test decompose/ntt order
     // recompose ntt
-    recomposeTrlweNtt(recompDft, out, param);
+    recomposeTrlweNtt(recompDft, outDft, param);
 //    printTrlweDftAB(inDft, "inDft");
 //    printTrlweDftAB(recompDft, "recompDft");
     applyInttForAB(intt, recompDft);
@@ -278,12 +279,13 @@ TEST(DecompositionTest, DecompNttOrderTest) {
 
     // NTT -> decomp -> recomp -> INTT
     DecomposedTrlwe out1 {param};
+    DecomposedTrlweDft outDft1 {param, param.lDft};
     TrlweDft dft1 {param.k, param.N};
     TrlweDft recompDft1 {param.k, param.N};
     Trlwe intt1 {param.k, param.N};
     COUNT_TIME("NTT", applyNttForAB(dft1, in);) // NTT
-    COUNT_TIME("decomp", gadgetDecomposeTrlweNtt(out1, dft1, param);) //decomp
-    COUNT_TIME("recomp", recomposeTrlweNtt(recompDft1, out1, param);) // recompose
+    COUNT_TIME("decomp", gadgetDecomposeTrlweNtt(outDft1, dft1, param);) //decomp
+    COUNT_TIME("recomp", recomposeTrlweNtt(recompDft1, outDft1, param);) // recompose
     COUNT_TIME("INTT", applyInttForAB(intt1, recompDft1);) // intt
     for (auto j = 0; j < in.b.N; j++) {
         for (auto i = 0; i < in.k; i++) {
@@ -297,14 +299,43 @@ TEST(DecompositionTest, DecompNttOrderTest) {
     // decomp -> NTT -> recomp -> INTT
     //todo
     DecomposedTrlwe out {param};
+    DecomposedTrlweDft outDft {param, param.l};
     TrlweDft recompDft {param.k, param.N};
     Trlwe intt {param.k, param.N};
+    std::vector<Integer> oneOverB(param.l);
+    decomposeOverB(oneOverB, 1, param);
+    vector<TorusPolynomial> helper (param.l, TorusPolynomial(param.N, 0));
+    vector<LagrangePolynomial> helperDft;
+    for (auto i = 0; i < helper.size(); i++) {
+        for (auto j = 0; j < param.N; j++) {
+            helper[i].coeffs[j] = oneOverB[i];
+        }
+        LagrangePolynomial tmp (param.N);
+        applyNtt(tmp, helper[i]);
+        helperDft.push_back(tmp);
+    }
+    for (auto i = 0; i < helperDft.size(); i++) {
+        printArray(helperDft[i].coeffs, "helperDft l" + to_string(i));
+    }
+
     COUNT_TIME("decomp", gadgetDecomposeTrlwe(out, in, param);) // decompose
     COUNT_TIME("NTT",
                for (auto i = 0; i < out.l; i++) {
-                   applyNttForAB(out.rlweDfts[i], out.rlwes[i]); // NTT
+                   applyNttForAB(outDft.rlweDfts[i], out.rlwes[i]); // NTT
                })
-    COUNT_TIME("recomp", recomposeTrlweNtt(recompDft, out, param);) // recompose
+    COUNT_TIME("recomp", {
+        auto l = out.l;
+        auto k = param.k;
+        for (auto lvl = 0; lvl < l; lvl++) {
+            for (auto row = 0; row < k + 1; row++) {
+                auto& currIn = (row < k) ? outDft.rlweDfts[lvl].a[row] : outDft.rlweDfts[lvl].b;
+                auto& currOut = (row < k) ? recompDft.a[row] : recompDft.b;
+                for (auto j = 0; j < param.N; j++) {
+                    currOut.coeffs[j] = modAdd(currOut.coeffs[j], modMul(currIn.coeffs[j], helperDft[lvl].coeffs[j]));
+                }
+            }
+        }
+    }) // recompose
     COUNT_TIME("intt", applyInttForAB(intt, recompDft);) // intt
     for (auto j = 0; j < in.b.N; j++) {
         for (auto i = 0 ; i < in.k; i++) {
