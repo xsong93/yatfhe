@@ -12,6 +12,14 @@ mt19937 rng(rd());
 uniform_int_distribution<Binary> binaryDistrib(0, 1);
 uniform_int_distribution<Torus> uniformTorusDistrib(TorusMin, TorusMax);
 
+int calLogBase2(int N) {
+    int res = 0;
+    while (N >>= 1){
+        res ++;
+    }
+    return res;
+}
+
 Integer genIntUniformDist(const int lowerBound, const int upperBound) {
     uniform_int_distribution<Integer> uniformIntDistrib(lowerBound, upperBound);
     return uniformIntDistrib(rng);

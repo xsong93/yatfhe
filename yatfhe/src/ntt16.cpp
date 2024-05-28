@@ -118,14 +118,6 @@ void bit_rev16(std::vector<Ntt16>& x) {
     }
 }
 
-int clog2(int N) {
-    int res = 0;
-    while (N >>= 1){
-        res ++;
-    }
-    return res;
-}
-
 void genTW_ROM16(TwRom16& tw_rom) {
     auto w_n = (tw_rom.N) >> 1;
     auto phi_n = tw_rom.N;
@@ -145,7 +137,7 @@ void genTW_ROM16(TwRom16& tw_rom) {
 }
 
 void genNWCparam16(TwParam16& nwc_tw,const int n, const TwRom16& tw_rom, const std::string& str) {
-    int lvl = clog2(n);
+    int lvl = calLogBase2(n);
     auto w_n = n >> 1;
     auto phi_n = n;
     Ntt16 tw_temp = 0, phi_temp = 0, nwc_temp = 0;
@@ -188,7 +180,7 @@ void DIT_NR16(Ntt16Polynomial& RES, const Ntt16Polynomial& IN) {
     res = in;
 
     const auto& tw = NWC_TW16.tw_factor;
-    const auto lvl = clog2(N);
+    const auto lvl = calLogBase2(N);
     auto gap = 0;
     auto block = 0;
     auto block_size = 0;
@@ -236,7 +228,7 @@ void DIF_RN16(Ntt16Polynomial& RES, const Ntt16Polynomial& IN) {
     const auto &in = IN.coeffs;
     const auto &tw = NWC_ITW16.tw_factor;
     const auto &N = IN.N;
-    const auto lvl = clog2(N);
+    const auto lvl = calLogBase2(N);
     auto gap = 0;
     auto block = 0;
     auto block_size = 0;
