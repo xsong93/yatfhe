@@ -14,7 +14,7 @@
 constexpr int32_t MOD16 = 65537;
 constexpr Ntt16 HALF_MOD16 = (MOD16 + 1) >> 1;
 constexpr Ntt16 NTT16_MASK = 0xff;
-constexpr Ntt16 PRIM_ROOT64 = 7;
+constexpr Ntt16 PRIM_ROOT16 = 7;
 constexpr uint32_t POLY_MAX = 1 << 31;
 const string STR_NTT = "NWC-DIT-NR-NNT";
 const string STR_INTT = "NWC-DIF-RN-INNT";
