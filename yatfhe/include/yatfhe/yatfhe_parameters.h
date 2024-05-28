@@ -31,7 +31,7 @@ struct YatfheParameters {
     double rlweStdDev {2.98023223876953e-8}; // 2^-25
     // RGSW params
     int l2 {8};
-    int lDft {l * 2};
+    int lDft {dftBits / radixBits};
     // KS params
     int ksLevel {torusBits / radixBits}; // ks decomposition length
     int radixBase {1 << radixBits};  // 2^b

@@ -88,7 +88,7 @@ void printDecomposedTrlweAB(const DecomposedTrlwe& in, const string& msg) {
 
 void printDecomposedTrlweNttAB(const DecomposedTrlweDft& in, const string& msg) {
     cout << msg<< ": ";
-    for (auto l = 0; l < in.l * 2; l++) {
+    for (auto l = 0; l < in.l; l++) {
         printf("level %d: a: ", l);
         for (int i = 0; i < in.rlweDfts[l].k; i++) {
             cout << "[";
