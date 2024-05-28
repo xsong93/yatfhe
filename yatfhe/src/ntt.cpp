@@ -50,24 +50,15 @@ void DIFRNLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
     auto block = 0;
     auto block_size = 0;
     auto tw_index = 0;
-//    Ntt64 flag_a = 0, flag_b = 0, flag_tw = 0;
     output = input;
     Ntt64 temp_add, temp_sub, temp_mult;
-//    int pos_a, pos_b;
     for (auto i = 0; i < lvl; i++) {
         block = N >> (i + 1);
         block_size = 1 << (i + 1);
         gap = 1 << i;
-//        pos_a = 0;
-//        pos_b = 0;
         for (auto j = 0; j < block; j++) { //debug:tw_index overflow
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-//                flag_a = res[j * block_size + k];
-//                flag_b = res[j * block_size + k + gap];
-//                flag_tw = tw[i][tw_index];
-//                pos_a = j * block_size + k;
-//                pos_b = j * block_size + k + gap;
                 temp_add = modADDscale(output[j * block_size + k], output[j * block_size + k + gap]);
                 temp_sub = modSUBscale(output[j * block_size + k], output[j * block_size + k + gap]);
                 temp_mult = modMul(temp_sub, tw[i][tw_index]);

@@ -58,6 +58,6 @@ Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
 
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
-void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
+void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, Trlwe& trlweInput, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

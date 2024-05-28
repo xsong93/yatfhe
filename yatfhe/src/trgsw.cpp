@@ -141,7 +141,7 @@ void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& t
     }
 }
 
-void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, const Trlwe& trlweInput, const YatfheParameters& param) {
+void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto level = trgswDftInput.l;
     const auto N = trlweInput.b.N;

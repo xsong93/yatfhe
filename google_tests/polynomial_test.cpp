@@ -8,10 +8,10 @@
 #include "yatfhe/tlwe.h"
 #include "yautil/tool.h"
 
-TEST(PolynomialRounding, PolynomialRounding) {
+TEST(PolynomialTest, PolynomialRounding) {
     YatfheParameters param {};
-    param.torusBase = 8;
-    param.N = 1024;
+//    param.torusBase = 8;
+//    param.N = 1024;
 //    param.n = 4;
     TorusPolynomial v {param.N};
     std::vector<Integer> d(param.N);
