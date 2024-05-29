@@ -33,40 +33,4 @@ const Integer TorusMax = INT64_MAX;
 const Integer TorusMin = INT64_MIN;
 #endif
 
-struct TorusPolynomial {
-    std::vector<Torus> coeffs {}; // N
-    int N {};
-
-    explicit TorusPolynomial(int N) :
-        coeffs(N, 0),
-        N(N) {};
-
-    TorusPolynomial(int N, Torus value) :
-            coeffs(N, value),
-            N(N) {};
-};
-struct NttPolynomial {
-    std::vector<Ntt32> coeffs {}; // N
-    int N {};
-
-    NttPolynomial() : coeffs(), N() {};
-
-    explicit NttPolynomial(int N) :
-            coeffs(N, 0),
-            N(N) {};
-
-    explicit NttPolynomial(int N, Ntt32 value) :
-            coeffs(N, value),
-            N(N) {};
-};
-struct Ntt64Polynomial {
-    std::vector<NttType> coeffs {};
-    int N {};
-    Ntt64Polynomial() : N(), coeffs() {};
-    explicit Ntt64Polynomial (int n):
-        coeffs(n,0), N(n) {};
-};
-using IntPolynomial = TorusPolynomial;
-using BinPolynomial = IntPolynomial;
-
 #endif //HLS_YATFHE_TORUS_H

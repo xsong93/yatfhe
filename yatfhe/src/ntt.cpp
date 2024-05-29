@@ -1,10 +1,8 @@
 //
 // Created by Xintong Song on 2024/1/11.
 //
-#include <iostream>
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt64.h"
-#include "yautil/tool.h"
 #include "yatfhe/numeric_functions.h"
 
 using namespace std;

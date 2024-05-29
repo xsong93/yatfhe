@@ -16,15 +16,15 @@ TEST(Ntt16Test, ModMultTest) {
     Ntt16 a = 59923;
     Ntt16 b = 65535;
     auto add = modADD16(a, b);
-    auto add2 = modADD64(a, b);
     auto sub = modSUB16(a, b);
-    auto sub2 = modSUB64(a, b);
     auto mul = modMULT16(a, b);
-    auto mul2 = modMULT64(a, b);
     auto inv = modINV16(a);
-    auto inv2 = modINV64(a);
+    auto pow = POW16(a, b);
     printf("a+b: %d, a-b: %d, a*b: %d, 1/a: %d\n", add, sub, mul, inv);
-    printf("a+b: %d, a-b: %d, a*b: %d, 1/a: %d\n", add2, sub2, mul2, inv2);
+    ASSERT_EQ(add, 59921);
+    ASSERT_EQ(sub,  59925);
+    ASSERT_EQ(mul, 11228);
+    ASSERT_EQ(inv, 36831);
 }
 
 TEST(Ntt16Test, NttIntt16Test) {

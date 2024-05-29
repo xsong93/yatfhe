@@ -45,20 +45,6 @@ struct TwParam16 {
     }
 };
 
-struct Ntt16Polynomial {
-    std::vector<Ntt16> coeffs {}; // N
-    int N {};
-
-    explicit Ntt16Polynomial(int N) :
-            N(N),
-            coeffs(N, 0) {};
-
-    Ntt16Polynomial(int N, Ntt16 value) :
-            N(N),
-            coeffs(N, value) {};
-};
-
-
 extern TwParam16 NWC_TW16;
 extern TwParam16 NWC_ITW16;
 extern TwRom16 TW_ROM16;
@@ -68,7 +54,7 @@ void genTW_ROM16(TwRom16& tw_rom);
 void genNWCparam16(TwParam16& nwc_tw,const int n, const TwRom16& tw_rom, const std::string& str);
 void applyNtt16(Ntt16Polynomial& RES, const IntPolynomial& IN);
 void applyIntt16(IntPolynomial & RES, const Ntt16Polynomial& IN);
-Ntt16 POW16(Ntt16 base, Ntt16 exp, Ntt16 mod);
+Ntt16 POW16(Ntt16 BASE, Ntt16 EXP);
 Ntt16 modINV16(Ntt16 in);
 Ntt16 modADD16(Ntt16 a, Ntt16 b);
 Ntt16 modADDscale16(Ntt16 a, Ntt16 b);

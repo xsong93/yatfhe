@@ -6,7 +6,6 @@
 #define HLS_YATFHE_NTT_H
 
 #include <vector>
-#include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
 #include "numeric_functions.h"
 

@@ -9,6 +9,22 @@
 #include <cstdint>
 #include "yatfhe/torus.h"
 
+struct TorusPolynomial {
+    std::vector<Torus> coeffs {}; // N
+    int N {};
+
+    explicit TorusPolynomial(int N) :
+            coeffs(N, 0),
+            N(N) {};
+
+    TorusPolynomial(int N, Torus value) :
+            coeffs(N, value),
+            N(N) {};
+};
+
+using IntPolynomial = TorusPolynomial;
+using BinPolynomial = IntPolynomial;
+
 struct LagrangePolynomial {
     std::vector<NttType> coeffs {}; // N
     int N {};
@@ -33,6 +49,27 @@ struct DoublePolynomial {
     DoublePolynomial(int N, double value) :
             N(N),
             coeffs(N, value) {};
+};
+
+struct Ntt16Polynomial {
+    std::vector<Ntt16> coeffs {}; // N
+    int N {};
+
+    explicit Ntt16Polynomial(int N) :
+            N(N),
+            coeffs(N, 0) {};
+
+    Ntt16Polynomial(int N, Ntt16 value) :
+            N(N),
+            coeffs(N, value) {};
+};
+
+struct Ntt64Polynomial {
+    std::vector<Ntt64> coeffs {};
+    int N {};
+    Ntt64Polynomial() : N(), coeffs() {};
+    explicit Ntt64Polynomial (int n):
+            coeffs(n,0), N(n) {};
 };
 
 void intPolyToDoublePoly(DoublePolynomial& output, const IntPolynomial & input);

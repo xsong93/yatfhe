@@ -13,19 +13,19 @@ TwParam16 NWC_TW16;
 TwParam16 NWC_ITW16;
 TwRom16 TW_ROM16;
 
-Ntt16 POW16(Ntt16 BASE, Ntt16 EXP, int32_t MODU) {
-    Ntt16 result = 1;
+Ntt16 POW16(Ntt16 BASE, Ntt16 EXP) {
+    uint32_t result = 1;
     while (EXP > 0) {
         if (EXP % 2 == 1) {
-            result = (result * BASE) % MODU;
+            result = (result * BASE) % MOD16;
         }
-        BASE = (BASE * BASE) % MODU;
+        BASE = (BASE * BASE) % MOD16;
         EXP = EXP / 2;
     }
-    return result;
+    return Ntt16(result);
 }
 
-Ntt16 modINV16(Ntt16 in){
+Ntt16 modINV16(Ntt16 in) {
     int32_t t = 0, newT = 1;
     int32_t r = MOD16, newR = in;
     while (newR != 0) {
@@ -88,12 +88,12 @@ void genTW_ROM16(TwRom16& tw_rom) {
     Ntt16 phi_q = Ntt16((MOD16 - 1) / (phi_n << 1));
     Ntt16 temp = 0;
     for (int i = 0; i < w_n; i++) {
-        temp = POW16(PRIM_ROOT16, Ntt16(i * w_q), MOD16);
+        temp = POW16(PRIM_ROOT16, Ntt16(i * w_q));
         tw_rom.w_rom[i] = temp;
         tw_rom.inv_w_rom[i] = modINV16(temp);
     }
     for (int j = 0; j < phi_n; j++) {
-        temp = POW16(PRIM_ROOT16, Ntt16(j*phi_q), MOD16);
+        temp = POW16(PRIM_ROOT16, Ntt16(j*phi_q));
         tw_rom.phi_rom[j] = temp;
         tw_rom.inv_phi_rom[j] = modINV16(temp);
     }

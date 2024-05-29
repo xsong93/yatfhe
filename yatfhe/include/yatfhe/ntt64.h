@@ -8,7 +8,6 @@
 #include <vector>
 #include <string>
 #include <gmp.h>
-#include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
 #include "numeric_functions.h"
 
