@@ -26,5 +26,8 @@ int main() {
     COUNT_TIME("16", {
         for (auto i = 0; i < 10000; i++) { modMULT16(a1, b1); }
     })
+    COUNT_TIME("16-8", {
+        for (auto i = 0; i < 10000; i++) { modMult16(a1, b1); }
+    })
 
 }

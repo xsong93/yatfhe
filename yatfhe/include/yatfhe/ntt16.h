@@ -13,9 +13,9 @@
 
 constexpr int32_t MOD16 = 65537;
 constexpr uint16_t HALF_MOD16 = (MOD16 + 1) >> 1;
-constexpr unsigned char NTT16_MASK = 0xff;
-constexpr char PRIM_ROOT16 = 3;
-constexpr unsigned char POLY_MAX8 = 1 << 7;
+constexpr uint8_t NTT16_MASK = 0xff;
+constexpr int8_t PRIM_ROOT16 = 3;
+constexpr uint8_t POLY_MAX8 = 1 << 7;
 
 
 struct TwRom16 {
@@ -61,6 +61,7 @@ Ntt16 modADDscale16(Ntt16 a, Ntt16 b);
 Ntt16 modSUBscale16(Ntt16 a, Ntt16 b);
 Ntt16 modSUB16(Ntt16 a, Ntt16 b);
 Ntt16 modMULT16(Ntt16 a, Ntt16 b);
+Ntt16 modMult16(Ntt16 a, Ntt16 b);
 void initGlobalParamsNtt16(int N);
 
 #endif //HLS_YATFHE_NTT16_H
