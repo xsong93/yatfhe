@@ -18,9 +18,9 @@ TEST(ntt64_test, ntt64_test){
     TwParam nwc_tw(depth);
     TwParam nwc_itw(depth);
     TwRom tw_rom(N);
-    genTW_ROM(tw_rom);
-    genNWCparam(nwc_tw, N, tw_rom, STR_NTT);
-    genNWCparam(nwc_itw, N, tw_rom, STR_INTT);
+    genTW_ROM64(tw_rom);
+    genNWCparam64(nwc_tw, N, tw_rom, STR_NTT);
+    genNWCparam64(nwc_itw, N, tw_rom, STR_INTT);
     IntPolynomial a{N}, b{N}, res{N}, ref{N}, test{N};
     Ntt64Polynomial a_ntt{N}, b_ntt{N}, mul_ntt{N};
     for (int i = 0; i < N; i++) {
@@ -28,12 +28,12 @@ TEST(ntt64_test, ntt64_test){
         b.coeffs[i] = i + (1<<30);
     }
     polynomialMulNaive(ref,a,b);
-    doNTT(a_ntt,a,nwc_tw);
-    doNTT(b_ntt,b,nwc_tw);
+    doNTT64(a_ntt,a,nwc_tw);
+    doNTT64(b_ntt,b,nwc_tw);
     for (int i = 0; i < N; i++) {
-        mul_ntt.coeffs[i] = modMULT(a_ntt.coeffs[i], b_ntt.coeffs[i]);
+        mul_ntt.coeffs[i] = modMULT64(a_ntt.coeffs[i], b_ntt.coeffs[i]);
     }
-    doINTT(res,mul_ntt,nwc_itw);
+    doINTT64(res,mul_ntt,nwc_itw);
     for (int i = 0; i < N; i++) {
         EXPECT_EQ(res.coeffs[i], ref.coeffs[i]);
     }
@@ -47,17 +47,17 @@ TEST(ntt64_test, single_test) {
     TwParam nwc_tw(depth);
     TwParam nwc_itw(depth);
     TwRom tw_rom(N);
-    genTW_ROM(tw_rom);
+    genTW_ROM64(tw_rom);
     std::string str_ntt = "NWC-DIT-NR-NNT";
     std::string str_intt = "NWC-DIF-RN-INNT";
-    genNWCparam(nwc_tw,N,tw_rom,str_ntt);
-    genNWCparam(nwc_itw,N,tw_rom,str_intt);
+    genNWCparam64(nwc_tw,N,tw_rom,str_ntt);
+    genNWCparam64(nwc_itw,N,tw_rom,str_intt);
     Ntt64Polynomial a{N}, a_ntt{N}, res{N};
     for (int i = 0; i < N; i++) {
         a.coeffs[i] = i;
     }
-    DIT_NR(a_ntt, a, nwc_tw);
-    DIF_RN(res, a_ntt, nwc_itw);
+    DIT_NR64(a_ntt, a, nwc_tw);
+    DIF_RN64(res, a_ntt, nwc_itw);
     cout<<"breakpoint"<<endl;
 }
 
@@ -70,7 +70,7 @@ TEST(MODMULT_TEST, test1){
     for (int i = 0 ; i < N; i++ ) {
         x += ((MOD64+1)>>lvl);
         y = x + 1;
-        res1 = modMULT(x,y);
+        res1 = modMULT64(x,y);
         res2 = modMul(x,y);
         EXPECT_EQ(res1, res2);
     }

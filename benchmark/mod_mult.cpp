@@ -2,6 +2,7 @@
 // Created by Xintong Song on 2024/5/28.
 //
 #include "yatfhe/ntt.h"
+#include "yatfhe/ntt16.h"
 #include "yatfhe/ntt64.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yautil/initializer.h"
@@ -10,17 +11,20 @@
 int main() {
     YatfheParameters param {};
     yatfheInit(param);
-    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
+    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n\n", param.n, param.k, param.N, param.radixBits, param.l);
 
-    NttType a = 1234567890123456789ULL;
-    NttType b = 9876543210987654321ULL;
+    Ntt64 a = 1234567890123456789ULL;
+    Ntt64 b = 9876543210987654321ULL;
+    Ntt16 a1 = 59923;
+    Ntt16 b1 = 65535;
     COUNT_TIME("modMul", {
-        for (auto i = 0; i < 1000; i++) { modMul(a, b); }
+        for (auto i = 0; i < 10000; i++) { modMULT64(a, b); }
     })
     COUNT_TIME("modmul", {
-        for (auto i = 0; i < 1000; i++) { modmul(a, b); }
+        for (auto i = 0; i < 10000; i++) { modmul64(a, b); }
     })
-    std::cout << "Result1: " << modMul(a, b) << std::endl;
-    std::cout << "Result2: " << modmul(a, b) << std::endl;
+    COUNT_TIME("16", {
+        for (auto i = 0; i < 10000; i++) { modMULT16(a1, b1); }
+    })
 
 }

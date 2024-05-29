@@ -16,9 +16,7 @@ constexpr Ntt64 MOD64 = 0xffffffff00000001;
 constexpr Ntt64 HALF_MOD64 = (MOD64 + 1) >> 1;
 constexpr uint32_t NTT64_MASK = 0xffffffff;
 constexpr Ntt64 PRIM_ROOT64 = 7;
-constexpr uint32_t POLY_MAX = 1 << 31;
-const string STR_NTT = "NWC-DIT-NR-NNT";
-const string STR_INTT = "NWC-DIF-RN-INNT";
+constexpr uint32_t POLY_MAX32 = 1 << 31;
 
 struct TwRom {
     int N {};
@@ -53,22 +51,23 @@ extern TwParam NWC_ITW64;
 extern TwRom TW_ROM64;
 
 //----------------------------------------------------------------------------------
-void genTW_ROM(TwRom& tw_rom);
-void genNWCparam(TwParam& nwc_tw,const int n, const TwRom& tw_rom, const std::string& str);
-void doNTT(Ntt64Polynomial& RES, const IntPolynomial & IN, const TwParam& ntt_param);
-void doNTT(Ntt64Polynomial& RES, const IntPolynomial& IN);
-void DIT_NR(Ntt64Polynomial& RES, const Ntt64Polynomial & IN, const TwParam& ntt_param);
-void doINTT(IntPolynomial & RES, const Ntt64Polynomial& IN, const TwParam& intt_param);
-void doINTT(IntPolynomial & RES, const Ntt64Polynomial& IN);
-void DIF_RN(Ntt64Polynomial & RES, const Ntt64Polynomial& IN, const TwParam& intt_param);
+void genTW_ROM64(TwRom& tw_rom);
+void genNWCparam64(TwParam& nwc_tw,const int n, const TwRom& tw_rom, const std::string& str);
+void doNTT64(Ntt64Polynomial& RES, const IntPolynomial & IN, const TwParam& ntt_param);
+void doNTT64(Ntt64Polynomial& RES, const IntPolynomial& IN);
+void DIT_NR64(Ntt64Polynomial& RES, const Ntt64Polynomial & IN, const TwParam& ntt_param);
+void doINTT64(IntPolynomial & RES, const Ntt64Polynomial& IN, const TwParam& intt_param);
+void doINTT64(IntPolynomial & RES, const Ntt64Polynomial& IN);
+void DIF_RN64(Ntt64Polynomial & RES, const Ntt64Polynomial& IN, const TwParam& intt_param);
 int clog2(int N);
-Ntt64 POW(Ntt64 base, Ntt64 exp, Ntt64 mod);
-Ntt64 modINV(Ntt64 in);
-Ntt64 modADD(Ntt64 a, Ntt64 b);
-Ntt64 modADDscale(Ntt64 a, Ntt64 b);
-Ntt64 modSUBscale(Ntt64 a, Ntt64 b);
-Ntt64 modSUB(Ntt64 a, Ntt64 b);
-Ntt64 modMULT(Ntt64 a, Ntt64 b);
-Ntt64 modmul(Ntt64 x, Ntt64 y);
-void bit_rev(std::vector<Ntt64>& x);
+Ntt64 POW64(Ntt64 base, Ntt64 exp, Ntt64 mod);
+Ntt64 modINV64(Ntt64 in);
+Ntt64 modADD64(Ntt64 a, Ntt64 b);
+Ntt64 modADDscale64(Ntt64 a, Ntt64 b);
+Ntt64 modSUBscale64(Ntt64 a, Ntt64 b);
+Ntt64 modSUB64(Ntt64 a, Ntt64 b);
+Ntt64 modMULT64(Ntt64 a, Ntt64 b);
+Ntt64 modmul64(Ntt64 x, Ntt64 y);
+void initGlobalParamsNtt64(int N);
+
 #endif //HLS_YATFHE_NTT64_H

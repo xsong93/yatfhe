@@ -6,7 +6,6 @@
 #define HLS_YATFHE_INITIALIZER_H
 
 #include "yatfhe/yatfhe_parameters.h"
-#include "yatfhe/ntt.h"
 
 void yatfheInit(YatfheParameters& param);
 

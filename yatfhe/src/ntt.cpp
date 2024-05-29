@@ -59,24 +59,14 @@ void DIFRNLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
         for (auto j = 0; j < block; j++) { //debug:tw_index overflow
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-                temp_add = modADDscale(output[j * block_size + k], output[j * block_size + k + gap]);
-                temp_sub = modSUBscale(output[j * block_size + k], output[j * block_size + k + gap]);
+                temp_add = modADDscale64(output[j * block_size + k], output[j * block_size + k + gap]);
+                temp_sub = modSUBscale64(output[j * block_size + k], output[j * block_size + k + gap]);
                 temp_mult = modMul(temp_sub, tw[i][tw_index]);
                 output[j * block_size + k] = temp_add;
                 output[j * block_size + k + gap] = temp_mult;
             }
         }
     }
-}
-
-void initGlobalParamsNtt64(int N) {
-    auto depth = clog2(N);
-    TwParam::initTwParam(NWC_TW64, depth);
-    TwParam::initTwParam(NWC_ITW64, depth);
-    TwRom::initTwRom(TW_ROM64, N);
-    genTW_ROM(TW_ROM64);
-    genNWCparam(NWC_TW64, N, TW_ROM64, STR_NTT);
-    genNWCparam(NWC_ITW64, N, TW_ROM64, STR_INTT);
 }
 
 // Function to perform Number Theoretic Transform (NTT)

@@ -2,9 +2,8 @@
 // Created by Xintong Song on 2024/5/28.
 //
 
-#include <iostream>
+#include "yatfhe/ntt.h"
 #include "yatfhe/ntt16.h"
-#include "yautil/tool.h"
 #include "yatfhe/numeric_functions.h"
 
 using namespace std;
@@ -16,25 +15,19 @@ TwRom16 TW_ROM16;
 
 Ntt16 POW16(Ntt16 BASE, Ntt16 EXP, int32_t MODU) {
     Ntt16 result = 1;
-
     while (EXP > 0) {
-        // If b is odd, multiply the result with the current base
         if (EXP % 2 == 1) {
             result = (result * BASE) % MODU;
         }
-
-        // Square the base and reduce the exponent by half
         BASE = (BASE * BASE) % MODU;
         EXP = EXP / 2;
     }
-
-    return static_cast<Ntt16>(result);
+    return result;
 }
 
 Ntt16 modINV16(Ntt16 in){
     int32_t t = 0, newT = 1;
     int32_t r = MOD16, newR = in;
-
     while (newR != 0) {
         int32_t quotient = r / newR;
         int32_t tempT = newT;
@@ -45,51 +38,42 @@ Ntt16 modINV16(Ntt16 in){
         newR = r - quotient * newR;
         r = tempR;
     }
-
     if (r > 1) {
         throw std::invalid_argument("a is not invertible");
     }
-
     if (t < 0) {
         t += MOD16;
     }
-
     return static_cast<uint16_t>(t);
 }
 
 Ntt16 modADD16(Ntt16 a, Ntt16 b) {
-    Ntt16 temp = 0;
-    temp = ((MOD16 - a) > b) ? (a + b) : (a + b - MOD16);
-    return temp;
+    return ((MOD16 - a) > b) ? (a + b) : (a + b - MOD16);
 }
 
 Ntt16 modADDscale16(Ntt16 a, Ntt16 b) {
-    Ntt16 temp = 0;
-    temp = ((MOD16 - a) > b) ? (a + b) : (a + b - MOD16);
+    Ntt16 temp = ((MOD16 - a) > b) ? (a + b) : (a + b - MOD16);
 
-    if (temp%2 == 0) {
+    if (temp % 2 == 0) {
         temp = temp >> 1;
     } else {
-        temp =  (temp>>1) + ((MOD16 + 1)>>1);
+        temp =  (temp >> 1) + ((MOD16 + 1) >> 1);
     }
-    return Ntt16(temp);
-}
-Ntt16 modSUB16(Ntt16 a, Ntt16 b) {
-    Ntt16 temp = 0;
-    temp = (a >= b) ? (a - b) : (MOD16 - b + a);
     return temp;
 }
 
+Ntt16 modSUB16(Ntt16 a, Ntt16 b) {
+    return (a >= b) ? (a - b) : (MOD16 - b + a);
+}
 
 Ntt16 modSUBscale16(Ntt16 a, Ntt16 b){
-    Ntt16 temp = 0;
-    temp = (a >= b) ? (a - b) : (MOD16 - b + a);
-    if (temp%2 == 0) {
+    Ntt16 temp = (a >= b) ? (a - b) : (MOD16 - b + a);
+    if (temp % 2 == 0) {
         temp = temp >> 1;
     } else {
-        temp =  (temp>>1) + ((MOD16 + 1)>>1);
+        temp = (temp >> 1) + ((MOD16 + 1) >> 1);
     }
-    return Ntt16(temp);
+    return temp;
 }
 
 Ntt16 modMULT16(Ntt16 a, Ntt16 b) {
@@ -97,32 +81,11 @@ Ntt16 modMULT16(Ntt16 a, Ntt16 b) {
     return static_cast<uint16_t>(result % MOD16);
 }
 
-void bit_rev16(std::vector<Ntt16>& x) {
-    int j = 0;
-    int b = 0;
-    int N = int(x.size());
-    for (int i = 1; i < N; i++) {
-        b = N >> 1;  // Initialize b to half of N
-        while (j >= b) {
-            j -= b;  // Perform bit-reversal
-            b >>= 1;
-        }
-        j += b;  // Move to the next position
-
-        // Swap elements if the bit-reversed index is greater than the current index
-        if (j > i) {
-            NttType temp = x[j];
-            x[j] = x[i];
-            x[i] = temp;
-        }
-    }
-}
-
 void genTW_ROM16(TwRom16& tw_rom) {
     auto w_n = (tw_rom.N) >> 1;
     auto phi_n = tw_rom.N;
-    Ntt16 w_q = Ntt16((MOD16 - 1)/(w_n<<1));
-    Ntt16 phi_q = Ntt16((MOD16 - 1)/(phi_n<<1));
+    Ntt16 w_q = Ntt16((MOD16 - 1) / (w_n << 1));
+    Ntt16 phi_q = Ntt16((MOD16 - 1) / (phi_n << 1));
     Ntt16 temp = 0;
     for (int i = 0; i < w_n; i++) {
         temp = POW16(PRIM_ROOT16, Ntt16(i * w_q), MOD16);
@@ -130,7 +93,7 @@ void genTW_ROM16(TwRom16& tw_rom) {
         tw_rom.inv_w_rom[i] = modINV16(temp);
     }
     for (int j = 0; j < phi_n; j++) {
-        temp = POW16(PRIM_ROOT16, Ntt16(j*phi_q),MOD16);
+        temp = POW16(PRIM_ROOT16, Ntt16(j*phi_q), MOD16);
         tw_rom.phi_rom[j] = temp;
         tw_rom.inv_phi_rom[j] = modINV16(temp);
     }
@@ -153,7 +116,7 @@ void genNWCparam16(TwParam16& nwc_tw,const int n, const TwRom16& tw_rom, const s
                 nwc_temp = modMULT16(tw_temp, phi_temp);
                 nwc_tw.tw_factor[i].push_back(nwc_temp);
             }
-            bit_rev16(nwc_tw.tw_factor[i]);
+            bitRev(nwc_tw.tw_factor[i]);
         }
     }
     if (str == "NWC-DIF-RN-INNT") {
@@ -167,7 +130,7 @@ void genNWCparam16(TwParam16& nwc_tw,const int n, const TwRom16& tw_rom, const s
                 nwc_temp = modMULT16(tw_temp, phi_temp);
                 nwc_tw.tw_factor[i].push_back(nwc_temp);
             }
-            bit_rev16(nwc_tw.tw_factor[i]);
+            bitRev(nwc_tw.tw_factor[i]);
         }
     }
 
@@ -190,15 +153,9 @@ void DIT_NR16(Ntt16Polynomial& RES, const Ntt16Polynomial& IN) {
         block = N >> (lvl-i);
         block_size = N >> i;
         gap = block_size >> 1;
-//        pos_a = 0; pos_b = 0;
         for (auto j = 0; j < block; j++) { //debug:tw_index overflow
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-//                flag_a = res[j*block_size + k];
-//                flag_b = res[j*block_size + k + gap];
-//                flag_tw = tw[i][tw_index];
-//                pos_a = j*block_size + k;
-//                pos_b = j*block_size + k + gap;
                 temp_mult = modMULT16(res[j*block_size + k + gap],tw[i][tw_index]);
                 temp_add = modADD16(res[j*block_size + k], temp_mult);
                 temp_sub = modSUB16(res[j*block_size + k], temp_mult);
@@ -210,7 +167,7 @@ void DIT_NR16(Ntt16Polynomial& RES, const Ntt16Polynomial& IN) {
     }
 }
 
-void doNTT16(Ntt16Polynomial& RES, const IntPolynomial& IN) {
+void applyNtt16(Ntt16Polynomial& RES, const IntPolynomial& IN) {
     auto N = IN.N;
     Ntt16Polynomial format_input(N);
     for (int i = 0; i < N; i++) {
@@ -261,7 +218,7 @@ void DIF_RN16(Ntt16Polynomial& RES, const Ntt16Polynomial& IN) {
     }
 }
 
-void doINTT16(IntPolynomial & RES, const Ntt16Polynomial& IN) {
+void applyIntt16(IntPolynomial & RES, const Ntt16Polynomial& IN) {
     auto N = IN.N;
     Ntt16Polynomial res(N);
     DIF_RN16(res,IN);
@@ -274,10 +231,20 @@ void doINTT16(IntPolynomial & RES, const Ntt16Polynomial& IN) {
             temp_ntt = int16_t(res.coeffs[i]);
         }
         temp_poly = uint32_t(temp_ntt & NTT16_MASK);
-        if (temp_poly >= POLY_MAX) {
-            RES.coeffs[i] = int32_t(temp_poly - (POLY_MAX<<1));
+        if (temp_poly >= POLY_MAX8) {
+            RES.coeffs[i] = int16_t(temp_poly - (POLY_MAX8 << 1));
         } else {
-            RES.coeffs[i] = int32_t(temp_poly);
+            RES.coeffs[i] = int16_t(temp_poly);
         }
     }
+}
+
+void initGlobalParamsNtt16(int N) {
+    auto depth = calLogBase2(N);
+    TwParam16::initTwParam(NWC_TW16, depth);
+    TwParam16::initTwParam(NWC_ITW16, depth);
+    TwRom16::initTwRom(TW_ROM16, N);
+    genTW_ROM16(TW_ROM16);
+    genNWCparam16(NWC_TW16, N, TW_ROM16, STR_NTT);
+    genNWCparam16(NWC_ITW16, N, TW_ROM16, STR_INTT);
 }

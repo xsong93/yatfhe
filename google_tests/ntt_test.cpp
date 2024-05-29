@@ -1,12 +1,10 @@
 //
 // Created by Xintong Song on 2024/1/30.
 //
-#include <unordered_set>
 #include "gtest/gtest.h"
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt64.h"
 #include "yatfhe/polynomial.h"
-#include "yatfhe/trgsw.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
@@ -26,71 +24,6 @@ std::vector<int> extractValues(const std::string& input) {
     }
 
     return result;
-}
-
-TEST(NttTest, IsPrimitiveRootTest) {
-    std::vector<std::vector<int>> cases = {
-            { 2,  1, 1},
-            { 3,  2, 2},
-            { 4,  2, 3},
-            { 5,  2, 4},
-            { 5,  4, 2, 3},
-            // Add more test cases as needed
-    };
-
-    for (const auto& cs : cases) {
-        int mod = cs[0];
-        std::unordered_set<int> primRoots(cs.begin() + 2, cs.end());
-        for (int i = 0; i < mod; i++) {
-            bool expect = primRoots.find(i) != primRoots.end();
-            bool actual = isPrimitiveRoot(i, cs[1], mod);
-            std::cout << "mod: " << mod << ", root: " << i << ", expected: " << expect << ", actual: " << actual << std::endl;
-            ASSERT_EQ(expect, actual);
-        }
-    }
-    printBanner("IsPrimitiveRootTest");
-}
-
-TEST(NttTest, NttIntt32Test) {
-//    std::vector<int> a = {1,2,3,4,5};
-//    std::vector<int> b = {3,4,5,6,7};
-//
-    const int N = 5;
-    IntPolynomial a{N};
-    IntPolynomial ntt{N};
-    IntPolynomial intt{N};
-
-    a.coeffs = {1,2,3,4,5};
-
-    applyNtt32(ntt, a, 9, 11);
-    printArray(ntt.coeffs, "ntt");
-    applyIntt32(intt, ntt, 9, 11);
-    printArray(intt.coeffs, "intt");
-    printBanner("NttIntt32Test");
-}
-
-TEST(NttTest, Ntt32MultTest) {
-    const int N = 2;
-    IntPolynomial a{N};
-    IntPolynomial b{N};
-    IntPolynomial res{N};
-    IntPolynomial aNtt{N};
-    IntPolynomial bNtt{N};
-    IntPolynomial aIntt{N};
-    IntPolynomial bIntt{N};
-
-    a.coeffs = {1,2};
-    b.coeffs = {3,4};
-    polynomialMulNaive(res, a, b);
-    printArray(res.coeffs, "multNai");
-
-    int root = 36;
-    int mod = 37;
-    applyNtt32(aNtt, a, root, mod);
-    applyNtt32(bNtt, b, root, mod);
-    printArray(aNtt.coeffs, "aNtt");
-    printArray(bNtt.coeffs, "bNtt");
-
 }
 
 TEST(NttTest, NttIntt64Test) {
@@ -174,7 +107,7 @@ TEST(NttTest, NttSamePolyTest) {
         applyNtt(a, poly0);
         applyNtt(b, poly2);
         for (int i = 0; i < a.N; i++) {
-           tmpMul.coeffs[i] = modMULT(a.coeffs[i], b.coeffs[i]);
+           tmpMul.coeffs[i] = modMULT64(a.coeffs[i], b.coeffs[i]);
         }
         applyIntt(resMul, tmpMul);})
     COUNT_TIME("NAIVE_MULT",

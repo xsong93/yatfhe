@@ -10,7 +10,9 @@
 #include "yatfhe/polynomial.h"
 #include "numeric_functions.h"
 
-constexpr NttType MODULUS = 0xffffffff00000001UL;
+constexpr uint32_t POLY_MAX = 1 << 31;
+const string STR_NTT = "NWC-DIT-NR-NNT";
+const string STR_INTT = "NWC-DIF-RN-INNT";
 using namespace std;
 
 int findModulus(int vecLen, int minimum);
@@ -18,8 +20,6 @@ int findModulus(int vecLen, int minimum);
 bool isPrimitiveRoot(int g, int degree, int mod);
 
 int findPrimitiveRoot(int degree, int totient, int mod);
-
-void initGlobalParamsNtt64(int N);
 
 void applyNtt(LagrangePolynomial& out, const IntPolynomial& in);
 
@@ -47,6 +47,28 @@ void applyInttForAB(T& out, R& in) {
         applyIntt(out.a[row], in.a[row]);
     }
     applyIntt(out.b, in.b);
+}
+
+template <typename T>
+void bitRev(std::vector<T>& x) {
+    int j = 0;
+    int b = 0;
+    int N = int(x.size());
+    for (int i = 1; i < N; i++) {
+        b = N >> 1;  // Initialize b to half of N
+        while (j >= b) {
+            j -= b;  // Perform bit-reversal
+            b >>= 1;
+        }
+        j += b;  // Move to the next position
+
+        // Swap elements if the bit-reversed index is greater than the current index
+        if (j > i) {
+            T temp = x[j];
+            x[j] = x[i];
+            x[i] = temp;
+        }
+    }
 }
 
 void bitRevShuffle(std::vector<NttType>& x);

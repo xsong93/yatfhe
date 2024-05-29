@@ -12,12 +12,11 @@
 #include "yatfhe/numeric_functions.h"
 
 constexpr int32_t MOD16 = 65537;
-constexpr Ntt16 HALF_MOD16 = (MOD16 + 1) >> 1;
-constexpr Ntt16 NTT16_MASK = 0xff;
-constexpr Ntt16 PRIM_ROOT16 = 7;
-constexpr uint32_t POLY_MAX = 1 << 31;
-const string STR_NTT = "NWC-DIT-NR-NNT";
-const string STR_INTT = "NWC-DIF-RN-INNT";
+constexpr uint16_t HALF_MOD16 = (MOD16 + 1) >> 1;
+constexpr unsigned char NTT16_MASK = 0xff;
+constexpr char PRIM_ROOT16 = 3;
+constexpr unsigned char POLY_MAX8 = 1 << 7;
+
 
 struct TwRom16 {
     int N {};
@@ -67,8 +66,8 @@ extern TwRom16 TW_ROM16;
 //----------------------------------------------------------------------------------
 void genTW_ROM16(TwRom16& tw_rom);
 void genNWCparam16(TwParam16& nwc_tw,const int n, const TwRom16& tw_rom, const std::string& str);
-void doNTT16(Ntt16Polynomial& RES, const IntPolynomial& IN);
-void doINTT16(IntPolynomial & RES, const Ntt16Polynomial& IN);
+void applyNtt16(Ntt16Polynomial& RES, const IntPolynomial& IN);
+void applyIntt16(IntPolynomial & RES, const Ntt16Polynomial& IN);
 Ntt16 POW16(Ntt16 base, Ntt16 exp, Ntt16 mod);
 Ntt16 modINV16(Ntt16 in);
 Ntt16 modADD16(Ntt16 a, Ntt16 b);
@@ -76,7 +75,6 @@ Ntt16 modADDscale16(Ntt16 a, Ntt16 b);
 Ntt16 modSUBscale16(Ntt16 a, Ntt16 b);
 Ntt16 modSUB16(Ntt16 a, Ntt16 b);
 Ntt16 modMULT16(Ntt16 a, Ntt16 b);
-Ntt16 modmul16(Ntt16 x, Ntt16 y);
-void bit_rev16(std::vector<Ntt16>& x);
+void initGlobalParamsNtt16(int N);
 
 #endif //HLS_YATFHE_NTT16_H
