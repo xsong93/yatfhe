@@ -39,7 +39,7 @@ Ntt16 modINV16(Ntt16 in){
         r = tempR;
     }
     if (r > 1) {
-        throw std::invalid_argument("a is not invertible");
+        throw std::invalid_argument("input is not invertible");
     }
     if (t < 0) {
         t += MOD16;
