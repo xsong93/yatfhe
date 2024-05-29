@@ -244,19 +244,19 @@ void applyIntt16(IntPolynomial & RES, const Ntt16Polynomial& IN) {
     auto N = IN.N;
     Ntt16Polynomial res(N);
     DIF_RN16(res,IN);
-    int16_t temp_ntt = 0;
+    int32_t temp_ntt = 0;
     uint32_t temp_poly = 0;
     for (int i = 0; i < N; i++) {
         if (res.coeffs[i] >= HALF_MOD16) {
-            temp_ntt = int16_t(res.coeffs[i] - MOD16);
+            temp_ntt = int32_t(res.coeffs[i] - MOD16);
         } else {
-            temp_ntt = int16_t(res.coeffs[i]);
+            temp_ntt = int32_t(res.coeffs[i]);
         }
         temp_poly = uint32_t(temp_ntt & NTT16_MASK);
         if (temp_poly >= POLY_MAX8) {
-            RES.coeffs[i] = int16_t(temp_poly - (POLY_MAX8 << 1));
+            RES.coeffs[i] = int32_t(temp_poly - (POLY_MAX8 << 1));
         } else {
-            RES.coeffs[i] = int16_t(temp_poly);
+            RES.coeffs[i] = int32_t(temp_poly);
         }
     }
 }
