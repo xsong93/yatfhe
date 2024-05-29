@@ -14,15 +14,15 @@ TwParam16 NWC_ITW16;
 TwRom16 TW_ROM16;
 
 Ntt16 POW16(Ntt16 BASE, Ntt16 EXP) {
-    uint32_t result = 1;
+    Ntt16 result = 1;
     while (EXP > 0) {
         if (EXP % 2 == 1) {
-            result = (result * BASE) % MOD16;
+            result = uint32_t(result * BASE) % MOD16;
         }
-        BASE = (BASE * BASE) % MOD16;
+        BASE = uint32_t(BASE * BASE) % MOD16;
         EXP = EXP / 2;
     }
-    return Ntt16(result);
+    return result;
 }
 
 Ntt16 modINV16(Ntt16 in) {
