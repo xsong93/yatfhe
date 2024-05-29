@@ -5,11 +5,13 @@
 #ifndef HLS_YATFHE_NTT16_H
 #define HLS_YATFHE_NTT16_H
 
+#include <gmp.h>
 #include <vector>
 #include <string>
 #include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
+#include "yautil/tool.h"
 
 constexpr int32_t MOD16 = 65537;
 constexpr uint16_t HALF_MOD16 = (MOD16 + 1) >> 1;

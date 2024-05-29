@@ -2,6 +2,7 @@
 // Created by Xintong Song on 2024/1/30.
 //
 #include "gtest/gtest.h"
+#include <gmp.h>
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt16.h"
 #include "yatfhe/ntt64.h"
@@ -31,13 +32,14 @@ TEST(Ntt16Test, ModMultTest) {
 }
 
 TEST(Ntt16Test, NttIntt16Test) {
-    const int N = 512;
+    const int N = 1024;
     initGlobalParamsNtt16(N);
     Ntt16Polynomial resNtt{N};
     IntPolynomial a1{N};
     IntPolynomial resIntt{N};
     for (auto i = 0; i < N; i++) {
         a1.coeffs[i] = genIntUniformDist(CHAR_MIN, CHAR_MAX);
+//        a1.coeffs[i] = 65536;
     }
 
     applyNtt16(resNtt, a1);

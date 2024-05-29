@@ -5,6 +5,9 @@
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt16.h"
 #include "yatfhe/numeric_functions.h"
+#include <gmp.h>
+#include "yautil/tool.h"
+
 
 using namespace std;
 
@@ -25,6 +28,17 @@ Ntt16 POW16(Ntt16 BASE, Ntt16 EXP) {
     return result;
 }
 
+Ntt16 modinv16(Ntt16 in) {
+    mpz_t a, inv, modu;
+    mpz_init(a);
+    mpz_init(inv);
+    mpz_init(modu);
+    mpz_set_ui(a, in);
+    mpz_set_ui(modu, MOD16);
+    mpz_invert(inv, a, modu);
+    Ntt16 res = mpz_get_ui(inv);
+    return res;
+}
 Ntt16 modINV16(Ntt16 in) {
     int32_t t = 0, newT = 1;
     int32_t r = MOD16, newR = in;
@@ -39,7 +53,7 @@ Ntt16 modINV16(Ntt16 in) {
         r = tempR;
     }
     if (r > 1) {
-        throw std::invalid_argument("input is not invertible");
+//        throw std::invalid_argument("input is not invertible");
     }
     if (t < 0) {
         t += MOD16;
@@ -77,8 +91,8 @@ Ntt16 modSUBscale16(Ntt16 a, Ntt16 b){
 }
 
 Ntt16 modMULT16(Ntt16 a, Ntt16 b) {
-    uint32_t result = static_cast<uint32_t>(a) * static_cast<uint32_t>(b);
-    return static_cast<uint16_t>(result % MOD16);
+    uint64_t result = static_cast<uint32_t>(a) * static_cast<uint32_t>(b);
+    return static_cast<uint32_t>(result % MOD16);
 }
 
 // unused
@@ -212,24 +226,24 @@ void DIF_RN16(Ntt16Polynomial& RES, const Ntt16Polynomial& IN) {
     auto block = 0;
     auto block_size = 0;
     auto tw_index = 0;
-//    Ntt16 flag_a = 0, flag_b = 0, flag_tw = 0;
+    Ntt16 flag_a = 0, flag_b = 0, flag_tw = 0;
     res = in;
     Ntt16 temp_add, temp_sub, temp_mult;
-//    int pos_a, pos_b;
+    int pos_a, pos_b;
     for (auto i = 0; i < lvl; i++) {
         block = N >> (i + 1);
         block_size = 1 << (i + 1);
         gap = 1 << i;
-//        pos_a = 0;
-//        pos_b = 0;
+        pos_a = 0;
+        pos_b = 0;
         for (auto j = 0; j < block; j++) { //debug:tw_index overflow
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-//                flag_a = res[j * block_size + k];
-//                flag_b = res[j * block_size + k + gap];
-//                flag_tw = tw[i][tw_index];
-//                pos_a = j * block_size + k;
-//                pos_b = j * block_size + k + gap;
+                flag_a = res[j * block_size + k];
+                flag_b = res[j * block_size + k + gap];
+                flag_tw = tw[i][tw_index];
+                pos_a = j * block_size + k;
+                pos_b = j * block_size + k + gap;
                 temp_add = modADDscale16(res[j * block_size + k], res[j * block_size + k + gap]);
                 temp_sub = modSUBscale16(res[j * block_size + k], res[j * block_size + k + gap]);
                 temp_mult = modMULT16(temp_sub, tw[i][tw_index]);
@@ -244,6 +258,7 @@ void applyIntt16(IntPolynomial & RES, const Ntt16Polynomial& IN) {
     auto N = IN.N;
     Ntt16Polynomial res(N);
     DIF_RN16(res,IN);
+    printArray(res.coeffs,"INTT");
     int32_t temp_ntt = 0;
     uint32_t temp_poly = 0;
     for (int i = 0; i < N; i++) {
