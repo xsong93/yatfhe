@@ -18,8 +18,8 @@ int main() {
     Ntt64 b = 9876543210987654321ULL;
     Ntt16 a1 = 59923;
     Ntt16 b1 = 65535;
-    Ntt14 a14 = 59923;
-    Ntt14 b14 = 65535;
+    Ntt14 a14 = 11280;
+    Ntt14 b14 = 11111;
     COUNT_TIME("modMul", {
         for (auto i = 0; i < 10000; i++) { modMULT64(a, b); }
     })
