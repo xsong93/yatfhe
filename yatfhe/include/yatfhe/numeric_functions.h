@@ -22,6 +22,8 @@ int calLogBase2(int N);
 
 Integer genIntUniformDist(int lowerBound, int upperBound);
 
+uint64_t genUint64UniformDist(const uint64_t lowerBound, const uint64_t upperBound);
+
 Torus addGaussianNoise(Torus message, double sigma);
 
 int32_t modSwitchFromTorus32(Torus in, int32_t newMod);
