@@ -25,6 +25,11 @@ Integer genIntUniformDist(const int lowerBound, const int upperBound) {
     return uniformIntDistrib(rng);
 }
 
+uint64_t genUInt64UniformDist(const uint64_t lowerBound, const uint64_t upperBound) {
+    uniform_int_distribution<uint64_t> uniformIntDistrib(lowerBound, upperBound);
+    return uniformIntDistrib(rng);
+}
+
 // Gaussian sample centered in message, with standard deviation sigma
 Torus addGaussianNoise(Torus message, const double sigma) {
     normal_distribution<double> normalDistribution(0.0, sigma);

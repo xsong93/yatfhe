@@ -39,7 +39,7 @@ TEST(Ntt16Test, NttIntt16Test) {
     IntPolynomial resIntt{N};
     for (auto i = 0; i < N; i++) {
         a1.coeffs[i] = genIntUniformDist(CHAR_MIN, CHAR_MAX);
-//        a1.coeffs[i] = 65536;
+//        a1.coeffs[i] = -1;
     }
 
     applyNtt16(resNtt, a1);

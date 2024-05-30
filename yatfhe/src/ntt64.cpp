@@ -119,6 +119,71 @@ Ntt64 modmul64(Ntt64 x, Ntt64 y) {
     return MOD64 - minus + plus;
 }
 
+Ntt64 fastmm(Ntt64 x, Ntt64 y) {
+    uint32_t x0 = (uint32_t)x;
+    uint32_t x1 = (uint32_t)(x >> 32);
+    uint32_t y0 = (uint32_t)y;
+    uint32_t y1 = (uint32_t)(y >> 32);
+
+    uint64_t x0y0 = (uint64_t)x0 * (uint64_t)y0;
+    uint64_t x0y1 = (uint64_t)x0 * (uint64_t)y1;
+    uint64_t x1y0 = (uint64_t)x1 * (uint64_t)y0;
+    uint64_t x1y1 = (uint64_t)x1 * (uint64_t)y1;
+    uint32_t x0y0_l = (uint32_t)x0y0;
+    uint32_t x0y0_h = (uint32_t)(x0y0>>32);
+    uint32_t x0y1_l = (uint32_t)x0y1;
+    uint32_t x0y1_h = (uint32_t)(x0y1>>32);
+    uint32_t x1y0_l = (uint32_t)x1y0;
+    uint32_t x1y0_h = (uint32_t)(x1y0>>32);
+    uint32_t x1y1_l = (uint32_t)x1y1;
+    uint32_t x1y1_h = (uint32_t)(x1y1>>32);
+
+
+    // z = x*y, z<127:0>
+    // a = z<127:96>, b = z<95:64>, c = z<63:32>, d = z<31:0>
+    uint32_t d = x0y0_l;
+    uint64_t temp_c = x0y0_h + x0y1_l + x1y0_l;
+    uint32_t c = (uint32_t)temp_c;
+    uint32_t c_of = (uint32_t)(temp_c >> 32);
+    uint64_t temp_b = x1y1_l + x0y1_h + x1y0_h + c_of;
+    uint32_t b = (uint32_t)temp_b;
+    uint32_t b_of = (uint32_t)(temp_b >> 32);
+    uint32_t a = x1y1_h + b_of;
+    uint64_t tmp_sum_bc = c + b;
+    bool sumbc_of = (bool)(tmp_sum_bc>>32);
+    tmp_sum_bc = (uint64_t) ((uint32_t)tmp_sum_bc)<<32;
+    int64_t d_minus_ab = d - a - b;
+    bool minus_flag = (d_minus_ab < 0);
+    uint64_t abs_val = abs(d_minus_ab);
+    uint64_t res;
+    if (sumbc_of) {
+        if (minus_flag) {
+          res = (tmp_sum_bc >= abs_val)? tmp_sum_bc - abs_val + UINT64_MAX + 1 - MOD64 : UINT64_MAX + 1 + tmp_sum_bc - abs_val;
+          res = (res >= MOD64)? (res - MOD64):res;
+        } else {
+            res = tmp_sum_bc + abs_val + UINT64_MAX + 1 - MOD64;
+        }
+    } else {
+        if (minus_flag) {
+            res = (tmp_sum_bc >= abs_val)? tmp_sum_bc - abs_val : MOD64 + tmp_sum_bc - abs_val;
+        } else {
+            res = ((tmp_sum_bc + abs_val) >= MOD64)? tmp_sum_bc + abs_val - MOD64 : tmp_sum_bc + abs_val;
+        }
+    }
+    return res;
+
+}
+
+//    uint32_t tmp_l0 = (uint32_t)x0y1;
+//    uint32_t tmp_l1 = (uint32_t)(x0y1>>32);
+//    uint32_t tmp_h0 = (uint32_t)x1y0;
+//    uint32_t tmp_h1 = (uint32_t)(x1y0>>32);
+//    uint64_t tmp_add_l = tmp_l0 + tmp_l1;
+//    uint64_t tmp_add_h = tmp_h0 + tmp_h1;
+//    uint8_t tmp_overflow_l = (uint8_t)(tmp_add_l>>32);
+//    uint8_t tmp_overflow_h = (uint8_t)((tmp_add_h + tmp_overflow_l)>>32);
+//    uint64_t temp = (uint64_t)((uint32_t)tmp_add_l) + (uint64_t)((uint32_t)((tmp_add_h + tmp_overflow_l)>>32));
+
 int clog2(int N) {
     int res = 0;
     while (N >>= 1){

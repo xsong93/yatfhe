@@ -66,6 +66,7 @@ Ntt64 modADDscale64(Ntt64 a, Ntt64 b);
 Ntt64 modSUBscale64(Ntt64 a, Ntt64 b);
 Ntt64 modSUB64(Ntt64 a, Ntt64 b);
 Ntt64 modMULT64(Ntt64 a, Ntt64 b);
+Ntt64 fastmm(Ntt64 a, Ntt64 b);
 Ntt64 modmul64(Ntt64 x, Ntt64 y);
 void initGlobalParamsNtt64(int N);
 
