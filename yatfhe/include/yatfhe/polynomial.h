@@ -9,6 +9,8 @@
 #include <cstdint>
 #include "yatfhe/torus.h"
 
+constexpr uint8_t POLY_MAX8 = 1 << 7;
+
 struct TorusPolynomial {
     std::vector<Torus> coeffs {}; // N
     int N {};
@@ -60,6 +62,19 @@ struct Ntt16Polynomial {
             coeffs(N, 0) {};
 
     Ntt16Polynomial(int N, Ntt16 value) :
+            N(N),
+            coeffs(N, value) {};
+};
+
+struct Ntt14Polynomial {
+    std::vector<Ntt14> coeffs {}; // N
+    int N {};
+
+    explicit Ntt14Polynomial(int N) :
+            N(N),
+            coeffs(N, 0) {};
+
+    Ntt14Polynomial(int N, Ntt16 value) :
             N(N),
             coeffs(N, value) {};
 };
