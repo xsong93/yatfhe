@@ -11,14 +11,11 @@
 #include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
-#include "yautil/tool.h"
 
 constexpr int32_t MOD16 = 65537;
 constexpr uint16_t HALF_MOD16 = (MOD16 + 1) >> 1;
 constexpr uint8_t NTT16_MASK = 0xff;
 constexpr int8_t PRIM_ROOT16 = 3;
-constexpr uint8_t POLY_MAX8 = 1 << 7;
-
 
 struct TwRom16 {
     int N {};

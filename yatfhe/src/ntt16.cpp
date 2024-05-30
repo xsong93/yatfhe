@@ -6,7 +6,6 @@
 #include "yatfhe/ntt16.h"
 #include "yatfhe/numeric_functions.h"
 #include <gmp.h>
-#include "yautil/tool.h"
 
 
 using namespace std;
@@ -258,7 +257,6 @@ void applyIntt16(IntPolynomial & RES, const Ntt16Polynomial& IN) {
     auto N = IN.N;
     Ntt16Polynomial res(N);
     DIF_RN16(res,IN);
-    printArray(res.coeffs,"INTT");
     int32_t temp_ntt = 0;
     uint32_t temp_poly = 0;
     for (int i = 0; i < N; i++) {
