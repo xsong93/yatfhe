@@ -90,6 +90,18 @@ TEST(MULT_TEST,rand_test){
         EXPECT_EQ(res1, res2);
     }
 }
+TEST(MULT_TEST,little_rand_test){
+    uint64_t x = 0, y = 0;
+    uint64_t res1 = 0, res2 = 0;
+    int N = 10000000;
+    for (int i = 0; i < N; i++) {
+        x = genUInt64UniformDist(0,N);
+        y = genUInt64UniformDist(0,N);
+        res1 = modMULT64(x,y);
+        res2 = fastmm(x,y);
+        EXPECT_EQ(res1, res2);
+    }
+}
 
 TEST(MULT_TEST,single_test){
     uint64_t x = 0, y = 0;

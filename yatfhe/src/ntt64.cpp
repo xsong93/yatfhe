@@ -119,6 +119,7 @@ Ntt64 modmul64(Ntt64 x, Ntt64 y) {
     return MOD64 - minus + plus;
 }
 
+//https://1drv.ms/o/s!AvAq0B6vaN_Tj02p-JtAH0A9ICGw?e=ITjEAn
 Ntt64 fastmm(Ntt64 x, Ntt64 y) {
     uint32_t x0 = (uint32_t)x;
     uint32_t x1 = (uint32_t)(x >> 32);
@@ -138,7 +139,6 @@ Ntt64 fastmm(Ntt64 x, Ntt64 y) {
     uint32_t x1y1_l = (uint32_t)x1y1;
     uint32_t x1y1_h = (uint32_t)(x1y1>>32);
 
-
     // z = x*y, z<127:0>
     // a = z<127:96>, b = z<95:64>, c = z<63:32>, d = z<31:0>
     uint32_t d = x0y0_l;
@@ -154,20 +154,21 @@ Ntt64 fastmm(Ntt64 x, Ntt64 y) {
     tmp_sum_bc = (uint64_t) ((uint32_t)tmp_sum_bc)<<32;
     int64_t d_minus_ab = (int64_t)d - (int64_t)a - (int64_t)b;
     bool minus_flag = (d_minus_ab < 0);
-    uint64_t abs_val = abs(d_minus_ab);
+//    uint64_t abs_val = abs(d_minus_ab);
     uint64_t res;
     if (sumbc_of) {
         if (minus_flag) {
-          res = (tmp_sum_bc >= abs_val)? tmp_sum_bc - abs_val + UINT64_MAX + 1 - MOD64 : UINT64_MAX + 1 + tmp_sum_bc - abs_val;
+//          res = (tmp_sum_bc >= abs_val)? tmp_sum_bc - abs_val + UINT64_MAX + 1 - MOD64 : UINT64_MAX + 1 + tmp_sum_bc - abs_val;
+          res = (tmp_sum_bc >= (-d_minus_ab))? tmp_sum_bc + d_minus_ab + UINT64_MAX + 1 - MOD64 : UINT64_MAX + 1 + tmp_sum_bc + d_minus_ab;
           res = (res >= MOD64)? (res - MOD64):res;
         } else {
-            res = tmp_sum_bc + abs_val + UINT64_MAX + 1 - MOD64;
+            res = tmp_sum_bc + d_minus_ab + UINT64_MAX + 1 - MOD64;
         }
     } else {
         if (minus_flag) {
-            res = (tmp_sum_bc >= abs_val)? tmp_sum_bc - abs_val : MOD64 + tmp_sum_bc - abs_val;
+            res = (tmp_sum_bc >= (-d_minus_ab))? tmp_sum_bc + d_minus_ab : MOD64 + tmp_sum_bc + d_minus_ab;
         } else {
-            res = ((tmp_sum_bc + abs_val) >= MOD64)? tmp_sum_bc + abs_val - MOD64 : tmp_sum_bc + abs_val;
+            res = ((tmp_sum_bc + d_minus_ab) >= MOD64)? tmp_sum_bc + d_minus_ab - MOD64 : tmp_sum_bc + d_minus_ab;
         }
     }
     return res;
