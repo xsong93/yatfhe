@@ -11,7 +11,6 @@
 #include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
-#include "yautil/tool.h"
 
 constexpr int32_t MOD14 = 12289;
 constexpr uint16_t HALF_MOD14 = (MOD14 + 1) >> 1;
@@ -61,6 +60,7 @@ Ntt14 modADDscale14(Ntt14 a, Ntt14 b);
 Ntt14 modSUBscale14(Ntt14 a, Ntt14 b);
 Ntt14 modSUB14(Ntt14 a, Ntt14 b);
 Ntt14 modMULT14(Ntt14 a, Ntt14 b);
+uint16_t fastModReduction(uint16_t a, uint16_t b);
 void initGlobalParamsNtt14(int N);
 
 #endif //HLS_YATFHE_NTT14_H

@@ -5,7 +5,6 @@
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt14.h"
 #include "yatfhe/numeric_functions.h"
-#include "yautil/tool.h"
 
 using namespace std;
 
@@ -221,7 +220,6 @@ void applyIntt14(IntPolynomial & RES, const Ntt14Polynomial& IN) {
     auto N = IN.N;
     Ntt14Polynomial res(N);
     DIF_RN14(res,IN);
-    printArray(res.coeffs,"INTT");
     int32_t temp_ntt = 0;
     uint32_t temp_poly = 0;
     for (int i = 0; i < N; i++) {
