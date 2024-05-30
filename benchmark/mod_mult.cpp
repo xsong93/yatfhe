@@ -20,19 +20,22 @@ int main() {
     Ntt16 b1 = 65535;
     Ntt14 a14 = 11280;
     Ntt14 b14 = 11111;
+
+    int n = param.N * param.l * param.n;
+    cout << "test on " << n << " samples" << endl;
     COUNT_TIME("modMul", {
-        for (auto i = 0; i < 10000; i++) { modMULT64(a, b); }
+        for (auto i = 0; i < n; i++) { modMULT64(a, b); }
     })
     COUNT_TIME("modmul", {
-        for (auto i = 0; i < 10000; i++) { modmul64(a, b); }
+        for (auto i = 0; i < n; i++) { modmul64(a, b); }
+    })
+    COUNT_TIME("fastmm", {
+        for (auto i = 0; i < n; i++) { fastmm(a, b); }
     })
     COUNT_TIME("16", {
-        for (auto i = 0; i < 10000; i++) { modMULT16(a1, b1); }
-    })
-    COUNT_TIME("16-8", {
-        for (auto i = 0; i < 10000; i++) { modMult16(a1, b1); }
+        for (auto i = 0; i < n; i++) { modMULT16(a1, b1); }
     })
     COUNT_TIME("14", {
-        for (auto i = 0; i < 10000; i++) { modMULT14(a14, b14); }
+        for (auto i = 0; i < n; i++) { modMULT14(a14, b14); }
     })
 }

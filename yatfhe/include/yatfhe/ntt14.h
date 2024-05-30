@@ -60,7 +60,6 @@ Ntt14 modADDscale14(Ntt14 a, Ntt14 b);
 Ntt14 modSUBscale14(Ntt14 a, Ntt14 b);
 Ntt14 modSUB14(Ntt14 a, Ntt14 b);
 Ntt14 modMULT14(Ntt14 a, Ntt14 b);
-uint16_t fastModReduction(uint16_t a, uint16_t b);
 void initGlobalParamsNtt14(int N);
 
 #endif //HLS_YATFHE_NTT14_H

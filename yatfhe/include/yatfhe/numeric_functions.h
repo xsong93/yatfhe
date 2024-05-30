@@ -21,9 +21,8 @@ static const int64_t twoP32 = INT64_C(1) << 32; // 2^32
 int calLogBase2(int N);
 
 Integer genIntUniformDist(int lowerBound, int upperBound);
-uint64_t genUInt64UniformDist(uint64_t lowerBound, uint64_t upperBound);
 
-uint64_t genUint64UniformDist(const uint64_t lowerBound, const uint64_t upperBound);
+uint64_t genUInt64UniformDist(uint64_t lowerBound, uint64_t upperBound);
 
 Torus addGaussianNoise(Torus message, double sigma);
 

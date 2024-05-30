@@ -94,28 +94,6 @@ Ntt16 modMULT16(Ntt16 a, Ntt16 b) {
     return static_cast<uint32_t>(result % MOD16);
 }
 
-// unused
-Ntt16 modMult16(Ntt16 a, Ntt16 b) {
-
-    // Split a and b into 8-bit parts
-    uint8_t a0 = a & 0xFF;
-    uint8_t a1 = (a >> 8) & 0xFF;
-    uint8_t b0 = b & 0xFF;
-    uint8_t b1 = (b >> 8) & 0xFF;
-
-    // Perform intermediate multiplications
-    uint32_t low = a0 * b0;
-    uint32_t mid1 = a0 * b1;
-    uint32_t mid2 = a1 * b0;
-    uint32_t high = a1 * b1;
-
-    // Combine the results and reduce modulo 65537
-    uint32_t result = low + ((mid1 + mid2) << 8) + (high << 16);
-    result %= MOD16;
-
-    return static_cast<Ntt16>(result);
-}
-
 void genTW_ROM16(TwRom16& tw_rom) {
     auto w_n = (tw_rom.N) >> 1;
     auto phi_n = tw_rom.N;

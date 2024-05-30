@@ -27,7 +27,7 @@ void DITNRLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
         for (auto j = 0; j < block; j++) {
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-                temp_mult = modMul(output[j*block_size + k + gap],tw[i][tw_index]);
+                temp_mult = fastmm(output[j*block_size + k + gap],tw[i][tw_index]);
                 temp_add = modAdd(output[j*block_size + k], temp_mult);
                 temp_sub = modSub(output[j*block_size + k], temp_mult);
 
@@ -59,7 +59,7 @@ void DIFRNLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
             for (auto k = 0; k < gap; k++) {
                 temp_add = modADDscale64(output[j * block_size + k], output[j * block_size + k + gap]);
                 temp_sub = modSUBscale64(output[j * block_size + k], output[j * block_size + k + gap]);
-                temp_mult = modMul(temp_sub, tw[i][tw_index]);
+                temp_mult = fastmm(temp_sub, tw[i][tw_index]);
                 output[j * block_size + k] = temp_add;
                 output[j * block_size + k + gap] = temp_mult;
             }
@@ -149,7 +149,7 @@ Ntt64 modMul(Ntt64 a, Ntt64 b) {
 void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {
     const auto N = output.size();
     for (auto j = 0; j < N; j++) {
-        output[j] = modMul(coeffsA[j], coeffsB[j]);
+        output[j] = fastmm(coeffsA[j], coeffsB[j]);
     }
 }
 
@@ -157,7 +157,7 @@ void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coe
 void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
     const auto N = coeffsB.size();
     for (auto j = 0; j < N; j++) {
-        auto tmp = modMul(coeffsA[j], coeffsS[j]);
+        auto tmp = fastmm(coeffsA[j], coeffsS[j]);
         coeffsB[j] = modAdd(coeffsB[j], tmp);
     }
 }

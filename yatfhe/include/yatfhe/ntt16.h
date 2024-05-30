@@ -60,7 +60,6 @@ Ntt16 modADDscale16(Ntt16 a, Ntt16 b);
 Ntt16 modSUBscale16(Ntt16 a, Ntt16 b);
 Ntt16 modSUB16(Ntt16 a, Ntt16 b);
 Ntt16 modMULT16(Ntt16 a, Ntt16 b);
-Ntt16 modMult16(Ntt16 a, Ntt16 b);
 void initGlobalParamsNtt16(int N);
 
 #endif //HLS_YATFHE_NTT16_H
