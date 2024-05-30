@@ -81,11 +81,12 @@ TEST(MODMULT_TEST, test1){
 TEST(MULT_TEST,rand_test){
     uint64_t x = 0, y = 0;
     uint64_t res1 = 0, res2 = 0;
-    int N = 4096;
+    int N = 10000000;
     for (int i = 0; i < N; i++) {
-        x = genUInt64UniformDist(0,(MOD64 - 1));
-        y = genUInt64UniformDist(0,(MOD64 - 1));
-
+        x = genUInt64UniformDist((MOD64 + 1)>>1,(MOD64 - 1));
+        y = genUInt64UniformDist((MOD64 + 1)>>1,(MOD64 - 1));
+        res1 = modMULT64(x,y);
+        res2 = fastmm(x,y);
         EXPECT_EQ(res1, res2);
     }
 }
@@ -93,9 +94,25 @@ TEST(MULT_TEST,rand_test){
 TEST(MULT_TEST,single_test){
     uint64_t x = 0, y = 0;
     uint64_t res1 = 0, res2 = 0;
-    x = 1;
-    y = MOD64 + 1;
+
+    x = MOD64 - 1;
+    y = MOD64 - 2;
     res1 = modMULT64(x,y);
     res2 = fastmm(x,y);
     EXPECT_EQ(res1, res2);
+}
+
+TEST(MULT_TEST,range_test){
+    uint64_t x = 0, y = 0;
+    uint64_t res1 = 0, res2 = 0;
+    for (int i = 1; i < 1024; i++) {
+        x = MOD64 - 1;
+        y = MOD64 - i;
+        res1 = modMULT64(x,y);
+        res2 = fastmm(x,y);
+        if (res1 != res2){
+            cout<<"error at: "<<i<<endl;
+            cout<<"Expect: "<<res1<<", Got: "<<res2<<endl;
+        }
+    }
 }

@@ -142,17 +142,17 @@ Ntt64 fastmm(Ntt64 x, Ntt64 y) {
     // z = x*y, z<127:0>
     // a = z<127:96>, b = z<95:64>, c = z<63:32>, d = z<31:0>
     uint32_t d = x0y0_l;
-    uint64_t temp_c = x0y0_h + x0y1_l + x1y0_l;
+    uint64_t temp_c = (uint64_t)x0y0_h + (uint64_t)x0y1_l + (uint64_t)x1y0_l;
     uint32_t c = (uint32_t)temp_c;
-    uint32_t c_of = (uint32_t)(temp_c >> 32);
-    uint64_t temp_b = x1y1_l + x0y1_h + x1y0_h + c_of;
+    uint64_t c_of = (uint64_t)(temp_c >> 32);
+    uint64_t temp_b = (uint64_t)x1y1_l + (uint64_t)x0y1_h + (uint64_t)x1y0_h + c_of;
     uint32_t b = (uint32_t)temp_b;
     uint32_t b_of = (uint32_t)(temp_b >> 32);
     uint32_t a = x1y1_h + b_of;
-    uint64_t tmp_sum_bc = c + b;
+    uint64_t tmp_sum_bc = (uint64_t)c + (uint64_t)b;
     bool sumbc_of = (bool)(tmp_sum_bc>>32);
     tmp_sum_bc = (uint64_t) ((uint32_t)tmp_sum_bc)<<32;
-    int64_t d_minus_ab = d - a - b;
+    int64_t d_minus_ab = (int64_t)d - (int64_t)a - (int64_t)b;
     bool minus_flag = (d_minus_ab < 0);
     uint64_t abs_val = abs(d_minus_ab);
     uint64_t res;
