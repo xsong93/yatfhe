@@ -4,6 +4,7 @@
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt64.h"
 #include "yatfhe/numeric_functions.h"
+#include "yautil/tool.h"
 
 using namespace std;
 
@@ -27,7 +28,7 @@ void DITNRLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
         for (auto j = 0; j < block; j++) {
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-                temp_mult = fastmm(output[j*block_size + k + gap],tw[i][tw_index]);
+                temp_mult = fastmm_opt(output[j*block_size + k + gap],tw[i][tw_index]);
                 temp_add = modAdd(output[j*block_size + k], temp_mult);
                 temp_sub = modSub(output[j*block_size + k], temp_mult);
 
@@ -50,6 +51,7 @@ void DIFRNLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
     auto tw_index = 0;
     output = input;
     Ntt64 temp_add, temp_sub, temp_mult;
+    Ntt64 tw_flag = 0;
     for (auto i = 0; i < lvl; i++) {
         block = N >> (i + 1);
         block_size = 1 << (i + 1);
@@ -57,9 +59,10 @@ void DIFRNLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
         for (auto j = 0; j < block; j++) { //debug:tw_index overflow
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
+                tw_flag = tw[i][tw_index];
                 temp_add = modADDscale64(output[j * block_size + k], output[j * block_size + k + gap]);
                 temp_sub = modSUBscale64(output[j * block_size + k], output[j * block_size + k + gap]);
-                temp_mult = fastmm(temp_sub, tw[i][tw_index]);
+                temp_mult = fastmm_opt(temp_sub, tw[i][tw_index]);
                 output[j * block_size + k] = temp_add;
                 output[j * block_size + k + gap] = temp_mult;
             }
@@ -85,6 +88,7 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
     auto N = in.N;
     LagrangePolynomial res(N);
     DIFRNLaPoly(res, in);
+    printArray(res.coeffs, "resINtt");
     int64_t temp_ntt = 0;
     uint32_t temp_poly = 0;
     for (int i = 0; i < N; i++) {
@@ -149,7 +153,7 @@ Ntt64 modMul(Ntt64 a, Ntt64 b) {
 void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {
     const auto N = output.size();
     for (auto j = 0; j < N; j++) {
-        output[j] = fastmm(coeffsA[j], coeffsB[j]);
+        output[j] = fastmm_opt(coeffsA[j], coeffsB[j]);
     }
 }
 
@@ -157,7 +161,7 @@ void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coe
 void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
     const auto N = coeffsB.size();
     for (auto j = 0; j < N; j++) {
-        auto tmp = fastmm(coeffsA[j], coeffsS[j]);
+        auto tmp = fastmm_opt(coeffsA[j], coeffsS[j]);
         coeffsB[j] = modAdd(coeffsB[j], tmp);
     }
 }

@@ -37,7 +37,7 @@ TEST(NttTest, NttIntt64Test) {
     TorusPolynomial resIntt{N};
     initCoeffsViaUniformDistribution(a1.coeffs);
 //    for (auto i = 0; i < N; i++) {
-//        a1.coeffs[i] = -3;
+//        a1.coeffs[i] = -1;
 //    }
     applyNtt(resNtt, a1);
     applyIntt(resIntt, resNtt);

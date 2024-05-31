@@ -175,6 +175,7 @@ Ntt64 fastmm(Ntt64 x, Ntt64 y) {
 
 }
 
+//https://1drv.ms/o/s!AvAq0B6vaN_Tj02p-JtAH0A9ICGw?e=ITjEAn
 Ntt64 fastmm_opt(Ntt64 x, Ntt64 y) {
     uint32_t x0 = (uint32_t)x;
     uint32_t x1 = (uint32_t)(x >> 32);
@@ -202,7 +203,8 @@ Ntt64 fastmm_opt(Ntt64 x, Ntt64 y) {
     uint64_t minus = (uint64_t)a + (uint64_t)b;
     uint64_t res = 0;
     if (bc_of) {
-        res =  sum - minus + UINT32_MAX;
+        res =  ((sum + UINT32_MAX) >= minus)? sum - minus + UINT32_MAX: sum - minus + UINT32_MAX + MOD64;
+//        res =  sum - minus + UINT32_MAX;
 //        res = (res>MOD64)? res - MOD64 : res;
     } else {
         res = (sum >= minus) ? sum - minus : MOD64 + sum - minus;

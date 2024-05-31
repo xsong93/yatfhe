@@ -120,11 +120,12 @@ TEST(MULT_TEST,single_test){
     uint64_t x = 0, y = 0;
     uint64_t res1 = 0, res2 = 0, res3 = 0;
 
-    x = MOD64 - 1;
-    y = MOD64 - 1;
+    x = 18446462594437873665;
+    y = 18446462594437873665;
     res1 = modMULT64(x,y);
     res2 = fastmm(x,y);
     res3 = fastmm_opt(x,y);
+    cout<<"Ref = "<<res1<<" Res = "<<res3<<endl;
     EXPECT_EQ(res1, res3);
 }
 
