@@ -38,6 +38,10 @@ int main() {
     COUNT_TIME("16", {
         for (auto i = 0; i < n; i++) { modMULT16(a1, b1); }
     })
+    COUNT_TIME("16R", {
+        for (auto i = 0; i < n; i++) { modMULT16R(a1, b1); }
+    })
+
     COUNT_TIME("14", {
         for (auto i = 0; i < n; i++) { modMULT14(a14, b14); }
     })

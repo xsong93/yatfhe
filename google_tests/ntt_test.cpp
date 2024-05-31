@@ -3,6 +3,7 @@
 //
 #include "gtest/gtest.h"
 #include "yatfhe/ntt.h"
+#include "yatfhe/ntt14.h"
 #include "yatfhe/ntt64.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
@@ -226,5 +227,25 @@ TEST(NttTest, bit_rev_test) {
         std::cout << k << ":" << vec[k] << " ";
     }
     std::cout<<std::endl;
+
+}
+
+TEST(NttTest, DiffBaseTest) {
+    const int N = 8;
+    initGlobalParamsNtt14(N);
+    initGlobalParamsNtt64(N);
+    Ntt14Polynomial resNtt14{N};
+    LagrangePolynomial resNtt64{N};
+    IntPolynomial a1{N};
+    IntPolynomial resIntt14{N};
+    IntPolynomial resIntt64{N};
+    for (auto i = 0; i < N; i++) {
+        a1.coeffs[i] = genIntUniformDist(1, 1);
+    }
+    applyNtt14(resNtt14, a1);
+    applyNtt(resNtt64, a1);
+//    applyIntt14(resIntt, resNtt);
+    printArray(resNtt14.coeffs, "resNtt14");
+    printArray(resNtt64.coeffs, "resNtt64");
 
 }

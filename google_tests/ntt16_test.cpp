@@ -19,12 +19,14 @@ TEST(Ntt16Test, ModMultTest) {
     auto add = modADD16(a, b);
     auto sub = modSUB16(a, b);
     auto mul = modMULT16(a, b);
+    auto mul2 = modMULT16R(a, b);
     auto inv = modINV16(a);
     auto pow = POW16(a, 3);
     printf("a+b: %d, a-b: %d, a*b: %d, inv: %d, pow: %d\n", add, sub, mul, inv, pow);
     ASSERT_EQ(add, 59921);
     ASSERT_EQ(sub, 59925);
     ASSERT_EQ(mul, 11228);
+    ASSERT_EQ(mul2, mul);
     ASSERT_EQ(inv, 36831);
     ASSERT_EQ(pow, ((uint32_t (a * a) % MOD16) * a) %MOD16);
 }

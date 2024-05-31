@@ -89,8 +89,17 @@ Ntt16 modSUBscale16(Ntt16 a, Ntt16 b){
     return temp;
 }
 
+Ntt16 redc16(uint64_t T) {
+    T = (uint32_t)T + (T >> 32);
+    return (T & 0xFFFF) + MOD16 - (T >> 16);
+}
+
+Ntt16 modMULT16R(Ntt16 a, Ntt16 b) {
+    return redc16((uint64_t)a * b);
+}
+
 Ntt16 modMULT16(Ntt16 a, Ntt16 b) {
-    uint64_t result = static_cast<uint32_t>(a) * static_cast<uint32_t>(b);
+    uint64_t result = a * b;
     return static_cast<uint32_t>(result % MOD16);
 }
 

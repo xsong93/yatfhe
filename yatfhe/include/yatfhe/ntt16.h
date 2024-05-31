@@ -59,6 +59,8 @@ Ntt16 modADD16(Ntt16 a, Ntt16 b);
 Ntt16 modADDscale16(Ntt16 a, Ntt16 b);
 Ntt16 modSUBscale16(Ntt16 a, Ntt16 b);
 Ntt16 modSUB16(Ntt16 a, Ntt16 b);
+Ntt16 redc16(uint64_t T);
+Ntt16 modMULT16R(Ntt16 a, Ntt16 b);
 Ntt16 modMULT16(Ntt16 a, Ntt16 b);
 void initGlobalParamsNtt16(int N);
 
