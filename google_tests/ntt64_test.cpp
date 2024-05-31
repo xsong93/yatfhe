@@ -77,8 +77,20 @@ TEST(MODMULT_TEST, test1){
     printBanner("modmult test");
 
 }
-
 TEST(MULT_TEST,rand_test){
+    uint64_t x = 0, y = 0;
+    uint64_t res1 = 0, res2 = 0, res3 = 0;
+    int N = 100000000;
+    for (int i = 0; i < N; i++) {
+        x = genUInt64UniformDist(0,(MOD64 - 1));
+        y = genUInt64UniformDist(0,(MOD64 - 1));
+        res1 = modMULT64(x,y);
+        res2 = fastmm(x,y);
+        res3 = fastmm_opt(x,y);
+        EXPECT_EQ(res1, res3);
+    }
+}
+TEST(MULT_TEST,big_rand_test){
     uint64_t x = 0, y = 0;
     uint64_t res1 = 0, res2 = 0, res3 = 0;
     int N = 10000000;
