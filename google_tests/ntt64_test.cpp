@@ -12,6 +12,40 @@
 #include "yatfhe/ntt.h"
 using namespace std;
 
+
+//std::vector<NttType> extractValues64(const std::string& input) {
+//    std::vector<NttType> result;
+//    std::istringstream iss(input);
+//    std::string token;
+//
+//    while (std::getline(iss, token, ' ')) {
+//        size_t pos = token.find(':');
+//        if (pos != std::string::npos) {
+//            std::string valueStr = token.substr(pos + 1);
+//            int value = std::stoi(valueStr);
+//            result.push_back(value);
+//        }
+//    }
+//
+//    return result;
+//}
+//std::vector<int32_t> extractValues32(const std::string& input) {
+//    std::vector<int32_t> result;
+//    std::istringstream iss(input);
+//    std::string token;
+//
+//    while (std::getline(iss, token, ' ')) {
+//        size_t pos = token.find(':');
+//        if (pos != std::string::npos) {
+//            std::string valueStr = token.substr(pos + 1);
+//            int value = std::stoi(valueStr);
+//            result.push_back(value);
+//        }
+//    }
+//
+//    return result;
+//}
+
 TEST(ntt64_test, ntt64_test){
     int N = 4096;
     int depth = clog2(N);
@@ -61,6 +95,7 @@ TEST(ntt64_test, single_test) {
     cout<<"breakpoint"<<endl;
 }
 
+
 TEST(MODMULT_TEST, test1){
     uint64_t x = 0, y = 0;
     uint64_t res1 = 0, res2 = 0;
@@ -87,6 +122,9 @@ TEST(MULT_TEST,rand_test){
         res1 = modMULT64(x,y);
         res2 = fastmm(x,y);
         res3 = fastmm_opt(x,y);
+        if (res1 != res3) {
+            cout<<"ref = "<<res1<<" res = "<<res3<<endl;
+        }
         EXPECT_EQ(res1, res3);
     }
 }
@@ -120,8 +158,8 @@ TEST(MULT_TEST,single_test){
     uint64_t x = 0, y = 0;
     uint64_t res1 = 0, res2 = 0, res3 = 0;
 
-    x = 18446462594437873665;
-    y = 18446462594437873665;
+    x = 18446744069397807105;
+    y = 1099511627520;
     res1 = modMULT64(x,y);
     res2 = fastmm(x,y);
     res3 = fastmm_opt(x,y);
@@ -143,3 +181,26 @@ TEST(MULT_TEST,range_test){
         }
     }
 }
+
+//TEST(INTT,DEBUG){
+//    int N = 32;
+//    string a = "[0:5260404028879888055 1:2080200617370937984 2:8635497518897110094 3:17074629399922632159 4:532751275413342706 5:94730927289256948 6:11800853980674729369 7:14181761097009271855 8:6012948908770388828 9:15183787253499871307 10:17178040517662139140 11:16490084431612065324 12:1281149636277345433 13:1027905122032817414 14:11259222992026333351 15:7307492464117241631 16:13480420096253804778 17:15589735580482405852 18:827757031063907394 19:8930242279963162792 20:17041204284390487620 21:10401226624546424232 22:6757777188599747093 23:647659515394691263 24:4322206117477043811 25:15732020634513371785 26:1089572772745239303 27:16700679773495330012 28:190484478297455371 29:7627482078881090742 30:16351998012850196391 31:2986772681141039532 ]";
+//    string ref = "[0:374207359 1:909129280 2:136638919 3:-1938377611 4:1948900086 5:-1066868068 6:27031941 7:1292742822 8:-471076183 9:308975578 10:1460128347 11:1915833895 12:1315060084 13:1896488892 14:-1630838405 15:-1132467645 16:703239536 17:380821871 18:308425268 19:-1100670068 20:-836101959 21:821753131 22:537169643 23:-532641213 24:-848097661 25:1221703882 26:-1761980014 27:-2092300082 28:-1353902721 29:-232174243 30:1200564444 31:-855495649 ]";
+//    std::vector<NttType> aPrime = extractValues64(a);
+//    std::vector<int32_t> ref_vec = extractValues32(ref);
+//
+//    LagrangePolynomial test_vec{N};
+//    for (int i = 0; i < N; i++) {
+//        test_vec.coeffs[i] = aPrime[i];
+//    }
+//    TorusPolynomial resIntt{N};
+//    applyIntt(resIntt, test_vec);
+//    for (int i = 0; i < N; i++) {
+//        if (resIntt.coeffs[i] != ref_vec[i]) {
+//            cout<<"error at:"<<i<<endl;
+//            cout<<"ref = "<<ref_vec[i]<<" res = "<<resIntt.coeffs[i]<<endl;
+//        }
+//    }
+//
+//}
+

@@ -207,8 +207,9 @@ Ntt64 fastmm_opt(Ntt64 x, Ntt64 y) {
 //        res =  sum - minus + UINT32_MAX;
 //        res = (res>MOD64)? res - MOD64 : res;
     } else {
-        res = (sum >= minus) ? sum - minus : MOD64 + sum - minus;
+        res = (sum >= minus) ? (((sum - minus) >= MOD64)?sum - minus - MOD64 : sum - minus): MOD64 + sum - minus;
     }
+
     return res;
 
 }
