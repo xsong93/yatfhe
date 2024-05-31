@@ -133,7 +133,7 @@ TEST(NttTest, NttSamePolyTest) {
 }
 
 TEST(NttTest, ConvolutionTest) {
-    for (int i = 0; i < 1024; ++i) {
+    for (int i = 0; i < 1; ++i) {
         COUNT_TIME("init timer", cout << endl;)
         const int N = 1024;
         const int k = 5;
@@ -150,10 +150,10 @@ TEST(NttTest, ConvolutionTest) {
         for (auto i = 0 ; i < k; i++) {
             for (auto j = 0; j < N; j++) {
                 poly0[i].coeffs[j] = genIntUniformDist(IntMin ,IntMax);
-                poly2[i].coeffs[j] = genIntUniformDist(0 ,1);
+                poly2[i].coeffs[j] = genIntUniformDist(IntMin ,1);
             }
-//            printArray(poly0[i].coeffs, "poly0" + to_string(i));
-//            printArray(poly2[i].coeffs, "poly2" + to_string(i));
+            printArray(poly0[i].coeffs, "poly0" + to_string(i));
+            printArray(poly2[i].coeffs, "poly2" + to_string(i));
         }
 
         COUNT_TIME("NTT_MULT", {
@@ -163,19 +163,19 @@ TEST(NttTest, ConvolutionTest) {
             }
 
             calModularInnerProductNtt(tmpMul, a, b);
-//            printArray(tmpMul.coeffs,"tmpMUL");
+            printArray(tmpMul.coeffs,"tmpMUL");
             applyIntt(resMul, tmpMul);})
         COUNT_TIME("NAIVE_MULT",
                    for (auto i = 0 ; i < k; i++) {
                        polynomialMulAccNaive(navMul, poly0[i], poly2[i]);
                    })
-//        printArray(resMul.coeffs, "resMul");
-//        printArray(navMul.coeffs, "navMul");
+        printArray(resMul.coeffs, "resMul");
+        printArray(navMul.coeffs, "navMul");
 
         for (int i = 0; i < navMul.N; i++) {
-//            if (resMul.coeffs[i] != navMul.coeffs[i]){
-//                cout<<"error at:"<<i<<endl;
-//            }
+            if (resMul.coeffs[i] != navMul.coeffs[i]){
+                cout<<"error at:"<<i<<endl;
+            }
             EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
         }
     }
@@ -184,26 +184,27 @@ TEST(NttTest, ConvolutionTest) {
 }
 
 TEST(NttTest, debug) {
-
-    const int N = 8;
-    initGlobalParamsNtt64(N);
-    LagrangePolynomial res_ntt{N};
-    IntPolynomial a{N}, res_intt{N};
-//    for (int i = 0; i < N; i++) {
-//        a.coeffs[i] = genIntUniformDist(0 ,1);
-//    }
-    a.coeffs = {0, 0, 1, 0, 1, 1, 0, 0};
-    printArray(a.coeffs,"ref_vec");
-    applyNtt(res_ntt, a);
-    printArray(res_ntt.coeffs,"res_ntt");
-    applyIntt(res_intt, res_ntt);
-    printArray(res_intt.coeffs, "res_intt");
-    for (int i = 0; i < N; i++) {
-        if (a.coeffs[i] != res_intt.coeffs[i]) {
-            cout<<"error at:"<<i<<endl;
-            cout<<"ref = "<<a.coeffs[i]<<" res = "<<res_intt.coeffs[i]<<endl;
+    for (int i = 0; i < 1000000; ++i) {
+        const int N = 16;
+        initGlobalParamsNtt64(N);
+        LagrangePolynomial res_ntt{N};
+        IntPolynomial a{N}, res_intt{N};
+        for (int i = 0; i < N; i++) {
+            a.coeffs[i] = genIntUniformDist(IntMin ,1);
         }
-//        EXPECT_EQ(a.coeffs[i], res_intt.coeffs[i]);
+//    a.coeffs = {0, 0, 1, 0, 1, 1, 0, 0};
+//        printArray(a.coeffs,"ref_vec");
+        applyNtt(res_ntt, a);
+//    printArray(res_ntt.coeffs,"res_ntt");
+        applyIntt(res_intt, res_ntt);
+//    printArray(res_intt.coeffs, "res_intt");
+        for (int i = 0; i < N; i++) {
+//        if (a.coeffs[i] != res_intt.coeffs[i]) {
+//            cout<<"error at:"<<i<<endl;
+//            cout<<"ref = "<<a.coeffs[i]<<" res = "<<res_intt.coeffs[i]<<endl;
+//        }
+            EXPECT_EQ(a.coeffs[i], res_intt.coeffs[i]);
+        }
     }
 }
 

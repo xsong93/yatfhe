@@ -92,7 +92,7 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
     auto N = in.N;
     LagrangePolynomial res(N);
     DIFRNLaPoly(res, in);
-    printArray(res.coeffs, "resINtt");
+//    printArray(res.coeffs, "resINtt");
     int64_t temp_ntt = 0;
     uint32_t temp_poly = 0;
     for (int i = 0; i < N; i++) {
