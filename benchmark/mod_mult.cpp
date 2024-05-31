@@ -32,6 +32,9 @@ int main() {
     COUNT_TIME("fastmm", {
         for (auto i = 0; i < n; i++) { fastmm(a, b); }
     })
+    COUNT_TIME("fastmm_opt", {
+        for (auto i = 0; i < n; i++) { fastmm_opt(a, b); }
+    })
     COUNT_TIME("16", {
         for (auto i = 0; i < n; i++) { modMULT16(a1, b1); }
     })

@@ -175,15 +175,42 @@ Ntt64 fastmm(Ntt64 x, Ntt64 y) {
 
 }
 
-//    uint32_t tmp_l0 = (uint32_t)x0y1;
-//    uint32_t tmp_l1 = (uint32_t)(x0y1>>32);
-//    uint32_t tmp_h0 = (uint32_t)x1y0;
-//    uint32_t tmp_h1 = (uint32_t)(x1y0>>32);
-//    uint64_t tmp_add_l = tmp_l0 + tmp_l1;
-//    uint64_t tmp_add_h = tmp_h0 + tmp_h1;
-//    uint8_t tmp_overflow_l = (uint8_t)(tmp_add_l>>32);
-//    uint8_t tmp_overflow_h = (uint8_t)((tmp_add_h + tmp_overflow_l)>>32);
-//    uint64_t temp = (uint64_t)((uint32_t)tmp_add_l) + (uint64_t)((uint32_t)((tmp_add_h + tmp_overflow_l)>>32));
+Ntt64 fastmm_opt(Ntt64 x, Ntt64 y) {
+    uint32_t x0 = (uint32_t)x;
+    uint32_t x1 = (uint32_t)(x >> 32);
+    uint32_t y0 = (uint32_t)y;
+    uint32_t y1 = (uint32_t)(y >> 32);
+
+    uint64_t x0y0 = (uint64_t)x0 * (uint64_t)y0;
+    uint64_t x0y1 = (uint64_t)x0 * (uint64_t)y1;
+    uint64_t x1y0 = (uint64_t)x1 * (uint64_t)y0;
+    uint64_t x1y1 = (uint64_t)x1 * (uint64_t)y1;
+
+
+    // z = x*y, z<127:0>
+    // a = z<127:96>, b = z<95:64>, c = z<63:32>, d = z<31:0>
+    auto d = (uint32_t)x0y0;
+    uint64_t pp1 = (x0y0>>32) + (uint32_t)x1y0 + (uint32_t)x0y1;
+    auto c = (uint32_t)pp1;
+    uint64_t pp2 = (pp1>>32) + (x0y1>>32) + (x1y0>>32) + (uint32_t)x1y1;
+    auto b = uint32_t(pp2);
+    uint32_t a = (x1y1>>32) + (pp2>>32);
+    uint64_t sum_bc = (uint64_t)b + (uint64_t)c;
+    bool bc_of = (bool)(sum_bc>>32);
+    sum_bc = (uint64_t)(sum_bc<<32);
+    uint64_t sum = sum_bc + (uint64_t)d;
+    uint64_t minus = (uint64_t)a + (uint64_t)b;
+    uint64_t res = 0;
+    if (bc_of) {
+        res =  sum - minus + UINT32_MAX;
+        res = (res>MOD64)? res - MOD64 : res;
+    } else {
+        res = (sum >= minus) ? sum - minus : MOD64 + sum - minus;
+    }
+    return res;
+
+}
+
 
 int clog2(int N) {
     int res = 0;

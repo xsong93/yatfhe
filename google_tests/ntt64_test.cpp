@@ -80,14 +80,15 @@ TEST(MODMULT_TEST, test1){
 
 TEST(MULT_TEST,rand_test){
     uint64_t x = 0, y = 0;
-    uint64_t res1 = 0, res2 = 0;
+    uint64_t res1 = 0, res2 = 0, res3 = 0;
     int N = 10000000;
     for (int i = 0; i < N; i++) {
         x = genUInt64UniformDist((MOD64 + 1)>>1,(MOD64 - 1));
         y = genUInt64UniformDist((MOD64 + 1)>>1,(MOD64 - 1));
         res1 = modMULT64(x,y);
         res2 = fastmm(x,y);
-        EXPECT_EQ(res1, res2);
+        res3 = fastmm_opt(x,y);
+        EXPECT_EQ(res1, res3);
     }
 }
 TEST(MULT_TEST,little_rand_test){
@@ -105,13 +106,14 @@ TEST(MULT_TEST,little_rand_test){
 
 TEST(MULT_TEST,single_test){
     uint64_t x = 0, y = 0;
-    uint64_t res1 = 0, res2 = 0;
+    uint64_t res1 = 0, res2 = 0, res3 = 0;
 
     x = MOD64 - 1;
-    y = MOD64 - 2;
+    y = MOD64 - 1;
     res1 = modMULT64(x,y);
     res2 = fastmm(x,y);
-    EXPECT_EQ(res1, res2);
+    res3 = fastmm_opt(x,y);
+    EXPECT_EQ(res1, res3);
 }
 
 TEST(MULT_TEST,range_test){
