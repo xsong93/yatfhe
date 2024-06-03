@@ -64,7 +64,7 @@ TEST(RgswTest, RgswMultTestNaive) {
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
-        Integer mu1 = genIntUniformDist(0, 1);
+        Integer mu1 = genIntUniformDist(0, 3);
         trgswEncrypt(trgsw, param, trgswKey, mu1);
         printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
 
@@ -113,7 +113,7 @@ TEST(RgswTest, RgswMultTestNTT) {
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
-        Integer mu1 = genIntUniformDist(0, 1);
+        Integer mu1 = genIntUniformDist(0, 3);
         trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, mu1);
         printf( "trgsw dec: %d.\n", trgswDecryptNtt(trgswDft, param, trgswKey));
 

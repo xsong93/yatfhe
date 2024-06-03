@@ -4,7 +4,6 @@
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt64.h"
 #include "yatfhe/numeric_functions.h"
-#include "yautil/tool.h"
 
 using namespace std;
 
@@ -49,10 +48,9 @@ void DIFRNLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
     auto block = 0;
     auto block_size = 0;
     auto tw_index = 0;
-    Ntt64 prob_1, prob_2;
     output = input;
     Ntt64 temp_add, temp_sub, temp_mult;
-    Ntt64 tw_flag = 0;
+//    Ntt64 tw_flag = 0;
     for (auto i = 0; i < lvl; i++) {
         block = N >> (i + 1);
         block_size = 1 << (i + 1);
@@ -60,12 +58,9 @@ void DIFRNLaPoly(LagrangePolynomial& out, const LagrangePolynomial& in) {
         for (auto j = 0; j < block; j++) { //debug:tw_index overflow
             tw_index = j;
             for (auto k = 0; k < gap; k++) {
-                tw_flag = tw[i][tw_index];
-                prob_1 = output[j * block_size + k];
-                prob_2 = output[j * block_size + k + gap];
+//                tw_flag = tw[i][tw_index];
                 temp_add = modADDscale64(output[j * block_size + k], output[j * block_size + k + gap]);
                 temp_sub = modSUBscale64(output[j * block_size + k], output[j * block_size + k + gap]);
-
                 temp_mult = fastmm_opt(temp_sub, tw[i][tw_index]);
                 output[j * block_size + k] = temp_add;
                 output[j * block_size + k + gap] = temp_mult;
@@ -92,7 +87,6 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
     auto N = in.N;
     LagrangePolynomial res(N);
     DIFRNLaPoly(res, in);
-//    printArray(res.coeffs, "resINtt");
     int64_t temp_ntt = 0;
     uint32_t temp_poly = 0;
     for (int i = 0; i < N; i++) {
