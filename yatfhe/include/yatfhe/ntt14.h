@@ -62,4 +62,20 @@ Ntt14 modSUB14(Ntt14 a, Ntt14 b);
 Ntt14 modMULT14(Ntt14 a, Ntt14 b);
 void initGlobalParamsNtt14(int N);
 
+template <typename T, typename R>
+void applyNttForAB14(T& out, R& in) {
+    for (auto row = 0; row < in.a.size(); row++) {
+        applyNtt14(out.a[row], in.a[row]);
+    }
+    applyNtt14(out.b, in.b);
+}
+
+template <typename T, typename R>
+void applyInttForAB14(T& out, R& in) {
+    for (auto row = 0; row < in.a.size(); row++) {
+        applyIntt14(out.a[row], in.a[row]);
+    }
+    applyIntt14(out.b, in.b);
+}
+
 #endif //HLS_YATFHE_NTT14_H

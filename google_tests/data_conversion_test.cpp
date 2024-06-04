@@ -7,7 +7,7 @@
 #include "yautil/tool.h"
 
 
-TEST(doubleTorusTest, doubleTorusTest) {
+TEST(DataConvTest, doubleTorusTest) {
     int N = 100;
     DoublePolynomial doublePoly{N};
     TorusPolynomial tPoly{N};
@@ -47,7 +47,7 @@ TEST(doubleTorusTest, doubleTorusTest) {
     printBanner("Data(double / Torus) conversion");
 }
 
-TEST(intTorusTest, intTorusTest) {
+TEST(DataConvTest, intTorusTest) {
     int N = 100;
     IntPolynomial intPoly{N};
     TorusPolynomial tPoly{N};

@@ -12,22 +12,25 @@
 struct Trgsw {
     std::vector<std::vector<Trlwe>> trlweSamples {};
     int l;
+    int k;
 //    int bgBit;
 
     explicit Trgsw(const YatfheParameters& p) :
 //            trlweSamples(p.k + 1, std::vector<Trlwe>(p.l, Trlwe(p.k, p.N))),
             trlweSamples(p.l, std::vector<Trlwe>(p.k + 1, Trlwe(p.k, p.N))),
-            l(p.l) {};
+            l(p.l),
+            k(p.k) {};
 };
 
-struct DecomposedTrgsw {
-    std::vector<Trgsw> trgswSamples {};
+struct Trgsw16 {
+    std::vector<std::vector<Trlwe16>> trlweSamples {};
     int l;
+    int k;
 
-    explicit DecomposedTrgsw(const YatfheParameters& p) :
-//            trlweSamples(p.k + 1, std::vector<Trlwe>(p.l, Trlwe(p.k, p.N))),
-            trgswSamples(p.l2, Trgsw(p)),
-            l(p.l2) {};
+    explicit Trgsw16(const YatfheParameters& p) :
+            trlweSamples(p.l, std::vector<Trlwe16>(p.k + 1, Trlwe16(p.k, p.N))),
+            l(p.l),
+            k(p.k) {};
 };
 
 struct TrgswDft {
@@ -41,12 +44,29 @@ struct TrgswDft {
             l(p.l) {};
 };
 
+struct TrgswDft14 {
+    std::vector<std::vector<TrlweDft14>> trlweDftSamples; // l *  (k + 1)
+    int l;
+
+    explicit TrgswDft14(const YatfheParameters& p) :
+            trlweDftSamples(p.l, std::vector<TrlweDft14>(p.k + 1, TrlweDft14(p.k, p.N))),
+            l(p.l) {};
+};
+
 struct TrgswKey {
     TrlweKey trlweKey;
 
     explicit TrgswKey(const YatfheParameters& p) :
         trlweKey(TrlweKey(p)) {};
 };
+
+void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
+
+void trgswAddInteger(Trgsw& trgsw, Integer mu, const YatfheParameters& param);
+
+void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
+
+void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const YatfheParameters& param);
 
 void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
 

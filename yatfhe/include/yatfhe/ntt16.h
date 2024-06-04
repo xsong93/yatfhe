@@ -64,4 +64,12 @@ Ntt16 modMULT16R(Ntt16 a, Ntt16 b);
 Ntt16 modMULT16(Ntt16 a, Ntt16 b);
 void initGlobalParamsNtt16(int N);
 
+template <typename T, typename R>
+void applyNttForAB16(T& out, R& in) {
+    for (auto row = 0; row < in.a.size(); row++) {
+        applyNtt16(out.a[row], in.a[row]);
+    }
+    applyNtt16(out.b, in.b);
+}
+
 #endif //HLS_YATFHE_NTT16_H

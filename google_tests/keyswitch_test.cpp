@@ -7,9 +7,11 @@
 #include "yatfhe/keyswitching.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
+#include "yautil/initializer.h"
 
 TEST(KSKTest, KSKTest) {
     YatfheParameters param {};
+    yatfheInit(param);
     TlweKey tlweKey {param.n, param.lweStdDev};
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};

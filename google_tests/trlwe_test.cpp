@@ -142,6 +142,7 @@ TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
 TEST(TrlweTest, TrlweMultLargeConstant) {
     YatfheParameters param {};
     param.torusBase = 1 << 3;
+    param.l = 8;
     yatfheInit(param);
 
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
@@ -201,6 +202,7 @@ TEST(TrlweTest, TrlweMultLargeConstant) {
 TEST(TrlweTest, TrlweMultLargeConstantMultiLvl) {
     YatfheParameters param {};
     param.torusBase = 1 << 3;
+    param.l = 8;
     yatfheInit(param);
 
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};

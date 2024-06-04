@@ -6,6 +6,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
+#include "yatfhe/trlgsw.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
@@ -44,6 +45,45 @@ TEST(RgswTest, RgswEncDecTest) {
     cout << "dec: " << dec << endl;
     ASSERT_EQ(plain, dec);
     printBanner("RgswEncDecTest");
+}
+
+// todo
+TEST(RgswTest, RgswEncDecTestNtt14) {
+    YatfheParameters param {};
+    yatfheInit(param);
+
+    // ken gen
+    TrgswKey trgswKey {param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    trlweKeyGen(trlweKey);
+
+    // trgsw enc
+    Trgsw trgsw {param};
+    TrgswDft trgswDft {param};
+    TrlgswDft14 trlgswDft14 {param};
+    Integer plain = 7;
+
+    trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, plain);
+    trgswEncryptNtt14(trgsw, trlgswDft14, param, trgswKey, plain);
+//    trgswEncrypt(trgsw, param, trgswKey, plain);
+
+//
+//    // test identity for trgsw and trgswDft value
+//    for (auto i = 0; i < trgsw.l; i++) {
+//        for (auto j = 0; j < trgsw.trlweSamples[i].size(); j++) {
+//            TorusPolynomial ip {trgswDft.trlweDftSamples[i][j].b.N};
+//            applyIntt(ip, trgswDft.trlweDftSamples[i][j].b);
+//            ASSERT_EQ(ip.coeffs, trgsw.trlweSamples[i][j].b.coeffs);
+//        }
+//    }
+
+    // trgsw dec
+    Integer dec = trgswDecryptNtt(trgswDft, param, trgswKey);
+//    Integer dec = trgswDecrypt(trgsw, param, trgswKey);
+    cout << "plain: " << plain << endl;
+    cout << "dec: " << dec << endl;
+    ASSERT_EQ(plain, dec);
+    printBanner("RgswEncDecTestNtt14");
 }
 
 TEST(RgswTest, RgswMultTestNaive) {

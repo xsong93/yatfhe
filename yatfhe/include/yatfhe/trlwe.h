@@ -39,6 +39,22 @@ struct Trlwe {
             k(k) {};
 };
 
+struct Trlwe16 {
+    std::vector<Int16Polynomial> a; // k
+    Int16Polynomial b; // 1
+    int k;
+
+    Trlwe16(int k, int N) :
+            a(k, Int16Polynomial(N)),
+            b(Int16Polynomial(N)),
+            k(k) {};
+
+    Trlwe16(int k, int N, int val) :
+            a(k, Int16Polynomial(N, val)),
+            b(Int16Polynomial(N, val)),
+            k(k) {};
+};
+
 struct TrlweDft{
     std::vector<LagrangePolynomial> a; // k
     LagrangePolynomial b; // 1
@@ -50,6 +66,28 @@ struct TrlweDft{
             k(k) {};
 };
 
+struct TrlweDft14{
+    std::vector<Ntt14Polynomial> a; // k
+    Ntt14Polynomial b; // 1
+    int k;
+
+    TrlweDft14(int k, int N) :
+            a(k, Ntt14Polynomial(N)),
+            b(Ntt14Polynomial(N)),
+            k(k) {};
+};
+
+struct TrlweDft16{
+    std::vector<Ntt16Polynomial> a; // k
+    Ntt16Polynomial b; // 1
+    int k;
+
+    TrlweDft16(int k, int N) :
+            a(k, Ntt16Polynomial(N)),
+            b(Ntt16Polynomial(N)),
+            k(k) {};
+};
+
 struct DecomposedTrlwe {
     std::vector<Rlwe> rlwes; // l
     int l;
@@ -57,6 +95,9 @@ struct DecomposedTrlwe {
     explicit DecomposedTrlwe(const YatfheParameters& param) :
             l(param.l),
             rlwes(param.l,  Rlwe(param.k, param.N)) {};
+    DecomposedTrlwe(const YatfheParameters& param, int l) :
+            l(l),
+            rlwes(l,  Rlwe(param.k, param.N)) {};
 };
 
 struct DecomposedTrlweDft {
@@ -66,6 +107,24 @@ struct DecomposedTrlweDft {
     DecomposedTrlweDft(const YatfheParameters& param, int l) :
             l(l),
             rlweDfts(l, TrlweDft(param.k, param.N)) {};
+};
+
+struct DecomposedTrlweDft14 {
+    std::vector<TrlweDft14> rlweDfts; // 2l, l
+    int l;
+
+    DecomposedTrlweDft14(const YatfheParameters& param, int l) :
+            l(l),
+            rlweDfts(l, TrlweDft14(param.k, param.N)) {};
+};
+
+struct DecomposedTrlweDft16 {
+    std::vector<TrlweDft16> rlweDfts; // 2l, l
+    int l;
+
+    DecomposedTrlweDft16(const YatfheParameters& param, int l) :
+            l(l),
+            rlweDfts(l, TrlweDft16(param.k, param.N)) {};
 };
 
 struct TrlweKey {

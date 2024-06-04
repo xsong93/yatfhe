@@ -159,7 +159,7 @@ void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coe
 void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
     const auto N = coeffsB.size();
     for (auto j = 0; j < N; j++) {
-        auto tmp = modMULT64(coeffsA[j], coeffsS[j]);
+        auto tmp = fastmm_opt(coeffsA[j], coeffsS[j]);
         coeffsB[j] = modAdd(coeffsB[j], tmp);
     }
 }

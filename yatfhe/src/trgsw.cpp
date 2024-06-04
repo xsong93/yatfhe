@@ -1,13 +1,11 @@
 //
 // Created by Xintong Song on 2023/12/25.
 //
-#include <iostream>
 //#include <omp.h>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
-#include "yatfhe/gadget_decomposition.h"
-#include "yautil/tool.h"
 #include "yatfhe/ntt.h"
+#include "yatfhe/ntt14.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
@@ -150,12 +148,17 @@ void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, Trlwe
     TrlweDft trlweDftRes {k, N};
     DecomposedTrlwe decomposedTrlwe {param};
     DecomposedTrlweDft decomposedTrlweDft {param, param.l};
+    DecomposedTrlweDft14 decomposedTrlweDft14 {param, param.l};
 
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
 //#pragma omp parallel for
     for (auto i = 0; i < decomposedTrlwe.l; i++) {
         applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.rlwes[i]);
+    }
+
+    for (auto i = 0; i < decomposedTrlwe.l; i++) {
+        applyNttForAB14(decomposedTrlweDft14.rlweDfts[i], decomposedTrlwe.rlwes[i]);
     }
 
 //#pragma omp parallel for collapse(2) private(out)

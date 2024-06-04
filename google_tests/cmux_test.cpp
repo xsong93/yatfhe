@@ -9,11 +9,13 @@
 #include "yatfhe/bootstrapping.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
+#include "yautil/initializer.h"
 
 TEST(Cmux, Cmux) {
     YatfheParameters param {};
     param.N = 1024;
     param.k = 2;
+    yatfheInit(param);
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;

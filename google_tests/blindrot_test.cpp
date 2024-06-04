@@ -9,10 +9,12 @@
 #include "yatfhe/bootstrapping.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
+#include "yautil/initializer.h"
 
 TEST(BlindRot, BlindRot) {
     YatfheParameters param {};
     param.n = 64;
+    yatfheInit(param);
 
     // key gen
     TlweKey tlweKey {param.n, param.lweStdDev};
@@ -72,10 +74,11 @@ TEST(BlindRot, BlindRot) {
     printBanner("BlindRot");
 }
 
-TEST(BlindRotLut, BlindRotLut) {
+TEST(BlindRot, BlindRotLut) {
     YatfheParameters param {};
-    param.n = 64;
-    param.torusBase = 512;
+//    param.n = 64;
+//    param.torusBase = 512;
+    yatfheInit(param);
 
     // key gen
     TlweKey tlweKey {param.n, param.lweStdDev};
@@ -135,21 +138,21 @@ TEST(BlindRotLut, BlindRotLut) {
     // tlwe dec
     auto out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
     cout << "out: " << out << endl;
-
-    extractTlweFromTrlwe(tmp, in2, 1);
-    tlweKeySwitch(tlweKs, ksk, tmp, param);
-    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
-    cout << "out: " << out << endl;
-
-    extractTlweFromTrlwe(tmp, in2, 2);
-    tlweKeySwitch(tlweKs, ksk, tmp, param);
-    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
-    cout << "out: " << out << endl;
-
-    extractTlweFromTrlwe(tmp, in2, 3);
-    tlweKeySwitch(tlweKs, ksk, tmp, param);
-    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
-    cout << "out: " << out << endl;
+//
+//    extractTlweFromTrlwe(tmp, in2, 1);
+//    tlweKeySwitch(tlweKs, ksk, tmp, param);
+//    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
+//    cout << "out: " << out << endl;
+//
+//    extractTlweFromTrlwe(tmp, in2, 2);
+//    tlweKeySwitch(tlweKs, ksk, tmp, param);
+//    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
+//    cout << "out: " << out << endl;
+//
+//    extractTlweFromTrlwe(tmp, in2, 3);
+//    tlweKeySwitch(tlweKs, ksk, tmp, param);
+//    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
+//    cout << "out: " << out << endl;
 
     //verify
     for (auto i = 0; i < decP.N; i++) {
