@@ -30,7 +30,7 @@ struct YatfheParameters {
     int driftPhase {N / torusBase};
     double rlweStdDev {2.98023223876953e-8}; // 2^-25
     // RGSW params
-    int l2 {8};
+    int l2 {2}; // todo
     int lDft {dftBits / radixBits};
     // KS params
     int ksLevel {torusBits / radixBits}; // ks decomposition length

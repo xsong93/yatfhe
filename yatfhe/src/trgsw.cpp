@@ -144,21 +144,15 @@ void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, Trlwe
     const auto k = trlweInput.k;
     const auto level = trgswDftInput.l;
     const auto N = trlweInput.b.N;
-    TrlweDft trlweDft {k, N};
     TrlweDft trlweDftRes {k, N};
     DecomposedTrlwe decomposedTrlwe {param};
     DecomposedTrlweDft decomposedTrlweDft {param, param.l};
-    DecomposedTrlweDft14 decomposedTrlweDft14 {param, param.l};
 
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
 //#pragma omp parallel for
     for (auto i = 0; i < decomposedTrlwe.l; i++) {
         applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.rlwes[i]);
-    }
-
-    for (auto i = 0; i < decomposedTrlwe.l; i++) {
-        applyNttForAB14(decomposedTrlweDft14.rlweDfts[i], decomposedTrlwe.rlwes[i]);
     }
 
 //#pragma omp parallel for collapse(2) private(out)

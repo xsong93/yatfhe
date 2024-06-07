@@ -250,50 +250,67 @@ TEST(DecompositionTest, DecomposedMult) {
     printBanner("DecomposedMult");
 }
 
-
-//TEST(DecompositionTest, DecompNttOrderTest) {
-//    YatfheParameters param {};
+TEST(DecompositionTest, DecompNttOrderTest) {
+    YatfheParameters param {};
 //    param.radixBits = 4;
 //    param.l = 8;
 //    param.k = 2;
-//    yatfheInit(param);
-//
-//    Trlwe in {param.k, param.N};
-//    TrlweDft inDft {param.k, param.N};
-//    Trlwe recomp {param.k, param.N};
-//
-//    Torus mu = doubleToTorus32(1.0 / param.torusBase);
-//    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
-//    trlweKeyGen(trlweKey);
-//    symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
-//
-//    // NTT -> decomp -> recomp -> INTT
-//    DecomposedTrlwe out1 {param};
-//    DecomposedTrlweDft outDft1 {param, param.lDft};
-//    TrlweDft dft1 {param.k, param.N};
-//    TrlweDft recompDft1 {param.k, param.N};
-//    Trlwe intt1 {param.k, param.N};
-//    COUNT_TIME("NTT", applyNttForAB(dft1, in);) // NTT
-//    COUNT_TIME("decomp", gadgetDecomposeTrlweNtt(outDft1, dft1, param);) //decomp
-//    COUNT_TIME("recomp", recomposeTrlweNtt(recompDft1, outDft1, param);) // recompose
-//    COUNT_TIME("INTT", applyInttForAB(intt1, recompDft1);) // intt
-//    for (auto j = 0; j < in.b.N; j++) {
-//        for (auto i = 0; i < in.k; i++) {
-//            ASSERT_EQ(in.a[i].coeffs[j], intt1.a[i].coeffs[j]);
-//        }
-//        ASSERT_EQ(in.b.coeffs[j], intt1.b.coeffs[j]);
+    yatfheInit(param);
+
+    Trlwe in {param.k, param.N};
+    TrlweDft inDft {param.k, param.N};
+    Trlwe recomp {param.k, param.N};
+
+    Torus mu = doubleToTorus32(1.0 / param.torusBase);
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    trlweKeyGen(trlweKey);
+    symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
+
+//    TorusPolynomial helper {param.N, 1};
+//    LagrangePolynomial helperDft {param.N};
+//    applyNtt(helperDft, helper);
+//    printArray(helperDft.coeffs, "helperDft");
+//    vector<DecomposedDataDft> decomposedHelperDft;
+//    for (auto i = 0; i < helperDft.N; i++) {
+//        DecomposedDataDft ddft {param.lDft};
+//        gadgetDecomposeNtt(ddft, helperDft.coeffs[i], param);
+//        decomposedHelperDft.push_back(ddft);
 //    }
-//    printBanner("NTT -> decomp -> recomp -> INTT");
-//
-//
+
+
+    // NTT -> decomp -> recomp -> INTT
+    DecomposedTrlwe out1 {param};
+    DecomposedTrlweDft outDft1 {param, param.lDft};
+    TrlweDft dft1 {param.k, param.N};
+    TrlweDft recompDft1 {param.k, param.N};
+    Trlwe intt1 {param.k, param.N};
+    COUNT_TIME("NTT", applyNttForAB(dft1, in);) // NTT
+    COUNT_TIME("decomp", gadgetDecomposeTrlweNtt(outDft1, dft1, param);) //decomp
+    COUNT_TIME("recomp", recomposeTrlweNtt(recompDft1, outDft1, param);) // recompose
+    COUNT_TIME("INTT", applyInttForAB(intt1, recompDft1);) // intt
+
+    TorusPolynomial dec1 {param.N};
+    symDecTrlweToInt(dec1, intt1, trlweKey, param.torusBase);
+    printArray(dec1.coeffs, "dec1");
+    for (auto j = 0; j < in.b.N; j++) {
+        for (auto i = 0; i < in.k; i++) {
+            ASSERT_EQ(in.a[i].coeffs[j], intt1.a[i].coeffs[j]);
+        }
+        ASSERT_EQ(in.b.coeffs[j], intt1.b.coeffs[j]);
+    }
+    printBanner("NTT -> decomp -> recomp -> INTT");
+
+
 //    // decomp -> NTT -> recomp -> INTT
-//    //todo
-//    DecomposedTrlwe out {param};
-//    DecomposedTrlweDft outDft {param, param.l};
-//    TrlweDft recompDft {param.k, param.N};
-//    Trlwe intt {param.k, param.N};
+//    // todo
+//    DecomposedTrlwe out2 {param};
+//    DecomposedTrlweDft outDft2 {param, param.l};
+//    TrlweDft recompDft2 {param.k, param.N};
+//    Trlwe intt2 {param.k, param.N};
+//
 //    std::vector<Integer> oneOverB(param.l);
 //    decomposeOverB(oneOverB, 1, param);
+//    printArray(oneOverB, "1");
 //    vector<TorusPolynomial> helper (param.l, TorusPolynomial(param.N, 0));
 //    vector<LagrangePolynomial> helperDft;
 //    for (auto i = 0; i < helper.size(); i++) {
@@ -308,30 +325,33 @@ TEST(DecompositionTest, DecomposedMult) {
 //        printArray(helperDft[i].coeffs, "helperDft l" + to_string(i));
 //    }
 //
-//    COUNT_TIME("decomp", gadgetDecomposeTrlwe(out, in, param);) // decompose
+//    COUNT_TIME("decomp", gadgetDecomposeTrlwe(out2, in, param);) // decompose
 //    COUNT_TIME("NTT",
-//               for (auto i = 0; i < out.l; i++) {
-//                   applyNttForAB(outDft.rlweDfts[i], out.rlwes[i]); // NTT
+//               for (auto i = 0; i < out2.l; i++) {
+//                   applyNttForAB(outDft2.rlweDfts[i], out2.rlwes[i]); // NTT
 //               })
 //    COUNT_TIME("recomp", {
-//        auto l = out.l;
+//        auto l = out2.l;
 //        auto k = param.k;
 //        for (auto lvl = 0; lvl < l; lvl++) {
 //            for (auto row = 0; row < k + 1; row++) {
-//                auto& currIn = (row < k) ? outDft.rlweDfts[lvl].a[row] : outDft.rlweDfts[lvl].b;
-//                auto& currOut = (row < k) ? recompDft.a[row] : recompDft.b;
+//                auto& currIn = (row < k) ? outDft2.rlweDfts[lvl].a[row] : outDft2.rlweDfts[lvl].b;
+//                auto& currOut = (row < k) ? recompDft2.a[row] : recompDft2.b;
 //                for (auto j = 0; j < param.N; j++) {
 //                    currOut.coeffs[j] = modAdd(currOut.coeffs[j], modMul(currIn.coeffs[j], helperDft[lvl].coeffs[j]));
 //                }
 //            }
 //        }
 //    }) // recompose
-//    COUNT_TIME("intt", applyInttForAB(intt, recompDft);) // intt
+//    COUNT_TIME("intt", applyInttForAB(intt2, recompDft2);) // intt
+//    TorusPolynomial dec2 {param.N};
+//    symDecTrlweToInt(dec2, intt2, trlweKey, param.torusBase);
+//    printArray(dec2.coeffs, "dec");
 //    for (auto j = 0; j < in.b.N; j++) {
 //        for (auto i = 0 ; i < in.k; i++) {
-//            ASSERT_EQ(in.a[i].coeffs[j], intt.a[i].coeffs[j]);
+//            ASSERT_EQ(in.a[i].coeffs[j], intt2.a[i].coeffs[j]);
 //        }
-//        ASSERT_EQ(in.b.coeffs[j], intt.b.coeffs[j]);
+//        ASSERT_EQ(in.b.coeffs[j], intt2.b.coeffs[j]);
 //    }
 //    printBanner("decomp -> NTT -> recomp -> INTT");
-//}
+}

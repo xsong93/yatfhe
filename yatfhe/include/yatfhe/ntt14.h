@@ -78,4 +78,6 @@ void applyInttForAB14(T& out, R& in) {
     applyIntt14(out.b, in.b);
 }
 
+void calModularInnerProductNtt14(Ntt14Polynomial& b, const Ntt14Polynomial& a, const Ntt14Polynomial& s);
+
 #endif //HLS_YATFHE_NTT14_H

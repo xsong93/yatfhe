@@ -25,7 +25,9 @@ struct TrlgswDft14 {
             l(param.l2) {};
 };
 
-void trgswEncryptNtt14(Trgsw& trgsw, TrlgswDft14& trgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
+void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
+
+void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Input, Trlwe& trlweInput, const YatfheParameters& param);
 
 
 #endif //HLS_YATFHE_TRLGSW_H

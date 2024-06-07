@@ -4,11 +4,12 @@
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlgsw.h"
 #include "yatfhe/ntt14.h"
+#include "yautil/tool.h"
 
-void trgswEncryptNtt14(Trgsw& trgsw, TrlgswDft14& trlgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
+void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
+    Trgsw trgsw {param};
     trgswEncZero(trgsw, param, trgswKey);
     trgswAddInteger(trgsw, mu, param);
-    Trlgsw trlgsw {param};
     for (auto lvl = 0; lvl < param.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
             DecomposedTrlwe decomposedTrlwe {param, param.l2};
@@ -25,4 +26,40 @@ void trgswEncryptNtt14(Trgsw& trgsw, TrlgswDft14& trlgswDft14, const YatfheParam
             }
         }
     }
+}
+
+
+//todo: optimize?
+void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Input, Trlwe& trlweInput, const YatfheParameters& param) {
+    const auto k = trlweInput.k;
+    const auto level1 = param.l;
+    const auto level2 = param.l2;
+    vector<TrlweDft14> trlweDftRes14(level2, TrlweDft14(param.k, param.N));
+
+    DecomposedTrlwe decomposedTrlwe {param};
+    DecomposedTrlweDft14 decomposedTrlweDft14 {param, level1};
+    DecomposedTrlwe decomposedTrlweIntt {param, level2};
+
+    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+
+    for (auto i = 0; i < decomposedTrlwe.l; i++) {
+        applyNttForAB14(decomposedTrlweDft14.rlweDfts[i], decomposedTrlwe.rlwes[i]);
+    }
+
+//#pragma omp parallel for collapse(2) private(out)
+    for (auto lvl2 = 0; lvl2 < level2; lvl2++) {
+        for (auto lvl = 0; lvl < level1; lvl++) {
+            for (auto col = 0; col < k + 1; col++) {
+                auto &curr = (col < k) ? decomposedTrlweDft14.rlweDfts[lvl].a[col] : decomposedTrlweDft14.rlweDfts[lvl].b;
+                for (auto col2 = 0; col2 < k + 1; col2++) {
+                    auto &out = (col2 < k) ? trlweDftRes14[lvl2].a[col2] : trlweDftRes14[lvl2].b;
+                    auto &curr2 = (col2 < k) ? trlgswDft14Input.trgswDfts[lvl2].trlweDftSamples[lvl][col].a[col2]
+                                             : trlgswDft14Input.trgswDfts[lvl2].trlweDftSamples[lvl][col].b;
+                    calModularInnerProductNtt14(out, curr, curr2);
+                }
+            }
+        }
+        applyInttForAB14(decomposedTrlweIntt.rlwes[lvl2], trlweDftRes14[lvl2]);
+    }
+    recomposeTrlwe(output, decomposedTrlweIntt, param);
 }

@@ -246,3 +246,15 @@ void initGlobalParamsNtt14(int N) {
     genNWCparam14(NWC_TW14, N, TW_ROM14, STR_NTT);
     genNWCparam14(NWC_ITW14, N, TW_ROM14, STR_INTT);
 }
+
+void modularAccumulate14(std::vector<Ntt14>& coeffsB, const std::vector<Ntt14>& coeffsA, const std::vector<Ntt14>& coeffsS) {
+    const auto N = coeffsB.size();
+    for (auto j = 0; j < N; j++) {
+        auto tmp = modMULT14(coeffsA[j], coeffsS[j]);
+        coeffsB[j] = modADD14(coeffsB[j], tmp);
+    }
+}
+
+void calModularInnerProductNtt14(Ntt14Polynomial& b, const Ntt14Polynomial& a, const Ntt14Polynomial& s) {
+    modularAccumulate14(b.coeffs, a.coeffs, s.coeffs);
+}
