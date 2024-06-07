@@ -196,6 +196,8 @@ TEST(RgswTest, RgswMultTestNTT14) {
         COUNT_TIME("trlgswExternalProductNtt14", trlgswExternalProductNtt14(out14, trlgswDft14, in2, param);)
 
         printTrlweAB(out, "out");
+        printTrlweAB(out14, "out14");
+
 
         // trlwe dec aft-mult
         symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
