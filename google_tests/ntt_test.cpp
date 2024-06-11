@@ -158,7 +158,7 @@ TEST(NttTest, ConvolutionTest) {
         for (auto i = 0 ; i < k; i++) {
             for (auto j = 0; j < N; j++) {
                 poly0[i].coeffs[j] = genIntUniformDist(INT32_MIN, INT32_MAX);
-                poly2[i].coeffs[j] = genIntUniformDist(INT32_MIN, INT32_MAX);
+                poly2[i].coeffs[j] = genIntUniformDist(0, 1);
             }
             printArray(poly0[i].coeffs, "poly0" + to_string(i));
             printArray(poly2[i].coeffs, "poly2" + to_string(i));
@@ -171,7 +171,7 @@ TEST(NttTest, ConvolutionTest) {
             }
 
             calModularInnerProductNtt(tmpMul, a, b);
-            printArray(tmpMul.coeffs,"tmpMUL");
+//            printArray(tmpMul.coeffs,"tmpMUL");
             applyIntt(resMul, tmpMul);})
         COUNT_TIME("NAIVE_MULT",
                    for (auto i = 0 ; i < k; i++) {
@@ -188,7 +188,7 @@ TEST(NttTest, ConvolutionTest) {
         }
     }
 
-    printBanner("NttSamePoly");
+    printBanner("ConvolutionTest");
 }
 
 TEST(NttTest, debug) {

@@ -50,5 +50,5 @@ TEST(Ntt14Test, NttIntt14Test) {
         }
         ASSERT_EQ(a1.coeffs[i], resIntt.coeffs[i]);
     }
-    printBanner("NttIntt64Test");
+    printBanner("NttIntt14Test");
 }
