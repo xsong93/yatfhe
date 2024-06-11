@@ -148,7 +148,7 @@ void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, Trlwe
     DecomposedTrlwe decomposedTrlwe {param};
     DecomposedTrlweDft decomposedTrlweDft {param, param.l};
 
-    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);  // 8 * 2
 
 //#pragma omp parallel for
     for (auto i = 0; i < decomposedTrlwe.l; i++) {

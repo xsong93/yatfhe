@@ -29,7 +29,7 @@ void conv(const int N, const int k) {
             }
         }
 
-        COUNT_TIME("NTT_MULT64", {
+        COUNT_TIME("NTT_CONV64", {
             for (auto i = 0; i < k; i++) {
                 applyNtt(a[i], poly0[i]);
                 applyNtt(b[i], poly2[i]);
@@ -40,7 +40,7 @@ void conv(const int N, const int k) {
             applyIntt(resMul, tmpMul);
         })
 
-        COUNT_TIME("NTT_MULT14", {
+        COUNT_TIME("NTT_CONV14", {
             for (auto i = 0; i < k; i++) {
                 applyNtt14(a14[i], poly0[i]);
                 applyNtt14(b14[i], poly2[i]);
