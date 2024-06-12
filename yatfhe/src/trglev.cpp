@@ -2,11 +2,11 @@
 // Created by Xintong Song on 2024/4/22.
 //
 #include <vector>
-#include "yatfhe/tglev.h"
+#include "yatfhe/trglev.h"
 
 using namespace std;
 
-void tglevEncSingleSample(Tglev& output, const TrlweKey& trlweKey, const Torus input, const YatfheParameters& param) {
+void trglevEncSingleSample(Trglev& output, const TrlweKey& trlweKey, const Torus input, const YatfheParameters& param) {
     const auto l = output.l;
     for (auto i = 0; i < l; i++) {
         auto inOverR = input << (param.torusBits - (i + 1) * param.radixBits);
@@ -14,7 +14,7 @@ void tglevEncSingleSample(Tglev& output, const TrlweKey& trlweKey, const Torus i
     }
 }
 
-void tglevEncMultiSample(Tglev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param) {
+void trglevEncMultiSample(Trglev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param) {
     const auto l = output.l;
     vector<Torus> inputsOverR(inputs.N);
     for (auto i = 0; i < l; i++) {
@@ -25,7 +25,7 @@ void tglevEncMultiSample(Tglev& output, const TrlweKey& trlweKey, const TorusPol
     }
 }
 
-void tglevMultConst(Trlwe& output, const Tglev& input, const Integer num, const YatfheParameters& param) {
+void trglevMultConst(Trlwe& output, const Trglev& input, const Integer num, const YatfheParameters& param) {
     auto N = output.b.N;
     auto k = output.k;
     DecomposedData d {input.l};
@@ -41,7 +41,7 @@ void tglevMultConst(Trlwe& output, const Tglev& input, const Integer num, const 
     }
 }
 
-void decomposedTglevMultConst(Trlwe& output, const Tglev& input, const Integer num, const YatfheParameters& param) {
+void decomposedTglevMultConst(Trlwe& output, const Trglev& input, const Integer num, const YatfheParameters& param) {
     const auto N = output.b.N;
     const auto k = output.k;
     const auto lvl0 = input.l;

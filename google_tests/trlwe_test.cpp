@@ -6,7 +6,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/gadget_decomposition.h"
-#include "yatfhe/tglev.h"
+#include "yatfhe/trglev.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 
@@ -160,14 +160,14 @@ TEST(TrlweTest, TrlweMultLargeConstant) {
     }
 
     // enc
-    Tglev tglev {param};
-    tglevEncMultiSample(tglev, trlweKey, plainT, param);
+    Trglev trglev {param};
+    trglevEncMultiSample(trglev, trlweKey, plainT, param);
 
     Integer y = genIntUniformDist(IntMin, IntMax);
 
     // recomp
     Trlwe recomp {param.k, param.N};
-    tglevMultConst(recomp, tglev, y, param);
+    trglevMultConst(recomp, trglev, y, param);
 
     // dec
     TorusPolynomial res {param.N};
@@ -187,7 +187,7 @@ TEST(TrlweTest, TrlweMultLargeConstant) {
     vectorMultConst(plainT.coeffs, plainT.coeffs, y);
     printArray(plainT.coeffs, "p0");
     printArray(res.coeffs, "re");
-    printArray(rounded.coeffs, "rd");
+    printArray(rounded.coeffs, "rd"); // rd = p0
 
     printArray(plain.coeffs, "plain");
     printArray(resP.coeffs, "p1");
@@ -221,13 +221,13 @@ TEST(TrlweTest, TrlweMultLargeConstantMultiLvl) {
     }
 
     // enc
-    Tglev tglev {param};
-    tglevEncMultiSample(tglev, trlweKey, plainT, param);
+    Trglev trglev {param};
+    trglevEncMultiSample(trglev, trlweKey, plainT, param);
 
     Integer y = genIntUniformDist(IntMin, IntMax);
 
     Trlwe recomp2 {param.k, param.N};
-    decomposedTglevMultConst(recomp2, tglev, y, param);
+    decomposedTglevMultConst(recomp2, trglev, y, param);
 
     // dec
     TorusPolynomial res {param.N};
