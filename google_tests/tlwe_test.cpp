@@ -6,6 +6,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
+#include "yatfhe/tglev.h"
 
 TEST(TlweTest, EncDecTest) {
     const YatfheParameters param {};
@@ -85,4 +86,36 @@ TEST(TlweTest, AddSubTest) {
     ASSERT_EQ(modSwitchFromTorus32(mu1 - mu2, param.torusBase), symDecTlweSampleToInt(output, tlweKey, param.torusBase));
 
     printBanner("AddSubTest");
+}
+
+TEST(TlweTest, MultTest) {
+    YatfheParameters param {};
+    param.torusBase = 8;
+    param.l = 4;
+
+    TlweKey tlweKey {param.n, param.lweStdDev};
+
+    lweKeyGen(tlweKey);
+
+    int p1 = 1;
+    int p2 = 2;
+
+    Torus mu1 = modSwitchToTorus32(p1, param.torusBase);
+
+    Tglev tglev {param.l, param.n};
+    Tlwe output {param.n};
+
+    tglevEnc(tglev, tlweKey, mu1, param);
+
+//    for (auto l = 0; l < tglev.l; l++) {
+//        printArray(tglev.tlwes[l].a, "a");
+//        cout << "b: " << tglev.tlwes[l].b << endl;
+//    }
+
+    tglevMultConst(output, tglev, p2, param);
+    cout << "p1 * p2: " << intModP(p1 * p2, param.torusBase) <<endl;
+    cout << "c1 * p2: " << symDecTlweSampleToInt(output, tlweKey, param.torusBase) << endl;
+    ASSERT_EQ(intModP(p1 * p2, param.torusBase), symDecTlweSampleToInt(output, tlweKey, param.torusBase));
+
+    printBanner("TlweMultTest");
 }
