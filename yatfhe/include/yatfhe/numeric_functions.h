@@ -74,6 +74,13 @@ void vectorMultConst(vector<T>& output, vector<T>& input1, R num) {
     }
 }
 
+template <typename T, typename R>
+void vectorDotMultConst(vector<T>& output, vector<T>& input1, vector<R>& nums) {
+    for (auto i = 0; i < output.size(); i++) {
+        output[i] = (T) (input1[i] * nums[i]);
+    }
+}
+
 template <typename T>
 void vectorAdd(vector<T>& output, vector<T>& input1, vector<T>& input2) {
     for (auto i = 0; i < output.size(); i++) {

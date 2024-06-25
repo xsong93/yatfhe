@@ -27,6 +27,8 @@ void trglevEncMultiSample(Trglev& output, const TrlweKey& trlweKey, const TorusP
 
 void trglevMultConst(Trlwe& output, const Trglev& input, Integer num, const YatfheParameters& param);
 
+void trglevDotMultConst(Trlwe& output, const Trglev& input, const std::vector<Integer>& nums, const YatfheParameters& param);
+
 void decomposedTglevMultConst(Trlwe& output, const Trglev& input, Integer num, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGLEV_H

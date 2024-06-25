@@ -41,6 +41,23 @@ void trglevMultConst(Trlwe& output, const Trglev& input, const Integer num, cons
     }
 }
 
+//todo: debug (change to poly conv)
+void trglevDotMultConst(Trlwe& output, const Trglev& input, const vector<Integer>& nums, const YatfheParameters& param) {
+    auto N = output.b.N;
+    auto k = output.k;
+    for (auto j = 0; j < N; j++) {
+        DecomposedData d {input.l};
+        gadgetDecompose(d, nums[j], param);
+        for (auto r = 0; r < k + 1; r++) {
+            auto& curr = (r < k) ? output.a[r] : output.b;
+            for (auto l1 = 0; l1 < d.l; l1++) {
+                auto& currTglev = (r < k) ? input.trlwes[l1].a[r] : input.trlwes[l1].b;
+                curr.coeffs[j] += currTglev.coeffs[j] * d.value[l1] * d.sign;
+            }
+        }
+    }
+}
+
 void decomposedTglevMultConst(Trlwe& output, const Trglev& input, const Integer num, const YatfheParameters& param) {
     const auto N = output.b.N;
     const auto k = output.k;

@@ -50,17 +50,19 @@ TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
     TrlweDft trlweDft {param.k, param.N};
     trlweKeyGen(trlweKey);
 
-    std::vector<double> plain(param.N);
+    std::vector<int> plain(param.N);
     std::vector<Torus> in(param.N);
     for (auto i = 0; i < in.size(); i++) {
-        plain[i] = (double) genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1) / param.torusBase;
-        in[i] = doubleToTorus32(plain[i]);
+//        plain[i] = (double) genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1) / param.torusBase;
+        plain[i] = genIntUniformDist(0, 1);
+        in[i] = modSwitchToTorus32(plain[i], param.torusBase);
     }
     printArray(plain, "plain");
 
-    DoublePolynomial output {param.N};
+    IntPolynomial output {param.N};
     symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
-    symDecTrlweNtt(output, trlweDft, trlweKey, param.torusBase);
+    printTrlweAB(trlwe, "trlwe");
+    symDecTrlweToIntNtt(output, trlweDft, trlweKey, param.torusBase);
 //    symEncTrlweMultiSample(trlwe, trlweKey, in);
 //    symDecTrlweToDouble(output, trlwe, trlweKey, param.torusBase);
 
@@ -73,7 +75,7 @@ TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
 
 TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
     YatfheParameters param {};
-    param.torusBase = 1 << 28;
+//    param.torusBase = 1 << 28;
     yatfheInit(param);
 
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
@@ -86,15 +88,17 @@ TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
 
     trlweKeyGen(trlweKey);
 
-    std::vector<double> plain1(param.N);
-    std::vector<double> plain2(param.N);
+    std::vector<Integer> plain1(param.N);
+    std::vector<Integer> plain2(param.N);
     std::vector<Torus> in1(param.N);
     std::vector<Torus> in2(param.N);
     for (auto i = 0; i < in1.size(); i++) {
-        plain1[i] = (double) genIntUniformDist(-param.torusBase / 4 + 1, param.torusBase / 4 - 1) / param.torusBase;
-        plain2[i] = (double) genIntUniformDist(-param.torusBase / 4 + 1, param.torusBase / 4 - 1) / param.torusBase;
-        in1[i] = doubleToTorus32(plain1[i]);
-        in2[i] = doubleToTorus32(plain2[i]);
+//        plain1[i] = genIntUniformDist(-param.torusBase / 4 + 1, param.torusBase / 4 - 1);
+//        plain2[i] = genIntUniformDist(-param.torusBase / 4 + 1, param.torusBase / 4 - 1);
+        plain1[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
+        plain2[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
+        in1[i] = modSwitchToTorus32(plain1[i], param.torusBase);
+        in2[i] = modSwitchToTorus32(plain2[i], param.torusBase);
     }
     printArray(plain1, "plain1");
     printArray(plain2, "plain2");
@@ -104,36 +108,36 @@ TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
 //    symEncTrlweMultiSample(trlwe1, trlweKey, in1);
 //    symEncTrlweMultiSample(trlwe2, trlweKey, in2);
 
-    DoublePolynomial output {param.N};
+    IntPolynomial output {param.N};
     TorusPolynomial torusOutput(param.N);
-    DoublePolynomial plainOutput(param.N);
+    IntPolynomial plainOutput(param.N);
 
     vectorAdd(torusOutput.coeffs, in1, in2);
-    torusPolyToDoublePoly(plainOutput, torusOutput);
+    torusPolyToIntPoly(plainOutput, torusOutput, param.torusBase);
     printArray(plainOutput.coeffs, "plainOutput Add");
 
     trlweAddNtt(trlweDft3, trlweDft1, trlweDft2);
-    symDecTrlweNtt(output, trlweDft3, trlweKey, param.torusBase);
+    symDecTrlweToIntNtt(output, trlweDft3, trlweKey, param.torusBase);
 //    trlweAdd(trlwe3, trlwe1, trlwe2);
 //    symDecTrlweToDouble(output, trlwe3, trlweKey, param.torusBase);
-    printArray(output.coeffs, "output Add");
+    printArray(output.coeffs, "trlweOutput Add");
 
     for (auto i = 0; i < plainOutput.N; i++) {
-        ASSERT_NEAR(plainOutput.coeffs[i], output.coeffs[i], 0.001);
+        ASSERT_EQ(plainOutput.coeffs[i], output.coeffs[i]);
     }
 
     vectorSub(torusOutput.coeffs, in1, in2);
-    torusPolyToDoublePoly(plainOutput, torusOutput);
+    torusPolyToIntPoly(plainOutput, torusOutput, param.torusBase);
     printArray(plainOutput.coeffs, "plainOutput Sub");
 
     trlweSubNtt(trlweDft3, trlweDft1, trlweDft2);
-    symDecTrlweNtt(output, trlweDft3, trlweKey, param.torusBase);
+    symDecTrlweToIntNtt(output, trlweDft3, trlweKey, param.torusBase);
 //    trlweSub(trlwe3, trlwe1, trlwe2);
 //    symDecTrlweToDouble(output, trlwe3, trlweKey, param.torusBase);
-    printArray(output.coeffs, "output Sub");
+    printArray(output.coeffs, "trlweOutput Sub");
 
     for (auto i = 0; i < plainOutput.N; i++) {
-        ASSERT_NEAR(plainOutput.coeffs[i], output.coeffs[i], 0.001);
+        ASSERT_EQ(plainOutput.coeffs[i], output.coeffs[i]);
     }
 
     printBanner("TrlweAddSubMultiSampleTest");
@@ -141,7 +145,7 @@ TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
 
 TEST(TrlweTest, TrlweMultLargeConstant) {
     YatfheParameters param {};
-    param.torusBase = 1 << 3;
+//    param.torusBase = 1 << 3;
     param.l = 4;
     yatfheInit(param);
 
@@ -254,4 +258,89 @@ TEST(TrlweTest, TrlweMultLargeConstantMultiLvl) {
     }
 
     printBanner("TrlweMultLargeConstantMultiLvl");
+}
+
+TEST(TrlweTest, TrlweDotMultLargeConstants) {
+    YatfheParameters param {};
+//    param.torusBase = 1 << 3;
+    param.l = 4;
+    param.n = 1024;
+    param.N = param.n;
+    yatfheInit(param);
+
+
+    // prepare data
+    // tlwe key gen
+    TlweKey tlweKey {param.n, param.lweStdDev};
+    lweKeyGen(tlweKey);
+
+    //tlwe enc
+    int pt = 1;
+    Tlwe ct {param.n};
+    symEncTlweSample(ct, pt, tlweKey);
+
+    // rescale
+    ScaledTlwe scaledCt {param.N * 2, param.n};
+    rescaleTlweFromTorus32(scaledCt, ct);
+
+    // todo: debug
+    for (auto i = 0; i < scaledCt.n; i++) {
+        scaledCt.a[i] = 2 + i;
+    }
+
+
+    // trlwe mult
+    // trlwe key gen
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    Trlwe trlwe {param.k, param.N};
+    TrlweDft trlweDft {param.k, param.N};
+    trlweKeyGen(trlweKey);
+
+    // data gen
+    IntPolynomial plain {param.N}; // Z/pZ
+    TorusPolynomial plainT {param.N};
+    for (auto i = 0; i < plain.N; i++) {
+        plain.coeffs[i] = tlweKey.s[i];
+        plainT.coeffs[i] = modSwitchToTorus32(plain.coeffs[i], param.torusBase);
+    }
+
+    // enc
+    Trglev trglev {param};
+    trglevEncMultiSample(trglev, trlweKey, plainT, param);
+
+//    Integer y = genIntUniformDist(IntMin, IntMax);
+
+    // recomp
+    Trlwe recomp {param.k, param.N};
+    trglevDotMultConst(recomp, trglev, scaledCt.a, param);
+
+
+    // dec
+    TorusPolynomial res {param.N};
+    TorusPolynomial rounded {param.N};
+    IntPolynomial resP {param.N};
+//    applyNttForAB(trlweDft, recomp);
+//    symDecTrlweWoRoundingNtt(res, trlweDft, trlweKey);
+    symDecTrlweWoRounding(res, recomp, trlweKey);
+
+
+    for (auto i = 0 ; i < res.N; i++) {
+        rounded.coeffs[i] = roundTorusError(res.coeffs[i], param.torusBase);
+        resP.coeffs[i] = modSwitchFromTorus32(rounded.coeffs[i], param.torusBase);
+    }
+
+    printArray(plainT.coeffs, "plainT");
+    vectorDotMultConst(plainT.coeffs, plainT.coeffs, scaledCt.a);
+    printArray(plainT.coeffs, "p0");
+    printArray(res.coeffs, "re");
+    printArray(rounded.coeffs, "rd"); // rd = p0
+
+    printArray(plain.coeffs, "plain");
+    printArray(resP.coeffs, "p1");
+
+    for (auto i = 0 ; i < param.n; i++) {
+        ASSERT_EQ(intModP(plain.coeffs[i] * scaledCt.a[i], param.torusBase), resP.coeffs[i]);
+    }
+
+    printBanner("TrlweMultLargeConstant");
 }

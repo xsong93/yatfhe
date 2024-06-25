@@ -98,7 +98,7 @@ TEST(TlweTest, MultTest) {
     lweKeyGen(tlweKey);
 
     int p1 = 1;
-    int p2 = 2;
+    int p2 = 2047;
 
     Torus mu1 = modSwitchToTorus32(p1, param.torusBase);
 
