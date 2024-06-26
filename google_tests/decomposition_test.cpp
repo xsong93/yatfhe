@@ -261,9 +261,9 @@ TEST(DecompositionTest, DecompNttOrderTest) {
     TrlweDft inDft {param.k, param.N};
     Trlwe recomp {param.k, param.N};
 
-    Torus mu = doubleToTorus32(1.0 / param.torusBase);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     trlweKeyGen(trlweKey);
+    Torus mu = doubleToTorus32(1.0 / param.torusBase);
     symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
 
 //    TorusPolynomial helper {param.N, 1};
@@ -354,4 +354,62 @@ TEST(DecompositionTest, DecompNttOrderTest) {
 //        ASSERT_EQ(in.b.coeffs[j], intt2.b.coeffs[j]);
 //    }
 //    printBanner("decomp -> NTT -> recomp -> INTT");
+}
+
+
+// decomposed NTT does not follow the normal arithmetic rules
+TEST(DecompositionTest, NttDecompArithTest) {
+    YatfheParameters param {};
+//    param.radixBits = 4;
+//    param.l = 8;
+//    param.k = 2;
+    yatfheInit(param);
+
+    Trlwe in {param.k, param.N};
+    Trlwe in1 {param.k, param.N};
+    TrlweDft inDft {param.k, param.N};
+    TrlweDft inDft1 {param.k, param.N};
+    Trlwe recomp {param.k, param.N};
+
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    trlweKeyGen(trlweKey);
+
+    Torus mu = doubleToTorus32(1.0 / param.torusBase);
+    Torus mu1 = doubleToTorus32(1.0 / param.torusBase);
+    symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
+    symEncTrlweSingleSampleNtt(in1, inDft1, trlweKey, mu1);
+
+
+    // NTT -> decomp -> recomp -> INTT
+    DecomposedTrlwe out1 {param};
+    DecomposedTrlweDft outDft {param, param.lDft};
+    DecomposedTrlweDft outDft1 {param, param.lDft};
+    DecomposedTrlweDft outDftAdd {param, param.lDft};
+    TrlweDft dft {param.k, param.N};
+    TrlweDft dft1 {param.k, param.N};
+    TrlweDft recompDft {param.k, param.N};
+    Trlwe intt {param.k, param.N};
+    COUNT_TIME("NTT", applyNttForAB(dft, in);) // NTT
+    COUNT_TIME("NTT1", applyNttForAB(dft1, in1);) // NTT
+    COUNT_TIME("decomp", gadgetDecomposeTrlweNtt(outDft, dft, param);) //decomp
+    COUNT_TIME("decomp1", gadgetDecomposeTrlweNtt(outDft1, dft1, param);) //decomp
+
+    // decomp mod add
+    for (auto l = 0; l < param.lDft; l++) {
+        trlweAddNtt(outDftAdd.rlweDfts[l], outDft.rlweDfts[l], outDft1.rlweDfts[l]);
+    }
+
+    COUNT_TIME("recomp", recomposeTrlweNtt(recompDft, outDftAdd, param);) // recompose
+    COUNT_TIME("INTT", applyInttForAB(intt, recompDft);) // intt
+
+    TorusPolynomial dec1 {param.N};
+    symDecTrlweToInt(dec1, intt, trlweKey, param.torusBase);
+    printArray(dec1.coeffs, "dec1");
+    for (auto j = 0; j < in.b.N; j++) {
+        for (auto i = 0; i < in.k; i++) {
+            ASSERT_EQ(in.a[i].coeffs[j], intt.a[i].coeffs[j]);
+        }
+        ASSERT_EQ(in.b.coeffs[j], intt.b.coeffs[j]);
+    }
+
 }

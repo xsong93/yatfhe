@@ -198,8 +198,6 @@ void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, 
         for (auto row = 0; row < decomposedTrlwe.rlwes[i].a.size(); row++) {
             applyNtt(decomposedTrlweDft.rlweDfts[i].a[row], decomposedTrlwe.rlwes[i].a[row]);
         }
-    }
-    for (auto i = 0; i < decomposedTrlwe.l - 1; i++) {
         applyNtt(decomposedTrlweDft.rlweDfts[i].b, decomposedTrlwe.rlwes[i].b);
     }
 
