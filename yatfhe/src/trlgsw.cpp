@@ -29,6 +29,47 @@ void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfhePa
 }
 
 
+//todo: debug
+void trlgswExternalProduct(Trlwe& output, const Trlgsw& trlgsw, Trlwe& trlweInput, const YatfheParameters& param) {
+    const auto k = trlweInput.k;
+    const auto level1 = param.l;
+    const auto level2 = param.l2;
+
+    DecomposedTrlwe decomposedTrlwe {param};
+    DecomposedTrlwe decomposedTrlweRes {param, level2};
+
+    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+
+//#pragma omp parallel for collapse(2) private(out)
+//    for (auto lvl2 = 0; lvl2 < level2; lvl2++) {
+//        for (auto lvl = 0; lvl < level1; lvl++) {
+//            for (auto col = 0; col < k + 1; col++) {
+//                auto &curr = (col < k) ? decomposedTrlwe.rlwes[lvl].a[col] : decomposedTrlwe.rlwes[lvl].b;
+//                for (auto col2 = 0; col2 < k + 1; col2++) {
+//                    auto &out = (col2 < k) ? decomposedTrlweRes.rlwes[lvl2].a[col2] : decomposedTrlweRes.rlwes[lvl2].b;
+//                    auto &curr2 = (col2 < k) ? trlgsw.trgsws[lvl2].trlweSamples[lvl][col].a[col2]
+//                                             : trlgsw.trgsws[lvl2].trlweSamples[lvl][col].b;
+//                    polynomialMulAccNaive(out, curr, curr2);
+//                }
+//            }
+//        }
+//    }
+    for (auto lvl = 0; lvl < level1; lvl++) {
+        for (auto col = 0; col < k + 1; col++) {
+            auto &curr = (col < k) ? decomposedTrlwe.rlwes[lvl].a[col] : decomposedTrlwe.rlwes[lvl].b;
+            for (auto col2 = 0; col2 < k + 1; col2++) {
+                for (auto lvl2 = 0; lvl2 < level2; lvl2++) {
+                    auto &out = (col2 < k) ? decomposedTrlweRes.rlwes[lvl2].a[col2] : decomposedTrlweRes.rlwes[lvl2].b;
+                    auto &curr2 = (col2 < k) ? trlgsw.trgsws[lvl2].trlweSamples[lvl][col].a[col2]
+                                             : trlgsw.trgsws[lvl2].trlweSamples[lvl][col].b;
+                    polynomialMulAccNaive(out, curr, curr2);
+                }
+            }
+        }
+    }
+    recomposeTrlwe(output, decomposedTrlweRes, param);
+}
+
 //todo: optimize?
 void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Input, Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;

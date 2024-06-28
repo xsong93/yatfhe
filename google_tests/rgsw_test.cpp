@@ -152,6 +152,9 @@ TEST(RgswTest, RgswMultTestNTT) {
 //todo: trlgsw
 TEST(RgswTest, RgswMultTestNTT14) {
     YatfheParameters param {};
+    param.radixBits = 8;
+    param.l = 4;
+    param.l2 = 4;
     printf("n:%d, k:%d, N:%d, b:%d, l:%d", param.n, param.k, param.N, param.radixBits, param.l);
     yatfheInit(param);
     int ti = 0;
@@ -191,11 +194,14 @@ TEST(RgswTest, RgswMultTestNTT14) {
         // trgsw mult ntt
         // todo
         Trlwe out {param.k, param.N};
+        Trlwe out14p {param.k, param.N};
         Trlwe out14 {param.k, param.N};
         COUNT_TIME("trgswExternalProductNtt", trgswExternalProductNtt(out, trgswDft, in2, param);)
+        trlgswExternalProduct(out14p, trlgsw, in2, param);
         COUNT_TIME("trlgswExternalProductNtt14", trlgswExternalProductNtt14(out14, trlgswDft14, in2, param);)
 
         printTrlweAB(out, "out");
+        printTrlweAB(out14p, "out14p");
         printTrlweAB(out14, "out14");
 
 

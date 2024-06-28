@@ -27,6 +27,8 @@ struct TrlgswDft14 {
 
 void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
 
+void trlgswExternalProduct(Trlwe& output, const Trlgsw& trlgsw, Trlwe& trlweInput, const YatfheParameters& param);
+
 void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Input, Trlwe& trlweInput, const YatfheParameters& param);
 
 
