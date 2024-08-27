@@ -38,7 +38,9 @@ Torus roundTorusError(Torus in, int torusBase);
 
 Integer roundErrorForShiftedTorus(Torus in, double sigma, int shift);
 
-int intModP(int a, int p);
+long intModP(long a, long p);
+
+long modInverse(long a, long p);
 
 double torus32ToDouble(Torus in);
 

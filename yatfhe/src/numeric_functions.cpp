@@ -79,7 +79,7 @@ Integer roundErrorForShiftedTorus(const Torus in, const double sigma, const int 
     return (in + 20 * doubleToTorus32(sigma)) >> shift;
 }
 
-int intModP(const int a, const int p) {
+long intModP(const long a, const long p) {
     auto b = a % p;
     if (b > p / 2 - 1) {
         b -= p;
@@ -87,6 +87,16 @@ int intModP(const int a, const int p) {
         b += p;
     }
     return b;
+}
+
+// Multiplicative inverse modulo p
+long modInverse(long a, long p) {
+    for (auto x = 1; x < p; x++) {
+        if ((a * x) % p == 1) {
+            return x;
+        }
+    }
+    return -1;
 }
 
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {
