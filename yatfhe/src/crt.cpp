@@ -4,6 +4,14 @@
 #include "yatfhe/crt.h"
 #include "yatfhe/numeric_functions.h"
 
+int calApproxCRTError(const std::vector<int>& f_tilde, const std::vector<int>& coeffs) {
+    int infNorm = 0;
+    for (auto i = 0; i < f_tilde.size(); i++) {
+        infNorm  = std::max(infNorm, std::abs(f_tilde[i] - coeffs[i]));
+    }
+    return infNorm;
+}
+
 void calGadgetVector(std::vector<long>& w, const int Qlow, const std::vector<int>& highModuli) {
     int Q = highModuli[0];
     for (auto i = 1; i < highModuli.size(); i++) {
@@ -13,25 +21,22 @@ void calGadgetVector(std::vector<long>& w, const int Qlow, const std::vector<int
     auto Q2 = Q / highModuli[1];
     w[0] = Qlow * Q1 * (modInverse(Qlow * Q1, highModuli[0]));
     w[1] = Qlow * Q2 * (modInverse(Qlow * Q2, highModuli[1]));
-    printf("w1:%ld, w2:%ld\n", w[0], w[1]);
+//    printf("w1:%ld, w2:%ld\n", w[0], w[1]);
 }
 
 void approximateCRTDecomposition(std::vector<std::vector<int>>& f, const std::vector<int>& coeffs, const int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli) {
-    auto k = lowModuli.size();
-    auto l = highModuli.size();
-
     for (int i = 0; i < coeffs.size(); ++i) {
         int fi = coeffs[i];
 
         // Calculate the low part contribution
         int lowSum = 0;
-        for (int u = 0; u < k; ++u) {
+        for (int u = 0; u < lowModuli.size(); ++u) {
             int q_u = lowModuli[u];
             int inv = (int)modInverse(Qlow / q_u, q_u);
             lowSum += (int)intModP(Qlow / q_u * intModP(inv * intModP(fi, q_u), q_u), Qlow);
         }
 
-        // Calculate f1 and f2 for high moduli
+        // Calculate f for high moduli
         for (auto j = 0; j < f.size(); j++) {
             f[j][i] = (int) intModP(fi - lowSum, highModuli[j]);
         }

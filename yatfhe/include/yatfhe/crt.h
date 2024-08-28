@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+int calApproxCRTError(const std::vector<int>& f_tilde, const std::vector<int>& coeffs);
+
 void calGadgetVector(std::vector<long>& w, const int Qlow, const std::vector<int>& highModuli);
 
 void approximateCRTDecomposition(std::vector<std::vector<int>>& f, const std::vector<int>& coeffs, const int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli);

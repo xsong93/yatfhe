@@ -23,5 +23,5 @@ int main() {
     }
     printArray(coeffs, "f_origi");
     printArray(f_tilde, "f_tilde");
-
+    cout << "||f - f_t|| = " << calApproxCRTError(f_tilde, coeffs) << endl;
 }
