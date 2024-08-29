@@ -69,6 +69,17 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
     trlweAccumulate(res, input); // res += input
 }
 
+
+// todo
+void controlMuxApproxCRT(Trlwe& res, const vector<Trlwe>& inputs, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
+    vector<Trlwe> tmp (param.d, Trlwe(param.k, param.N));
+    for (auto i = 0; i < param.d; i++) {
+        trlweRotateMinusOne(tmp[i], inputs[i], aBarI); // res = c1 - c0 = X^aBarI * input - input
+    }
+//    trgswExternalProductNtt(res, bskI, tmp, param); // res *= bskI
+//    trlweAccumulate(res, input); // res += input
+}
+
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
     if (bsk.unfolding == 1) {
         bootstrappingKeyGenWoUnfolding(bsk, param, trgswKey, tlweKey);

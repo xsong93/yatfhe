@@ -32,7 +32,20 @@ struct Int16Polynomial {
             coeffs(N, 0),
             N(N) {};
 
-    Int16Polynomial(int N, Torus value) :
+    Int16Polynomial(int N, int16_t value) :
+            coeffs(N, value),
+            N(N) {};
+};
+
+struct Int8Polynomial {
+    std::vector<int8_t> coeffs {}; // N
+    int N {};
+
+    explicit Int8Polynomial(int N) :
+            coeffs(N, 0),
+            N(N) {};
+
+    Int8Polynomial(int N, int8_t value) :
             coeffs(N, value),
             N(N) {};
 };

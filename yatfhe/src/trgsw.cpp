@@ -224,4 +224,57 @@ void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, 
     applyInttForAB(output, trlweDftRes);
 }
 
-
+//todo
+void trgswExternalProductSplitApproxCRT(Trlwe& output, const TrgswDft& trgswDftInput, std::vector<Trlwe>& trlweInput, const YatfheParameters& param) {
+    const auto k = param.k;
+    const auto level = trgswDftInput.l;
+    const auto N = param.N;
+    TrlweDft trlweDftRes {k, N};
+    DecomposedTrlwe decomposedTrlwe {param};
+    DecomposedTrlweDft decomposedTrlweDft {param, param.l};
+//
+//
+//
+////    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+//    for (auto row = 0; row < k + 1; row++) {
+//        auto& currIn = (row < k) ? trlweInput.a[row] : trlweInput.b;
+//        for (auto j = 0; j < N; j++) {
+//            DecomposedData d {level};
+//            gadgetDecompose(d, currIn.coeffs[j], param);
+//            for (auto lvl = 0; lvl < level; lvl++) {
+//                auto& currOut = (row < k) ? decomposedTrlwe.rlwes[lvl].a[row] : decomposedTrlwe.rlwes[lvl].b;
+//                currOut.coeffs[j] = d.value[lvl] * d.sign;
+//            }
+//        }
+//    }
+//
+////#pragma omp parallel for
+//    for (auto i = 0; i < decomposedTrlwe.l; i++) {
+//        for (auto row = 0; row < decomposedTrlwe.rlwes[i].a.size(); row++) {
+//            applyNtt(decomposedTrlweDft.rlweDfts[i].a[row], decomposedTrlwe.rlwes[i].a[row]);
+//        }
+//        applyNtt(decomposedTrlweDft.rlweDfts[i].b, decomposedTrlwe.rlwes[i].b);
+//    }
+//
+////#pragma omp parallel for collapse(2) private(out)
+//    for (auto lvl = 0; lvl < level; lvl++) {
+//        for (auto col = 0; col < k; col++) {
+//            for (auto col2 = 0; col2 < k + 1; col2++) {
+//                auto& out = (col2 < k) ? trlweDftRes.a[col2] : trlweDftRes.b;
+//                auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][col].a[col2]
+//                                         : trgswDftInput.trlweDftSamples[lvl][col].b;
+//                calModularInnerProductNtt(out, decomposedTrlweDft.rlweDfts[lvl].a[col], curr2);
+//            }
+//        }
+//    }
+//
+//    for (auto lvl = 0; lvl < level; lvl++) {
+//        for (auto col2 = 0; col2 < k + 1; col2++) {
+//            auto& out = (col2 < k) ? trlweDftRes.a[col2] : trlweDftRes.b;
+//            auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][k].a[col2]
+//                                     : trgswDftInput.trlweDftSamples[lvl][k].b;
+//            calModularInnerProductNtt(out, decomposedTrlweDft.rlweDfts[lvl].b, curr2);
+//        }
+//    }
+//    applyInttForAB(output, trlweDftRes);
+}

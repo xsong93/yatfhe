@@ -38,6 +38,14 @@ struct YatfheParameters {
     int baseOverTwo {radixBase / 2}; // B / 2 threshold
     int digitMask {radixBase - 1};
     int unfolding {1};
+    // CRT params
+    int d = 4; // # of primes
+    int q1 {233};
+    int q2 {239};
+    int q1p {241};
+    int q2p {251};
+    long qCRT{q1 * q2 * q1p * q2p};
+
 };
 
 #endif //HLS_YATFHE_YATFHE_PARAMETERS_H

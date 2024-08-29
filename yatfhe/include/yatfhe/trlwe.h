@@ -39,6 +39,22 @@ struct Trlwe {
             k(k) {};
 };
 
+struct Trlwe8 {
+    std::vector<Int8Polynomial> a; // k
+    Int8Polynomial b; // 1
+    int k;
+
+    Trlwe8(int k, int N) :
+            a(k, Int8Polynomial(N)),
+            b(Int8Polynomial(N)),
+            k(k) {};
+
+    Trlwe8(int k, int N, int8_t val) :
+            a(k, Int8Polynomial(N, val)),
+            b(Int8Polynomial(N, val)),
+            k(k) {};
+};
+
 struct Trlwe16 {
     std::vector<Int16Polynomial> a; // k
     Int16Polynomial b; // 1
@@ -49,7 +65,7 @@ struct Trlwe16 {
             b(Int16Polynomial(N)),
             k(k) {};
 
-    Trlwe16(int k, int N, int val) :
+    Trlwe16(int k, int N, int16_t val) :
             a(k, Int16Polynomial(N, val)),
             b(Int16Polynomial(N, val)),
             k(k) {};
