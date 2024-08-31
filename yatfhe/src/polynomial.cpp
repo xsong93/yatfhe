@@ -91,6 +91,24 @@ void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const Toru
     }
 }
 
+void int8PolynomialRotate(Int8Polynomial& out, const int a, const Int8Polynomial& input) {
+    const auto N = input.N;
+    int aTrue, isWrap;
+    validateRotator(aTrue, isWrap, a, N);
+    for (auto i = 0; i < N; i++) {
+        out.coeffs[i] = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * (int8_t)isWrap) : (input.coeffs[i - aTrue] * (int8_t)isWrap);
+    }
+}
+
+void int8PolynomialRotateMinusOne(Int8Polynomial& out, const int a, const Int8Polynomial& input) {
+    const auto N = input.N;
+    int aTrue, isWrap;
+    validateRotator(aTrue, isWrap, a, N);
+    for (auto i = 0; i < N; i++) {
+        out.coeffs[i] = ((i < aTrue) ? (-input.coeffs[i - aTrue + N] * (int8_t)isWrap) : (input.coeffs[i - aTrue] * (int8_t)isWrap)) - input.coeffs[i];
+    }
+}
+
 void polynomialMulNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
     Torus tmp;

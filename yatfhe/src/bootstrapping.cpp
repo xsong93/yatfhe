@@ -53,6 +53,17 @@ void blindRotateNtt(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe&
     }
 }
 
+void blindRotateCRT(Trlwe8& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+    for (auto i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        Trlwe8 temp {param.k, param.N};
+//        controlMuxCRT(temp, accum, input.a[i], bsk.bskDft[i], param);
+        swap(accum, temp); // assign the previous result to accumulator
+    }
+}
+
 // res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input
 void controlMux(Trlwe& res, const Trlwe& input, const int aBarI, const Trgsw& bskI, const YatfheParameters& param) {
     Trlwe tmp {param.k, param.N};
@@ -71,10 +82,10 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
 
 
 // todo
-void controlMuxApproxCRT(Trlwe& res, const vector<Trlwe>& inputs, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
-    vector<Trlwe> tmp (param.d, Trlwe(param.k, param.N));
+void controlMuxCRT(Trlwe8& res, const vector<Trlwe8>& inputs, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
+    vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
     for (auto i = 0; i < param.d; i++) {
-        trlweRotateMinusOne(tmp[i], inputs[i], aBarI); // res = c1 - c0 = X^aBarI * input - input
+        trlweRotateMinusOne8(tmp[i], inputs[i], aBarI); // res = c1 - c0 = X^aBarI * input - input
     }
 //    trgswExternalProductNtt(res, bskI, tmp, param); // res *= bskI
 //    trlweAccumulate(res, input); // res += input

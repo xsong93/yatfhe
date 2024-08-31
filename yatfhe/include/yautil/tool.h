@@ -38,7 +38,8 @@ template <typename T>
 void printArray(const vector<T>& in, const string& msg) {
     cout << msg <<": [";
     for (int i = 0; i < in.size(); i++) {
-        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] << ANSI_COLOR_RESET <<" ";
+//        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] << ANSI_COLOR_RESET <<" ";
+        printf("%d:%s%d%s ", i, ANSI_COLOR_YELLOW, in[i], ANSI_COLOR_RESET);
     }
     cout <<"]" <<endl << endl;
 }

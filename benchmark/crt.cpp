@@ -11,7 +11,7 @@ int main() {
     std::vector<int> lowModuli = {233, 239};
     std::vector<int> highModuli = {241, 251};
     long q = 3368562317;
-    std::vector<std::vector<int>> f(l, std::vector<int>(coeffs.size(), 0));
+    std::vector<std::vector<int8_t>> f(l, std::vector<int8_t>(coeffs.size(), 0));
     std::vector<int> f_tilde(coeffs.size(), 0);
     std::vector<long> w(l, 0l);
 

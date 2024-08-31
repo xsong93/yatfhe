@@ -24,7 +24,7 @@ void calGadgetVector(std::vector<long>& w, const int Qlow, const std::vector<int
 //    printf("w1:%ld, w2:%ld\n", w[0], w[1]);
 }
 
-void approximateCRTDecomposition(std::vector<std::vector<int>>& f, const std::vector<int>& coeffs, const int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli) {
+void approximateCRTDecomposition(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli) {
     for (int i = 0; i < coeffs.size(); ++i) {
         int fi = coeffs[i];
 
@@ -38,12 +38,12 @@ void approximateCRTDecomposition(std::vector<std::vector<int>>& f, const std::ve
 
         // Calculate f for high moduli
         for (auto j = 0; j < f.size(); j++) {
-            f[j][i] = (int) intModP(fi - lowSum, highModuli[j]);
+            f[j][i] = (int8_t) intModP(fi - lowSum, highModuli[j]);
         }
     }
 }
 
-void approximatePolynomialReconstruction(std::vector<int>& f_tilde, const std::vector<std::vector<int>>& f, const std::vector<long>& w, long q) {
+void approximatePolynomialReconstruction(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q) {
     for (int i = 0; i < f_tilde.size(); i++) {
         for (int j = 0; j < w.size(); j++) {
             f_tilde[i] = (int) intModP(intModP((long)f[j][i] * w[j], q) + f_tilde[i], q);

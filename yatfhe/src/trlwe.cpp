@@ -284,12 +284,11 @@ void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, const int a) {
     torusPolynomialRotateMinusOne(res.b, a, input.b);
 }
 
-// todo: torusPolynomialRotateMinusOne mod q
-void trlweRotateMinusOneModQ(Trlwe& res, const Trlwe& input, const int a, const int q) {
+void trlweRotateMinusOne8(Trlwe8& res, const Trlwe8& input, const int a) {
     for (auto i = 0; i < input.a.size(); i++) {
-        torusPolynomialRotateMinusOne(res.a[i], a, input.a[i]);
+        int8PolynomialRotateMinusOne(res.a[i], a, input.a[i]);
     }
-    torusPolynomialRotateMinusOne(res.b, a, input.b);
+    int8PolynomialRotateMinusOne(res.b, a, input.b);
 }
 
 void copyTrlwe(Trlwe& target, const Trlwe& source, const bool copyA, const bool copyB) {

@@ -221,6 +221,8 @@ void trlweRotate(Trlwe& res, const Trlwe& input, int a);
 
 void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, int a);
 
+void trlweRotateMinusOne8(Trlwe8& res, const Trlwe8& input, int a);
+
 void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);
 
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput);
