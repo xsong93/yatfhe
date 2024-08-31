@@ -53,6 +53,7 @@ void blindRotateNtt(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe&
     }
 }
 
+//todo
 void blindRotateCRT(Trlwe8& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
@@ -87,7 +88,7 @@ void controlMuxCRT(Trlwe8& res, const vector<Trlwe8>& inputs, const int aBarI, c
     for (auto i = 0; i < param.d; i++) {
         trlweRotateMinusOne8(tmp[i], inputs[i], aBarI); // res = c1 - c0 = X^aBarI * input - input
     }
-//    trgswExternalProductNtt(res, bskI, tmp, param); // res *= bskI
+//    trgswExternalProductSplitApproxCRT(res, bskI, tmp, param); // res *= bskI
 //    trlweAccumulate(res, input); // res += input
 }
 
