@@ -33,7 +33,7 @@ TEST(PolyRotTest, PolyRotTest) {
     std::vector<Torus> m2 {3,4,-1,-2};
     std::vector<Torus> m1 {2,3,4,-1};
     std::vector<Torus> zo {1,2,3,4};
-    std::vector<std::vector<Torus>> rotatedVec (N * 2, std::vector<Torus> (N));
+    std::vector<std::vector<Torus>> rotatedVec (N * 4 + 1, std::vector<Torus> (N));
     rotatedVec[0] = zo; rotatedVec[8] = zo; rotatedVec[16] = zo;
     rotatedVec[1] = m7; rotatedVec[9] = m7;
     rotatedVec[2] = m6; rotatedVec[10] = m6;
@@ -71,7 +71,7 @@ TEST(Poly8RotTest, Poly8RotTest) {
     std::vector<int8_t> m2 {3,4,-1,-2};
     std::vector<int8_t> m1 {2,3,4,-1};
     std::vector<int8_t> zo {1,2,3,4};
-    std::vector<std::vector<int8_t>> rotatedVec (N * 2, std::vector<int8_t> (N));
+    std::vector<std::vector<int8_t>> rotatedVec (N * 4 + 1, std::vector<int8_t> (N));
     rotatedVec[0] = zo; rotatedVec[8] = zo; rotatedVec[16] = zo;
     rotatedVec[1] = m7; rotatedVec[9] = m7;
     rotatedVec[2] = m6; rotatedVec[10] = m6;

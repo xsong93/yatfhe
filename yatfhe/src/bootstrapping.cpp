@@ -81,7 +81,6 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
     trlweAccumulate(res, input); // res += input
 }
 
-
 // todo
 void controlMuxCRT(Trlwe8& res, const vector<Trlwe8>& inputs, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
     vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));

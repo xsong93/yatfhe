@@ -6,6 +6,7 @@
 #define HLS_YATFHE_CRT_H
 
 #include <iostream>
+#include <vector>
 
 int calApproxCRTError(const std::vector<int>& f_tilde, const std::vector<int>& coeffs);
 
