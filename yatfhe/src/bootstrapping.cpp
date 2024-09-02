@@ -85,7 +85,7 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
 void controlMuxCRT(Trlwe8& res, const vector<Trlwe8>& inputs, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
     vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
     for (auto i = 0; i < param.d; i++) {
-        trlweRotateMinusOne8(tmp[i], inputs[i], aBarI); // res = c1 - c0 = X^aBarI * input - input
+        trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input
     }
 //    trgswExternalProductSplitApproxCRT(res, bskI, tmp, param); // res *= bskI
 //    trlweAccumulate(res, input); // res += input

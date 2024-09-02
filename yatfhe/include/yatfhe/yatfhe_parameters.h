@@ -5,6 +5,7 @@
 #define HLS_YATFHE_YATFHE_PARAMETERS_H
 
 #include "yautil/control_helper.h"
+#include <vector>
 
 struct YatfheParameters {
 #ifdef PAR_SET1 // 128-bit
@@ -39,12 +40,9 @@ struct YatfheParameters {
     int digitMask {radixBase - 1};
     int unfolding {1};
     // CRT params
-    int d = 4; // # of primes
-    int q1 {233};
-    int q2 {239};
-    int q1p {241};
-    int q2p {251};
-    long qCRT{q1 * q2 * q1p * q2p};
+    int d {4}; // # of primes
+    int qd[4] {233, 239, 241, 251};
+    long qCRT{qd[0] * qd[1] * qd[2] * qd[3]};
 
 };
 
