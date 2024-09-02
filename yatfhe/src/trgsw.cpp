@@ -225,16 +225,16 @@ void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, 
 }
 
 //todo
-void trgswExternalProductSplitApproxCRT(Trlwe& output, const TrgswDft& trgswDftInput, std::vector<Trlwe>& trlweInput, const YatfheParameters& param) {
+void trgswExternalProductCRT(Trlwe& output, const TrgswDft& trgswDftInput, std::vector<Trlwe>& trlweInput, const YatfheParameters& param) {
     const auto k = param.k;
     const auto level = trgswDftInput.l;
     const auto N = param.N;
     TrlweDft trlweDftRes {k, N};
     DecomposedTrlwe decomposedTrlwe {param};
     DecomposedTrlweDft decomposedTrlweDft {param, param.l};
-//
-//
-//
+
+
+
 ////    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 //    for (auto row = 0; row < k + 1; row++) {
 //        auto& currIn = (row < k) ? trlweInput.a[row] : trlweInput.b;

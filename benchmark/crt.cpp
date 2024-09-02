@@ -15,9 +15,9 @@ int main() {
     std::vector<int> f_tilde(coeffs.size(), 0);
     std::vector<long> w(l, 0l);
 
-    approximateCRTDecomposition(f, coeffs, Qlow, lowModuli, highModuli);
+    approxCRTDecomp(f, coeffs, Qlow, lowModuli, highModuli);
     calGadgetVector(w, Qlow, highModuli);
-    approximatePolynomialReconstruction(f_tilde, f, w, q);
+    approxPolyReconstruct(f_tilde, f, w, q);
     for (auto i = 0; i < f.size(); i++) {
         printArray(f[i], "f" + to_string(i));
     }
