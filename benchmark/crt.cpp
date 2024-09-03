@@ -19,7 +19,7 @@ int main() {
     calGadgetVector(w, Qlow, highModuli);
     approxPolyReconstruct(f_tilde, f, w, q);
     for (auto i = 0; i < f.size(); i++) {
-        printArray(f[i], "f" + to_string(i));
+        printArray(f[i], "f" + to_string(i) + "(mod " + to_string(highModuli[i]) + ")");
     }
     printArray(coeffs, "f_origi");
     printArray(f_tilde, "f_tilde");

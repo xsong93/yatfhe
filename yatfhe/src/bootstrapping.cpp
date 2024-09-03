@@ -5,6 +5,7 @@
 #include "yatfhe/bootstrapping.h"
 #include "yatfhe/keyswitching.h"
 #include "yatfhe/ntt.h"
+#include "yatfhe/crt.h"
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
@@ -84,9 +85,12 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
 // todo
 void controlMuxCRT(Trlwe8& res, const vector<Trlwe8>& inputs, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
     vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
+    vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
+
     for (auto i = 0; i < param.d; i++) {
         trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input
     }
+    syncGadgetDecomp(tmpD, tmp, param);
 //    approxCRTDecomp();
 //    trgswExternalProductCRT(res, bskI, tmp, param); // res *= bskI
 //    trlweAccumulate(res, input); // res += input

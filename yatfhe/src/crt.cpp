@@ -3,6 +3,7 @@
 //
 #include "yatfhe/crt.h"
 #include "yatfhe/numeric_functions.h"
+#include "yatfhe/trlwe.h"
 
 int calApproxCRTError(const std::vector<int>& f_tilde, const std::vector<int>& coeffs) {
     int infNorm = 0;
@@ -33,7 +34,7 @@ void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>
         for (int u = 0; u < lowModuli.size(); ++u) {
             int q_u = lowModuli[u];
             int inv = (int)modInverse(Qlow / q_u, q_u);
-            lowSum += (int)intModP(Qlow / q_u * intModP(inv * intModP(fi, q_u), q_u), Qlow);
+            lowSum += Qlow / q_u * intModP(inv * intModP(fi, q_u), q_u);
         }
 
         // Calculate f for high moduli
@@ -47,6 +48,31 @@ void approxPolyReconstruct(std::vector<int>& f_tilde, const std::vector<std::vec
     for (int i = 0; i < f_tilde.size(); i++) {
         for (int j = 0; j < w.size(); j++) {
             f_tilde[i] = (int) intModP(intModP((long)f[j][i] * w[j], q) + f_tilde[i], q);
+        }
+    }
+}
+
+void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param) {
+    for (size_t j = 0; j < param.N; j++) {
+        for (size_t k = 0; k < param.k; k++) {
+            for (size_t i = 0; i < param.dh; i++) {
+                auto aHi = aux[i].a[k].coeffs[j];
+                auto aLo = aux[i + param.dh].a[k].coeffs[j];
+                int lowSum = 0;
+                for (size_t u = 0; u < param.dl; u++) {
+                    lowSum += (int)intModP(param.qLow / param.ql[u] * aLo, param.qh[i]);
+                }
+                out[i].a[k].coeffs[j] = (int8_t)intModP(aHi - lowSum, param.qh[i]);
+            }
+        }
+        for (size_t i = 0; i < param.dh; i++) {
+            auto bHi = aux[i].b.coeffs[j];
+            auto bLo = aux[i + param.dh].b.coeffs[j];
+            int lowSum = 0;
+            for (size_t u = 0; u < param.dl; u++) {
+                lowSum += (int)intModP(param.qLow / param.ql[u] * bLo, param.qh[i]);
+            }
+            out[i].b.coeffs[j] = (int8_t)intModP(bHi - lowSum, param.qh[i]);
         }
     }
 }

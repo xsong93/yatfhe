@@ -7,13 +7,17 @@
 
 #include <iostream>
 #include <vector>
+#include "yatfhe/yatfhe_parameters.h"
+#include "yatfhe/trlwe.h"
 
 int calApproxCRTError(const std::vector<int>& f_tilde, const std::vector<int>& coeffs);
 
 void calGadgetVector(std::vector<long>& w, int Qlow, const std::vector<int>& highModuli);
 
-void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli);
+void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli);
 
 void approxPolyReconstruct(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q);
+
+void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_CRT_H

@@ -41,7 +41,13 @@ struct YatfheParameters {
     int unfolding {1};
     // CRT params
     int d {4}; // # of primes
-    int qd[4] {233, 239, 241, 251};
+    int dh {2};
+    int dl{2};
+    int qd[4] {251, 241, 239, 233};
+    int qh[2] {qd[0], qd[1]};
+    int ql[2] {qd[2], qd[3]};
+    int qHigh {qd[0] * qd[1]};
+    int qLow {qd[2] * qd[3]};
     long qCRT{qd[0] * qd[1] * qd[2] * qd[3]};
 
 };
