@@ -91,7 +91,6 @@ void controlMuxCRT(Trlwe8& res, const vector<Trlwe8>& inputs, const int aBarI, c
         trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input
     }
     syncGadgetDecomp(tmpD, tmp, param);
-//    approxCRTDecomp();
 //    trgswExternalProductCRT(res, bskI, tmp, param); // res *= bskI
 //    trlweAccumulate(res, input); // res += input
 }
