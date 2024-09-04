@@ -47,32 +47,35 @@ void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>
 void approxPolyReconstruct(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q) {
     for (int i = 0; i < f_tilde.size(); i++) {
         for (int j = 0; j < w.size(); j++) {
-            f_tilde[i] = (int) intModP(intModP((long)f[j][i] * w[j], q) + f_tilde[i], q);
+            f_tilde[i] = (int) longModP(longModP(f[j][i] * w[j], q) + f_tilde[i], q);
         }
     }
 }
 
 void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param) {
-    for (size_t j = 0; j < param.N; j++) {
-        for (size_t k = 0; k < param.k; k++) {
-            for (size_t i = 0; i < param.dh; i++) {
-                auto aHi = aux[i].a[k].coeffs[j];
-                auto aLo = aux[i + param.dh].a[k].coeffs[j];
+    int qLowDivQl[param.dl];
+    for (size_t u = 0; u < param.dl; u++) {
+        qLowDivQl[u] = param.qLow / param.ql[u];
+    }
+    for (size_t i = 0; i < param.dh; i++) {
+        int qhI = param.qh[i];
+        for (size_t j = 0; j < param.N; j++) {
+            for (size_t k = 0; k < param.k; k++) {
+                int8_t aHi = aux[i].a[k].coeffs[j];
+                int8_t aLo = aux[i + param.dh].a[k].coeffs[j];
                 int lowSum = 0;
                 for (size_t u = 0; u < param.dl; u++) {
-                    lowSum += (int)intModP(param.qLow / param.ql[u] * aLo, param.qh[i]);
+                    lowSum += intModP(qLowDivQl[u] * aLo, qhI);
                 }
-                out[i].a[k].coeffs[j] = (int8_t)intModP(aHi - lowSum, param.qh[i]);
+                out[i].a[k].coeffs[j] = static_cast<int8_t>(intModP(aHi - intModP(lowSum, qhI), qhI));
             }
-        }
-        for (size_t i = 0; i < param.dh; i++) {
-            auto bHi = aux[i].b.coeffs[j];
-            auto bLo = aux[i + param.dh].b.coeffs[j];
+            int8_t bHi = aux[i].b.coeffs[j];
+            int8_t bLo = aux[i + param.dh].b.coeffs[j];
             int lowSum = 0;
             for (size_t u = 0; u < param.dl; u++) {
-                lowSum += (int)intModP(param.qLow / param.ql[u] * bLo, param.qh[i]);
+                lowSum += intModP(qLowDivQl[u] * bLo, qhI);
             }
-            out[i].b.coeffs[j] = (int8_t)intModP(bHi - lowSum, param.qh[i]);
+            out[i].b.coeffs[j] = static_cast<int8_t>(intModP(bHi - intModP(lowSum, qhI), qhI));
         }
     }
 }

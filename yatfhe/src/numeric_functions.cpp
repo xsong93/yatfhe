@@ -79,7 +79,17 @@ Integer roundErrorForShiftedTorus(const Torus in, const double sigma, const int 
     return (in + 20 * doubleToTorus32(sigma)) >> shift;
 }
 
-long intModP(const long a, const long p) {
+int intModP(const int a, const int p) {
+    auto b = a % p;
+    if (b > p / 2 - 1) {
+        b -= p;
+    } else if (b < - p / 2) {
+        b += p;
+    }
+    return b;
+}
+
+long longModP(const long a, const long p) {
     auto b = a % p;
     if (b > p / 2 - 1) {
         b -= p;

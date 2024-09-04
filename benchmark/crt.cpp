@@ -3,6 +3,7 @@
 //
 #include "yatfhe/crt.h"
 #include "yautil/tool.h"
+#include "yatfhe/numeric_functions.h"
 
 int main() {
     std::vector<int> coeffs = {656381177, -1322693974, 749894848, 1618033988};
@@ -24,4 +25,27 @@ int main() {
     printArray(coeffs, "f_origi");
     printArray(f_tilde, "f_tilde");
     cout << "||f - f_t|| = " << calApproxCRTError(f_tilde, coeffs) << endl;
+
+    YatfheParameters p {};
+    vector<Trlwe8> t1 (p.d, Trlwe8(p.k, p.N));
+    vector<Trlwe8> t2 (p.dh, Trlwe8(p.k, p.N));
+
+    for (size_t i = 0; i < p.d; i++) {
+        for (size_t j = 0; j < p.N; j++) {
+            for (size_t k = 0; k < p.k; k++) {
+                t1[i].a[k].coeffs[j] = (int8_t)intModP(j, 256);
+            }
+            t1[i].b.coeffs[j] = (int8_t)intModP(j, 256);
+        }
+    }
+    syncGadgetDecomp(t2, t1, p);
+    for (size_t i = 0; i < p.dh; i++) {
+        for (size_t j = 0; j < p.N; j++) {
+            for (size_t k = 0; k < p.k; k++) {
+                printf("t2a: %d; ", t2[i].a[k].coeffs[j]);
+            }
+            cout<< endl << endl;
+            printf("t2b: %d; ", t2[i].b.coeffs[j]);
+        }
+    }
 }
