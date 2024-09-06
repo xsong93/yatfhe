@@ -178,6 +178,19 @@ void applyNtt14(Ntt14Polynomial& RES, const IntPolynomial& IN) {
     DIT_NR14(RES, format_input);
 }
 
+void applyNtt14Poly8(Ntt14Polynomial& RES, const Int8Polynomial& IN) {
+    auto N = IN.N;
+    Ntt14Polynomial format_input(N);
+    for (int i = 0; i < N; i++) {
+        if (IN.coeffs[i] >= 0){
+            format_input.coeffs[i] = Ntt14(IN.coeffs[i]);
+        } else {
+            format_input.coeffs[i] = Ntt14(IN.coeffs[i] + MOD14);
+        }
+    }
+    DIT_NR14(RES, format_input);
+}
+
 void DIF_RN14(Ntt14Polynomial& RES, const Ntt14Polynomial& IN) {
     auto &res = RES.coeffs;
     const auto &in = IN.coeffs;

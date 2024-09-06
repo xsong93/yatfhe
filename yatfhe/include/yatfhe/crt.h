@@ -20,4 +20,6 @@ void approxPolyReconstruct(std::vector<int>& f_tilde, const std::vector<std::vec
 
 void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param);
 
+void broadcastCRT(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param);
+
 #endif //HLS_YATFHE_CRT_H

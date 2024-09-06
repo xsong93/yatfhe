@@ -52,6 +52,7 @@ extern TwRom14 TW_ROM14;
 void genTW_ROM14(TwRom14& tw_rom);
 void genNWCparam14(TwParam14& nwc_tw,const int n, const TwRom14& tw_rom, const std::string& str);
 void applyNtt14(Ntt14Polynomial& RES, const IntPolynomial& IN);
+void applyNtt14Poly8(Ntt14Polynomial& RES, const Int8Polynomial& IN);
 void applyIntt14(IntPolynomial & RES, const Ntt14Polynomial& IN);
 Ntt14 POW14(Ntt14 BASE, Ntt14 EXP);
 Ntt14 modINV14(Ntt14 in);

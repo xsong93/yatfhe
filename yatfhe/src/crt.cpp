@@ -58,24 +58,37 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, 
         qLowDivQl[u] = param.qLow / param.ql[u];
     }
     for (size_t i = 0; i < param.dh; i++) {
-        int qhI = param.qh[i];
+        int qHi = param.qh[i];
         for (size_t j = 0; j < param.N; j++) {
             for (size_t k = 0; k < param.k; k++) {
                 int8_t aHi = aux[i].a[k].coeffs[j];
-                int8_t aLo = aux[i + param.dh].a[k].coeffs[j];
                 int lowSum = 0;
                 for (size_t u = 0; u < param.dl; u++) {
-                    lowSum += intModP(qLowDivQl[u] * aLo, qhI);
+                    int8_t aLo = aux[u + param.dh].a[k].coeffs[j];
+                    lowSum += qLowDivQl[u] * aLo;
                 }
-                out[i].a[k].coeffs[j] = static_cast<int8_t>(intModP(aHi - intModP(lowSum, qhI), qhI));
+                out[i].a[k].coeffs[j] = static_cast<int8_t>(intModP(aHi - intModP(lowSum, qHi), qHi));
             }
             int8_t bHi = aux[i].b.coeffs[j];
-            int8_t bLo = aux[i + param.dh].b.coeffs[j];
             int lowSum = 0;
             for (size_t u = 0; u < param.dl; u++) {
-                lowSum += intModP(qLowDivQl[u] * bLo, qhI);
+                int8_t bLo = aux[u + param.dh].b.coeffs[j];
+                lowSum += qLowDivQl[u] * bLo;
             }
-            out[i].b.coeffs[j] = static_cast<int8_t>(intModP(bHi - intModP(lowSum, qhI), qhI));
+            out[i].b.coeffs[j] = static_cast<int8_t>(intModP(bHi - intModP(lowSum, qHi), qHi));
+        }
+    }
+}
+
+void broadcastCRT(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
+    for (size_t i1 = 0; i1 < param.d; i1++) {
+        for (size_t i2 = 0; i2 < param.dh; i2++) {
+            for (size_t j = 0; j < param.N; j++) {
+                for (size_t k = 0; k < param.k; k++) {
+                    out[i1][i2].a[k].coeffs[j] = static_cast<int8_t>(intModP(in[i2].a[k].coeffs[j], param.qd[i1]));
+                }
+                out[i1][i2].b.coeffs[j] = static_cast<int8_t>(intModP(in[i2].b.coeffs[j], param.qd[i1]));
+            }
         }
     }
 }

@@ -6,6 +6,7 @@
 #include "yatfhe/keyswitching.h"
 #include "yatfhe/ntt.h"
 #include "yatfhe/crt.h"
+#include "yatfhe/ntt14.h"
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
@@ -83,14 +84,27 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
 }
 
 // todo
-void controlMuxCRT(Trlwe8& res, const vector<Trlwe8>& inputs, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
-    vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
-    vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
+void controlMuxCRT(Trlwe8& res, const std::vector<Trlwe8>& inputs, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
+    std::vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
+    std::vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
+    std::vector<std::vector<Trlwe8>> tmpDB (param.d, std::vector<Trlwe8>(param.dh, Trlwe8(param.k, param.N)));
+    std::vector<std::vector<TrlweDft14>> tmpDBNtt (param.d, std::vector<TrlweDft14>(param.dh, TrlweDft14(param.k, param.N)));
 
-    for (auto i = 0; i < param.d; i++) {
+    for (size_t i = 0; i < param.d; i++) {
         trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input
     }
     syncGadgetDecomp(tmpD, tmp, param);
+    broadcastCRT(tmpDB, tmpD, param);
+
+    // ntt
+    for (size_t i1 = 0; i1 < param.d; i1++) {
+        for (size_t i2 = 0; i2 < param.dh; i2++) {
+            for (size_t k = 0; k < param.k; k++) {
+                applyNtt14Poly8(tmpDBNtt[i1][i2].a[k], tmpDB[i1][i2].a[k]);
+            }
+            applyNtt14Poly8(tmpDBNtt[i1][i2].b, tmpDB[i1][i2].b);
+        }
+    }
 //    trgswExternalProductCRT(res, bskI, tmp, param); // res *= bskI
 //    trlweAccumulate(res, input); // res += input
 }

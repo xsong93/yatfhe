@@ -39,13 +39,13 @@ int main() {
         }
     }
     syncGadgetDecomp(t2, t1, p);
-//    for (size_t i = 0; i < p.dh; i++) {
-//        for (size_t j = 0; j < p.N; j++) {
-//            for (size_t k = 0; k < p.k; k++) {
-//                printf("t2a: %d; ", t2[i].a[k].coeffs[j]);
-//            }
-//            cout<< endl << endl;
-//            printf("t2b: %d; ", t2[i].b.coeffs[j]);
-//        }
-//    }
+    for (size_t i = 0; i < p.dh; i++) {
+        for (size_t j = 0; j < p.N; j++) {
+            for (size_t k = 0; k < p.k; k++) {
+                printf("t2a: %d; ", t2[i].a[k].coeffs[j]);
+            }
+            cout<< endl << endl;
+            printf("t2b: %d; ", t2[i].b.coeffs[j]);
+        }
+    }
 }
