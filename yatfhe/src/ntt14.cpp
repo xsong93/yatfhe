@@ -183,9 +183,9 @@ void applyNtt14Poly8(Ntt14Polynomial& RES, const Int8Polynomial& IN) {
     Ntt14Polynomial format_input(N);
     for (int i = 0; i < N; i++) {
         if (IN.coeffs[i] >= 0){
-            format_input.coeffs[i] = Ntt14(IN.coeffs[i]);
+            format_input.coeffs[i] = static_cast<Ntt14>(IN.coeffs[i]);
         } else {
-            format_input.coeffs[i] = Ntt14(IN.coeffs[i] + MOD14);
+            format_input.coeffs[i] = static_cast<Ntt14>(IN.coeffs[i] + MOD14);
         }
     }
     DIT_NR14(RES, format_input);
@@ -246,6 +246,27 @@ void applyIntt14(IntPolynomial & RES, const Ntt14Polynomial& IN) {
             RES.coeffs[i] = int32_t(temp_poly - (POLY_MAX8 << 1));
         } else {
             RES.coeffs[i] = int32_t(temp_poly);
+        }
+    }
+}
+
+void applyIntt14Poly8(Int8Polynomial & RES, const Ntt14Polynomial& IN) {
+    auto N = IN.N;
+    Ntt14Polynomial res(N);
+    DIF_RN14(res, IN);
+    int16_t temp_ntt = 0;
+    uint16_t temp_poly = 0;
+    for (int i = 0; i < N; i++) {
+        if (res.coeffs[i] >= HALF_MOD14) {
+            temp_ntt = static_cast<int16_t>(res.coeffs[i] - MOD14);
+        } else {
+            temp_ntt = static_cast<int16_t>(res.coeffs[i]);
+        }
+        temp_poly = static_cast<uint16_t>(temp_ntt & NTT14_MASK);
+        if (temp_poly >= POLY_MAX8) {
+            RES.coeffs[i] = int8_t(temp_poly - (POLY_MAX8 << 1));
+        } else {
+            RES.coeffs[i] = int8_t(temp_poly);
         }
     }
 }
