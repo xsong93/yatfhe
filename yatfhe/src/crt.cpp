@@ -80,14 +80,17 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, 
     }
 }
 
+// l -> l*d
 void broadcastCRT(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
     for (size_t i1 = 0; i1 < param.d; i1++) {
         for (size_t i2 = 0; i2 < param.dh; i2++) {
             for (size_t j = 0; j < param.N; j++) {
                 for (size_t k = 0; k < param.k; k++) {
-                    out[i1][i2].a[k].coeffs[j] = static_cast<int8_t>(intModP(in[i2].a[k].coeffs[j], param.qd[i1]));
+                    out[i1][i2].a[k].coeffs[j] = (param.qh[i2] > param.qd[i1]) ?
+                            static_cast<int8_t>(intModP(in[i2].a[k].coeffs[j], param.qd[i1])) : in[i2].a[k].coeffs[j];
                 }
-                out[i1][i2].b.coeffs[j] = static_cast<int8_t>(intModP(in[i2].b.coeffs[j], param.qd[i1]));
+                out[i1][i2].b.coeffs[j] = (param.qh[i2] > param.qd[i1]) ?
+                        static_cast<int8_t>(intModP(in[i2].b.coeffs[j], param.qd[i1])) : in[i2].b.coeffs[j];
             }
         }
     }
