@@ -8,6 +8,42 @@
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 
+TEST(NttOldTest, NaiveArithTest) {
+    const int N = 4;
+
+    TorusPolynomial poly0{N};
+    TorusPolynomial poly2{N};
+    TorusPolynomial resMul{N};
+    TorusPolynomial resAdd{N};
+    TorusPolynomial resSub{N};
+    TorusPolynomial navMul{N};
+    TorusPolynomial navAdd{N};
+    TorusPolynomial navSub{N};
+    int t = 10;
+    while (t-- > 0) {
+        for (auto j = 0; j < N; j++) {
+            poly0.coeffs[j] = j + 1;
+            poly2.coeffs[j] = j + 5;
+        }
+        printArray(poly0.coeffs, "poly0");
+        printArray(poly2.coeffs, "poly2");
+
+        polynomialMulNaiveModQ(navMul, poly0, poly2, 4294967296);
+        printArray(navMul.coeffs, "navMul");
+
+
+//        polynomialAdd(navAdd, poly0, poly2);
+//        polynomialSub(navSub, poly0, poly2);
+
+//        for (int i = 0; i < navMul.N; i++) {
+//            EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
+////            EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
+////            EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
+//        }
+    }
+    printBanner("NttBasicArithTest");
+}
+
 TEST(NttOldTest, NttOldBasicArithTest) {
     COUNT_TIME("init timer", cout << endl;)
     const int N = 1024;
@@ -28,8 +64,8 @@ TEST(NttOldTest, NttOldBasicArithTest) {
     int t = 10;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = genIntUniformDist(1 << 24, 1<< 25);
-            poly2.coeffs[j] = genIntUniformDist(1 << 24, 1<< 25);
+            poly0.coeffs[j] = genIntUniformDist(1 << 26, 1<< 27);
+            poly2.coeffs[j] = genIntUniformDist(1 << 26, 1<< 27);
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");

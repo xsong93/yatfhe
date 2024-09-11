@@ -86,7 +86,7 @@ TEST(NttTest, NttAddConstantTest) {
 
 TEST(NttTest, NttBasicArithTest) {
     COUNT_TIME("init timer", cout << endl;)
-    const int N = 512;
+    const int N = 1024;
     initGlobalParamsNtt64(N);
     LagrangePolynomial a{N};
     LagrangePolynomial b{N};
@@ -105,8 +105,8 @@ TEST(NttTest, NttBasicArithTest) {
     int t = 10;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = genIntUniformDist(INT32_MIN, INT32_MAX);
-            poly2.coeffs[j] = genIntUniformDist(INT32_MIN, INT32_MAX);
+            poly0.coeffs[j] = genIntUniformDist(1 << 26, 1<< 27);
+            poly2.coeffs[j] = genIntUniformDist(1 << 26, 1<< 27);
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");

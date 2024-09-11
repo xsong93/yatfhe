@@ -137,6 +137,8 @@ void int8PolynomialRotateMinusOne(Int8Polynomial& out, int a, const Int8Polynomi
 
 void polynomialMulNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
+void polynomialMulNaiveModQ(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2, long q);
+
 void polynomialMulAccNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
 void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);
