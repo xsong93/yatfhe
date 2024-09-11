@@ -9,16 +9,16 @@
 using namespace std;
 
 // Function to perform Number Theoretic Transform (NTT)
-void applyNtt(LagrangePolynomial& out, const IntPolynomial& in) {
+void applyNttOld(LagrangePolynomial& out, const IntPolynomial& in) {
     auto& input = in.coeffs;
     auto& output = out.coeffs;
     const auto N = out.N;
 
     for (int i = 0; i < N; i++) {
         uint64_t inputValue = input[i] < 0 ? input[i] + MODULUS : input[i];
-        output[i] = modMul(inputValue, phi_normal_2[i]);
+        output[i] = modMulOld(inputValue, phi_normal_2[i]);
     }
-    bitRevShuffle(output, N);
+    bitRevShuffleOld(output, N);
     int32_t wbarr = 0;
 
     // Loop for the NTT algorithm
@@ -31,23 +31,23 @@ void applyNtt(LagrangePolynomial& out, const IntPolynomial& in) {
 
                 // Perform butterfly operations
                 uint64_t a = output[i];
-                uint64_t b = (wb == 1) ? output[j] : modMul(output[j], wb);
-                output[i] = modAdd(a, b);
-                output[j] = modSub(a, b);
+                uint64_t b = (wb == 1) ? output[j] : modMulOld(output[j], wb);
+                output[i] = modAddOld(a, b);
+                output[j] = modSubOld(a, b);
             }
             wb = wb_normal_2[wbarr++];
         }
     }
 }
 
-void applyNttTorus(LagrangePolynomial& out, const TorusPolynomial & in, const int mSize) {
+void applyNttTorusOld(LagrangePolynomial& out, const TorusPolynomial & in, const int mSize) {
     IntPolynomial intPolynomial(in.N);
     torusPolyToIntPoly(intPolynomial, in, mSize);
     printArray(intPolynomial.coeffs, "intPolynomial@applyNttTorus");
-    applyNtt(out, intPolynomial);
+    applyNttOld(out, intPolynomial);
 }
 
-void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
+void applyInttOld(IntPolynomial& out, const LagrangePolynomial& in) {
     vector<NttType> input(in.coeffs.size());
     copy(in.coeffs.begin(), in.coeffs.end(), input.begin());
     int32_t N = in.N;
@@ -55,7 +55,7 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
     vector<NttType>& tmp = temp.coeffs;
     vector<Integer>& output = out.coeffs;
     int inv = 0;
-    bitRevShuffle(input, N);
+    bitRevShuffleOld(input, N);
     for (int transSize = 2; transSize <= N; transSize = transSize * 2) {
         uint64_t wb = 1;
         for (int t = 0; t < (transSize >> 1); t++) {
@@ -63,16 +63,16 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
                 int i = trans * transSize + t;
                 int j = i + (transSize >> 1);
                 uint64_t a = input[i];
-                uint64_t b = (wb == 1) ? input[j] : modMul(input[j], wb);
-                input[i] = modAdd(a, b);
-                input[j] = modSub(a, b);
+                uint64_t b = (wb == 1) ? input[j] : modMulOld(input[j], wb);
+                input[i] = modAddOld(a, b);
+                input[j] = modSubOld(a, b);
             }
             wb = wb_inverse_2[inv++];
         }
     }
     for (int i = 0; i < N; i++) {
-        tmp[i] = modMul(input[i], scale_2);    //scale_2*phi inversev, modulus  (phi inverse sclaed)
-        tmp[i] = modMul(tmp[i], phi_inverse_2[i]);
+        tmp[i] = modMulOld(input[i], scale_2);    //scale_2*phi inversev, modulus  (phi inverse sclaed)
+        tmp[i] = modMulOld(tmp[i], phi_inverse_2[i]);
     }
 
     uint64_t med = MODULUS / 2;
@@ -81,7 +81,7 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
     }
 }
 
-void bitRevShuffle(std::vector<NttType>& x, int N) {
+void bitRevShuffleOld(std::vector<NttType>& x, int N) {
     int j = 0;
     int b = 0;
 
@@ -102,15 +102,15 @@ void bitRevShuffle(std::vector<NttType>& x, int N) {
     }
 }
 
-uint64_t modAdd(uint64_t x, uint64_t y) {
+uint64_t modAddOld(uint64_t x, uint64_t y) {
     return ((MODULUS - x) > y) ? (x + y) : (x + y - MODULUS);
 }
 
-uint64_t modSub(uint64_t x, uint64_t y) {
+uint64_t modSubOld(uint64_t x, uint64_t y) {
     return (x >= y) ? (x - y) : (MODULUS - y + x);
 }
 
-uint64_t modMul(uint64_t x, uint64_t y) {
+uint64_t modMulOld(uint64_t x, uint64_t y) {
     // Break down x and y into 32-bit components
     auto x0 = (uint32_t)x;
     auto x1 = (uint32_t)(x >> 32);
@@ -145,25 +145,25 @@ uint64_t modMul(uint64_t x, uint64_t y) {
 }
 
 // output_j = aj * bj mod p
-void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {
+void modularMultOld(std::vector<uint64_t>& output, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsB) {
     const auto N = output.size();
     for (auto j = 0; j < N; j++) {
-        output[j] = modMul(coeffsA[j], coeffsB[j]);
+        output[j] = modMulOld(coeffsA[j], coeffsB[j]);
     }
 }
 
 // b += a * s mod p
-void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
+void modularAccumulateOld(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
     const auto N = coeffsB.size();
     for (auto j = 0; j < N; j++) {
-        auto tmp = modMul(coeffsA[j], coeffsS[j]);
-        coeffsB[j] = modAdd(coeffsB[j], tmp);
+        auto tmp = modMulOld(coeffsA[j], coeffsS[j]);
+        coeffsB[j] = modAddOld(coeffsB[j], tmp);
     }
 }
 
 // b = aN * sN
-void calModularInnerProductNtt(LagrangePolynomial& b, const vector<LagrangePolynomial>& a, const vector<LagrangePolynomial>& s) {
+void calModularInnerProductNttOld(LagrangePolynomial& b, const vector<LagrangePolynomial>& a, const vector<LagrangePolynomial>& s) {
     for (auto i = 0; i < a.size(); i++) {
-        modularAccumulate(b.coeffs, a[i].coeffs, s[i].coeffs);
+        modularAccumulateOld(b.coeffs, a[i].coeffs, s[i].coeffs);
     }
 }
