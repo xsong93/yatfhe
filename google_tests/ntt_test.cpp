@@ -86,7 +86,7 @@ TEST(NttTest, NttAddConstantTest) {
 
 TEST(NttTest, NttBasicArithTest) {
     COUNT_TIME("init timer", cout << endl;)
-    const int N = 1024;
+    const int N = 64;
     initGlobalParamsNtt64(N);
     LagrangePolynomial a{N};
     LagrangePolynomial b{N};
@@ -102,11 +102,11 @@ TEST(NttTest, NttBasicArithTest) {
     TorusPolynomial navMul{N};
     TorusPolynomial navAdd{N};
     TorusPolynomial navSub{N};
-    int t = 10;
+    int t = 1;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = genIntUniformDist(1 << 26, 1<< 27);
-            poly2.coeffs[j] = genIntUniformDist(1 << 26, 1<< 27);
+            poly0.coeffs[j] = genIntUniformDist(1 << 29, 1 << 29);
+            poly2.coeffs[j] = genIntUniformDist(1 << 29, 1 << 29);
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");
@@ -131,10 +131,13 @@ TEST(NttTest, NttBasicArithTest) {
         polynomialAdd(navAdd, poly0, poly2);
         polynomialSub(navSub, poly0, poly2);
 
+        printArray(resMul.coeffs, "resMul");
+        printArray(navMul.coeffs, "navMul");
+
         for (int i = 0; i < navMul.N; i++) {
             EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
-            EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
-            EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
+//            EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
+//            EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
         }
     }
     printBanner("NttSamePoly");

@@ -96,6 +96,7 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
             temp_ntt = int64_t(res.coeffs[i]);
         }
         temp_poly = uint32_t(temp_ntt & NTT64_MASK);
+//        temp_poly = uint32_t(res.coeffs[i] & NTT64_MASK);
         if (temp_poly >= POLY_MAX) {
             out.coeffs[i] = int32_t(temp_poly - (POLY_MAX<<1));
         } else {

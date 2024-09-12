@@ -139,6 +139,8 @@ void polynomialMulNaive(TorusPolynomial& res, const TorusPolynomial& poly1, cons
 
 void polynomialMulNaiveModQ(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2, long q);
 
+void polynomialMulNaiveModQ8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, int q);
+
 void polynomialMulAccNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
 void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);

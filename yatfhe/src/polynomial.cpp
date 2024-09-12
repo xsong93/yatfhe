@@ -136,6 +136,20 @@ void polynomialMulNaiveModQ(TorusPolynomial& res, const TorusPolynomial& poly1, 
     }
 }
 
+void polynomialMulNaiveModQ8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, const int q) {
+    const int N = res.N;
+    int8_t tmp;
+    for (auto i = 0; i < N; i++) {
+        tmp = 0;
+        for (auto j = 0; j < N; j++) {
+            tmp = (j <= i) ?
+                  (tmp + static_cast<int8_t>(intModP(poly1.coeffs[j] * poly2.coeffs[i - j], q)))
+                           : (tmp - static_cast<int8_t>(intModP(poly1.coeffs[j] * poly2.coeffs[N + i - j], q)));
+        }
+        res.coeffs[i] = static_cast<int8_t>(intModP(tmp, q));
+    }
+}
+
 void polynomialMulAccNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
     Torus tmp;

@@ -52,3 +52,45 @@ TEST(Ntt14Test, NttIntt14Test) {
     }
     printBanner("NttIntt14Test");
 }
+
+TEST(Ntt14Test, Ntt14BasicArithTest) {
+    COUNT_TIME("init timer", cout << endl;)
+    const int N = 64;
+    initGlobalParamsNtt14(N);
+    Ntt14Polynomial a{N};
+    Ntt14Polynomial b{N};
+    Ntt14Polynomial tmpMul{N};
+
+    Int8Polynomial poly0{N};
+    Int8Polynomial poly2{N};
+    Int8Polynomial resMul{N};
+    Int8Polynomial navMul{N};
+    int t = 1;
+    while (t-- > 0) {
+        for (auto j = 0; j < N; j++) {
+            poly0.coeffs[j] = genIntUniformDist((1 << 7) - 1, (1 << 7) - 1);
+            poly2.coeffs[j] = genIntUniformDist((1 << 7) - 1, (1 << 7) - 1);
+        }
+        printArray(poly0.coeffs, "poly0");
+        printArray(poly2.coeffs, "poly2");
+
+        COUNT_TIME("NTT_MULT", {
+            applyNtt14Poly8(a, poly0);
+            applyNtt14Poly8(b, poly2);
+            for (int i = 0; i < a.N; i++) {
+                tmpMul.coeffs[i] = modMULT14(a.coeffs[i], b.coeffs[i]);
+            }
+            applyIntt14Poly8(resMul, tmpMul);
+        })
+        COUNT_TIME("NAIVE_MULT",
+                   polynomialMulNaiveModQ8(navMul, poly0, poly2, 1 << 8);)
+
+        printArray(resMul.coeffs, "resMul");
+        printArray(navMul.coeffs, "navMul");
+
+        for (int i = 0; i < navMul.N; i++) {
+            EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
+        }
+    }
+    printBanner("NttSamePoly");
+}
