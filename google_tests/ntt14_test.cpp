@@ -55,7 +55,7 @@ TEST(Ntt14Test, NttIntt14Test) {
 
 TEST(Ntt14Test, Ntt14BasicArithTest) {
     COUNT_TIME("init timer", cout << endl;)
-    const int N = 64;
+    const int N = 512;
     initGlobalParamsNtt14(N);
     Ntt14Polynomial a{N};
     Ntt14Polynomial b{N};

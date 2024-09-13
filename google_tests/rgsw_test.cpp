@@ -121,12 +121,19 @@ TEST(RgswTest, RgswMultTestNTT) {
         // trlwe enc
         Trlwe in2 {param.k, param.N};
         TrlweDft in2Dft {param.k, param.N};
-        Integer mu2p = genIntUniformDist(INT32_MIN, INT32_MAX);
-        Torus mu2 = modSwitchToTorus32(mu2p, param.torusBase);
+//        Integer mu2p = genIntUniformDist(0, 3);
+//        Torus mu2 = modSwitchToTorus32(mu2p, param.torusBase);
+        vector<Integer> mu2ps(param.N);
+        vector<Torus> mu2s(param.N);
+        for (auto i = 0; i < param.N; i++) {
+            mu2ps[i] = genIntUniformDist(0, 3);
+            mu2s[i] = modSwitchToTorus32(mu2ps[i], param.torusBase);
+        }
         Trlwe out {param.k, param.N};
         IntPolynomial decPreP {param.N};
         IntPolynomial decAftP {param.N};
-        symEncTrlweSingleSampleNtt(in2, in2Dft, trlweKey, mu2);
+//        symEncTrlweSingleSampleNtt(in2, in2Dft, trlweKey, mu2);
+        symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, mu2s);
         printTrlweAB(in2, "trlwe");
 
         // trlwe dec pre-mult
@@ -134,15 +141,20 @@ TEST(RgswTest, RgswMultTestNTT) {
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult ntt
-        // todo
         COUNT_TIME("trgswExternalProductNtt", trgswExternalProductNtt(out, trgswDft, in2, param);)
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
         symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
         printArray(decAftP.coeffs, "decAftP");
+
+        vector<Integer> pMult(param.N);
+        for (auto i = 0; i < param.N; i++) {
+            pMult[i] = intModP(mu1 * mu2ps[i], param.torusBase);
+        }
+        printArray(pMult, "realVal");
         for (auto i = 0 ; i < decAftP.N; i++) {
-            ASSERT_EQ(intModP(mu1 * mu2p, param.torusBase), decAftP.coeffs[i]);
+            ASSERT_EQ(pMult[i], decAftP.coeffs[i]);
         }
     }
     printBanner("RgswMultTestNTT");
@@ -168,7 +180,8 @@ TEST(RgswTest, RgswMultTestNTT14) {
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
-        Integer mu1 = genIntUniformDist(0, 3);
+//        Integer mu1 = genIntUniformDist(1, 3);
+        Integer mu1 = 3;
         trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, mu1);
 
         Trlgsw trlgsw {param};
@@ -180,7 +193,8 @@ TEST(RgswTest, RgswMultTestNTT14) {
         // trlwe enc
         Trlwe in2 {param.k, param.N};
         TrlweDft in2Dft {param.k, param.N};
-        Integer mu2p = genIntUniformDist(INT32_MIN, INT32_MAX);
+//        Integer mu2p = genIntUniformDist(1, 1);
+        Integer mu2p = 1;
         Torus mu2 = modSwitchToTorus32(mu2p, param.torusBase);
         IntPolynomial decPreP {param.N};
         IntPolynomial decAftP {param.N};

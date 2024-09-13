@@ -15,6 +15,7 @@
 using Torus = int32_t; // use 32-bit int as torus to handle modular arithmetic naturally
 using Ntt14 = uint16_t;
 using Ntt16 = uint32_t;
+using Ntt24 = uint32_t;
 using Ntt64 = uint64_t;
 using UnsignedInteger = uint32_t;
 using NttType = uint64_t;
