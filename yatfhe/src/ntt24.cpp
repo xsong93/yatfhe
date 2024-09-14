@@ -16,9 +16,9 @@ Ntt24 POW24(Ntt24 BASE, Ntt24 EXP) {
     Ntt24 result = 1;
     while (EXP > 0) {
         if (EXP % 2 == 1) {
-            result = result * BASE % MOD24;
+            result = static_cast<uint64_t>(result * BASE) % MOD24;
         }
-        BASE = BASE * BASE % MOD24;
+        BASE = static_cast<uint64_t>(BASE * BASE) % MOD24;
         EXP = EXP / 2;
     }
     return result;
@@ -28,7 +28,7 @@ Ntt24 modINV24(Ntt24 in) {
     int32_t t = 0;
     int32_t newT = 1;
     int32_t r = MOD24;
-    int32_t newR = in;
+    auto newR = static_cast<int32_t>(in);
     while (newR != 0) {
         int32_t quotient = r / newR;
         int32_t tempT = newT;
@@ -75,24 +75,24 @@ Ntt24 modSUBscale24(Ntt24 a, Ntt24 b){
 }
 
 Ntt24 modMULT24(Ntt24 a, Ntt24 b) {
-//    uint64_t result = a * b;
-//    return static_cast<Ntt24>(result % MOD24);
-    return a * b % MOD24;
+    uint64_t result = a * b;
+    return static_cast<Ntt24>(result % MOD24);
+//    return a * b % MOD24;
 }
 
 void genTW_ROM24(TwRom24& tw_rom) {
     auto w_n = (tw_rom.N) >> 1;
     auto phi_n = tw_rom.N;
-    Ntt24 w_q = Ntt24((MOD24 - 1) / (w_n << 1));
-    Ntt24 phi_q = Ntt24((MOD24 - 1) / (phi_n << 1));
+    auto w_q = static_cast<Ntt24>((MOD24 - 1) / (w_n << 1));
+    auto phi_q = static_cast<Ntt24>((MOD24 - 1) / (phi_n << 1));
     Ntt24 temp = 0;
     for (int i = 0; i < w_n; i++) {
-        temp = POW24(PRIM_ROOT24, Ntt24(i * w_q));
+        temp = POW24(PRIM_ROOT24, static_cast<Ntt24>(i * w_q));
         tw_rom.w_rom[i] = temp;
         tw_rom.inv_w_rom[i] = modINV24(temp);
     }
     for (int j = 0; j < phi_n; j++) {
-        temp = POW24(PRIM_ROOT24, Ntt24(j*phi_q));
+        temp = POW24(PRIM_ROOT24, static_cast<Ntt24>(j*phi_q));
         tw_rom.phi_rom[j] = temp;
         tw_rom.inv_phi_rom[j] = modINV24(temp);
     }

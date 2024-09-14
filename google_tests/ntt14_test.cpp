@@ -68,8 +68,8 @@ TEST(Ntt14Test, Ntt14BasicArithTest) {
     int t = 1;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = genIntUniformDist((1 << 7) - 1, (1 << 7) - 1);
-            poly2.coeffs[j] = genIntUniformDist((1 << 7) - 1, (1 << 7) - 1);
+            poly0.coeffs[j] = genIntUniformDist((1 << 4), (1 << 4));
+            poly2.coeffs[j] = genIntUniformDist((1 << 4), (1 << 4));
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");

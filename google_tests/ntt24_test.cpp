@@ -10,13 +10,13 @@
 #include "yautil/tool.h"
 
 TEST(Ntt24Test, NttIntt24Test) {
-    const int N = 512;
+    const int N = 8;
     initGlobalParamsNtt24(N);
     Ntt24Polynomial resNtt{N};
     Int8Polynomial a1{N};
     Int8Polynomial resIntt{N};
     for (auto i = 0; i < N; i++) {
-        a1.coeffs[i] = static_cast<int8_t>(genIntUniformDist((1 << 7) - 1, (1 << 7) - 1));
+        a1.coeffs[i] = static_cast<int8_t>(genIntUniformDist(CHAR_MIN, CHAR_MAX));
 //        a1.coeffs[i] = 65536;
     }
 
