@@ -12,10 +12,10 @@
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
 
-constexpr int32_t MOD24 = 16760833;
+constexpr int32_t MOD24 = (1 << 24) - (1 << 14) + 1;
 constexpr uint32_t HALF_MOD24 = (MOD24 + 1) >> 1;
-constexpr int8_t PRIM_ROOT24 = 7;
-const uint8_t NTT24_MASK = 0xff;
+constexpr int32_t PRIM_ROOT24 = 7;
+constexpr int32_t NTT24_MASK = 0xff;
 
 struct TwRom24 {
     int N {};

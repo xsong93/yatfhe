@@ -14,11 +14,12 @@ TwRom24 TW_ROM24;
 
 Ntt24 POW24(Ntt24 BASE, Ntt24 EXP) {
     Ntt24 result = 1;
+    uint64_t t = BASE;
     while (EXP > 0) {
         if (EXP % 2 == 1) {
-            result = static_cast<uint64_t>(result * BASE) % MOD24;
+            result = static_cast<uint64_t>(result * t) % MOD24;
         }
-        BASE = static_cast<uint64_t>(BASE * BASE) % MOD24;
+        t = static_cast<uint64_t>(t * t) % MOD24;
         EXP = EXP / 2;
     }
     return result;
@@ -75,9 +76,9 @@ Ntt24 modSUBscale24(Ntt24 a, Ntt24 b){
 }
 
 Ntt24 modMULT24(Ntt24 a, Ntt24 b) {
-    uint64_t result = a * b;
-    return static_cast<Ntt24>(result % MOD24);
-//    return a * b % MOD24;
+    uint64_t a1 = a;
+    uint64_t b1 = b;
+    return static_cast<Ntt24>(a1 * b1 % MOD24);
 }
 
 void genTW_ROM24(TwRom24& tw_rom) {

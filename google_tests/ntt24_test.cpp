@@ -9,8 +9,23 @@
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 
+TEST(Ntt24Test, PowInvTest) {
+    std::vector<Ntt24> a(0);
+    std::vector<Ntt24> b(0);
+    std::vector<Ntt24> c(0);
+    for (int i = 1; i < 100; i++) {
+        a.push_back(POW24(i, i));
+        b.push_back(modINV24(a[i-1]));
+        c.push_back(modInverse(a[i-1], MOD24));
+    }
+    printArray(a, "a");
+    printArray(b, "b");
+    printArray(c, "c");
+    printBanner("PowInvTest");
+}
+
 TEST(Ntt24Test, NttIntt24Test) {
-    const int N = 8;
+    const int N = 512;
     initGlobalParamsNtt24(N);
     Ntt24Polynomial resNtt{N};
     Int8Polynomial a1{N};
@@ -46,14 +61,14 @@ TEST(Ntt24Test, Ntt24BasicArithTest) {
     Int8Polynomial poly2{N};
     Int8Polynomial resMul{N};
     Int8Polynomial navMul{N};
-    int t = 1;
+    int t = 1000;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = static_cast<int8_t>(genIntUniformDist((1 << 7) - 1, (1 << 7) - 1));
-            poly2.coeffs[j] = static_cast<int8_t>(genIntUniformDist((1 << 7) - 1, (1 << 7) - 1));
+            poly0.coeffs[j] = static_cast<int8_t>(genIntUniformDist(CHAR_MIN, CHAR_MAX));
+            poly2.coeffs[j] = static_cast<int8_t>(genIntUniformDist(CHAR_MIN, CHAR_MAX));
         }
-        printArray(poly0.coeffs, "poly0");
-        printArray(poly2.coeffs, "poly2");
+//        printArray(poly0.coeffs, "poly0");
+//        printArray(poly2.coeffs, "poly2");
 
         COUNT_TIME("NTT_MULT", {
             applyNtt24(a, poly0);
@@ -66,8 +81,8 @@ TEST(Ntt24Test, Ntt24BasicArithTest) {
         COUNT_TIME("NAIVE_MULT",
                    polynomialMulNaiveModQ8(navMul, poly0, poly2, 1 << 8);)
 
-        printArray(resMul.coeffs, "resMul");
-        printArray(navMul.coeffs, "navMul");
+//        printArray(resMul.coeffs, "resMul");
+//        printArray(navMul.coeffs, "navMul");
 
         for (int i = 0; i < navMul.N; i++) {
             EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
