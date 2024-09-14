@@ -14,11 +14,12 @@ TwRom14 TW_ROM14;
 
 Ntt14 POW14(Ntt14 BASE, Ntt14 EXP) {
     Ntt14 result = 1;
+    uint32_t t = BASE;
     while (EXP > 0) {
         if (EXP % 2 == 1) {
-            result = uint32_t(result * BASE) % MOD14;
+            result = uint32_t(result * t) % MOD14;
         }
-        BASE = uint32_t(BASE * BASE) % MOD14;
+        t = uint32_t(t * t) % MOD14;
         EXP = EXP / 2;
     }
     return result;
@@ -75,8 +76,9 @@ Ntt14 modSUBscale14(Ntt14 a, Ntt14 b){
 }
 
 Ntt14 modMULT14(Ntt14 a, Ntt14 b) {
-    uint32_t result = a * b;
-    return static_cast<Ntt14>(result % MOD14);
+    uint32_t a1 = a;
+    uint32_t b1 = b;
+    return static_cast<Ntt14>(a1 * b1 % MOD14);
 }
 
 void genTW_ROM14(TwRom14& tw_rom) {

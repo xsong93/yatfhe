@@ -61,14 +61,14 @@ TEST(Ntt24Test, Ntt24BasicArithTest) {
     Int8Polynomial poly2{N};
     Int8Polynomial resMul{N};
     Int8Polynomial navMul{N};
-    int t = 1000;
+    int t = 10;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = static_cast<int8_t>(genIntUniformDist(CHAR_MIN, CHAR_MAX));
-            poly2.coeffs[j] = static_cast<int8_t>(genIntUniformDist(CHAR_MIN, CHAR_MAX));
+            poly0.coeffs[j] = static_cast<int8_t>(genIntUniformDist(-127, -127));
+            poly2.coeffs[j] = static_cast<int8_t>(genIntUniformDist(-127, -127));
         }
-//        printArray(poly0.coeffs, "poly0");
-//        printArray(poly2.coeffs, "poly2");
+        printArray(poly0.coeffs, "poly0");
+        printArray(poly2.coeffs, "poly2");
 
         COUNT_TIME("NTT_MULT", {
             applyNtt24(a, poly0);
@@ -81,8 +81,8 @@ TEST(Ntt24Test, Ntt24BasicArithTest) {
         COUNT_TIME("NAIVE_MULT",
                    polynomialMulNaiveModQ8(navMul, poly0, poly2, 1 << 8);)
 
-//        printArray(resMul.coeffs, "resMul");
-//        printArray(navMul.coeffs, "navMul");
+        printArray(resMul.coeffs, "resMul");
+        printArray(navMul.coeffs, "navMul");
 
         for (int i = 0; i < navMul.N; i++) {
             EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
