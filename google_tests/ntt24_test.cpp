@@ -61,11 +61,12 @@ TEST(Ntt24Test, Ntt24BasicArithTest) {
     Int8Polynomial poly2{N};
     Int8Polynomial resMul{N};
     Int8Polynomial navMul{N};
-    int t = 10;
-    while (t-- > 0) {
+    int t = 0;
+    while (t++ < 10) {
+        cout << "cycle: " << t << endl;
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = static_cast<int8_t>(genIntUniformDist(-127, -127));
-            poly2.coeffs[j] = static_cast<int8_t>(genIntUniformDist(-127, -127));
+            poly0.coeffs[j] = static_cast<int8_t>(genIntUniformDist(CHAR_MIN, CHAR_MAX));
+            poly2.coeffs[j] = static_cast<int8_t>(genIntUniformDist(CHAR_MIN, CHAR_MAX));
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");
