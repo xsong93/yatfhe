@@ -19,7 +19,6 @@ struct BootstrappingKey {
     int n {};
     int k {};
     int N {};
-    int bgBit {};
     int l {};
     int unfolding {};
 
@@ -28,6 +27,16 @@ struct BootstrappingKey {
         unfolding(parameters.unfolding),
         bsk(parameters.n, Trgsw(parameters)),
         bskDft(parameters.n,TrgswDft(parameters)) {};
+};
+
+struct BootstrappingKeyCRT {
+    std::vector<std::vector<TrgswDft24>> bskCRT {}; // n * d
+    int n {};
+    int d {};
+
+    explicit BootstrappingKeyCRT(const YatfheParameters& param) :
+            n(param.n),
+            bskCRT(param.n, std::vector<TrgswDft24>(param.d, TrgswDft24(param))) {};
 };
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
@@ -42,9 +51,12 @@ void controlMux(Trlwe& res, const Trlwe& input, int aBarI, const Trgsw& bskI, co
 
 void controlMuxNtt(Trlwe& res, const Trlwe& input, int aBarI, const TrgswDft& bskI, const YatfheParameters& param);
 
-void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey,
-                                    const TlweKey& tlweKey);
+void controlMuxCRT(Trlwe8& res, const std::vector<Trlwe8>& inputs, int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param);
+
+void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey);
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey);
+
+void bootstrappingKeyCRTDecomp(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_BOOTSTRAPPING_H

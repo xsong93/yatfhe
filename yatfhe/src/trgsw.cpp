@@ -82,7 +82,6 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, cons
     }
 }
 
-
 void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
     trgswEncZero(trgsw, param, trgswKey);
     trgswAddInteger(trgsw, mu, param);

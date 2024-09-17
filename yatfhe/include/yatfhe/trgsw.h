@@ -53,6 +53,15 @@ struct TrgswDft14 {
             l(p.l) {};
 };
 
+struct TrgswDft24 {
+    std::vector<std::vector<TrlweDft24>> trlweDftSamples; // l *  (k + 1)
+    int l;
+
+    explicit TrgswDft24(const YatfheParameters& p) :
+            trlweDftSamples(p.l, std::vector<TrlweDft24>(p.k + 1, TrlweDft24(p.k, p.N))),
+            l(p.l) {};
+};
+
 struct TrgswKey {
     TrlweKey trlweKey;
 

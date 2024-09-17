@@ -104,6 +104,17 @@ struct TrlweDft16{
             k(k) {};
 };
 
+struct TrlweDft24{
+    std::vector<Ntt24Polynomial> a; // k
+    Ntt24Polynomial b; // 1
+    int k;
+
+    TrlweDft24(int k, int N) :
+            a(k, Ntt24Polynomial(N)),
+            b(Ntt24Polynomial(N)),
+            k(k) {};
+};
+
 struct DecomposedTrlwe {
     std::vector<Rlwe> rlwes; // l
     int l;

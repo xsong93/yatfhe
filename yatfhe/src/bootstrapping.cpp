@@ -56,13 +56,13 @@ void blindRotateNtt(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe&
 }
 
 //todo
-void blindRotateCRT(Trlwe8& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateCRT(Trlwe8& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
         Trlwe8 temp {param.k, param.N};
-//        controlMuxCRT(temp, accum, input.a[i], bsk.bskDft[i], param);
+//        controlMuxCRT(temp, accum, input.a[i], bskCRT.bskCRT[i], param);
         swap(accum, temp); // assign the previous result to accumulator
     }
 }
@@ -84,7 +84,7 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
 }
 
 // todo
-void controlMuxCRT(Trlwe8& res, const std::vector<Trlwe8>& inputs, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
+void controlMuxCRT(Trlwe8& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param) {
     std::vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
     std::vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
     std::vector<std::vector<Trlwe8>> tmpDB (param.d, std::vector<Trlwe8>(param.dh, Trlwe8(param.k, param.N)));
@@ -118,6 +118,30 @@ void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, T
 void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
     for (auto i = 0; i < bsk.n; i++) {
         trgswEncryptNtt(bsk.bsk[i], bsk.bskDft[i], param, trgswKey, tlweKey.s[i]);
+    }
+}
+
+void bootstrappingKeyCRTDecomp(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param) {
+    std::vector<int> tao(param.dh, 1);
+    for (size_t d = 0; d < param.dl; d++) {
+        tao.push_back(static_cast<int>(modInverse(param.qLow / param.ql[d], param.ql[d])));
+    }
+
+    for (size_t i = 0; i < param.n; i++) {
+        for (size_t l = 0; l < param.l; l++) {
+            for (size_t k1 = 0; k1 < param.k + 1; k1++) {
+                for (size_t j = 0; j < param.N; j++) {
+                    for (size_t d = 0; d < param.d; d++) {
+                        for (size_t k2 = 0; k2 < param.k; k2++) {
+                            bskCRT.bskCRT[i][d].trlweDftSamples[l][k1].a[k2].coeffs[j] =
+                                    static_cast<Ntt24>(intModP(tao[d] * bsk.bsk[i].trlweSamples[l][k1].a[k2].coeffs[j], param.qd[d]));
+                        }
+                        bskCRT.bskCRT[i][d].trlweDftSamples[l][k1].b.coeffs[j] =
+                                static_cast<Ntt24>(intModP(tao[d] * bsk.bsk[i].trlweSamples[l][k1].b.coeffs[j], param.qd[d]));
+                    }
+                }
+            }
+        }
     }
 }
 
