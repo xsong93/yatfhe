@@ -5,7 +5,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"
-#include "yatfhe/ntt14.h"
+#include "yatfhe/ntt24.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
@@ -223,57 +223,40 @@ void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, 
     applyInttForAB(output, trlweDftRes);
 }
 
-//todo
-void trgswExternalProductCRT(Trlwe& output, const TrgswDft& trgswDftInput, std::vector<Trlwe>& trlweInput, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto level = trgswDftInput.l;
-    const auto N = param.N;
-    TrlweDft trlweDftRes {k, N};
-    DecomposedTrlwe decomposedTrlwe {param};
-    DecomposedTrlweDft decomposedTrlweDft {param, param.l};
+void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<std::vector<Trlwe8>>& trlweInput, const YatfheParameters& param) {
+    std::vector<std::vector<TrlweDft24>> tmpDBNtt (param.d, std::vector<TrlweDft24>(param.dh, TrlweDft24(param.k, param.N)));
+    std::vector<TrlweDft24> trlweDftRes (param.d, TrlweDft24(param.k, param.N));
 
+    // ntt
+    for (size_t i1 = 0; i1 < param.d; i1++) {
+        for (size_t i2 = 0; i2 < param.dh; i2++) {
+            for (size_t k = 0; k < param.k; k++) {
+                applyNtt24(tmpDBNtt[i1][i2].a[k], trlweInput[i1][i2].a[k]);
+            }
+            applyNtt24(tmpDBNtt[i1][i2].b, trlweInput[i1][i2].b);
+        }
+    }
 
+    for (size_t d = 0; d < param.d; d++) {
+        for (size_t l = 0; l < param.dh; l++) {
+            for (size_t k = 0; l < param.k + 1; k++) {
+                for (size_t j = 0; j < param.N; j++) {
+                    for (size_t k2 = 0; j < param.k; j++) {
+                        auto tmp = modMULT24(trgswDftInput[d].trlweDftSamples[l][k].a[k2].coeffs[j], tmpDBNtt[d][l].a[k2].coeffs[j]);
+                        trlweDftRes[d].a[k2].coeffs[j] = modADD24(trlweDftRes[d].a[k2].coeffs[j], tmp);
+                    }
+                    auto tmp = modMULT24(trgswDftInput[d].trlweDftSamples[l][k].b.coeffs[j], tmpDBNtt[d][l].b.coeffs[j]);
+                    trlweDftRes[d].b.coeffs[j] = modADD24(trlweDftRes[d].b.coeffs[j], tmp);
+                }
+            }
+        }
+    }
 
-////    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
-//    for (auto row = 0; row < k + 1; row++) {
-//        auto& currIn = (row < k) ? trlweInput.a[row] : trlweInput.b;
-//        for (auto j = 0; j < N; j++) {
-//            DecomposedData d {level};
-//            gadgetDecompose(d, currIn.coeffs[j], param);
-//            for (auto lvl = 0; lvl < level; lvl++) {
-//                auto& currOut = (row < k) ? decomposedTrlwe.rlwes[lvl].a[row] : decomposedTrlwe.rlwes[lvl].b;
-//                currOut.coeffs[j] = d.value[lvl] * d.sign;
-//            }
-//        }
-//    }
-//
-////#pragma omp parallel for
-//    for (auto i = 0; i < decomposedTrlwe.l; i++) {
-//        for (auto row = 0; row < decomposedTrlwe.rlwes[i].a.size(); row++) {
-//            applyNtt(decomposedTrlweDft.rlweDfts[i].a[row], decomposedTrlwe.rlwes[i].a[row]);
-//        }
-//        applyNtt(decomposedTrlweDft.rlweDfts[i].b, decomposedTrlwe.rlwes[i].b);
-//    }
-//
-////#pragma omp parallel for collapse(2) private(out)
-//    for (auto lvl = 0; lvl < level; lvl++) {
-//        for (auto col = 0; col < k; col++) {
-//            for (auto col2 = 0; col2 < k + 1; col2++) {
-//                auto& out = (col2 < k) ? trlweDftRes.a[col2] : trlweDftRes.b;
-//                auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][col].a[col2]
-//                                         : trgswDftInput.trlweDftSamples[lvl][col].b;
-//                calModularInnerProductNtt(out, decomposedTrlweDft.rlweDfts[lvl].a[col], curr2);
-//            }
-//        }
-//    }
-//
-//    for (auto lvl = 0; lvl < level; lvl++) {
-//        for (auto col2 = 0; col2 < k + 1; col2++) {
-//            auto& out = (col2 < k) ? trlweDftRes.a[col2] : trlweDftRes.b;
-//            auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][k].a[col2]
-//                                     : trgswDftInput.trlweDftSamples[lvl][k].b;
-//            calModularInnerProductNtt(out, decomposedTrlweDft.rlweDfts[lvl].b, curr2);
-//        }
-//    }
-//    applyInttForAB(output, trlweDftRes);
+    // intt
+    for (size_t d = 0; d < param.d; d++) {
+        for (size_t k = 0; k < param.k; k++) {
+            applyIntt24(output[d].a[k], trlweDftRes[d].a[k]);
+        }
+        applyIntt24(output[d].b, trlweDftRes[d].b);
+    }
 }

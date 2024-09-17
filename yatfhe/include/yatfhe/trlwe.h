@@ -55,22 +55,6 @@ struct Trlwe8 {
             k(k) {};
 };
 
-struct Trlwe16 {
-    std::vector<Int16Polynomial> a; // k
-    Int16Polynomial b; // 1
-    int k;
-
-    Trlwe16(int k, int N) :
-            a(k, Int16Polynomial(N)),
-            b(Int16Polynomial(N)),
-            k(k) {};
-
-    Trlwe16(int k, int N, int16_t val) :
-            a(k, Int16Polynomial(N, val)),
-            b(Int16Polynomial(N, val)),
-            k(k) {};
-};
-
 struct TrlweDft{
     std::vector<LagrangePolynomial> a; // k
     LagrangePolynomial b; // 1

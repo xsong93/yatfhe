@@ -7,6 +7,7 @@
 #include "yatfhe/ntt.h"
 #include "yatfhe/crt.h"
 #include "yatfhe/ntt14.h"
+#include "yatfhe/ntt24.h"
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
@@ -84,11 +85,10 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
 }
 
 // todo
-void controlMuxCRT(Trlwe8& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param) {
+void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param) {
     std::vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
     std::vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
     std::vector<std::vector<Trlwe8>> tmpDB (param.d, std::vector<Trlwe8>(param.dh, Trlwe8(param.k, param.N)));
-    std::vector<std::vector<TrlweDft14>> tmpDBNtt (param.d, std::vector<TrlweDft14>(param.dh, TrlweDft14(param.k, param.N)));
 
     for (size_t i = 0; i < param.d; i++) {
         trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input
@@ -96,16 +96,7 @@ void controlMuxCRT(Trlwe8& res, const std::vector<Trlwe8>& inputs, const int aBa
     syncGadgetDecomp(tmpD, tmp, param);
     broadcastCRT(tmpDB, tmpD, param);
 
-    // ntt
-    for (size_t i1 = 0; i1 < param.d; i1++) {
-        for (size_t i2 = 0; i2 < param.dh; i2++) {
-            for (size_t k = 0; k < param.k; k++) {
-                applyNtt14Poly8(tmpDBNtt[i1][i2].a[k], tmpDB[i1][i2].a[k]);
-            }
-            applyNtt14Poly8(tmpDBNtt[i1][i2].b, tmpDB[i1][i2].b);
-        }
-    }
-//    trgswExternalProductCRT(res, bskI, tmp, param); // res *= bskI
+    trgswExternalProductCRT(res, bskCRT, tmpDB, param); // res *= bskI
 //    trlweAccumulate(res, input); // res += input
 }
 
@@ -122,23 +113,24 @@ void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameter
 }
 
 void bootstrappingKeyCRTDecomp(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param) {
-    std::vector<int> tao(param.dh, 1);
+    std::vector<int32_t> tao(param.dh, 1);
     for (size_t d = 0; d < param.dl; d++) {
         tao.push_back(static_cast<int>(modInverse(param.qLow / param.ql[d], param.ql[d])));
     }
 
     for (size_t i = 0; i < param.n; i++) {
-        for (size_t l = 0; l < param.l; l++) {
+        for (size_t l = 0; l < param.dh; l++) {
             for (size_t k1 = 0; k1 < param.k + 1; k1++) {
-                for (size_t j = 0; j < param.N; j++) {
-                    for (size_t d = 0; d < param.d; d++) {
+                for (size_t d = 0; d < param.d; d++) {
+                    for (size_t j = 0; j < param.N; j++) {
                         for (size_t k2 = 0; k2 < param.k; k2++) {
-                            bskCRT.bskCRT[i][d].trlweDftSamples[l][k1].a[k2].coeffs[j] =
-                                    static_cast<Ntt24>(intModP(tao[d] * bsk.bsk[i].trlweSamples[l][k1].a[k2].coeffs[j], param.qd[d]));
+                            bskCRT.bsk8[i][d].trlweSamples[l][k1].a[k2].coeffs[j] =
+                                    static_cast<int8_t>(intModP(tao[d] * bsk.bsk[i].trlweSamples[l][k1].a[k2].coeffs[j], param.qd[d]));
                         }
-                        bskCRT.bskCRT[i][d].trlweDftSamples[l][k1].b.coeffs[j] =
-                                static_cast<Ntt24>(intModP(tao[d] * bsk.bsk[i].trlweSamples[l][k1].b.coeffs[j], param.qd[d]));
+                        bskCRT.bsk8[i][d].trlweSamples[l][k1].b.coeffs[j] =
+                                static_cast<int8_t>(intModP(tao[d] * bsk.bsk[i].trlweSamples[l][k1].b.coeffs[j], param.qd[d]));
                     }
+                    applyNttForAB24(bskCRT.bskCRT[i][d].trlweDftSamples[l][k1], bskCRT.bsk8[i][d].trlweSamples[l][k1]);
                 }
             }
         }

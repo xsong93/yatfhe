@@ -22,15 +22,20 @@ struct Trgsw {
             k(p.k) {};
 };
 
-struct Trgsw16 {
-    std::vector<std::vector<Trlwe16>> trlweSamples {};
+struct Trgsw8 {
+    std::vector<std::vector<Trlwe8>> trlweSamples {};
     int l;
     int k;
 
-    explicit Trgsw16(const YatfheParameters& p) :
-            trlweSamples(p.l, std::vector<Trlwe16>(p.k + 1, Trlwe16(p.k, p.N))),
+    explicit Trgsw8(const YatfheParameters& p) :
+            trlweSamples(p.l, std::vector<Trlwe8>(p.k + 1, Trlwe8(p.k, p.N))),
             l(p.l),
             k(p.k) {};
+
+    Trgsw8(const int l, const int k, const int N) :
+            trlweSamples(l, std::vector<Trlwe8>(k + 1, Trlwe8(k, N))),
+            l(l),
+            k(k) {};
 };
 
 struct TrgswDft {
@@ -60,6 +65,10 @@ struct TrgswDft24 {
     explicit TrgswDft24(const YatfheParameters& p) :
             trlweDftSamples(p.l, std::vector<TrlweDft24>(p.k + 1, TrlweDft24(p.k, p.N))),
             l(p.l) {};
+
+    TrgswDft24(const int l, const int k, const int N) :
+            trlweDftSamples(l, std::vector<TrlweDft24>(k + 1, TrlweDft24(k, N))),
+            l(l) {};
 };
 
 struct TrgswKey {
@@ -88,5 +97,7 @@ Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
 void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, Trlwe& trlweInput, const YatfheParameters& param);
+
+void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<std::vector<Trlwe8>>& trlweInput, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

@@ -31,12 +31,14 @@ struct BootstrappingKey {
 
 struct BootstrappingKeyCRT {
     std::vector<std::vector<TrgswDft24>> bskCRT {}; // n * d
+    std::vector<std::vector<Trgsw8>> bsk8 {}; // n * d
     int n {};
     int d {};
 
     explicit BootstrappingKeyCRT(const YatfheParameters& param) :
             n(param.n),
-            bskCRT(param.n, std::vector<TrgswDft24>(param.d, TrgswDft24(param))) {};
+            bsk8(param.n, std::vector<Trgsw8>(param.d, Trgsw8(param.dh, param.k, param.N))),
+            bskCRT(param.n, std::vector<TrgswDft24>(param.d, TrgswDft24(param.dh, param.k, param.N))) {};
 };
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);

@@ -78,6 +78,6 @@ void applyInttForAB24(T& out, R& in) {
     applyINtt24(out.b, in.b);
 }
 
-void calModularInnerProductNtt24(Ntt24Polynomial& b, const Ntt24Polynomial& a, const Ntt24Polynomial& s);
+void calModularInnerProductNtt24(Ntt24Polynomial& out, const Ntt24Polynomial& in1, const Ntt24Polynomial& in2);
 
 #endif //HLS_YATFHE_NTT24_H

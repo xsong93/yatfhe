@@ -24,19 +24,6 @@ struct TorusPolynomial {
             N(N) {};
 };
 
-struct Int16Polynomial {
-    std::vector<int16_t> coeffs {}; // N
-    int N {};
-
-    explicit Int16Polynomial(int N) :
-            coeffs(N, 0),
-            N(N) {};
-
-    Int16Polynomial(int N, int16_t value) :
-            coeffs(N, value),
-            N(N) {};
-};
-
 struct Int8Polynomial {
     std::vector<int8_t> coeffs {}; // N
     int N {};

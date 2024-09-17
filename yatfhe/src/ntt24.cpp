@@ -249,14 +249,14 @@ void initGlobalParamsNtt24(int N) {
     genNWCparam24(NWC_ITW24, N, TW_ROM24, STR_INTT);
 }
 
-void modularAccumulate24(std::vector<Ntt24>& coeffsB, const std::vector<Ntt24>& coeffsA, const std::vector<Ntt24>& coeffsS) {
-    const auto N = coeffsB.size();
+void modularAccumulate24(std::vector<Ntt24>& coeffsOut, const std::vector<Ntt24>& coeffs1, const std::vector<Ntt24>& coeffs2) {
+    const auto N = coeffsOut.size();
     for (auto j = 0; j < N; j++) {
-        auto tmp = modMULT24(coeffsA[j], coeffsS[j]);
-        coeffsB[j] = modADD24(coeffsB[j], tmp);
+        auto tmp = modMULT24(coeffs1[j], coeffs2[j]);
+        coeffsOut[j] = modADD24(coeffsOut[j], tmp);
     }
 }
 
-void calModularInnerProductNtt24(Ntt24Polynomial& b, const Ntt24Polynomial& a, const Ntt24Polynomial& s) {
-    modularAccumulate24(b.coeffs, a.coeffs, s.coeffs);
+void calModularInnerProductNtt24(Ntt24Polynomial& out, const Ntt24Polynomial& in1, const Ntt24Polynomial& in2) {
+    modularAccumulate24(out.coeffs, in1.coeffs, in2.coeffs);
 }
