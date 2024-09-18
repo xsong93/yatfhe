@@ -126,16 +126,22 @@ void trgswCRTDecomp(std::vector<TrgswDft24>& out, const Trgsw& in, const YatfheP
         tao.push_back(static_cast<int>(modInverse(param.qLow / param.ql[d], param.ql[d])));
     }
 
-    for (size_t l = 0; l < param.dh; l++) {
-        for (size_t k1 = 0; k1 < param.k + 1; k1++) {
-            for (size_t d = 0; d < param.d; d++) {
-                for (size_t j = 0; j < param.N; j++) {
-                    for (size_t k2 = 0; k2 < param.k; k2++) {
-                        tmp[d].trlweSamples[l][k1].a[k2].coeffs[j] =
-                                static_cast<int8_t>(intModP(tao[d] * in.trlweSamples[l][k1].a[k2].coeffs[j], param.qd[d]));
+    for (size_t d = 0; d < param.d; d++) {
+        auto& tmpT = tao[d];
+        auto& tmpQd = param.qd[d];
+        for (size_t l = 0; l < param.dh; l++) {
+            for (size_t k1 = 0; k1 < param.k + 1; k1++) {
+                auto& tmpRgswInA = in.trlweSamples[l][k1].a;
+                auto& tmpRgswInB = in.trlweSamples[l][k1].b;
+                auto& tmpRgswResA = tmp[d].trlweSamples[l][k1].a;
+                auto& tmpRgswResB = tmp[d].trlweSamples[l][k1].b;
+                for (size_t k2 = 0; k2 < param.k; k2++) {
+                    for (size_t j = 0; j < param.N; j++) {
+                        tmpRgswResA[k2].coeffs[j] = static_cast<int8_t>(intModP(tmpT * tmpRgswInA[k2].coeffs[j], tmpQd));
                     }
-                    tmp[d].trlweSamples[l][k1].b.coeffs[j] =
-                            static_cast<int8_t>(intModP(tao[d] * in.trlweSamples[l][k1].b.coeffs[j], param.qd[d]));
+                }
+                for (size_t j = 0; j < param.N; j++) {
+                    tmpRgswResB.coeffs[j] = static_cast<int8_t>(intModP(tmpT * tmpRgswInB.coeffs[j], tmpQd));
                 }
                 applyNttForAB24(out[d].trlweDftSamples[l][k1], tmp[d].trlweSamples[l][k1]);
             }
@@ -194,8 +200,7 @@ void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, Trlwe
     applyInttForAB(output, trlweDftRes);
 }
 
-
-//todo
+/*//todo
 void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto level = trgswDftInput.l;
@@ -246,7 +251,7 @@ void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, 
         }
     }
     applyInttForAB(output, trlweDftRes);
-}
+}*/
 
 void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
     std::vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
