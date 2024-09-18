@@ -48,5 +48,4 @@ int main() {
 //            printf("t2b: %d; ", t2[i].b.coeffs[j]);
 //        }
 //    }
-    cout << longModP(18014398509481984, 1l << 32);
 }

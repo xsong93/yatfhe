@@ -118,6 +118,30 @@ Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
     return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
 }
 
+void trgswCRTDecomp(std::vector<TrgswDft24>& out, const Trgsw& in, const YatfheParameters& param) {
+    std::vector<Trgsw8> tmp(param.d, Trgsw8(param.dh, param.k, param.N));
+    std::vector<int32_t> tao(param.dh, 1);
+    for (size_t d = 0; d < param.dl; d++) {
+        tao.push_back(static_cast<int>(modInverse(param.qLow / param.ql[d], param.ql[d])));
+    }
+
+    for (size_t l = 0; l < param.dh; l++) {
+        for (size_t k1 = 0; k1 < param.k + 1; k1++) {
+            for (size_t d = 0; d < param.d; d++) {
+                for (size_t j = 0; j < param.N; j++) {
+                    for (size_t k2 = 0; k2 < param.k; k2++) {
+                        tmp[d].trlweSamples[l][k1].a[k2].coeffs[j] =
+                                static_cast<int8_t>(intModP(tao[d] * in.trlweSamples[l][k1].a[k2].coeffs[j], param.qd[d]));
+                    }
+                    tmp[d].trlweSamples[l][k1].b.coeffs[j] =
+                            static_cast<int8_t>(intModP(tao[d] * in.trlweSamples[l][k1].b.coeffs[j], param.qd[d]));
+                }
+                applyNttForAB24(out[d].trlweDftSamples[l][k1], tmp[d].trlweSamples[l][k1]);
+            }
+        }
+    }
+}
+
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto level = trgswInput.l;

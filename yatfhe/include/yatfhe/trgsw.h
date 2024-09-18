@@ -94,6 +94,8 @@ Integer trgswDecrypt(const Trgsw& trgsw, const YatfheParameters& param, const Tr
 
 Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 
+void trgswCRTDecomp(std::vector<TrgswDft24>& out, const Trgsw& in, const YatfheParameters& param);
+
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
 void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, Trlwe& trlweInput, const YatfheParameters& param);

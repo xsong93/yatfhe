@@ -31,14 +31,14 @@ void trgswFunctionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const Bootstr
     tlweKeySwitch(out, ksk, tmp, param);
 }
 
-//todo
-//void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
+////todo
+//void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const BootstrappingKeyCRT& bskCRT, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
 //    ScaledTlwe inputModN2 {param.N * 2, param.n};
 //    std::vector<Trlwe8> accum (param.d, Trlwe8(param.k, param.N));
 //    Tlwe tmp {ksk.nCurrKey};
 //    rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
 //    genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
-//    blindRotateCRT(accum, bsk, inputModN2, param);
+//    blindRotateCRT(accum, bskCRT, inputModN2, param);
 //    extractTlweFromTrlwe(tmp, accum, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
 //    tlweKeySwitch(out, ksk, tmp, param);
 //}
@@ -125,27 +125,8 @@ void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameter
 }
 
 void bootstrappingKeyCRTDecomp(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param) {
-    std::vector<int32_t> tao(param.dh, 1);
-    for (size_t d = 0; d < param.dl; d++) {
-        tao.push_back(static_cast<int>(modInverse(param.qLow / param.ql[d], param.ql[d])));
-    }
-
     for (size_t i = 0; i < param.n; i++) {
-        for (size_t l = 0; l < param.dh; l++) {
-            for (size_t k1 = 0; k1 < param.k + 1; k1++) {
-                for (size_t d = 0; d < param.d; d++) {
-                    for (size_t j = 0; j < param.N; j++) {
-                        for (size_t k2 = 0; k2 < param.k; k2++) {
-                            bskCRT.bsk8[i][d].trlweSamples[l][k1].a[k2].coeffs[j] =
-                                    static_cast<int8_t>(intModP(tao[d] * bsk.bsk[i].trlweSamples[l][k1].a[k2].coeffs[j], param.qd[d]));
-                        }
-                        bskCRT.bsk8[i][d].trlweSamples[l][k1].b.coeffs[j] =
-                                static_cast<int8_t>(intModP(tao[d] * bsk.bsk[i].trlweSamples[l][k1].b.coeffs[j], param.qd[d]));
-                    }
-                    applyNttForAB24(bskCRT.bskCRT[i][d].trlweDftSamples[l][k1], bskCRT.bsk8[i][d].trlweSamples[l][k1]);
-                }
-            }
-        }
+        trgswCRTDecomp(bskCRT.bskCRT[i], bsk.bsk[i], param);
     }
 }
 
