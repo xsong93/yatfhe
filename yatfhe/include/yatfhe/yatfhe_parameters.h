@@ -5,7 +5,6 @@
 #define HLS_YATFHE_YATFHE_PARAMETERS_H
 
 #include "yautil/control_helper.h"
-#include <vector>
 
 struct YatfheParameters {
 #ifdef PAR_SET1 // 128-bit

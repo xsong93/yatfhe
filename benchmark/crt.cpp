@@ -4,6 +4,7 @@
 #include "yatfhe/crt.h"
 #include "yautil/tool.h"
 #include "yatfhe/numeric_functions.h"
+#include "yautil/time_counter.h"
 
 int main() {
     std::vector<int> coeffs = {656381177, -1322693974, 749894848, 1618033988};
@@ -48,4 +49,45 @@ int main() {
 //            printf("t2b: %d; ", t2[i].b.coeffs[j]);
 //        }
 //    }
+
+    std::vector<std::vector<std::vector<long>>> iii(1000, std::vector<std::vector<long>>(1000, std::vector<long>(1000, 0)));
+
+    COUNT_TIME("n3",
+               for (size_t i = 0; i < 1000; i++) {
+                   auto& t11 = iii[i];
+                   for (size_t j = 0; j < 1000; j++) {
+                       auto& t12 = t11[j];
+                       for (size_t k = 0; k < 1000; k++) {
+                           t12[k] = i * j * k;
+                       }
+                   }
+               })
+    COUNT_TIME("n21",
+               for (size_t i = 0; i < 1000; i++) {
+                   auto& t11 = iii[i];
+                   for (size_t j = 0; j < 1000; j++) {
+                       for (size_t k = 0; k < 1000; k++) {
+                           t11[j][k] = i * j * k;
+                       }
+                   }
+               })
+    COUNT_TIME("n22",
+               for (size_t i = 0; i < 1000; i++) {
+                   for (size_t j = 0; j < 1000; j++) {
+                       auto& t12 = iii[i][j];
+                       for (size_t k = 0; k < 1000; k++) {
+                           t12[k] = i * j * k;
+                       }
+                   }
+               })
+    COUNT_TIME("n1",
+               for (size_t i = 0; i < 1000; i++) {
+                   for (size_t j = 0; j < 1000; j++) {
+                       for (size_t k = 0; k < 1000; k++) {
+                           iii[i][j][k] = i * j * k;
+                       }
+                   }
+               })
+
+
 }
