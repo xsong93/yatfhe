@@ -162,13 +162,13 @@ void polynomialMulAccNaive(TorusPolynomial& res, const TorusPolynomial& poly1, c
     }
 }
 
-// res += accum
-void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum) {
-    const int N = res.N;
-    for (int i = 0; i < N; i++) {
-        res.coeffs[i] += accum.coeffs[i];
-    }
-}
+//// res += accum
+//void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum) {
+//    const int N = res.N;
+//    for (int i = 0; i < N; i++) {
+//        res.coeffs[i] += accum.coeffs[i];
+//    }
+//}
 
 // res = poly1 + poly2
 void polynomialAdd(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {

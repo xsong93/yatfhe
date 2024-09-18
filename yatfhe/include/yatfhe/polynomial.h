@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdint>
 #include "yatfhe/torus.h"
+#include "yatfhe/numeric_functions.h"
 
 constexpr uint8_t POLY_MAX8 = 1 << 7;
 
@@ -113,6 +114,23 @@ struct Ntt64Polynomial {
             coeffs(n,0), N(n) {};
 };
 
+// res += accum
+template<typename PolyType>
+void polynomialAccumulate(PolyType& res, const PolyType& accum) {
+    const int N = res.N;
+    for (int i = 0; i < N; i++) {
+        res.coeffs[i] += accum.coeffs[i];
+    }
+}
+
+template<typename PolyType, typename R>
+void polynomialAccumulateModP(PolyType& res, const PolyType& accum, const R p) {
+    const int N = res.N;
+    for (int i = 0; i < N; i++) {
+        res.coeffs[i] = static_cast<R>(longModP(res.coeffs[i] + accum.coeffs[i], p));
+    }
+}
+
 void intPolyToDoublePoly(DoublePolynomial& output, const IntPolynomial & input);
 
 void torusPolyToDoublePoly(DoublePolynomial& output, const TorusPolynomial& input);
@@ -143,7 +161,7 @@ void polynomialMulNaiveModQ8(Int8Polynomial& res, const Int8Polynomial& poly1, c
 
 void polynomialMulAccNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
-void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);
+//void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);
 
 void polynomialAdd(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 

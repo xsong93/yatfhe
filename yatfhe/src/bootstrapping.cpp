@@ -31,6 +31,18 @@ void trgswFunctionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const Bootstr
     tlweKeySwitch(out, ksk, tmp, param);
 }
 
+//todo
+//void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
+//    ScaledTlwe inputModN2 {param.N * 2, param.n};
+//    std::vector<Trlwe8> accum (param.d, Trlwe8(param.k, param.N));
+//    Tlwe tmp {ksk.nCurrKey};
+//    rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
+//    genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
+//    blindRotateCRT(accum, bsk, inputModN2, param);
+//    extractTlweFromTrlwe(tmp, accum, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+//    tlweKeySwitch(out, ksk, tmp, param);
+//}
+
 /**
  * Multiply the accumulator by X^sum(bara_i * s_i)
  * */
@@ -56,15 +68,14 @@ void blindRotateNtt(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe&
     }
 }
 
-//todo
-void blindRotateCRT(Trlwe8& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
-        Trlwe8 temp {param.k, param.N};
-//        controlMuxCRT(temp, accum, input.a[i], bskCRT.bskCRT[i], param);
-        swap(accum, temp); // assign the previous result to accumulator
+        std::vector<Trlwe8> temp (param.d, Trlwe8(param.k, param.N));
+        controlMuxCRT(temp, accum, input.a[i], bskCRT.bskCRT[i], param);
+        swap(accum, temp);
     }
 }
 
@@ -84,7 +95,6 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
     trlweAccumulate(res, input); // res += input
 }
 
-// todo
 void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param) {
     std::vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
     std::vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
@@ -97,7 +107,9 @@ void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, 
     broadcastCRT(tmpDB, tmpD, param);
 
     trgswExternalProductCRT(res, bskCRT, tmpDB, param); // res *= bskI
-//    trlweAccumulate(res, input); // res += input
+    for (size_t i = 0; i < param.d; i++) {
+        trlweAccumulateModP(res[i], inputs[i], static_cast<int8_t>(param.qd[i])); // res += input
+    }
 }
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {

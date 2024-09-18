@@ -8,7 +8,6 @@
 #include <cstdlib>
 #include <random>
 #include "yatfhe/torus.h"
-#include "yatfhe/polynomial.h"
 
 using namespace std;
 

@@ -166,6 +166,25 @@ void trlweSetZero(std::vector<T>& a, T& b) {
     std::fill(b.coeffs.begin(), b.coeffs.end(), 0);
 }
 
+/**
+ * accum.a += tlwe.a, accum.b += tlwe.b
+ * */
+template<typename TrlweType>
+void trlweAccumulate(TrlweType& accum, const TrlweType& tlwe) {
+    for (auto i = 0; i < accum.a.size(); i++) {
+        polynomialAccumulate(accum.a[i], tlwe.a[i]);
+    }
+    polynomialAccumulate(accum.b, tlwe.b);
+}
+
+template<typename TrlweType, typename R>
+void trlweAccumulateModP(TrlweType& accum, const TrlweType& tlwe, const R p) {
+    for (auto i = 0; i < accum.a.size(); i++) {
+        polynomialAccumulateModP(accum.a[i], tlwe.a[i], p);
+    }
+    polynomialAccumulateModP(accum.b, tlwe.b, p);
+}
+
 void trlweKeyGen(TrlweKey& key);
 
 void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu);
@@ -198,7 +217,7 @@ void trlweAddNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input
 
 void trlweSubNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2);
 
-void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
+//void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe);
 
 void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param);
 

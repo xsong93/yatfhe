@@ -165,15 +165,15 @@ void trlweSubNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input
     lagrangePolynomialSub(output.b, input1.b, input2.b);
 }
 
-/**
- * accum.a += tlwe.a, accum.b += tlwe.b
- * */
-void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe) {
-    for (auto i = 0; i < accum.a.size(); i++) {
-        polynomialAccumulate(accum.a[i], tlwe.a[i]);
-    }
-    polynomialAccumulate(accum.b, tlwe.b);
-}
+///**
+// * accum.a += tlwe.a, accum.b += tlwe.b
+// * */
+//void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe) {
+//    for (auto i = 0; i < accum.a.size(); i++) {
+//        polynomialAccumulate(accum.a[i], tlwe.a[i]);
+//    }
+//    polynomialAccumulate(accum.b, tlwe.b);
+//}
 
 // G^-1 * Trlwe = DecomposedTrlwe
 void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param) {
