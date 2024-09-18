@@ -268,15 +268,24 @@ void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<Trgs
     }
 
     for (size_t d = 0; d < param.d; d++) {
+        auto& tmpRgswIn = trgswDftInput[d];
+        auto& tmpRlweResA = trlweDftRes[d].a;
+        auto& tmpRlweResB = trlweDftRes[d].b;
         for (size_t l = 0; l < param.dh; l++) {
-            for (size_t k = 0; l < param.k + 1; k++) {
-                for (size_t j = 0; j < param.N; j++) {
-                    for (size_t k2 = 0; j < param.k; j++) {
-                        auto tmp = modMULT24(trgswDftInput[d].trlweDftSamples[l][k].a[k2].coeffs[j], tmpDBNtt[d][l].a[k2].coeffs[j]);
-                        trlweDftRes[d].a[k2].coeffs[j] = modADD24(trlweDftRes[d].a[k2].coeffs[j], tmp);
+            auto& tmpDBNttA = tmpDBNtt[d][l].a;
+            auto& tmpDBNttB = tmpDBNtt[d][l].b;
+            for (size_t k = 0; k < param.k + 1; k++) {
+                auto& tmpRgswNttA = tmpRgswIn.trlweDftSamples[l][k].a;
+                auto& tmpRgswNttB = tmpRgswIn.trlweDftSamples[l][k].b;
+                for (size_t ka = 0; ka < param.k; ka++) {
+                    for (size_t j = 0; j < param.N; j++) {
+                        auto tmpA = modMULT24(tmpRgswNttA[ka].coeffs[j], tmpDBNttA[ka].coeffs[j]);
+                        tmpRlweResA[ka].coeffs[j] = modADD24(tmpRlweResA[ka].coeffs[j], tmpA);
                     }
-                    auto tmp = modMULT24(trgswDftInput[d].trlweDftSamples[l][k].b.coeffs[j], tmpDBNtt[d][l].b.coeffs[j]);
-                    trlweDftRes[d].b.coeffs[j] = modADD24(trlweDftRes[d].b.coeffs[j], tmp);
+                }
+                for (size_t j = 0; j < param.N; j++) {
+                    auto tmpB = modMULT24(tmpRgswNttB.coeffs[j], tmpDBNttB.coeffs[j]);
+                    tmpRlweResB.coeffs[j] = modADD24(tmpRlweResB.coeffs[j], tmpB);
                 }
             }
         }
