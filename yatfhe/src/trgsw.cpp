@@ -9,6 +9,7 @@
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
+#include "yatfhe/crt.h"
 
 // trgsw(0): [trlwe(0)]  (k+1)l rows
 void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
@@ -247,17 +248,22 @@ void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, 
     applyInttForAB(output, trlweDftRes);
 }
 
-void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<std::vector<Trlwe8>>& trlweInput, const YatfheParameters& param) {
+void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
+    std::vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
+    std::vector<std::vector<Trlwe8>> tmpDB (param.d, std::vector<Trlwe8>(param.dh, Trlwe8(param.k, param.N)));
     std::vector<std::vector<TrlweDft24>> tmpDBNtt (param.d, std::vector<TrlweDft24>(param.dh, TrlweDft24(param.k, param.N)));
     std::vector<TrlweDft24> trlweDftRes (param.d, TrlweDft24(param.k, param.N));
+
+    syncGadgetDecomp(tmpD, trlweInput, param);
+    broadcastCRT(tmpDB, tmpD, param);
 
     // ntt
     for (size_t i1 = 0; i1 < param.d; i1++) {
         for (size_t i2 = 0; i2 < param.dh; i2++) {
             for (size_t k = 0; k < param.k; k++) {
-                applyNtt24(tmpDBNtt[i1][i2].a[k], trlweInput[i1][i2].a[k]);
+                applyNtt24(tmpDBNtt[i1][i2].a[k], tmpDB[i1][i2].a[k]);
             }
-            applyNtt24(tmpDBNtt[i1][i2].b, trlweInput[i1][i2].b);
+            applyNtt24(tmpDBNtt[i1][i2].b, tmpDB[i1][i2].b);
         }
     }
 

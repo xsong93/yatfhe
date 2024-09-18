@@ -100,6 +100,6 @@ void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& t
 
 void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, Trlwe& trlweInput, const YatfheParameters& param);
 
-void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<std::vector<Trlwe8>>& trlweInput, const YatfheParameters& param);
+void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

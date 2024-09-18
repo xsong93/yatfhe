@@ -97,16 +97,13 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
 
 void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param) {
     std::vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
-    std::vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
-    std::vector<std::vector<Trlwe8>> tmpDB (param.d, std::vector<Trlwe8>(param.dh, Trlwe8(param.k, param.N)));
 
     for (size_t i = 0; i < param.d; i++) {
         trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input
     }
-    syncGadgetDecomp(tmpD, tmp, param);
-    broadcastCRT(tmpDB, tmpD, param);
 
-    trgswExternalProductCRT(res, bskCRT, tmpDB, param); // res *= bskI
+    trgswExternalProductCRT(res, bskCRT, tmp, param); // res *= bskI
+
     for (size_t i = 0; i < param.d; i++) {
         trlweAccumulateModP(res[i], inputs[i], static_cast<int8_t>(param.qd[i])); // res += input
     }
