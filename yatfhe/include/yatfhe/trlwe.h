@@ -185,6 +185,21 @@ void trlweAccumulateModP(TrlweType& accum, const TrlweType& tlwe, const R p) {
     polynomialAccumulateModP(accum.b, tlwe.b, p);
 }
 
+template<typename TrlweTypeA, typename TrlweTypeB>
+void trlweCRTDecomp(std::vector<TrlweTypeA>& accum, const TrlweTypeB& tv, const YatfheParameters& param) {
+    for (size_t d = 0; d < param.d; d++) {
+        auto& tmpTao = param.taoU[d];
+        for (size_t k = 0; k < param.k; k++) {
+            for (size_t j = 0; j < param.N; j++) {
+                accum[d].a[k].coeffs[j] = static_cast<int8_t>(longModP(tmpTao * tv.a[k].coeffs[j], param.qd[d]));
+            }
+        }
+        for (size_t j = 0; j < param.N; j++) {
+            accum[d].b.coeffs[j] = static_cast<int8_t>(longModP(tmpTao * tv.b.coeffs[j], param.qd[d]));
+        }
+    }
+}
+
 void trlweKeyGen(TrlweKey& key);
 
 void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu);

@@ -31,17 +31,19 @@ void trgswFunctionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const Bootstr
     tlweKeySwitch(out, ksk, tmp, param);
 }
 
-////todo
-//void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const BootstrappingKeyCRT& bskCRT, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
-//    ScaledTlwe inputModN2 {param.N * 2, param.n};
-//    std::vector<Trlwe8> accum (param.d, Trlwe8(param.k, param.N));
-//    Tlwe tmp {ksk.nCurrKey};
-//    rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
-//    genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
-//    blindRotateCRT(accum, bskCRT, inputModN2, param);
+//todo
+void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const BootstrappingKeyCRT& bskCRT, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
+    ScaledTlwe inputModN2 {param.N * 2, param.n};
+    Trlwe tv (param.k, param.N);
+    std::vector<Trlwe8> accum (param.d, Trlwe8(param.k, param.N));
+    Tlwe tmp {ksk.nCurrKey};
+    rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
+    genNoiselessTrlweSample(tv, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
+    trlweCRTDecomp(accum, tv, param);
+    blindRotateCRT(accum, bskCRT, inputModN2, param);
 //    extractTlweFromTrlwe(tmp, accum, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
-//    tlweKeySwitch(out, ksk, tmp, param);
-//}
+    tlweKeySwitch(out, ksk, tmp, param);
+}
 
 /**
  * Multiply the accumulator by X^sum(bara_i * s_i)
@@ -69,13 +71,18 @@ void blindRotateNtt(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe&
 }
 
 void blindRotateCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
-    for (auto i = 0; i < param.n; i++) {
+    std::vector<Trlwe8> tmpAcc (param.d, Trlwe8(param.k, param.N));
+    for (size_t i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
         std::vector<Trlwe8> temp (param.d, Trlwe8(param.k, param.N));
-        controlMuxCRT(temp, accum, input.a[i], bskCRT.bskCRT[i], param);
-        swap(accum, temp);
+        controlMuxCRT(temp, tmpAcc, input.a[i], bskCRT.bskCRT[i], param);
+        swap(tmpAcc, temp);
+    }
+    for (size_t d = 0; d < param.d; d++) {
+        // todo wCRT to CRT
+//        accum = tmpAcc;
     }
 }
 

@@ -121,13 +121,9 @@ Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
 
 void trgswCRTDecomp(std::vector<TrgswDft24>& out, const Trgsw& in, const YatfheParameters& param) {
     std::vector<Trgsw8> tmp(param.d, Trgsw8(param.dh, param.k, param.N));
-    std::vector<int32_t> tao(param.d, 1);
-    for (size_t d = 0; d < param.dl; d++) {
-        tao[param.dh + d] = static_cast<int>(modInverse(param.qLow / param.ql[d], param.ql[d]));
-    }
 
     for (size_t d = 0; d < param.d; d++) {
-        auto& tmpT = tao[d];
+        auto& tmpT = param.taoU[d];
         auto& tmpQd = param.qd[d];
         for (size_t l = 0; l < param.dh; l++) {
             for (size_t k1 = 0; k1 < param.k + 1; k1++) {
