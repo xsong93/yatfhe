@@ -5,8 +5,11 @@
 #include "yautil/tool.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/time_counter.h"
+#include "yautil/initializer.h"
 
 int main() {
+    YatfheParameters p {};
+    yatfheInit(p);
     std::vector<int> coeffs = {656381177, -1322693974, 749894848, 1618033988};
     int Qlow = 55687;
     int l = 2;
@@ -27,7 +30,6 @@ int main() {
     printArray(f_tilde, "f_tilde");
     cout << "||f - f_t|| = " << calApproxCRTError(f_tilde, coeffs) << endl;
 
-    YatfheParameters p {};
     vector<Trlwe8> t1 (p.d, Trlwe8(p.k, p.N));
     vector<Trlwe8> t2 (p.dh, Trlwe8(p.k, p.N));
 
@@ -50,7 +52,12 @@ int main() {
 //        }
 //    }
 
-    std::vector<std::vector<std::vector<long>>> iii(1000, std::vector<std::vector<long>>(1000, std::vector<long>(1000, 0)));
+    printArray(p.taoU, "taoU");
+    printArray(p.taoUInv, "taoUInv");
+    cout << longModP(p.taoU[2] * p.taoUInv[2], p.qd[2]) << endl;
+    cout << longModP(p.taoU[3] * p.taoUInv[3], p.qd[3]) << endl;
+
+/*    std::vector<std::vector<std::vector<long>>> iii(1000, std::vector<std::vector<long>>(1000, std::vector<long>(1000, 0)));
 
     COUNT_TIME("n3",
                for (size_t i = 0; i < 1000; i++) {
@@ -87,7 +94,7 @@ int main() {
                            iii[i][j][k] = i * j * k;
                        }
                    }
-               })
+               })*/
 
 
 }

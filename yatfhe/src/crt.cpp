@@ -33,7 +33,7 @@ void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>
         int lowSum = 0;
         for (int u = 0; u < lowModuli.size(); ++u) {
             int q_u = lowModuli[u];
-            int inv = (int)modInverse(Qlow / q_u, q_u);
+            int inv = static_cast<int>(modInverse(Qlow / q_u, q_u));
             lowSum += Qlow / q_u * intModP(inv * intModP(fi, q_u), q_u);
         }
 

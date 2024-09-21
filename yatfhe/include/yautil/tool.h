@@ -44,6 +44,16 @@ void printArray(const vector<T>& in, const string& msg) {
     cout <<"]" <<endl << endl;
 }
 
+template <typename T, size_t N>
+void printArray(const T (&in)[N], const string& msg) {
+    cout << msg <<": [";
+    for (int i = 0; i < N; i++) {
+//        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] << ANSI_COLOR_RESET <<" ";
+        printf("%d:%s%d%s ", i, ANSI_COLOR_YELLOW, in[i], ANSI_COLOR_RESET);
+    }
+    cout <<"]" <<endl << endl;
+}
+
 void printPolyMat(const vector<vector<IntPolynomial>>& in, const string& msg);
 
 template <typename T>

@@ -100,13 +100,30 @@ long longModP(const long a, const long p) {
 }
 
 // Multiplicative inverse modulo p
-long modInverse(long a, long p) {
-    for (auto x = 1; x < p; x++) {
-        if ((a * x) % p == 1) {
-            return x;
-        }
+long modInverse(long a, long mod) {
+    long m0 = mod, t, q;
+    long x0 = 0, x1 = 1;
+
+    if (mod == 1) {
+        return 0;
     }
-    return -1;
+
+    while (a > 1) {
+        q = a / mod; // q is quotient
+        t = mod;
+        mod = a % mod; // m is remainder now, process same as Euclid's algorithm
+        a = t;
+        t = x0;
+        x0 = x1 - q * x0;
+        x1 = t;
+    }
+
+//    // Make x1 positive
+//    if (x1 < 0) {
+//        x1 += m0;
+//    }
+
+    return x1;
 }
 
 Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {
