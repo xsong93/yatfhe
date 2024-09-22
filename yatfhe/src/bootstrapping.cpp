@@ -49,54 +49,59 @@ void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const Bootstr
  * Multiply the accumulator by X^sum(bara_i * s_i)
  * */
 void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+    Trlwe temp {param.k, param.N};
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
-        Trlwe temp {param.k, param.N};
+        temp = Trlwe(param.k, param.N);
         controlMux(temp, accum, input.a[i], bsk.bsk[i], param);
         swap(accum, temp); // assign the previous result to accumulator
     }
 }
 
 void blindRotateNtt(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+    Trlwe temp {param.k, param.N};
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
-        Trlwe temp {param.k, param.N};
+        temp = Trlwe(param.k, param.N);
         controlMuxNtt(temp, accum, input.a[i], bsk.bskDft[i], param);
         swap(accum, temp); // assign the previous result to accumulator
     }
 }
 
 void blindRotateCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
-    std::vector<Trlwe8> tmpAcc (param.d, Trlwe8(param.k, param.N));
+    std::vector<Trlwe8> temp (param.d, Trlwe8(param.k, param.N));
     for (size_t i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
-        std::vector<Trlwe8> temp (param.d, Trlwe8(param.k, param.N));
-        controlMuxCRT(temp, tmpAcc, input.a[i], bskCRT.bskCRT[i], param);
-        swap(tmpAcc, temp);
+        for (size_t d = 0; d < param.d; d++) {
+            temp[d] = Trlwe8(param.k, param.N);
+        }
+        controlMuxCRT(temp, accum, input.a[i], bskCRT.bskCRT[i], param);
+        swap(accum, temp);
     }
 
     // wCRT to CRT
     auto& dh = param.dh;
     for (size_t d = 0; d < param.dl; d++) {
-        auto& tmpQl = param.ql[d];
-        auto& tmpTaoUInv = param.taoUInv[dh + d];
-        auto& tmpAccAIn = tmpAcc[dh + d].a;
-        auto& tmpAccBIn = tmpAcc[dh + d].b;
-        auto& tmpAccARes = accum[dh + d].a;
-        auto& tmpAccBRes = accum[dh + d].b;
+        auto& ql = param.ql[d];
+        auto& taoUInv = param.taoUInv[dh + d];
+        auto& accA = accum[dh + d].a;
+        auto& accB = accum[dh + d].b;
         for (size_t k = 0; k < param.k; k++) {
+            auto& coeffA = accA[k].coeffs;
             for (size_t j = 0; j < param.N; j++) {
-                tmpAccARes[k].coeffs[j] = static_cast<int8_t>(intModP(tmpTaoUInv * tmpAccAIn[k].coeffs[j], tmpQl));
+                auto aCopy = coeffA[j];
+                coeffA[j] = static_cast<int8_t>(intModP(taoUInv * aCopy, ql));
             }
         }
         for (size_t j = 0; j < param.N; j++) {
-            tmpAccBRes.coeffs[j] = static_cast<int8_t>(intModP(tmpTaoUInv * tmpAccBIn.coeffs[j], tmpQl));
+            auto bCopy = accB.coeffs[j];
+            accB.coeffs[j] = static_cast<int8_t>(intModP(taoUInv * bCopy, ql));
         }
     }
 }
