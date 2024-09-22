@@ -48,6 +48,7 @@ struct YatfheParameters {
     int qHigh {qd[0] * qd[1]};
     int qLow {qd[2] * qd[3]};
     long qCRT{qd[0] * qd[1] * qd[2] * qd[3]};
+    int qLowDivQl[2] {qLow / ql[0], qLow / ql[1]};
     int taoU[4] {1, 1, 1, 1};
     int taoUInv[4] {1, 1, 1, 1};
 };

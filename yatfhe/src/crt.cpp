@@ -53,27 +53,25 @@ void approxPolyReconstruct(std::vector<int>& f_tilde, const std::vector<std::vec
 }
 
 void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param) {
-    int qLowDivQl[param.dl];
-    for (size_t u = 0; u < param.dl; u++) {
-        qLowDivQl[u] = param.qLow / param.ql[u];
-    }
     for (size_t i = 0; i < param.dh; i++) {
         int qHi = param.qh[i];
-        for (size_t j = 0; j < param.N; j++) {
-            for (size_t k = 0; k < param.k; k++) {
+        for (size_t k = 0; k < param.k; k++) {
+            for (size_t j = 0; j < param.N; j++) {
                 int8_t aHi = aux[i].a[k].coeffs[j];
                 int lowSum = 0;
                 for (size_t u = 0; u < param.dl; u++) {
                     int8_t aLo = aux[u + param.dh].a[k].coeffs[j];
-                    lowSum += qLowDivQl[u] * aLo;
+                    lowSum += param.qLowDivQl[u] * aLo;
                 }
                 out[i].a[k].coeffs[j] = static_cast<int8_t>(intModP(aHi - intModP(lowSum, qHi), qHi));
             }
+        }
+        for (size_t j = 0; j < param.N; j++) {
             int8_t bHi = aux[i].b.coeffs[j];
             int lowSum = 0;
             for (size_t u = 0; u < param.dl; u++) {
                 int8_t bLo = aux[u + param.dh].b.coeffs[j];
-                lowSum += qLowDivQl[u] * bLo;
+                lowSum += param.qLowDivQl[u] * bLo;
             }
             out[i].b.coeffs[j] = static_cast<int8_t>(intModP(bHi - intModP(lowSum, qHi), qHi));
         }
