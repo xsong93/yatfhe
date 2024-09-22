@@ -43,6 +43,7 @@ struct YatfheParameters {
     int dh {2};
     int dl{2};
     int qd[4] {251, 241, 239, 233};
+    int qdHalf[4] {qd[0]/2, qd[1]/2, qd[2]/2, qd[3]/2};
     int qh[2] {qd[0], qd[1]};
     int ql[2] {qd[2], qd[3]};
     int qHigh {qd[0] * qd[1]};
