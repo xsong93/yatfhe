@@ -104,6 +104,9 @@ void blindRotateCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCR
             accB.coeffs[j] = static_cast<int8_t>(intModP(taoUInv * bCopy, ql));
         }
     }
+
+    //todo: CRT recomp
+
 }
 
 // res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input

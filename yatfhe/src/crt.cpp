@@ -74,9 +74,7 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, 
     for (size_t i = 0; i < param.dh; i++) {
         auto& qHi = param.qh[i];
         auto& outA = out[i].a;
-        auto& coeffBOut = out[i].b.coeffs;
         auto& inA = aux[i].a;
-        auto& coeffBHi = aux[i].b.coeffs;
         for (size_t k = 0; k < param.k; k++) {
             auto& coeffAOut = outA[k].coeffs;
             auto& coeffAHi = inA[k].coeffs;
@@ -84,6 +82,8 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, 
                 coeffAOut[j] = static_cast<int8_t>(intModP(coeffAHi[j] - lowSumsA[k][j], qHi));
             }
         }
+        auto& coeffBHi = aux[i].b.coeffs;
+        auto& coeffBOut = out[i].b.coeffs;
         for (size_t j = 0; j < param.N; j++) {
             coeffBOut[j] = static_cast<int8_t>(intModP(coeffBHi[j] - lowSumsB[j], qHi));
         }
@@ -97,9 +97,7 @@ void broadcastCRT(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe
         auto& qdHalf = param.qdHalf[d];
         for (size_t dh = 0; dh < param.dh; dh++) {
             auto& outA = out[d][dh].a;
-            auto& outB = out[d][dh].b;
             auto& inA = in[dh].a;
-            auto& inB = in[dh].b;
             for (size_t k = 0; k < param.k; k++) {
                 auto& coeffInA = inA[k].coeffs;
                 auto& coeffOutA = outA[k].coeffs;
@@ -108,6 +106,8 @@ void broadcastCRT(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe
                     coeffOutA[j] = (valA >= qdHalf || valA < -qdHalf) ? static_cast<int8_t>(intModP(valA, qd)) : valA;
                 }
             }
+            auto& inB = in[dh].b;
+            auto& outB = out[d][dh].b;
             for (size_t j = 0; j < param.N; j++) {
                 auto& valB = inB.coeffs[j];
                 outB.coeffs[j] = (valB >= qdHalf || valB < -qdHalf) ? static_cast<int8_t>(intModP(valB, qd)) : valB;
