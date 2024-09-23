@@ -33,10 +33,10 @@ void trgswFunctionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const Bootstr
 
 //todo
 void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const BootstrappingKeyCRT& bskCRT, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
-    ScaledTlwe inputModN2 {param.N * 2, param.n};
-    Trlwe tv (param.k, param.N);
-    std::vector<Trlwe8> accum (param.d, Trlwe8(param.k, param.N));
-    Tlwe tmp {ksk.nCurrKey};
+    ScaledTlwe inputModN2{param.N * 2, param.n};
+    Trlwe tv{param.k, param.N};
+    std::vector<Trlwe8> accum(param.d, Trlwe8{param.k, param.N});
+    Tlwe tmp{ksk.nCurrKey};
     rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(tv, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     trlweCRTDecomp(accum, tv, param);
@@ -49,37 +49,37 @@ void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const Bootstr
  * Multiply the accumulator by X^sum(bara_i * s_i)
  * */
 void blindRotate(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
-    Trlwe temp {param.k, param.N};
+    Trlwe temp{param.k, param.N};
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
-        temp = Trlwe(param.k, param.N);
+        temp = Trlwe{param.k, param.N};
         controlMux(temp, accum, input.a[i], bsk.bsk[i], param);
         swap(accum, temp); // assign the previous result to accumulator
     }
 }
 
 void blindRotateNtt(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
-    Trlwe temp {param.k, param.N};
+    Trlwe temp{param.k, param.N};
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
-        temp = Trlwe(param.k, param.N);
+        temp = Trlwe{param.k, param.N};
         controlMuxNtt(temp, accum, input.a[i], bsk.bskDft[i], param);
         swap(accum, temp); // assign the previous result to accumulator
     }
 }
 
 void blindRotateCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
-    std::vector<Trlwe8> temp (param.d, Trlwe8(param.k, param.N));
+    std::vector<Trlwe8> temp(param.d, Trlwe8{param.k, param.N});
     for (size_t i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
         for (size_t d = 0; d < param.d; d++) {
-            temp[d] = Trlwe8(param.k, param.N);
+            temp[d] = Trlwe8{param.k, param.N};
         }
         controlMuxCRT(temp, accum, input.a[i], bskCRT.bskCRT[i], param);
         swap(accum, temp);
@@ -123,7 +123,7 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
 }
 
 void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param) {
-    std::vector<Trlwe8> tmp (param.d, Trlwe8(param.k, param.N));
+    std::vector<Trlwe8> tmp(param.d, Trlwe8{param.k, param.N});
 
     for (size_t i = 0; i < param.d; i++) {
         trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input

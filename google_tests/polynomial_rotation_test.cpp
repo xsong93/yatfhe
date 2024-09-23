@@ -87,7 +87,7 @@ TEST(Poly8RotTest, Poly8RotTest) {
     }
     printArray(a.coeffs, "a");
     for (auto i = - N * 2; i <= N * 2; i++) {
-        int8PolynomialRotate(b, i, a);
+        int8PolynomialRotate(b, i, a, 256);
         printArray(b.coeffs, "b " + to_string(i));
         ASSERT_EQ(b.coeffs, rotatedVec[i + N * 2]);
     }
@@ -95,6 +95,15 @@ TEST(Poly8RotTest, Poly8RotTest) {
         int8PolynomialRotateMinusOne(b, i, a, 256);
         printArray(b.coeffs, "b-1 " + to_string(i));
         ASSERT_EQ(b.coeffs, vecSub8(rotatedVec[i + N * 2], a.coeffs));
+    }
+
+    for (auto i = 0; i < N ; i++) {
+        a.coeffs[i] = -128 - i;
+    }
+    for (auto i = - N * 2; i <= N * 2; i++) {
+        int8PolynomialRotate(b, i, a, 256);
+        printArray(b.coeffs, "-128-1 " + to_string(i));
+//        ASSERT_EQ(b.coeffs, vecSub8(rotatedVec[i + N * 2], a.coeffs));
     }
     printBanner("Poly8RotTest");
 }

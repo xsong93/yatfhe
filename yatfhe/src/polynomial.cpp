@@ -91,12 +91,13 @@ void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const Toru
     }
 }
 
-void int8PolynomialRotate(Int8Polynomial& out, const int a, const Int8Polynomial& input) {
+void int8PolynomialRotate(Int8Polynomial& out, const int a, const Int8Polynomial& input, int modP) {
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
-    for (auto i = 0; i < N; i++) {
-        out.coeffs[i] = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * (int8_t)isWrap) : (input.coeffs[i - aTrue] * (int8_t)isWrap);
+    for (size_t i = 0; i < N; i++) {
+        auto tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
+        out.coeffs[i] = static_cast<int8_t>(intModP(tmp, modP));
     }
 }
 
@@ -104,9 +105,10 @@ void int8PolynomialRotateMinusOne(Int8Polynomial& out, const int a, const Int8Po
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
-    for (auto i = 0; i < N; i++) {
-        auto tmp = ((i < aTrue) ? (-input.coeffs[i - aTrue + N] * (int8_t)isWrap) : (input.coeffs[i - aTrue] * (int8_t)isWrap));
-        out.coeffs[i] = (int8_t)intModP(tmp - input.coeffs[i], modP);
+    auto isWrapCasted = static_cast<int8_t>(isWrap);
+    for (size_t i = 0; i < N; i++) {
+        auto tmp = ((i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrapCasted) : (input.coeffs[i - aTrue] * isWrapCasted));
+        out.coeffs[i] = static_cast<int8_t>(intModP(tmp - input.coeffs[i], modP));
     }
 }
 

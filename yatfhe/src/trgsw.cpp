@@ -120,26 +120,34 @@ Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
 }
 
 void trgswCRTDecomp(std::vector<TrgswDft24>& out, const Trgsw& in, const YatfheParameters& param) {
-    std::vector<Trgsw8> tmp(param.d, Trgsw8(param.dh, param.k, param.N));
+    std::vector<Trgsw8> tmp(param.d, Trgsw8{param.dh, param.k, param.N});
 
     for (size_t d = 0; d < param.d; d++) {
-        auto& tmpT = param.taoU[d];
-        auto& tmpQd = param.qd[d];
+        auto& taoU = param.taoU[d];
+        auto& qd = param.qd[d];
+        auto& tmpOut = out[d];
+        auto& tmpD = tmp[d];
         for (size_t l = 0; l < param.dh; l++) {
             for (size_t k1 = 0; k1 < param.k + 1; k1++) {
-                auto& tmpRgswInA = in.trlweSamples[l][k1].a;
-                auto& tmpRgswInB = in.trlweSamples[l][k1].b;
-                auto& tmpRgswResA = tmp[d].trlweSamples[l][k1].a;
-                auto& tmpRgswResB = tmp[d].trlweSamples[l][k1].b;
+                auto& nttOut = tmpOut.trlweDftSamples[l][k1];
+                auto& nttIn = tmpD.trlweSamples[l][k1];
+                auto& rgswInA = in.trlweSamples[l][k1].a;
+                auto& rgswInB = in.trlweSamples[l][k1].b;
+                auto& rgswResA = tmpD.trlweSamples[l][k1].a;
+                auto& rgswResB = tmpD.trlweSamples[l][k1].b;
                 for (size_t k2 = 0; k2 < param.k; k2++) {
+                    auto& coeffResA = rgswResA[k2].coeffs;
+                    auto& coeffInA = rgswInA[k2].coeffs;
                     for (size_t j = 0; j < param.N; j++) {
-                        tmpRgswResA[k2].coeffs[j] = static_cast<int8_t>(intModP(tmpT * tmpRgswInA[k2].coeffs[j], tmpQd));
+                        coeffResA[j] = static_cast<int8_t>(longModP(taoU * coeffInA[j], qd));
                     }
                 }
+                auto& coeffResB = rgswResB.coeffs;
+                auto& coeffInB = rgswInB.coeffs;
                 for (size_t j = 0; j < param.N; j++) {
-                    tmpRgswResB.coeffs[j] = static_cast<int8_t>(intModP(tmpT * tmpRgswInB.coeffs[j], tmpQd));
+                    coeffResB[j] = static_cast<int8_t>(longModP(taoU * coeffInB[j], qd));
                 }
-                applyNttForAB24(out[d].trlweDftSamples[l][k1], tmp[d].trlweSamples[l][k1]);
+                applyNttForAB24(nttOut, nttIn);
             }
         }
     }
