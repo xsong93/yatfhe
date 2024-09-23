@@ -169,12 +169,13 @@ void DIT_NR24(Ntt24Polynomial& RES, const Ntt24Polynomial& IN) {
 
 void applyNtt24(Ntt24Polynomial& RES, const Int8Polynomial& IN) {
     auto N = IN.N;
-    Ntt24Polynomial format_input(N);
+    Ntt24Polynomial format_input{N};
     for (int i = 0; i < N; i++) {
-        if (IN.coeffs[i] >= 0){
-            format_input.coeffs[i] = static_cast<Ntt24>(IN.coeffs[i]);
+        auto& valIn = IN.coeffs[i];
+        if (valIn >= 0){
+            format_input.coeffs[i] = static_cast<Ntt24>(valIn);
         } else {
-            format_input.coeffs[i] = static_cast<Ntt24>(IN.coeffs[i] + MOD24);
+            format_input.coeffs[i] = static_cast<Ntt24>(valIn + MOD24);
         }
     }
     DIT_NR24(RES, format_input);

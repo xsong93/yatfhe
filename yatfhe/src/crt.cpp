@@ -92,14 +92,14 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, 
 
 // l -> l*d
 void broadcastCRT(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
-    for (size_t i1 = 0; i1 < param.d; i1++) {
-        auto& qd = param.qd[i1];
-        auto& qdHalf = param.qdHalf[i1];
-        for (size_t i2 = 0; i2 < param.dh; i2++) {
-            auto& outA = out[i1][i2].a;
-            auto& outB = out[i1][i2].b;
-            auto& inA = in[i2].a;
-            auto& inB = in[i2].b;
+    for (size_t d = 0; d < param.d; d++) {
+        auto& qd = param.qd[d];
+        auto& qdHalf = param.qdHalf[d];
+        for (size_t dh = 0; dh < param.dh; dh++) {
+            auto& outA = out[d][dh].a;
+            auto& outB = out[d][dh].b;
+            auto& inA = in[dh].a;
+            auto& inB = in[dh].b;
             for (size_t k = 0; k < param.k; k++) {
                 auto& coeffInA = inA[k].coeffs;
                 auto& coeffOutA = outA[k].coeffs;

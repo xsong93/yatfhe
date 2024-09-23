@@ -258,43 +258,76 @@ void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, 
 }*/
 
 void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
-    std::vector<Trlwe8> tmpD (param.dh, Trlwe8(param.k, param.N));
-    std::vector<std::vector<Trlwe8>> tmpDB (param.d, std::vector<Trlwe8>(param.dh, Trlwe8(param.k, param.N)));
-    std::vector<std::vector<TrlweDft24>> tmpDBNtt (param.d, std::vector<TrlweDft24>(param.dh, TrlweDft24(param.k, param.N)));
-    std::vector<TrlweDft24> trlweDftRes (param.d, TrlweDft24(param.k, param.N));
+    std::vector<Trlwe8> tmpD(param.dh, Trlwe8{param.k, param.N});
+    std::vector<std::vector<Trlwe8>> tmpDB(param.d, std::vector<Trlwe8>(param.dh, Trlwe8{param.k, param.N}));
+    std::vector<std::vector<TrlweDft24>> tmpDBNtt(param.d, std::vector<TrlweDft24>(param.dh, TrlweDft24{param.k, param.N}));
+    std::vector<TrlweDft24> trlweDftRes(param.d, TrlweDft24{param.k, param.N});
 
     syncGadgetDecomp(tmpD, trlweInput, param);
     broadcastCRT(tmpDB, tmpD, param);
 
     // ntt
-    for (size_t i1 = 0; i1 < param.d; i1++) {
-        for (size_t i2 = 0; i2 < param.dh; i2++) {
+    for (size_t d = 0; d < param.d; d++) {
+        for (size_t dh = 0; dh < param.dh; dh++) {
             for (size_t k = 0; k < param.k; k++) {
-                applyNtt24(tmpDBNtt[i1][i2].a[k], tmpDB[i1][i2].a[k]);
+                applyNtt24(tmpDBNtt[d][dh].a[k], tmpDB[d][dh].a[k]);
             }
-            applyNtt24(tmpDBNtt[i1][i2].b, tmpDB[i1][i2].b);
+            applyNtt24(tmpDBNtt[d][dh].b, tmpDB[d][dh].b);
         }
     }
 
-    for (size_t d = 0; d < param.d; d++) {
-        auto& tmpRgswIn = trgswDftInput[d];
-        auto& tmpRlweResA = trlweDftRes[d].a;
-        auto& tmpRlweResB = trlweDftRes[d].b;
+/*    for (size_t d = 0; d < param.d; d++) {
+        auto& rgswIn = trgswDftInput[d];
+        auto& rlweResA = trlweDftRes[d].a;
+        auto& rlweResB = trlweDftRes[d].b;
         for (size_t l = 0; l < param.dh; l++) {
-            auto& tmpDBNttA = tmpDBNtt[d][l].a;
-            auto& tmpDBNttB = tmpDBNtt[d][l].b;
-            for (size_t k = 0; k < param.k + 1; k++) {
-                auto& tmpRgswNttA = tmpRgswIn.trlweDftSamples[l][k].a;
-                auto& tmpRgswNttB = tmpRgswIn.trlweDftSamples[l][k].b;
+            auto& decompNttA = tmpDBNtt[d][l].a;
+            auto& decompNttB = tmpDBNtt[d][l].b;
+            for (size_t k = 0; k < param.k; k++) {
+                auto& rgswNttA = rgswIn.trlweDftSamples[l][k].a;
+                auto& rgswNttB = rgswIn.trlweDftSamples[l][k].b;
                 for (size_t ka = 0; ka < param.k; ka++) {
                     for (size_t j = 0; j < param.N; j++) {
-                        auto tmpA = modMULT24(tmpRgswNttA[ka].coeffs[j], tmpDBNttA[ka].coeffs[j]);
-                        tmpRlweResA[ka].coeffs[j] = modADD24(tmpRlweResA[ka].coeffs[j], tmpA);
+                        auto tmpAA = modMULT24(decompNttA[ka].coeffs[j], rgswNttA[ka].coeffs[j]);
+                        auto tmpAB = modMULT24(decompNttA[ka].coeffs[j], rgswNttB.coeffs[j]);
+                        rlweResA[ka].coeffs[j] = modADD24(rlweResA[ka].coeffs[j], tmpAA);
+                        rlweResB.coeffs[j] = modADD24(rlweResB.coeffs[j], tmpAB);
                     }
                 }
+            }
+            auto& rgswNttAk = rgswIn.trlweDftSamples[l][param.k].a;
+            auto& rgswNttBk = rgswIn.trlweDftSamples[l][param.k].b;
+            for (size_t ka = 0; ka < param.k; ka++) {
                 for (size_t j = 0; j < param.N; j++) {
-                    auto tmpB = modMULT24(tmpRgswNttB.coeffs[j], tmpDBNttB.coeffs[j]);
-                    tmpRlweResB.coeffs[j] = modADD24(tmpRlweResB.coeffs[j], tmpB);
+                    auto tmpBA = modMULT24(decompNttB.coeffs[j], rgswNttAk[ka].coeffs[j]);
+                    rlweResA[ka].coeffs[j] = modADD24(rlweResA[ka].coeffs[j], tmpBA);
+                }
+            }
+            for (size_t j = 0; j < param.N; j++) {
+                auto tmpBB = modMULT24(decompNttB.coeffs[j], rgswNttBk.coeffs[j]);
+                rlweResB.coeffs[j] = modADD24(rlweResB.coeffs[j], tmpBB);
+            }
+        }
+    }*/
+
+    for (size_t d = 0; d < param.d; d++) {
+        auto& rgswIn = trgswDftInput[d];
+        auto& rlweResA = trlweDftRes[d].a;
+        auto& rlweResB = trlweDftRes[d].b;
+        for (size_t l = 0; l < param.dh; l++) {
+            auto& decompNttA = tmpDBNtt[d][l].a;
+            auto& decompNttB = tmpDBNtt[d][l].b;
+            for (size_t k = 0; k < param.k + 1; k++) {
+                auto& rgswNttA = rgswIn.trlweDftSamples[l][k].a;
+                auto& rgswNttB = rgswIn.trlweDftSamples[l][k].b;
+                auto& decompNtt = (k < param.k) ? decompNttA[k] : decompNttB;
+                for (size_t ka = 0; ka < param.k + 1; ka++) {
+                    auto& rgswNtt = (ka < param.k) ? rgswNttA[ka] : rgswNttB;
+                    auto& rlweRes = (ka < param.k) ? rlweResA[ka] : rlweResB;
+                    for (size_t j = 0; j < param.N; j++) {
+                        auto tmp = modMULT24(decompNtt.coeffs[j], rgswNtt.coeffs[j]);
+                        rlweRes.coeffs[j] = modADD24(rlweRes.coeffs[j], tmp);
+                    }
                 }
             }
         }
