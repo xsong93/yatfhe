@@ -16,7 +16,9 @@ void calGadgetVector(std::vector<long>& w, int Qlow, const std::vector<int>& hig
 
 void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli);
 
-void approxPolyReconstruct(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q);
+int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfheParameters& param);
+
+void approxCRTReconstructPoly(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q);
 
 void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param);
 

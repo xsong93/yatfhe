@@ -186,7 +186,7 @@ void trlweAccumulateModP(TrlweType& accum, const TrlweType& tlwe, const R p) {
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
-void trlweCRTDecomp(std::vector<TrlweTypeA>& accum, const TrlweTypeB& tv, const YatfheParameters& param) {
+void trlweMCRTDecomp(std::vector<TrlweTypeA>& accum, const TrlweTypeB& tv, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
         auto& taoU = param.taoU[d];
         auto& qd = param.qd[d];

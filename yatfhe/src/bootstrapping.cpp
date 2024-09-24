@@ -39,7 +39,7 @@ void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const Bootstr
     Tlwe tmp{ksk.nCurrKey};
     rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(tv, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
-    trlweCRTDecomp(accum, tv, param);
+    trlweMCRTDecomp(accum, tv, param);
     blindRotateCRT(accum, bskCRT, inputModN2, param);
 //    extractTlweFromTrlwe(tmp, accum, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     tlweKeySwitch(out, ksk, tmp, param);
@@ -106,6 +106,7 @@ void blindRotateCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCR
     }
 
     //todo: CRT recomp
+//    approxPolyReconstructPoly();
 
 }
 

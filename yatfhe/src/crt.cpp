@@ -44,12 +44,20 @@ void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>
     }
 }
 
-void approxPolyReconstruct(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q) {
+void approxCRTReconstructPoly(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q) {
     for (int i = 0; i < f_tilde.size(); i++) {
-        for (int j = 0; j < w.size(); j++) {
-            f_tilde[i] = (int) longModP(longModP(f[j][i] * w[j], q) + f_tilde[i], q);
+        for (size_t j = 0; j < w.size(); j++) {
+            f_tilde[i] = static_cast<int32_t>(longModP(f[j][i] * w[j] + f_tilde[i], q));
         }
     }
+}
+
+int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfheParameters& param) {
+    int32_t fTilde = 0;
+    for (size_t j = 0; j < param.dh; j++) {
+        fTilde = static_cast<int32_t>(longModP(f[j] * param.w[j] + fTilde, param.q));
+    }
+    return fTilde;
 }
 
 void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param) {

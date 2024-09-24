@@ -13,8 +13,8 @@ int main() {
     std::vector<int> coeffs = {656381177, -1322693974, 749894848, 1618033988};
     int Qlow = 55687;
     int l = 2;
-    std::vector<int> lowModuli = {233, 239};
-    std::vector<int> highModuli = {241, 251};
+    std::vector<int> lowModuli = {239, 233};
+    std::vector<int> highModuli = {251, 241};
     long q = 3368562317;
     std::vector<std::vector<int8_t>> f(l, std::vector<int8_t>(coeffs.size(), 0));
     std::vector<int> f_tilde(coeffs.size(), 0);
@@ -22,7 +22,7 @@ int main() {
 
     approxCRTDecomp(f, coeffs, Qlow, lowModuli, highModuli);
     calGadgetVector(w, Qlow, highModuli);
-    approxPolyReconstruct(f_tilde, f, w, q);
+    approxCRTReconstructPoly(f_tilde, f, w, q);
     for (auto i = 0; i < f.size(); i++) {
         printArray(f[i], "f" + to_string(i) + "(mod " + to_string(highModuli[i]) + ")");
     }

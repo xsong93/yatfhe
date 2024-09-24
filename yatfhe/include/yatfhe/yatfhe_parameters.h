@@ -48,10 +48,11 @@ struct YatfheParameters {
     int ql[2] {qd[2], qd[3]};
     int qHigh {qd[0] * qd[1]};
     int qLow {qd[2] * qd[3]};
-    long qCRT{qd[0] * qd[1] * qd[2] * qd[3]};
+    long qCRT{static_cast<long>(qHigh) * static_cast<long>(qLow)};
     int qLowDivQl[2] {qLow / ql[0], qLow / ql[1]};
     int taoU[4] {1, 1, 1, 1};
     int taoUInv[4] {1, 1, 1, 1};
+    long w[2] {1, 1};
 };
 
 #endif //HLS_YATFHE_YATFHE_PARAMETERS_H
