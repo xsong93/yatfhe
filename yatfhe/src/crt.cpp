@@ -25,6 +25,25 @@ void calGadgetVector(std::vector<long>& w, const int Qlow, const std::vector<int
 //    printf("w1:%ld, w2:%ld\n", w[0], w[1]);
 }
 
+void exactCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param) {
+    for (size_t d = 0; d < param.d; d++) {
+        auto& qd = param.qd[d];
+        for (size_t j = 0; j < coeffs.size(); j++) {
+            f[d][j] = static_cast<int8_t>(intModP(coeffs[j], qd));
+        }
+    }
+}
+
+void exactCRTReconstruct(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param) {
+    for (int i = 0; i < f_tilde.size(); i++) {
+        long acc = 0;
+        for (size_t j = 0; j < param.d; j++) {
+            acc += f[j][i] * param.z[j];
+        }
+        f_tilde[i] = static_cast<int32_t>(longModP(acc, param.qCRT));
+    }
+}
+
 void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli) {
     for (int i = 0; i < coeffs.size(); ++i) {
         int fi = coeffs[i];
@@ -46,18 +65,20 @@ void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>
 
 void approxCRTReconstructPoly(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q) {
     for (int i = 0; i < f_tilde.size(); i++) {
+        long acc = 0;
         for (size_t j = 0; j < w.size(); j++) {
-            f_tilde[i] = static_cast<int32_t>(longModP(f[j][i] * w[j] + f_tilde[i], q));
+            acc += f[j][i] * w[j];
         }
+        f_tilde[i] = static_cast<int32_t>(longModP(acc, q));
     }
 }
 
 int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfheParameters& param) {
-    int32_t fTilde = 0;
+    long acc = 0;
     for (size_t j = 0; j < param.dh; j++) {
-        fTilde = static_cast<int32_t>(longModP(f[j] * param.w[j] + fTilde, param.q));
+        acc += f[j] * param.w[j];
     }
-    return fTilde;
+    return static_cast<int32_t>(longModP(acc, param.qCRT));
 }
 
 void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param) {

@@ -18,6 +18,16 @@ void calGadgetVectorW(YatfheParameters& param) {
 //    printf("w1:%ld, w2:%ld\n", param.w[0], param.w[1]);
 }
 
+void calGadgetVectorZ(YatfheParameters& param) {
+    auto qCRT = param.qCRT;
+    for (size_t i = 0; i < param.d; i++) {
+        auto qj = param.qd[i];
+        auto qjTilde = qCRT / qj;
+        param.z[i] = qjTilde * (modInverse(qjTilde, qj));
+    }
+//    printf("z1:%ld, z2:%ld, z3:%ld, z4:%ld\n", param.z[0], param.z[1], param.z[2], param.z[3]);
+}
+
 void yatfheInit(YatfheParameters& param) {
     initGlobalParamsNtt64(param.N);
     initGlobalParamsNtt24(param.N);
@@ -29,5 +39,6 @@ void yatfheInit(YatfheParameters& param) {
         param.taoUInv[dh + d] = static_cast<int>((longModP(param.qLow / param.ql[d], param.ql[d])));
     }
     calGadgetVectorW(param);
+    calGadgetVectorZ(param);
     COUNT_TIME("init timer", std::cout << std::endl;)
 }

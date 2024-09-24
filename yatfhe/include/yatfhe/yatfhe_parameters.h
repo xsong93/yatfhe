@@ -53,6 +53,7 @@ struct YatfheParameters {
     int taoU[4] {1, 1, 1, 1};
     int taoUInv[4] {1, 1, 1, 1};
     long w[2] {1, 1};
+    long z[4] {1, 1, 1, 1};
 };
 
 #endif //HLS_YATFHE_YATFHE_PARAMETERS_H

@@ -14,6 +14,10 @@ int calApproxCRTError(const std::vector<int>& f_tilde, const std::vector<int>& c
 
 void calGadgetVector(std::vector<long>& w, int Qlow, const std::vector<int>& highModuli);
 
+void exactCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param);
+
+void exactCRTReconstruct(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param);
+
 void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli);
 
 int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfheParameters& param);
