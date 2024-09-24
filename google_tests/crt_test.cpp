@@ -66,3 +66,10 @@ TEST(CRT, EXACT_CRT) {
     }
     printBanner("EXACT_CRT");
 }
+
+TEST(CRT, TRLWE_CRT) {
+    YatfheParameters param{};
+    yatfheInit(param);
+    //todo
+    printBanner("TRLWE_CRT");
+}
