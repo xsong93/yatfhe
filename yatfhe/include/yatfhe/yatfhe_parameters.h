@@ -4,6 +4,7 @@
 #ifndef HLS_YATFHE_YATFHE_PARAMETERS_H
 #define HLS_YATFHE_YATFHE_PARAMETERS_H
 
+#include "torus.h"
 #include "yautil/control_helper.h"
 
 struct YatfheParameters {
@@ -42,7 +43,7 @@ struct YatfheParameters {
     int d {4}; // # of primes
     int dh {2};
     int dl{2};
-    int qd[4] {251, 241, 239, 233};
+    int qd[4] {QdCRT[0], QdCRT[1], QdCRT[2], QdCRT[3]};
     int qdHalf[4] {qd[0]/2, qd[1]/2, qd[2]/2, qd[3]/2};
     int qh[2] {qd[0], qd[1]};
     int ql[2] {qd[2], qd[3]};

@@ -11,6 +11,7 @@ random_device rd;
 mt19937 rng(rd());
 uniform_int_distribution<Binary> binaryDistrib(0, 1);
 uniform_int_distribution<Torus> uniformTorusDistrib(TorusMin, TorusMax);
+uniform_int_distribution<Torus> uniformTorusCRTDistrib(TorusMinCRT, TorusMaxCRT);
 
 int calLogBase2(int N) {
     int res = 0;

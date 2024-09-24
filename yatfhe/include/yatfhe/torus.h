@@ -25,6 +25,11 @@ const Integer IntMax = INT32_MAX;
 const Integer IntMin = INT32_MIN;
 const Integer TorusMax = IntMax;
 const Integer TorusMin = IntMin;
+const Integer QdCRT[4] {251, 241, 239, 233};
+const Integer IntMaxCRT = 1684281158;
+const Integer IntMinCRT = -IntMaxCRT - 1;
+const Integer TorusMaxCRT = IntMaxCRT;
+const Integer TorusMinCRT = IntMinCRT;
 #else
 using Torus = int64_t;
 using UnsignedInteger = uint64_t;

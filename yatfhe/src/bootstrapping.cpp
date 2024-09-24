@@ -35,13 +35,15 @@ void trgswFunctionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const Bootstr
 void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const BootstrappingKeyCRT& bskCRT, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2{param.N * 2, param.n};
     Trlwe tv{param.k, param.N};
-    std::vector<Trlwe8> accum(param.d, Trlwe8{param.k, param.N});
+    Trlwe acc{param.k, param.N};
+    std::vector<Trlwe8> accCRT(param.d, Trlwe8{param.k, param.N});
     Tlwe tmp{ksk.nCurrKey};
     rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(tv, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
-    trlweMCRTDecomp(accum, tv, param);
-    blindRotateCRT(accum, bskCRT, inputModN2, param);
-//    extractTlweFromTrlwe(tmp, accum, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    trlweMCRTDecomp(accCRT, tv, param);
+    blindRotateCRT(accCRT, bskCRT, inputModN2, param);
+    trlweCRTRecomp(acc, accCRT, param);
+    extractTlweFromTrlwe(tmp, acc, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     tlweKeySwitch(out, ksk, tmp, param);
 }
 
@@ -86,28 +88,24 @@ void blindRotateCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCR
     }
 
     // wCRT to CRT
-    auto& dh = param.dh;
+    auto dh = param.dh;
     for (size_t d = 0; d < param.dl; d++) {
-        auto& ql = param.ql[d];
-        auto& taoUInv = param.taoUInv[dh + d];
+        auto ql = param.ql[d];
+        auto taoUInv = param.taoUInv[dh + d];
         auto& accA = accum[dh + d].a;
         auto& accB = accum[dh + d].b;
         for (size_t k = 0; k < param.k; k++) {
             auto& coeffA = accA[k].coeffs;
             for (size_t j = 0; j < param.N; j++) {
                 auto aCopy = coeffA[j];
-                coeffA[j] = static_cast<int8_t>(intModP(taoUInv * aCopy, ql));
+                coeffA[j] = static_cast<int8_t>(longModP(taoUInv * aCopy, ql));
             }
         }
         for (size_t j = 0; j < param.N; j++) {
             auto bCopy = accB.coeffs[j];
-            accB.coeffs[j] = static_cast<int8_t>(intModP(taoUInv * bCopy, ql));
+            accB.coeffs[j] = static_cast<int8_t>(longModP(taoUInv * bCopy, ql));
         }
     }
-
-    //todo: CRT recomp
-//    approxPolyReconstructPoly();
-
 }
 
 // res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input

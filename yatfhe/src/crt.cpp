@@ -29,7 +29,16 @@ void exactCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>&
     for (size_t d = 0; d < param.d; d++) {
         auto& qd = param.qd[d];
         for (size_t j = 0; j < coeffs.size(); j++) {
-            f[d][j] = static_cast<int8_t>(intModP(coeffs[j], qd));
+            f[d][j] = static_cast<int8_t>(longModP(coeffs[j], qd));
+        }
+    }
+}
+
+void exactCRTDecompIO(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param) {
+    for (size_t j = 0; j < coeffs.size(); j++) {
+        for (size_t d = 0; d < param.d; d++) {
+            auto qd = param.qd[d];
+            f[j][d] = static_cast<int8_t>(longModP(coeffs[j], qd));
         }
     }
 }
@@ -39,6 +48,16 @@ void exactCRTReconstruct(std::vector<int32_t>& f_tilde, const std::vector<std::v
         long acc = 0;
         for (size_t j = 0; j < param.d; j++) {
             acc += f[j][i] * param.z[j];
+        }
+        f_tilde[i] = static_cast<int32_t>(longModP(acc, param.qCRT));
+    }
+}
+
+void exactCRTReconstructIO(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param) {
+    for (int i = 0; i < f_tilde.size(); i++) {
+        long acc = 0;
+        for (size_t j = 0; j < param.d; j++) {
+            acc += f[i][j] * param.z[j];
         }
         f_tilde[i] = static_cast<int32_t>(longModP(acc, param.qCRT));
     }

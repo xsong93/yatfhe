@@ -209,6 +209,48 @@ void trlweMCRTDecomp(std::vector<TrlweTypeA>& accum, const TrlweTypeB& tv, const
     }
 }
 
+template<typename TrlweTypeA, typename TrlweTypeB>
+void trlweCRTRecomp(TrlweTypeA& acc, std::vector<TrlweTypeB>& accCRT, const YatfheParameters& param) {
+    long rearrA[param.k][param.N][param.d];
+    long rearrB[param.N][param.d];
+
+    for (size_t d = 0; d < param.d; d++) {
+        auto& aModD = accCRT[d].a;
+        auto& coeffBModD = accCRT[d].b.coeffs;
+        auto z = param.z[d];
+        for (size_t k = 0; k < param.k; k++) {
+            auto& coeffAModD = aModD[k].coeffs;
+            for (size_t j = 0; j < param.N; j++) {
+                rearrA[k][j][d] = coeffAModD[j] * z;
+            }
+        }
+        for (size_t j = 0; j < param.N; j++) {
+            rearrB[j][d] = coeffBModD[j] * z;
+        }
+    }
+
+    auto& accA = acc.a;
+    auto qCRT = param.qCRT;
+    for (size_t k = 0; k < param.k; k++) {
+        auto& coeffA = accA[k].coeffs;
+        for (size_t j = 0; j < param.N; j++) {
+            long tmpA = 0;
+            for (size_t d = 0; d < param.d; d++) {
+                tmpA += rearrA[k][j][d];
+            }
+            coeffA[j] = static_cast<Torus>(longModP(tmpA, qCRT));
+        }
+    }
+    auto& coeffB = acc.b.coeffs;
+    for (size_t j = 0; j < param.N; j++) {
+        long tmpB = 0;
+        for (size_t d = 0; d < param.d; d++) {
+            tmpB += rearrB[j][d];
+        }
+        coeffB[j] = static_cast<Torus>(longModP(tmpB, qCRT));
+    }
+}
+
 void trlweKeyGen(TrlweKey& key);
 
 void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu);

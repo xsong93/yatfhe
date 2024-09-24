@@ -39,14 +39,26 @@ TEST(CRT, APPROX_CRT) {
 TEST(CRT, EXACT_CRT) {
     YatfheParameters p {};
     yatfheInit(p);
-    std::vector<int32_t> coeffs = {656381177, -1322693974, 749894848, 1618033988};
+//    std::vector<int32_t> coeffs = {656381177, -1322693974, 749894848, 1618033988};
+    std::vector<int32_t> coeffs(p.N);
+    for (size_t i = 0; i < p.N; i++) {
+        coeffs[i] = genIntUniformDist(IntMinCRT, IntMaxCRT);
+    }
     std::vector<std::vector<int8_t>> f(p.d, std::vector<int8_t>(coeffs.size(), 0));
+    std::vector<std::vector<int8_t>> f2(coeffs.size(), std::vector<int8_t>(p.d, 0));
     std::vector<int32_t> f_tilde(coeffs.size(), 0);
     exactCRTDecomp(f, coeffs, p);
     for (auto i = 0; i < f.size(); i++) {
         printArray(f[i], "f" + to_string(i) + "(mod " + to_string(p.qd[i]) + ")");
     }
     exactCRTReconstruct(f_tilde, f, p);
+
+    COUNT_TIME("exactCRTDecomp", for(size_t i = 0; i < 10000; i++){exactCRTDecomp(f, coeffs, p);})
+    COUNT_TIME("exactCRTReconstruct", for(size_t i = 0; i < 10000; i++){exactCRTReconstruct(f_tilde, f, p);})
+
+    COUNT_TIME("exactCRTDecompIO", for(size_t i = 0; i < 10000; i++){ exactCRTDecompIO(f2, coeffs, p);})
+    COUNT_TIME("exactCRTReconstructIO", for(size_t i = 0; i < 10000; i++){ exactCRTReconstructIO(f_tilde, f2, p);})
+
     printArray(coeffs, "f_origi");
     printArray(f_tilde, "f_tilde");
     for (size_t i = 0; i < coeffs.size(); i++) {
