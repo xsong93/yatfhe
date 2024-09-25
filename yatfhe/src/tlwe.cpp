@@ -50,12 +50,11 @@ Integer symDecTlweSampleToInt(Tlwe& in, const TlweKey& key, const int torusBase)
     return modSwitchFromTorus32(roundTorusError(in.b - aXs, torusBase), torusBase);
 }
 
-//todo: nt
 void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
     const auto newMod = output.mod;
-    output.b = modSwitchFromTorus32Pos(input.b, newMod);
+    output.b = static_cast<int32_t>(modSwitchFromTorus32Pos(input.b, newMod));
     for (auto i = 0; i < input.n; i++) {
-        output.a[i] = modSwitchFromTorus32Pos(input.a[i], newMod);
+        output.a[i] = static_cast<int32_t>(modSwitchFromTorus32Pos(input.a[i], newMod));
     }
 }
 

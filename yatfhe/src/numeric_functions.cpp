@@ -10,8 +10,7 @@ using namespace std;
 random_device rd;
 mt19937 rng(rd());
 uniform_int_distribution<Binary> binaryDistrib(0, 1);
-uniform_int_distribution<Torus> uniformTorusDistrib(TorusMin, TorusMax);
-uniform_int_distribution<Torus> uniformTorusCRTDistrib(TorusMinCRT, TorusMaxCRT);
+uniform_int_distribution<Torus> uniformTorusDistrib(TORUS_MIN, TORUS_MAX);
 
 int calLogBase2(int N) {
     int res = 0;
@@ -42,22 +41,23 @@ Torus addGaussianNoise(Torus message, const double sigma) {
     return message + err;
 }
 
-// Convert double to Torus32, d in [-0.5, 0.5).
-// Generally, d shouldn't be taken as near as the boundary values, since in lwe-like cryptology schemes, a random error
-// will be added for security considerations. An input value near boundary will very likely produce the add zero overflow issue.
+/*
+ Convert double to Torus32, d in [-0.5, 0.5).
+ Generally, d shouldn't be taken too close to the boundary values, since in lwe-like cryptology schemes, a random error
+ will be added for security considerations. An input value near boundary will very likely produce the add zero overflow issue.
+*/
 Torus doubleToTorus32(const double d) {
-    auto frac = d - (int64_t) d; // get the fraction part of d
+    auto frac = d - static_cast<double>(static_cast<int64_t>(d)); // get the fraction part of d
     if (frac >= 0.5) {
         frac = frac - 1;
     } else if (frac < -0.5) {
         frac = 1 + frac;
     }
-    auto scaledFrac = int64_t(frac * twoP32); // scale the fraction part to [0, 2^32), then cast the result to a 64-bit integer
-    return int32_t(scaledFrac); // rescale to int32
+    return static_cast<Torus>(frac * static_cast<double>(TORUS_Q)); // scale the fraction part to Z_TORUS_Q
 }
 
 double torus32ToDouble(const Torus in) {
-    return double(in) / twoP32;
+    return static_cast<double>(in) / static_cast<double>(TORUS_Q);
 }
 
 double roundError(const double in, const int torusBase) {
@@ -127,27 +127,36 @@ long modInverse(long a, long mod) {
     return x1;
 }
 
-Torus modSwitchToTorus32(int32_t mu, int32_t Msize) {
-    uint64_t interv = ((UINT64_C(1) << 63) / Msize) * 2; // width of each interval
-    uint64_t phase64 = mu * interv;
-    //floor to the nearest multiples of interv
-    return phase64 >> 32;
+Torus modSwitchToTorus32(int32_t mu, uint32_t Msize) {
+//    uint64_t interv = ((UINT64_C(1) << 63) / Msize) * 2; // width of each interval
+//    uint64_t phase64 = mu * interv;
+//    //floor to the nearest multiples of interv
+//    return phase64 >> 32;
+    auto interv = static_cast<int32_t>(TORUS_Q / Msize);
+    int32_t mod = intModP(mu, static_cast<int32_t>(Msize));
+    return mod * interv;
 }
 
-int32_t modSwitchFromTorus32(Torus in, int32_t newMod) {
-    uint64_t interv = ((UINT64_C(1) << 63) / newMod) * 2; // width of each interval
-    uint64_t half_interval = interv / 2; // begin of the first intervall
-    uint64_t phase64 = (uint64_t(in) << 32) + half_interval;
-    //floor to the nearest multiples of interv
-    return (in >= 0) ? (phase64 / interv) : (phase64 / interv - newMod);
+int32_t modSwitchFromTorus32(Torus in, uint32_t newMod) {
+//    uint64_t interv = ((UINT64_C(1) << 63) / newMod) * 2; // width of each interval
+//    uint64_t half_interval = interv / 2; // begin of the first intervall
+//    uint64_t phase64 = (uint64_t(in) << 32) + half_interval;
+//    //floor to the nearest multiples of interv
+//    return (in >= 0) ? (phase64 / interv) : (phase64 / interv - newMod);
+    auto interv = static_cast<int32_t>(TORUS_Q / newMod);
+    double div = (double)in / interv;
+    auto real = static_cast<int32_t>(round(div));
+    return intModP(real, static_cast<int32_t>(newMod));
 }
 
-int32_t modSwitchFromTorus32Pos(Torus in, int32_t newMod) {
-    uint64_t interv = ((UINT64_C(1) << 63) / newMod) * 2; // width of each interval
-    uint64_t half_interval = interv / 2; // begin of the first intervall
-    uint64_t phase64 = (uint64_t(in) << 32) + half_interval;
-    //floor to the nearest multiples of interv
-    return phase64 / interv;
+uint32_t modSwitchFromTorus32Pos(Torus in, uint32_t newMod) {
+//    uint64_t interv = ((UINT64_C(1) << 63) / newMod) * 2; // width of each interval
+//    uint64_t half_interval = interv / 2; // begin of the first intervall
+//    uint64_t phase64 = (uint64_t(in) << 32) + half_interval;
+//    //floor to the nearest multiples of interv
+//    return phase64 / interv;
+    auto tmp = modSwitchFromTorus32(in, newMod); // [-newMod/2, newMod/2)
+    return tmp + newMod / 2;
 }
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {

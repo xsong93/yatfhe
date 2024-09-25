@@ -76,7 +76,7 @@ void symDecTrlweToDouble(DoublePolynomial& output, const Trlwe& trlwe, const Trl
     }
     polynomialSub(tmp, trlwe.b, innerProduct);
     torusPolyToDoublePoly(output, tmp);
-    roundErrorPoly(output, torusBase);
+    roundErrorDoublePoly(output, torusBase);
 }
 
 void symDecTrlweToTorus(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key, const int torusBase) {
@@ -119,7 +119,7 @@ void symDecTrlweNtt(DoublePolynomial& output, const TrlweDft& trlweDft, const Tr
     lagrangePolynomialSub(res, trlweDft.b, innerProduct);
     applyIntt(tmp, res);
     torusPolyToDoublePoly(output, tmp);
-    roundErrorPoly(output, torusBase);
+    roundErrorDoublePoly(output, torusBase);
 }
 
 void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key) {

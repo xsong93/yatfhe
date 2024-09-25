@@ -15,7 +15,6 @@ extern random_device rd;
 extern mt19937 rng;
 extern uniform_int_distribution<Binary> binaryDistrib;
 extern uniform_int_distribution<Torus> uniformTorusDistrib;
-extern uniform_int_distribution<Torus> uniformTorusCRTDistrib;
 static const int64_t twoP32 = INT64_C(1) << 32; // 2^32
 
 int calLogBase2(int N);
@@ -26,9 +25,11 @@ uint64_t genUInt64UniformDist(uint64_t lowerBound, uint64_t upperBound);
 
 Torus addGaussianNoise(Torus message, double sigma);
 
-int32_t modSwitchFromTorus32(Torus in, int32_t newMod);
+Torus modSwitchToTorus32(int32_t mu, uint32_t Msize);
 
-int32_t modSwitchFromTorus32Pos(Torus in, int32_t newMod);
+int32_t modSwitchFromTorus32(Torus in, uint32_t newMod);
+
+uint32_t modSwitchFromTorus32Pos(Torus in, uint32_t newMod);
 
 Torus doubleToTorus32(double d);
 
@@ -45,8 +46,6 @@ long longModP(long a, long p);
 long modInverse(long a, long p);
 
 double torus32ToDouble(Torus in);
-
-Torus modSwitchToTorus32(int32_t mu, int32_t Msize);
 
 void initCoeffsViaUniformDistribution(vector<Torus>& coeffs);
 

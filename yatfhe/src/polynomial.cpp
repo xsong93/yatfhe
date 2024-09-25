@@ -57,7 +57,13 @@ void intPolyToTorusPoly(TorusPolynomial& output, const IntPolynomial& input, con
     }
 }
 
-void roundErrorPoly(DoublePolynomial& target, const int torusBase) {
+void roundErrorTorusPoly(TorusPolynomial& target, const int torusBase) {
+    for (auto i = 0 ; i < target.N; i++) {
+        target.coeffs[i] = roundTorusError(target.coeffs[i], torusBase);
+    }
+}
+
+void roundErrorDoublePoly(DoublePolynomial& target, const int torusBase) {
     for (auto i = 0 ; i < target.N; i++) {
         target.coeffs[i] = roundError(target.coeffs[i], torusBase);
     }

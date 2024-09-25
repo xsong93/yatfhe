@@ -21,14 +21,14 @@ using UnsignedInteger = uint32_t;
 using NttType = uint64_t;
 using Integer = int32_t;
 using Binary = Integer;
-const Integer TORUS_MAX = INT32_MAX;
-const Integer TORUS_MIN = INT32_MAX;
 const Integer QD_CRT[4] {251, 241, 239, 233};
-const int64_t TORUS_Q {static_cast<int64_t>(QD_CRT[0]) * QD_CRT[1] * QD_CRT[2] * QD_CRT[3]};
+//const uint64_t TORUS_Q = INT64_C(1) << 32;
+const uint64_t TORUS_Q {static_cast<uint64_t>(QD_CRT[0]) * QD_CRT[1] * QD_CRT[2] * QD_CRT[3]};
 const Integer INT_MAX_CRT = static_cast<Integer>(TORUS_Q / 2);
-const Integer INT_MIN_CRT = -INT_MAX_CRT - 1;
-const Integer TORUS_MAX_CRT = INT_MAX_CRT;
-const Integer TORUS_MIN_CRT = INT_MIN_CRT;
+const Integer INT_MIN_CRT = -INT_MAX_CRT;
+const Integer TORUS_MAX = INT_MAX_CRT;
+const Integer TORUS_MIN = INT_MIN_CRT;
+
 #else
 using Torus = int64_t;
 using UnsignedInteger = uint64_t;

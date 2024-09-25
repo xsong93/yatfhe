@@ -141,7 +141,9 @@ void torusPolyToIntPoly(IntPolynomial& output, const TorusPolynomial& input, int
 
 void intPolyToTorusPoly(TorusPolynomial& output, const IntPolynomial& input, int mSize);
 
-void roundErrorPoly(DoublePolynomial& target, int torusBase);
+void roundErrorTorusPoly(TorusPolynomial& target, int torusBase);
+
+void roundErrorDoublePoly(DoublePolynomial& target, int torusBase);
 
 void generateTestPolynomial(TorusPolynomial& v, int modP, int modQ);
 
