@@ -66,7 +66,6 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
     for (auto lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
-        // todo: decompose on second level
         for (auto row = 0; row < param.k + 1; row++) {
 
             // add to a_lii

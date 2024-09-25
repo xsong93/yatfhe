@@ -17,7 +17,6 @@ int main(int argc, char **argv) {
     yatfheInit(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
-
     TlweKey tlweKey {param.n, param.lweStdDev};
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;

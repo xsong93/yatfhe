@@ -90,7 +90,7 @@ int intModP(const int a, const int p) {
     return b;
 }
 
-long longModP(const long a, const long p) {
+int64_t longModP(const int64_t a, const int64_t p) {
     auto b = a % p;
     if (b > p / 2 - 1) {
         b -= p;
@@ -101,7 +101,7 @@ long longModP(const long a, const long p) {
 }
 
 // Multiplicative inverse modulo p
-long modInverse(long a, long mod) {
+int64_t modInverse(int64_t a, int64_t mod) {
     long m0 = mod, t, q;
     long x0 = 0, x1 = 1;
 
