@@ -167,7 +167,7 @@ TEST(TrlweTest, TrlweMultLargeConstant) {
     Trglev trglev {param};
     trglevEncMultiSample(trglev, trlweKey, plainT, param);
 
-    Integer y = genIntUniformDist(IntMin, IntMax);
+    Integer y = genIntUniformDist(INT32_MIN, INT32_MAX);
 
     // recomp
     Trlwe recomp {param.k, param.N};
@@ -228,7 +228,7 @@ TEST(TrlweTest, TrlweMultLargeConstantMultiLvl) {
     Trglev trglev {param};
     trglevEncMultiSample(trglev, trlweKey, plainT, param);
 
-    Integer y = genIntUniformDist(IntMin, IntMax);
+    Integer y = genIntUniformDist(INT32_MIN, INT32_MAX);
 
     Trlwe recomp2 {param.k, param.N};
     decomposedTglevMultConst(recomp2, trglev, y, param);

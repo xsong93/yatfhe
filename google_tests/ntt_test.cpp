@@ -201,7 +201,7 @@ TEST(NttTest, debug) {
         LagrangePolynomial res_ntt{N};
         IntPolynomial a{N}, res_intt{N};
         for (int i = 0; i < N; i++) {
-            a.coeffs[i] = genIntUniformDist(IntMin ,1);
+            a.coeffs[i] = genIntUniformDist(INT32_MIN ,1);
         }
 //    a.coeffs = {0, 0, 1, 0, 1, 1, 0, 0};
 //        printArray(a.coeffs,"ref_vec");

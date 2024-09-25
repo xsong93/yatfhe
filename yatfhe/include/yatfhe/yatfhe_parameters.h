@@ -26,10 +26,10 @@ struct YatfheParameters {
     long q {1 << 31};
     int torusBase {8}; // p|q
     int dftBits {64};
-    double lweStdDev {2.98023e-08}; // 2^-15
+    double lweStdDev {2.98023e-15}; // 2^-15
     // RLWE params
     int driftPhase {N / torusBase};
-    double rlweStdDev {2.98023223876953e-8}; // 2^-25
+    double rlweStdDev {2.98023223876953e-25}; // 2^-25
     // RGSW params
     int l2 {4}; // todo
     int lDft {dftBits / radixBits};
@@ -43,7 +43,7 @@ struct YatfheParameters {
     int d {4}; // # of primes
     int dh {2};
     int dl{2};
-    int qd[4] {QdCRT[0], QdCRT[1], QdCRT[2], QdCRT[3]};
+    int qd[4] {QD_CRT[0], QD_CRT[1], QD_CRT[2], QD_CRT[3]};
     int qdHalf[4] {qd[0]/2, qd[1]/2, qd[2]/2, qd[3]/2};
     int qh[2] {qd[0], qd[1]};
     int ql[2] {qd[2], qd[3]};

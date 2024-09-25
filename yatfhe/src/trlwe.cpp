@@ -1,8 +1,6 @@
 //
 // Created by Xintong Song on 2023/12/25.
 //
-#include <iostream>
-#include <random>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"

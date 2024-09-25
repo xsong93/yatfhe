@@ -61,14 +61,14 @@ TEST(DecompositionTest, DecomposeOverBSingleStage) {
     YatfheParameters param {};
 //    param.radixBits = 4;
 //    param.ksLevel = 8;
-    Torus mult = genIntUniformDist(TorusMin, TorusMax);
+    Torus mult = genIntUniformDist(TORUS_MIN, TORUS_MAX);
     std::vector<Integer> rhs(param.ksLevel);
     decomposeOverB(rhs, mult, param);
     printArray(rhs, to_string(mult) + " decomposeOverB");
     DecomposedData decomp {param.ksLevel};
     int ti = 0;
     while (ti++ < 10) {
-        Torus data = genIntUniformDist(TorusMin, TorusMax);
+        Torus data = genIntUniformDist(TORUS_MIN, TORUS_MAX);
 //        signedGadgetDecomposition(decomp, data, param); // both correct
         gadgetDecompose(decomp, data, param); // both correct
         printf("iter: %d, in: %d, ", ti, data);
@@ -110,7 +110,7 @@ TEST(DecompositionTest, DecomposeOverBMultiStages) {
     DecomposedData decompL1 {param.ksLevel};
     DecomposedData recompL1 {param.ksLevel};
 //    Torus data = genIntUniformDist(TorusMin, TorusMax);
-    Torus data = TorusMax - 3;
+    Torus data = TORUS_MAX - 3;
 
 //  signedGadgetDecomposition(decomp, data, param); // both correct
     gadgetDecompose(decompL1, data, param); // both correct
@@ -223,8 +223,8 @@ TEST(DecompositionTest, DecomposedMult) {
     int t = 2000;
     while (t-- > 0) {
         std::cout << "iter: " << t << endl;
-        a = genIntUniformDist(TorusMin, TorusMax);
-        b = genIntUniformDist(TorusMin, TorusMax);
+        a = genIntUniformDist(TORUS_MIN, TORUS_MAX);
+        b = genIntUniformDist(TORUS_MIN, TORUS_MAX);
 
         gadgetDecompose(da, a, param);
         printArray(da.value, "da");
