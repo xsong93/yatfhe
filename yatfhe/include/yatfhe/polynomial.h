@@ -155,21 +155,25 @@ void int8PolynomialRotate(Int8Polynomial& out, int a, const Int8Polynomial& inpu
 
 void int8PolynomialRotateMinusOne(Int8Polynomial& out, int a, const Int8Polynomial& input, int modP);
 
-void polynomialMulNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
+void polynomialMulNaiveT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
-void polynomialMulNaiveModQ(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2, long q);
+void polynomialMulNaiveModQ(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2, int64_t q);
 
 void polynomialMulNaiveModQ8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, int q);
 
-void polynomialMulAccNaive(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
+void polynomialMulAccNaiveI32(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
 
 //void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);
 
-void polynomialAdd(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
+void polynomialAddI32(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
 
-void polynomialAddSubOffset(TorusPolynomial& poly, int offset, bool isAdd);
+void polynomialAddT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
-void polynomialSub(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
+void polynomialAddSubOffset(IntPolynomial& poly, int offset, bool isAdd);
+
+void polynomialSubI32(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
+
+void polynomialSubT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
 void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, int value, int position);
 

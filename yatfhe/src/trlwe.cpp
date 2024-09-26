@@ -28,7 +28,7 @@ void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
 
 void symEncTrlwe(Trlwe& trlwe, const TrlweKey& key) {
     for (auto i = 0; i < trlwe.k; i++) {
-        polynomialMulAccNaive(trlwe.b, trlwe.a[i], key.s[i]);
+        polynomialMulNaiveT32(trlwe.b, trlwe.a[i], key.s[i]);
     }
 }
 
@@ -72,9 +72,9 @@ void symDecTrlweToDouble(DoublePolynomial& output, const Trlwe& trlwe, const Trl
     TorusPolynomial tmp {output.N};
     TorusPolynomial innerProduct {output.N};
     for (auto i = 0; i < trlwe.k; i++) {
-        polynomialMulAccNaive(innerProduct, trlwe.a[i], key.s[i]);
+        polynomialMulNaiveT32(innerProduct, trlwe.a[i], key.s[i]);
     }
-    polynomialSub(tmp, trlwe.b, innerProduct);
+    polynomialSubT32(tmp, trlwe.b, innerProduct);
     torusPolyToDoublePoly(output, tmp);
     roundErrorDoublePoly(output, torusBase);
 }
@@ -106,9 +106,9 @@ void symDecTrlweToIntNtt(IntPolynomial& output, const TrlweDft& trlweDft, const 
 
 void symDecTrlweWoRounding(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key) {
     for (auto i = 0; i < trlwe.k; i++) {
-        polynomialMulAccNaive(output, trlwe.a[i], key.s[i]);
+        polynomialMulNaiveT32(output, trlwe.a[i], key.s[i]);
     }
-    polynomialSub(output, trlwe.b, output);
+    polynomialSubT32(output, trlwe.b, output);
 }
 
 void symDecTrlweNtt(DoublePolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, const int torusBase) {
@@ -137,16 +137,16 @@ void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const Scale
 
 void trlweAdd(Trlwe& output, const Trlwe& input1, const Trlwe& input2) {
     for (auto i = 0; i < output.a.size(); i++) {
-        polynomialAdd(output.a[i], input1.a[i], input2.a[i]);
+        polynomialAddT32(output.a[i], input1.a[i], input2.a[i]);
     }
-    polynomialAdd(output.b, input1.b, input2.b);
+    polynomialAddT32(output.b, input1.b, input2.b);
 }
 
 void trlweSub(Trlwe& output, const Trlwe& input1, const Trlwe& input2) {
     for (auto i = 0; i < output.a.size(); i++) {
-        polynomialSub(output.a[i], input1.a[i], input2.a[i]);
+        polynomialSubT32(output.a[i], input1.a[i], input2.a[i]);
     }
-    polynomialSub(output.b, input1.b, input2.b);
+    polynomialSubT32(output.b, input1.b, input2.b);
 }
 
 void trlweAddNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2) {

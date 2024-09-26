@@ -43,9 +43,13 @@ int intModP(int a, int p);
 
 int64_t longModP(int64_t a, int64_t p);
 
+int64_t barrettReduceT32(int64_t in);
+
 Torus modAddT32(Torus in1, Torus in2);
 
 Torus modSubT32(Torus in1, Torus in2);
+
+Torus modMulT32(Torus in1, Torus in2);
 
 int64_t modInverse(int64_t a, int64_t p);
 
@@ -66,6 +70,22 @@ bool isPrime(int num);
 void uniquePrimeFactors(std::vector<int>& result, int n);
 
 int sqrtFloor(int x);
+
+template<typename T, typename R>
+T modP(const T a, const R p) {
+    auto b = a % p;
+    if (b > p / 2 - 1) {
+        b -= p;
+    } else if (b < - p / 2) {
+        b += p;
+    }
+    return b;
+}
+
+template<typename T, typename R>
+T modMulQ(T in1, T in2, R q) {
+    return static_cast<T>(modP(static_cast<R>(in1) * static_cast<R>(in2), q));
+}
 
 template <typename T>
 void setCoeffsValue(vector<T> coeffs, T val) {

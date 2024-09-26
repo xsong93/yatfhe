@@ -28,6 +28,7 @@ const Integer INT_MAX_CRT = static_cast<Integer>(TORUS_Q / 2);
 const Integer INT_MIN_CRT = -INT_MAX_CRT;
 const Integer TORUS_MAX = INT_MAX_CRT;
 const Integer TORUS_MIN = INT_MIN_CRT;
+const uint64_t BARRETT_CONSTANT = UINT64_MAX / (uint64_t)TORUS_Q;  // μ = floor(2^64 / TORUS_Q)
 
 #else
 using Torus = int64_t;

@@ -59,9 +59,9 @@ TEST(ntt64_test, ntt64_test){
     Ntt64Polynomial a_ntt{N}, b_ntt{N}, mul_ntt{N};
     for (int i = 0; i < N; i++) {
         a.coeffs[i] = i - (N>>1);
-        b.coeffs[i] = i + (1<<30);
+        b.coeffs[i] = i + (1<<24);
     }
-    polynomialMulNaive(ref,a,b);
+    polynomialMulNaiveModQ(ref, a, b, 1l<<32);
     doNTT64(a_ntt,a,nwc_tw);
     doNTT64(b_ntt,b,nwc_tw);
     for (int i = 0; i < N; i++) {
@@ -158,8 +158,8 @@ TEST(MULT_TEST,single_test){
     uint64_t x = 0, y = 0;
     uint64_t res1 = 0, res2 = 0, res3 = 0;
 
-    x = 18446744069397807105;
-    y = 1099511627520;
+    x = 18446744069397807105ul;
+    y = 1099511627520ul;
     res1 = modMULT64(x,y);
     res2 = fastmm(x,y);
     res3 = fastmm_opt(x,y);

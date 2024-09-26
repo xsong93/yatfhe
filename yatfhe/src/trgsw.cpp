@@ -171,7 +171,7 @@ void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& t
                 auto& out = (col2 < k) ? output.a[col2] : output.b;
                 auto& curr2 = (col2 < k) ? trgswInput.trlweSamples[lvl][col].a[col2]
                                          : trgswInput.trlweSamples[lvl][col].b;
-                polynomialMulAccNaive(out, curr, curr2);
+                polynomialMulNaiveT32(out, curr, curr2);
             }
         }
     }

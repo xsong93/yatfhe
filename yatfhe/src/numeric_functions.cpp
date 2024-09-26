@@ -100,6 +100,33 @@ int64_t longModP(const int64_t a, const int64_t p) {
     return b;
 }
 
+// a * b = (k*a_hi + a_lo) * (k*b_hi + b_lo)
+// k = 2^32
+// https://stackoverflow.com/a/31662911/6553631
+uint64_t mulhi64(uint64_t a, uint64_t b) {
+    const uint64_t a_lo = static_cast<uint32_t>(a);
+    const uint64_t a_hi = a >> 32;
+    const uint64_t b_lo = static_cast<uint32_t>(b);
+    const uint64_t b_hi = b >> 32;
+
+    const uint64_t p0 = a_lo * b_lo;
+    const uint64_t p1 = a_lo * b_hi;
+    const uint64_t p2 = a_hi * b_lo;
+    const uint64_t p3 = a_hi * b_hi;
+
+    const uint32_t cy = ((p0 >> 32) + static_cast<uint32_t>(p1) + static_cast<uint32_t>(p2)) >> 32;
+
+    return p3 + (p1 >> 32) + (p2 >> 32) + cy;
+}
+
+int64_t barrettReduceT32(int64_t in) {
+    auto x = static_cast<uint64_t>(in < 0 ? -in : in);
+    uint64_t q = mulhi64(x, BARRETT_CONSTANT);
+    q = x - q * TORUS_Q;
+    q = (q >= TORUS_Q) ? q - TORUS_Q : q;
+    return in < 0 ? -static_cast<int64_t>(q) : static_cast<int64_t>(q);
+}
+
 Torus modAddT32(Torus in1, Torus in2) {
     auto tmp = static_cast<int64_t>(in1) + static_cast<int64_t>(in2);
     return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
@@ -108,6 +135,10 @@ Torus modAddT32(Torus in1, Torus in2) {
 Torus modSubT32(Torus in1, Torus in2) {
     auto tmp = static_cast<int64_t>(in1) - static_cast<int64_t>(in2);
     return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
+}
+
+Torus modMulT32(Torus in1, Torus in2) {
+    return static_cast<Torus>(longModP(static_cast<int64_t>(in1) * static_cast<int64_t>(in2), TORUS_Q));
 }
 
 // Multiplicative inverse modulo p

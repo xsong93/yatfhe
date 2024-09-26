@@ -49,7 +49,7 @@ void trlgswExternalProduct(Trlwe& output, const Trlgsw& trlgsw, Trlwe& trlweInpu
 //                    auto &out = (col2 < k) ? decomposedTrlweRes.rlwes[lvl2].a[col2] : decomposedTrlweRes.rlwes[lvl2].b;
 //                    auto &curr2 = (col2 < k) ? trlgsw.trgsws[lvl2].trlweSamples[lvl][col].a[col2]
 //                                             : trlgsw.trgsws[lvl2].trlweSamples[lvl][col].b;
-//                    polynomialMulAccNaive(out, curr, curr2);
+//                    polynomialMulAccNaiveI32(out, curr, curr2);
 //                }
 //            }
 //        }
@@ -62,7 +62,7 @@ void trlgswExternalProduct(Trlwe& output, const Trlgsw& trlgsw, Trlwe& trlweInpu
                     auto &out = (col2 < k) ? decomposedTrlweRes.rlwes[lvl2].a[col2] : decomposedTrlweRes.rlwes[lvl2].b;
                     auto &curr2 = (col2 < k) ? trlgsw.trgsws[lvl2].trlweSamples[lvl][col].a[col2]
                                              : trlgsw.trgsws[lvl2].trlweSamples[lvl][col].b;
-                    polynomialMulAccNaive(out, curr, curr2);
+                    polynomialMulNaiveT32(out, curr, curr2);
                 }
             }
         }

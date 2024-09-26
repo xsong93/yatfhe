@@ -11,14 +11,14 @@
 TEST(NttOldTest, NaiveArithTest) {
     const int N = 4;
 
-    TorusPolynomial poly0{N};
-    TorusPolynomial poly2{N};
-    TorusPolynomial resMul{N};
-    TorusPolynomial resAdd{N};
-    TorusPolynomial resSub{N};
-    TorusPolynomial navMul{N};
-    TorusPolynomial navAdd{N};
-    TorusPolynomial navSub{N};
+    IntPolynomial poly0{N};
+    IntPolynomial poly2{N};
+    IntPolynomial resMul{N};
+    IntPolynomial resAdd{N};
+    IntPolynomial resSub{N};
+    IntPolynomial navMul{N};
+    IntPolynomial navAdd{N};
+    IntPolynomial navSub{N};
     int t = 10;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
@@ -32,8 +32,8 @@ TEST(NttOldTest, NaiveArithTest) {
         printArray(navMul.coeffs, "navMul");
 
 
-//        polynomialAdd(navAdd, poly0, poly2);
-//        polynomialSub(navSub, poly0, poly2);
+//        polynomialAddI32(navAdd, poly0, poly2);
+//        polynomialSubI32(navSub, poly0, poly2);
 
 //        for (int i = 0; i < navMul.N; i++) {
 //            EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
@@ -53,14 +53,14 @@ TEST(NttOldTest, NttOldBasicArithTest) {
     LagrangePolynomial tmpAdd{N};
     LagrangePolynomial tmpSub{N};
 
-    TorusPolynomial poly0{N};
-    TorusPolynomial poly2{N};
-    TorusPolynomial resMul{N};
-    TorusPolynomial resAdd{N};
-    TorusPolynomial resSub{N};
-    TorusPolynomial navMul{N};
-    TorusPolynomial navAdd{N};
-    TorusPolynomial navSub{N};
+    IntPolynomial poly0{N};
+    IntPolynomial poly2{N};
+    IntPolynomial resMul{N};
+    IntPolynomial resAdd{N};
+    IntPolynomial resSub{N};
+    IntPolynomial navMul{N};
+    IntPolynomial navAdd{N};
+    IntPolynomial navSub{N};
     int t = 10;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
@@ -79,7 +79,7 @@ TEST(NttOldTest, NttOldBasicArithTest) {
             applyInttOld(resMul, tmpMul);
         })
         COUNT_TIME("NAIVE_MULT",
-            polynomialMulNaive(navMul, poly0, poly2);)
+                   polynomialMulNaiveModQ(navMul, poly0, poly2, 1l<<32);)
             for (int i = 0; i < a.N; i++) {
                 tmpAdd.coeffs[i] = modAddOld(a.coeffs[i], b.coeffs[i]);
                 tmpSub.coeffs[i] = modSubOld(a.coeffs[i], b.coeffs[i]);
@@ -87,8 +87,8 @@ TEST(NttOldTest, NttOldBasicArithTest) {
         applyInttOld(resAdd, tmpAdd);
         applyInttOld(resSub, tmpSub);
 
-        polynomialAdd(navAdd, poly0, poly2);
-        polynomialSub(navSub, poly0, poly2);
+        polynomialAddI32(navAdd, poly0, poly2);
+        polynomialSubI32(navSub, poly0, poly2);
 
         for (int i = 0; i < navMul.N; i++) {
             EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);

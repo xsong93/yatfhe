@@ -94,19 +94,19 @@ TEST(NttTest, NttBasicArithTest) {
     LagrangePolynomial tmpAdd{N};
     LagrangePolynomial tmpSub{N};
 
-    TorusPolynomial poly0{N};
-    TorusPolynomial poly2{N};
-    TorusPolynomial resMul{N};
-    TorusPolynomial resAdd{N};
-    TorusPolynomial resSub{N};
-    TorusPolynomial navMul{N};
-    TorusPolynomial navAdd{N};
-    TorusPolynomial navSub{N};
+    IntPolynomial poly0{N};
+    IntPolynomial poly2{N};
+    IntPolynomial resMul{N};
+    IntPolynomial resAdd{N};
+    IntPolynomial resSub{N};
+    IntPolynomial navMul{N};
+    IntPolynomial navAdd{N};
+    IntPolynomial navSub{N};
     int t = 1;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = genIntUniformDist(1 << 29, 1 << 29);
-            poly2.coeffs[j] = genIntUniformDist(1 << 29, 1 << 29);
+            poly0.coeffs[j] = genIntUniformDist(1 << 23, 1 << 23);
+            poly2.coeffs[j] = genIntUniformDist(1 << 23, 1 << 23);
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");
@@ -120,7 +120,7 @@ TEST(NttTest, NttBasicArithTest) {
             applyIntt(resMul, tmpMul);
         })
         COUNT_TIME("NAIVE_MULT",
-            polynomialMulNaive(navMul, poly0, poly2);)
+                   polynomialMulNaiveModQ(navMul, poly0, poly2, 1l<<32);)
             for (int i = 0; i < a.N; i++) {
                 tmpAdd.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
                 tmpSub.coeffs[i] = modSub(a.coeffs[i], b.coeffs[i]);
@@ -128,8 +128,8 @@ TEST(NttTest, NttBasicArithTest) {
         applyIntt(resAdd, tmpAdd);
         applyIntt(resSub, tmpSub);
 
-        polynomialAdd(navAdd, poly0, poly2);
-        polynomialSub(navSub, poly0, poly2);
+        polynomialAddI32(navAdd, poly0, poly2);
+        polynomialSubI32(navSub, poly0, poly2);
 
         printArray(resMul.coeffs, "resMul");
         printArray(navMul.coeffs, "navMul");
@@ -144,19 +144,19 @@ TEST(NttTest, NttBasicArithTest) {
 }
 
 TEST(NttTest, ConvolutionTest) {
-        COUNT_TIME("init timer", cout << endl;)
-        const int N = 512;
-        const int k = 1;
-        initGlobalParamsNtt64(N);
+    COUNT_TIME("init timer", cout << endl;)
+    const int N = 512;
+    const int k = 1;
+    initGlobalParamsNtt64(N);
 
-        vector<LagrangePolynomial> a(k, LagrangePolynomial(N));
-        vector<LagrangePolynomial> b(k, LagrangePolynomial(N));
-        LagrangePolynomial tmpMul{N};
+    vector<LagrangePolynomial> a(k, LagrangePolynomial(N));
+    vector<LagrangePolynomial> b(k, LagrangePolynomial(N));
+    LagrangePolynomial tmpMul{N};
 
-        vector<TorusPolynomial> poly0(k, TorusPolynomial(N));
-        vector<TorusPolynomial> poly2(k, TorusPolynomial(N));
-        TorusPolynomial resMul{N};
-        TorusPolynomial navMul{N};
+    vector<IntPolynomial> poly0(k, TorusPolynomial(N));
+    vector<IntPolynomial> poly2(k, TorusPolynomial(N));
+    IntPolynomial resMul{N};
+    IntPolynomial navMul{N};
     for (int t = 0; t < 10; ++t) {
         for (auto i = 0 ; i < k; i++) {
             for (auto j = 0; j < N; j++) {
@@ -178,7 +178,7 @@ TEST(NttTest, ConvolutionTest) {
             applyIntt(resMul, tmpMul);})
         COUNT_TIME("NAIVE_MULT",
                    for (auto i = 0 ; i < k; i++) {
-                       polynomialMulAccNaive(navMul, poly0[i], poly2[i]);
+                       polynomialMulAccNaiveI32(navMul, poly0[i], poly2[i]);
                    })
         printArray(resMul.coeffs, "resMul");
         printArray(navMul.coeffs, "navMul");
