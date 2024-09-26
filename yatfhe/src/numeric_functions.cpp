@@ -100,6 +100,16 @@ int64_t longModP(const int64_t a, const int64_t p) {
     return b;
 }
 
+Torus modAddT32(Torus in1, Torus in2) {
+    auto tmp = static_cast<int64_t>(in1) + static_cast<int64_t>(in2);
+    return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
+}
+
+Torus modSubT32(Torus in1, Torus in2) {
+    auto tmp = static_cast<int64_t>(in1) - static_cast<int64_t>(in2);
+    return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
+}
+
 // Multiplicative inverse modulo p
 int64_t modInverse(int64_t a, int64_t mod) {
     long m0 = mod, t, q;

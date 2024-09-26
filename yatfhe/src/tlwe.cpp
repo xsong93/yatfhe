@@ -20,7 +20,7 @@ void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key)
     for (auto i = 0; i < key.n; i++) {
         tlweSample.a[i] = uniformTorusDistrib(rng);
         if (key.s[i] != 0) {
-            tmp += + key.s[i] * static_cast<int64_t>(tlweSample.a[i]);
+            tmp += static_cast<int64_t>(tlweSample.a[i]) * key.s[i];
         }
     }
     tlweSample.b = addGaussianNoise(message, key.sigma) + static_cast<Torus>(longModP(tmp, TORUS_Q));
@@ -34,10 +34,8 @@ double symDecTlweSampleToDouble(Tlwe& in, const TlweKey& key, const int torusBas
             tmp += static_cast<int64_t>(in.a[i]) * key.s[i];
         }
     }
-    auto aXs = longModP(tmp, TORUS_Q);
-    int64_t tmp2 = static_cast<int64_t>(in.b) - aXs;
-    auto bMinusAxS = static_cast<Torus>(longModP(tmp2, TORUS_Q));
-    return roundError(torus32ToDouble(bMinusAxS), torusBase);
+    auto aXs = static_cast<Torus>(longModP(tmp, TORUS_Q));
+    return roundError(torus32ToDouble(modSubT32(in.b, aXs)), torusBase);
 }
 
 Torus symDecTlweSampleToTorus(Tlwe& in, const TlweKey& key, const int torusBase) {
@@ -47,9 +45,8 @@ Torus symDecTlweSampleToTorus(Tlwe& in, const TlweKey& key, const int torusBase)
             tmp += static_cast<int64_t>(in.a[i]) * key.s[i];
         }
     }
-    auto tmp2 = static_cast<int64_t>(in.b) - longModP(tmp, TORUS_Q);
-    auto bMinusAxS = static_cast<Torus>(longModP(tmp2, TORUS_Q));
-    return roundTorusError(bMinusAxS, torusBase);
+    auto aXs = static_cast<Torus>(longModP(tmp, TORUS_Q));
+    return roundTorusError(modSubT32(in.b, aXs), torusBase);
 }
 
 Integer symDecTlweSampleToInt(Tlwe& in, const TlweKey& key, const int torusBase) {
@@ -59,9 +56,8 @@ Integer symDecTlweSampleToInt(Tlwe& in, const TlweKey& key, const int torusBase)
             tmp += static_cast<int64_t>(in.a[i]) * key.s[i];
         }
     }
-    auto tmp2 = static_cast<int64_t>(in.b) - longModP(tmp, TORUS_Q);
-    auto bMinusAxS = static_cast<Torus>(longModP(tmp2, TORUS_Q));
-    return modSwitchFromTorus32(roundTorusError(bMinusAxS, torusBase), torusBase);
+    auto aXs = static_cast<Torus>(longModP(tmp, TORUS_Q));
+    return modSwitchFromTorus32(roundTorusError(modSubT32(in.b, aXs), torusBase), torusBase);
 }
 
 void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
@@ -73,34 +69,25 @@ void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
 }
 
 void lweAdd(Tlwe& output, const Tlwe& input1, const Tlwe& input2) {
-    int64_t tmp = 0;
     for (auto i = 0; i < output.n; i++) {
-        tmp = static_cast<int64_t>(input1.a[i]) + static_cast<int64_t>(input2.a[i]);
-        output.a[i] = static_cast<Torus>(longModP(tmp, TORUS_Q));
+        output.a[i] = modAddT32(input1.a[i], input2.a[i]);
     }
-    tmp = static_cast<int64_t>(input1.b) + static_cast<int64_t>(input2.b);
-    output.b = static_cast<Torus>(longModP(tmp, TORUS_Q));
+    output.b = modAddT32(input1.b, input2.b);
 }
 
 void lweSub(Tlwe& output, const Tlwe& input1, const Tlwe& input2) {
-    int64_t tmp = 0;
     for (auto i = 0; i < output.n; i++) {
-        tmp = static_cast<int64_t>(input1.a[i]) - static_cast<int64_t>(input2.a[i]);
-        output.a[i] = static_cast<Torus>(longModP(tmp, TORUS_Q));
+        output.a[i] = modSubT32(input1.a[i], input2.a[i]);
     }
-    tmp = static_cast<int64_t>(input1.b) - static_cast<int64_t>(input2.b);
-    output.b = static_cast<Torus>(longModP(tmp, TORUS_Q));
+    output.b = modSubT32(input1.b, input2.b);
 }
 
 // output -= input
 void lweSubTo(Tlwe& output, const Tlwe& input) {
-    int64_t tmp = 0;
     for (auto i = 0; i < output.n; i++) {
-        tmp = static_cast<int64_t>(output.a[i]) - static_cast<int64_t>(input.a[i]);
-        output.a[i] = static_cast<Torus>(longModP(tmp, TORUS_Q));
+        output.a[i] = modSubT32(output.a[i], input.a[i]);
     }
-    tmp = static_cast<int64_t>(output.b) - static_cast<int64_t>(input.b);
-    output.b = static_cast<Torus>(longModP(tmp, TORUS_Q));
+    output.b = modSubT32(output.b, input.b);
 }
 
 void tlweCopy(Tlwe& output, const Tlwe& input) {

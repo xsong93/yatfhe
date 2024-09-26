@@ -43,6 +43,10 @@ int intModP(int a, int p);
 
 int64_t longModP(int64_t a, int64_t p);
 
+Torus modAddT32(Torus in1, Torus in2);
+
+Torus modSubT32(Torus in1, Torus in2);
+
 int64_t modInverse(int64_t a, int64_t p);
 
 double torus32ToDouble(Torus in);
