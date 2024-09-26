@@ -43,12 +43,14 @@ void trgswAddInteger(Trgsw& trgsw, const Integer mu, const YatfheParameters& par
 
             // add to a_lii
             if (row < param.k) {
-                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
+//                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].a[row].coeffs[0], decomposedMu);
                 continue;
             }
 
             // add to b_lk
-            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
+//            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
+            trgsw.trlweSamples[lvl][row].b.coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].b.coeffs[0], decomposedMu);
         }
     }
 }
@@ -70,13 +72,15 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, cons
 
             // add to a_lii
             if (row < param.k) {
-                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
+//                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].a[row].coeffs[0], decomposedMu);
                 applyNtt(trgswDft.trlweDftSamples[lvl][row].a[row], trgsw.trlweSamples[lvl][row].a[row]);
                 continue;
             }
 
             // add to b_lk
-            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
+//            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
+            trgsw.trlweSamples[lvl][row].b.coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].b.coeffs[0], decomposedMu);
             applyNtt(trgswDft.trlweDftSamples[lvl][row].b , trgsw.trlweSamples[lvl][row].b);
         }
     }

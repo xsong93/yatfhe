@@ -1,7 +1,6 @@
 //
 // Created by Xintong Song on 2023/12/25.
 //
-#include <iostream>
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"
@@ -27,9 +26,9 @@ void validateRotator(int& aTrue, int& isWrap, const int a, const int N) {
     aTrue = (aTrue < N) ? aTrue : aTrue - N;
 }
 
-void intPolyToDoublePoly(DoublePolynomial& output, const IntPolynomial & input) {
+void intPolyToDoublePoly(DoublePolynomial& output, const IntPolynomial& input) {
     for (auto i = 0; i < output.N; i++) {
-        output.coeffs[i] = (double) input.coeffs[i];
+        output.coeffs[i] = static_cast<double>(input.coeffs[i]);
     }
 }
 
@@ -92,8 +91,10 @@ void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const Toru
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
+    Torus tmp = 0;
     for (auto i = 0; i < N; i++) {
-        out.coeffs[i] = ((i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap)) - input.coeffs[i];
+        tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
+        out.coeffs[i] = modSubT32(tmp, input.coeffs[i]);
     }
 }
 
@@ -101,8 +102,9 @@ void int8PolynomialRotate(Int8Polynomial& out, const int a, const Int8Polynomial
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
+    int8_t tmp = 0;
     for (size_t i = 0; i < N; i++) {
-        auto tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
+        tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
         out.coeffs[i] = static_cast<int8_t>(intModP(tmp, modP));
     }
 }
@@ -112,8 +114,9 @@ void int8PolynomialRotateMinusOne(Int8Polynomial& out, const int a, const Int8Po
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
     auto isWrapCasted = static_cast<int8_t>(isWrap);
+    int tmp = 0;
     for (size_t i = 0; i < N; i++) {
-        auto tmp = ((i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrapCasted) : (input.coeffs[i - aTrue] * isWrapCasted));
+        tmp = ((i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrapCasted) : (input.coeffs[i - aTrue] * isWrapCasted));
         out.coeffs[i] = static_cast<int8_t>(intModP(tmp - input.coeffs[i], modP));
     }
 }

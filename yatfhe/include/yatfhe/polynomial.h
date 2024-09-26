@@ -131,7 +131,7 @@ void polynomialAccumulateModP(PolyType& res, const PolyType& accum, const R p) {
     }
 }
 
-void intPolyToDoublePoly(DoublePolynomial& output, const IntPolynomial & input);
+void intPolyToDoublePoly(DoublePolynomial& output, const IntPolynomial& input);
 
 void torusPolyToDoublePoly(DoublePolynomial& output, const TorusPolynomial& input);
 
