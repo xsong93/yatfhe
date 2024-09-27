@@ -28,7 +28,7 @@ TEST(NttOldTest, NaiveArithTest) {
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");
 
-        polynomialMulNaiveModQ(navMul, poly0, poly2, 4294967296);
+        polynomialMulNaiveModQ(navMul, poly0, poly2, 1l << 32);
         printArray(navMul.coeffs, "navMul");
 
 

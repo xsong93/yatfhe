@@ -19,7 +19,7 @@ static const int64_t twoP32 = INT64_C(1) << 32; // 2^32
 
 int calLogBase2(int N);
 
-Integer genIntUniformDist(int lowerBound, int upperBound);
+Integer genIntUniformDist(Integer lowerBound, Integer upperBound);
 
 uint64_t genUInt64UniformDist(uint64_t lowerBound, uint64_t upperBound);
 

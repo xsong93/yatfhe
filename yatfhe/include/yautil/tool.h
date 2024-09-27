@@ -14,6 +14,15 @@
 using namespace std;
 
 template <typename T>
+void printElement(int index, const T& value) {
+    if constexpr (std::is_integral<T>::value) {
+        printf("%d:%s%d%s ", index, ANSI_COLOR_YELLOW, value, ANSI_COLOR_RESET);
+    } else if constexpr (std::is_floating_point<T>::value) {
+        printf("%d:%s%f%s ", index, ANSI_COLOR_YELLOW, value, ANSI_COLOR_RESET);
+    }
+}
+
+template <typename T>
 void printTlweAB(const T& in, const string& msg) {
     cout << msg << ": a: [";
     for (int i = 0; i < in.n; i++) {
@@ -39,7 +48,8 @@ void printArray(const vector<T>& in, const string& msg) {
     cout << msg <<": [";
     for (int i = 0; i < in.size(); i++) {
 //        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] << ANSI_COLOR_RESET <<" ";
-        printf("%d:%s%d%s ", i, ANSI_COLOR_YELLOW, in[i], ANSI_COLOR_RESET);
+//        printf("%d:%s%d%s ", i, ANSI_COLOR_YELLOW, in[i], ANSI_COLOR_RESET);
+        printElement(i, in[i]);
     }
     cout <<"]" <<endl << endl;
 }
@@ -49,7 +59,8 @@ void printArray(const T (&in)[N], const string& msg) {
     cout << msg <<": [";
     for (int i = 0; i < N; i++) {
 //        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] << ANSI_COLOR_RESET <<" ";
-        printf("%d:%s%d%s ", i, ANSI_COLOR_YELLOW, in[i], ANSI_COLOR_RESET);
+//        printf("%d:%s%d%s ", i, ANSI_COLOR_YELLOW, in[i], ANSI_COLOR_RESET);
+        printElement(i, in[i]);
     }
     cout <<"]" <<endl << endl;
 }

@@ -20,7 +20,7 @@ int calLogBase2(int N) {
     return res;
 }
 
-Integer genIntUniformDist(const int lowerBound, const int upperBound) {
+Integer genIntUniformDist(const Integer lowerBound, const Integer upperBound) {
     uniform_int_distribution<Integer> uniformIntDistrib(lowerBound, upperBound);
     return uniformIntDistrib(rng);
 }
@@ -34,11 +34,11 @@ uint64_t genUInt64UniformDist(const uint64_t lowerBound, const uint64_t upperBou
 Torus addGaussianNoise(Torus message, const double sigma) {
     normal_distribution<double> normalDistribution(0.0, sigma);
     Torus err = doubleToTorus32(normalDistribution(rng));
-    Torus tmp = message + err;
+    Torus tmp = modAddT32(message, err);
     if ((message > 0 && tmp < 0) || (message < 0 && tmp > 0)) { // handle overflow
         return message - err;
     }
-    return message + err;
+    return tmp;
 }
 
 /*
@@ -63,7 +63,6 @@ double torus32ToDouble(const Torus in) {
 double roundError(const double in, const int torusBase) {
     int mulP  = round(in * torusBase);
     int modP = mulP % torusBase;
-//    printf("yatfhe/src/numeric_functions.cpp@roundError. in: %f, mulP: %d, modP: %d\n", in, mulP, modP);
     return modP / double(torusBase);
 }
 
@@ -143,8 +142,8 @@ Torus modMulT32(Torus in1, Torus in2) {
 
 // Multiplicative inverse modulo p
 int64_t modInverse(int64_t a, int64_t mod) {
-    long m0 = mod, t, q;
-    long x0 = 0, x1 = 1;
+    int64_t m0 = mod, t, q;
+    int64_t x0 = 0, x1 = 1;
 
     if (mod == 1) {
         return 0;
