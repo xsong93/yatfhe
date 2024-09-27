@@ -2,7 +2,6 @@
 // Created by Xintong Song on 2024/3/8.
 //
 #include "yatfhe/gadget_decomposition.h"
-#include "yatfhe/numeric_functions.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/keyswitching.h"
@@ -44,9 +43,9 @@ void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& inp
         gadgetDecompose(aBar, input.a[i], param);
         for (auto j = 0; j < param.ksLevel; j++) {
             for (auto k = 0; k < output.n; k++) {
-                tmp.a[k] += aBar.value[j] * ksk.decomposedKsk[i][j].a[k] * aBar.sign;
+                tmp.a[k] = modAddT32(tmp.a[k], aBar.value[j] * ksk.decomposedKsk[i][j].a[k] * aBar.sign);
             }
-            tmp.b += aBar.value[j] * ksk.decomposedKsk[i][j].b * aBar.sign;
+            tmp.b = modAddT32(tmp.b, aBar.value[j] * ksk.decomposedKsk[i][j].b * aBar.sign);
         }
         lweSubTo(output, tmp);
     }

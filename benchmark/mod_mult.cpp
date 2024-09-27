@@ -91,4 +91,17 @@ int main() {
     })
 
     conv(param.N, param.k);
+
+    const int N = 1024;
+    IntPolynomial poly0{N};
+    IntPolynomial poly2{N};;
+    IntPolynomial navMul{N};
+    for (auto j = 0; j < N; j++) {
+        poly0.coeffs[j] = genIntUniformDist(1 << 26, 1<< 27);
+        poly2.coeffs[j] = genIntUniformDist(1 << 26, 1<< 27);
+    }
+    COUNT_TIME("NAIVE_MULT",
+               for (auto i = 0; i < 600; i++) { polynomialMulNaiveModQ(navMul, poly0, poly2, 1l<<32);})
+    COUNT_TIME("NAIVE_MULT32",
+               for (auto i = 0; i < 600; i++) { polynomialMulAccNaiveI32(navMul, poly0, poly2);})
 }

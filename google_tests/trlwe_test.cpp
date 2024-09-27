@@ -43,7 +43,7 @@ TEST(TrlweTest, TrlweEncDecSingleSampleTest) {
 }
 
 TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
-    YatfheParameters param = {};
+    YatfheParameters param{};
     yatfheInit(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
@@ -54,7 +54,7 @@ TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
     std::vector<Torus> in(param.N);
     for (auto i = 0; i < in.size(); i++) {
 //        plain[i] = (double) genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1) / param.torusBase;
-        plain[i] = genIntUniformDist(0, 1);
+        plain[i] = genIntUniformDist(-4, 3);
         in[i] = modSwitchToTorus32(plain[i], param.torusBase);
     }
     printArray(plain, "plain");
