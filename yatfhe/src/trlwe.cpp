@@ -28,7 +28,7 @@ void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
 
 void symEncTrlwe(Trlwe& trlwe, const TrlweKey& key) {
     for (auto i = 0; i < trlwe.k; i++) {
-        polynomialMulNaiveT32(trlwe.b, trlwe.a[i], key.s[i]);
+        polynomialMulAccNaiveT32(trlwe.b, trlwe.a[i], key.s[i]);
     }
 }
 
@@ -106,7 +106,7 @@ void symDecTrlweToIntNtt(IntPolynomial& output, const TrlweDft& trlweDft, const 
 
 void symDecTrlweWoRounding(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key) {
     for (auto i = 0; i < trlwe.k; i++) {
-        polynomialMulNaiveT32(output, trlwe.a[i], key.s[i]);
+        polynomialMulAccNaiveT32(output, trlwe.a[i], key.s[i]);
     }
     polynomialSubT32(output, trlwe.b, output);
 }
