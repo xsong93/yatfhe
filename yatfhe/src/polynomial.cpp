@@ -196,6 +196,22 @@ void polynomialMulAccNaiveT32(TorusPolynomial& res, const TorusPolynomial& poly1
     }
 }
 
+void polynomialMulAccNaiveT32b(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
+    const int N = res.N;
+    int64_t tmp;
+    for (auto i = 0; i < N; i++) {
+        tmp = 0;
+        for (auto j = 0; j < N; j++) {
+            if (j <= i) {
+                tmp += static_cast<int64_t>(poly1.coeffs[j]) * static_cast<int64_t>(poly2.coeffs[i - j]);
+            } else {
+                tmp -= static_cast<int64_t>(poly1.coeffs[j]) * static_cast<int64_t>(poly2.coeffs[N + i - j]);
+            }
+        }
+        res.coeffs[i] = static_cast<Torus>(longModP(res.coeffs[i] + tmp, TORUS_Q));
+    }
+}
+
 //// res += accum
 //void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum) {
 //    const int N = res.N;

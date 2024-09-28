@@ -72,7 +72,7 @@ void symDecTrlweToDouble(DoublePolynomial& output, const Trlwe& trlwe, const Trl
     TorusPolynomial tmp {output.N};
     TorusPolynomial innerProduct {output.N};
     for (auto i = 0; i < trlwe.k; i++) {
-        polynomialMulNaiveT32(innerProduct, trlwe.a[i], key.s[i]);
+        polynomialMulAccNaiveT32(innerProduct, trlwe.a[i], key.s[i]);
     }
     polynomialSubT32(tmp, trlwe.b, innerProduct);
     torusPolyToDoublePoly(output, tmp);

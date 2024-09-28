@@ -152,7 +152,7 @@ TEST(DecompositionTest, DecomposeTrlweTest) {
     symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
     Trlwe intt {param.k, param.N};
     applyInttForAB(intt, inDft);
-//    printTrlweAB(in, "in");
+    printTrlweAB(in, "in");
 //    printTrlweAB(intt, "intt");
 
     IntPolynomial dec2 {param.N};
@@ -160,20 +160,20 @@ TEST(DecompositionTest, DecomposeTrlweTest) {
     printArray(dec2.coeffs, "d2");
 
     // decompose
-    DecomposedTrlwe out {param, 4};
+    DecomposedTrlwe out {param, 2};
 //    DecomposedTrlweDft outDft {param, param.lDft}; // lDft > l, optimize?
-    gadgetDecomposeTrlwe(out, in, param);
+    gadgetDecomposeTrlwe(out, in2, param);
 //    gadgetDecomposeTrlweNtt(outDft, inDft, param);
 //    printDecomposedTrlweAB(out, "out");
 //    printDecomposedTrlweNttAB(outDft, "outNtt");
 
     // recompose original
     recomposeTrlwe(recomp, out, param);
-    printTrlweAB(in, "original");
+    printTrlweAB(in2, "original");
     printTrlweAB(recomp, "recomp");
     IntPolynomial dec1 {param.N};
-    symDecTrlweToInt(dec1, in, trlweKey, param.torusBase);
-    for (auto j = 0; j < in.b.N; j++) {
+    symDecTrlweToInt(dec1, in2, trlweKey, param.torusBase);
+    for (auto j = 0; j < in2.b.N; j++) {
         ASSERT_EQ(dec1.coeffs[j], plain);
     }
 

@@ -165,6 +165,8 @@ void polynomialMulAccNaiveI32(IntPolynomial& res, const IntPolynomial& poly1, co
 
 void polynomialMulAccNaiveT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
+void polynomialMulAccNaiveT32b(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
+
 //void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);
 
 void polynomialAddI32(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
