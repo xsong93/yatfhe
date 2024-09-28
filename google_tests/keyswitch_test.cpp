@@ -21,7 +21,7 @@ TEST(KSKTest, KSKTest) {
     TlweKey inKey(param.k * param.N, param.lweStdDev);
     convertTrlweKeyToTlweKey(inKey, trlweKey);
     param.torusBase = 1 << 8;
-    for (int i = - param.torusBase / 2 + 1; i < param.torusBase / 2; i++) {
+    for (int i = - param.torusBase / 2; i < param.torusBase / 2; i++) {
         Integer plainMsg = i;
         Torus mu = modSwitchToTorus32(plainMsg, param.torusBase);
         Tlwe input {param.N * param.k};

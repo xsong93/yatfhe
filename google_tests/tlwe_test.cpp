@@ -14,12 +14,13 @@ TEST(TlweTest, EncDecTest) {
     TlweKey tlweKey {param.n, param.lweStdDev};
     lweKeyGen(tlweKey);
 
-    int plain = genIntUniformDist(-4, 3);
+    int plain = genIntUniformDist(-param.torusBase/2, param.torusBase/2 - 1);
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
     Tlwe input {param.n};
     symEncTlweSample(input, mu, tlweKey);
 
     cout << "msg:" << intModP(plain, param.torusBase) << endl;
+    cout << "mu:" << mu << endl;
     cout << "decPre:" << symDecTlweSampleToInt(input, tlweKey, param.torusBase) << endl;
     ASSERT_EQ(intModP(plain, param.torusBase), symDecTlweSampleToInt(input, tlweKey, param.torusBase));
     printBanner("EncDecTest");

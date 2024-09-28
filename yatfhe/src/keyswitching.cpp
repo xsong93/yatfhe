@@ -36,6 +36,7 @@ void tlweKeySwitchingKeyGen(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
 void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param) {
     tlweCLear(output);
     output.b = input.b; // init output as (0,..., 0, b)
+    Torus mul = 0;
     for (auto i = 0; i < input.n; i++) {
         DecomposedData aBar {param.ksLevel};
         Tlwe tmp {output.n};
@@ -43,9 +44,11 @@ void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& inp
         gadgetDecompose(aBar, input.a[i], param);
         for (auto j = 0; j < param.ksLevel; j++) {
             for (auto k = 0; k < output.n; k++) {
-                tmp.a[k] = modAddT32(tmp.a[k], aBar.value[j] * ksk.decomposedKsk[i][j].a[k] * aBar.sign);
+                mul = modMulT32(aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].a[k]);
+                tmp.a[k] = modAddT32(tmp.a[k], mul);
             }
-            tmp.b = modAddT32(tmp.b, aBar.value[j] * ksk.decomposedKsk[i][j].b * aBar.sign);
+            mul = modMulT32(aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].b);
+            tmp.b = modAddT32(tmp.b, mul);
         }
         lweSubTo(output, tmp);
     }
