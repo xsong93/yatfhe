@@ -157,25 +157,25 @@ void modularMult(std::vector<uint64_t>& output, const std::vector<uint64_t>& coe
 }
 
 // b += a * s mod p
-void modularAccumulate(std::vector<uint64_t>& coeffsB, const std::vector<uint64_t>& coeffsA, const std::vector<uint64_t>& coeffsS) {
-    const auto N = coeffsB.size();
+void modularAccumulate(std::vector<uint64_t>& res, const std::vector<uint64_t>& in1, const std::vector<uint64_t>& in2) {
+    const auto N = res.size();
     Ntt64 tmp = 0;
     for (auto j = 0; j < N; j++) {
-        if (coeffsA[j] == 0 || coeffsS[j] == 0) {
+        if (in1[j] == 0 || in2[j] == 0) {
             continue;
         }
-        tmp = fastmm_opt(coeffsA[j], coeffsS[j]);
-        coeffsB[j] = modAdd(coeffsB[j], tmp);
+        tmp = fastmm_opt(in1[j], in2[j]);
+        res[j] = modAdd(res[j], tmp);
     }
 }
 
-// b = aN * sN
-void calModularInnerProductNtt(LagrangePolynomial& b, const vector<LagrangePolynomial>& a, const vector<LagrangePolynomial>& s) {
-    for (auto i = 0; i < a.size(); i++) {
-        modularAccumulate(b.coeffs, a[i].coeffs, s[i].coeffs);
+// res = aN * sN
+void calModularInnerProductNtt(LagrangePolynomial& res, const vector<LagrangePolynomial>& in1, const vector<LagrangePolynomial>& in2) {
+    for (auto i = 0; i < in1.size(); i++) {
+        modularAccumulate(res.coeffs, in1[i].coeffs, in2[i].coeffs);
     }
 }
 
-void calModularInnerProductNtt(LagrangePolynomial& b, const LagrangePolynomial& a, const LagrangePolynomial& s) {
-    modularAccumulate(b.coeffs, a.coeffs, s.coeffs);
+void calModularInnerProductNtt(LagrangePolynomial& res, const LagrangePolynomial& in1, const LagrangePolynomial& in2) {
+    modularAccumulate(res.coeffs, in1.coeffs, in2.coeffs);
 }

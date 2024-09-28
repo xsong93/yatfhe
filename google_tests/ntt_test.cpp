@@ -178,7 +178,7 @@ TEST(NttTest, ConvolutionTest) {
             applyIntt(resMul, tmpMul);})
         COUNT_TIME("NAIVE_MULT",
                    for (auto i = 0 ; i < k; i++) {
-                       polynomialMulNaiveT32(navMul, poly0[i], poly2[i]);
+                       polynomialMulAccNaiveT32(navMul, poly0[i], poly2[i]);
                    })
         printArray(resMul.coeffs, "resMul");
         printArray(navMul.coeffs, "navMul");

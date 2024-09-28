@@ -80,10 +80,10 @@ NttType modMul(NttType x, NttType y);
 
 void modularMult(std::vector<NttType>& output, const std::vector<NttType>& coeffsA, const std::vector<NttType>& coeffsB);
 
-void modularAccumulate(vector<NttType>& coeffsB, const vector<NttType>& coeffsA, const vector<NttType>& coeffsS);
+void modularAccumulate(vector<NttType>& res, const vector<NttType>& in1, const vector<NttType>& in2);
 
-void calModularInnerProductNtt(LagrangePolynomial& b, const vector<LagrangePolynomial>& a, const vector<LagrangePolynomial>& s);
+void calModularInnerProductNtt(LagrangePolynomial& res, const vector<LagrangePolynomial>& in1, const vector<LagrangePolynomial>& in2);
 
-void calModularInnerProductNtt(LagrangePolynomial& b, const LagrangePolynomial& a, const LagrangePolynomial& s);
+void calModularInnerProductNtt(LagrangePolynomial& res, const LagrangePolynomial& in1, const LagrangePolynomial& in2);
 
 #endif //HLS_YATFHE_NTT_H
