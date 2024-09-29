@@ -105,8 +105,8 @@ TEST(NttTest, NttBasicArithTest) {
     int t = 1;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = genIntUniformDist(1 << 23, 1 << 23);
-            poly2.coeffs[j] = genIntUniformDist(1 << 23, 1 << 23);
+            poly0.coeffs[j] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
+            poly2.coeffs[j] = genIntUniformDist(1, 1);
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");
@@ -120,7 +120,7 @@ TEST(NttTest, NttBasicArithTest) {
             applyIntt(resMul, tmpMul);
         })
         COUNT_TIME("NAIVE_MULT",
-                   polynomialMulNaiveModQ(navMul, poly0, poly2, 1l<<32);)
+                   polynomialMulNaiveModQ(navMul, poly0, poly2, POLY_Q);)
             for (int i = 0; i < a.N; i++) {
                 tmpAdd.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
                 tmpSub.coeffs[i] = modSub(a.coeffs[i], b.coeffs[i]);
@@ -140,7 +140,7 @@ TEST(NttTest, NttBasicArithTest) {
 //            EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
         }
     }
-    printBanner("NttSamePoly");
+    printBanner("NttBasicArithTest");
 }
 
 TEST(NttTest, ConvolutionTest) {
@@ -178,16 +178,16 @@ TEST(NttTest, ConvolutionTest) {
             applyIntt(resMul, tmpMul);})
         COUNT_TIME("NAIVE_MULT",
                    for (auto i = 0 ; i < k; i++) {
-                       polynomialMulAccNaiveT32(navMul, poly0[i], poly2[i]);
+                       polynomialMulAccNaiveI32(navMul, poly0[i], poly2[i]);
                    })
         printArray(resMul.coeffs, "resMul");
         printArray(navMul.coeffs, "navMul");
 
         for (int i = 0; i < navMul.N; i++) {
-//            if (resMul.coeffs[i] != navMul.coeffs[i]){
-//                cout<<"error at:"<<i<<endl;
-//            }
-//            EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
+            if (resMul.coeffs[i] != navMul.coeffs[i]){
+                cout<<"error at:"<<i<<endl;
+            }
+            EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
         }
     }
 

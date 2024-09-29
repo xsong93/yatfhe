@@ -10,6 +10,7 @@
 #include "numeric_functions.h"
 
 constexpr uint32_t POLY_MAX = 1 << 31;
+constexpr uint64_t POLY_Q = 1l << 32;
 const string STR_NTT = "NWC-DIT-NR-NNT";
 const string STR_INTT = "NWC-DIF-RN-INNT";
 using namespace std;
