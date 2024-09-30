@@ -24,11 +24,8 @@ using Binary = Integer;
 const Integer QD_CRT[4] {251, 241, 239, 233};
 //const uint64_t TORUS_Q = INT64_C(1) << 32;
 const int64_t TORUS_Q {static_cast<int64_t>(QD_CRT[0]) * QD_CRT[1] * QD_CRT[2] * QD_CRT[3]};
-const int64_t POS_HALF_TORUS_Q = (TORUS_Q -1)>>1;
-const int64_t NEG_HALF_TORUS_Q = -((TORUS_Q - 1)>>1);
-//const int64_t TORUS_Q_RANGE = (TORUS_Q + 1);
-const Integer INT_MAX_CRT = static_cast<Integer>(TORUS_Q / 2);
-const Integer INT_MIN_CRT = -INT_MAX_CRT;
+const Integer INT_MAX_CRT = static_cast<Integer>((TORUS_Q - 1) >> 1);
+const Integer INT_MIN_CRT = static_cast<Integer>(-(TORUS_Q >> 1));
 const Integer TORUS_MAX = INT_MAX_CRT;
 const Integer TORUS_MIN = INT_MIN_CRT;
 const uint64_t BARRETT_CONSTANT = UINT64_MAX / (uint64_t)TORUS_Q;  // μ = floor(2^64 / TORUS_Q)

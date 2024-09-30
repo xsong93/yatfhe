@@ -89,13 +89,13 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
     auto N = in.N;
     LagrangePolynomial res(N);
     DIFRNLaPoly(res, in);
-    vector<int64_t> temp_ntt(N);
-    vector<int64_t> temp_poly(N);
+    int64_t temp_ntt;
+    int64_t temp_poly;
     for (int i = 0; i < N; i++) {
         if (res.coeffs[i] >= HALF_MOD64) {
-            temp_ntt[i] = int64_t(res.coeffs[i] - MOD64);
+            temp_ntt = int64_t(res.coeffs[i] - MOD64);
         } else {
-            temp_ntt[i] = int64_t(res.coeffs[i]);
+            temp_ntt = int64_t(res.coeffs[i]);
         }
 //        temp_poly[i] = uint32_t(temp_ntt[i] & NTT64_MASK);
 //        temp_poly = uint32_t(res.coeffs[i] & NTT64_MASK);
@@ -106,13 +106,13 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
 //            out.coeffs[i] = int32_t(temp_poly[i]);
 //        }
 //    }
-            temp_poly[i] = temp_ntt[i] % TORUS_Q;
-            if (temp_poly[i]  < NEG_HALF_TORUS_Q) {
-                out.coeffs[i] = int32_t(temp_poly[i] + TORUS_Q);
-            } else if (temp_poly[i] > POS_HALF_TORUS_Q){
-                out.coeffs[i] = int32_t(temp_poly[i] - TORUS_Q);
+            temp_poly = temp_ntt % TORUS_Q;
+            if (temp_poly  < TORUS_MIN) {
+                out.coeffs[i] = int32_t(temp_poly + TORUS_Q);
+            } else if (temp_poly > TORUS_MAX){
+                out.coeffs[i] = int32_t(temp_poly - TORUS_Q);
             } else {
-                out.coeffs[i] = int32_t(temp_poly[i]);
+                out.coeffs[i] = int32_t(temp_poly);
         }
     }
 
