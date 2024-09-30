@@ -69,15 +69,13 @@ void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>
 
         // Calculate the low part contribution
         int lowSum = 0;
-        for (int u = 0; u < lowModuli.size(); ++u) {
-            int q_u = lowModuli[u];
-            int inv = static_cast<int>(modInverse(Qlow / q_u, q_u));
-            lowSum += Qlow / q_u * intModP(inv * intModP(fi, q_u), q_u);
+        for (int q_u : lowModuli) {
+            long inv = modInverse(Qlow / q_u, q_u);
+            lowSum += Qlow / q_u * static_cast<int32_t>(longModP(inv * fi, q_u));
         }
-
         // Calculate f for high moduli
         for (auto j = 0; j < f.size(); j++) {
-            f[j][i] = (int8_t) intModP(fi - lowSum, highModuli[j]);
+            f[j][i] =  static_cast<int8_t >(intModP(fi - lowSum, highModuli[j]));
         }
     }
 }
@@ -101,13 +99,13 @@ int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfhePar
 }
 
 void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param) {
-    int lowSumsA[param.k][param.N];
-    int lowSumsB[param.N];
+    int32_t lowSumsA[param.k][param.N];
+    int32_t lowSumsB[param.N];
     for (size_t k = 0; k < param.k; k++) {
         for (size_t j = 0; j < param.N; j++) {
             lowSumsA[k][j] = 0;
             for (size_t u = 0; u < param.dl; u++) {
-                auto& aLo = aux[u + param.dh].a[k].coeffs[j];
+                auto aLo = aux[u + param.dh].a[k].coeffs[j];
                 lowSumsA[k][j] += param.qLowDivQl[u] * aLo;
             }
         }
@@ -115,25 +113,25 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, 
     for (size_t j = 0; j < param.N; j++) {
         lowSumsB[j] = 0;
         for (size_t u = 0; u < param.dl; u++) {
-            auto& bLo = aux[u + param.dh].b.coeffs[j];
+            auto bLo = aux[u + param.dh].b.coeffs[j];
             lowSumsB[j] += param.qLowDivQl[u] * bLo;
         }
     }
     for (size_t i = 0; i < param.dh; i++) {
-        auto& qHi = param.qh[i];
+        auto qHi = param.qh[i];
         auto& outA = out[i].a;
         auto& inA = aux[i].a;
         for (size_t k = 0; k < param.k; k++) {
             auto& coeffAOut = outA[k].coeffs;
             auto& coeffAHi = inA[k].coeffs;
             for (size_t j = 0; j < param.N; j++) {
-                coeffAOut[j] = static_cast<int8_t>(intModP(coeffAHi[j] - lowSumsA[k][j], qHi));
+                coeffAOut[j] = static_cast<int8_t>(intModP(static_cast<int32_t>(coeffAHi[j]) - lowSumsA[k][j], qHi));
             }
         }
         auto& coeffBHi = aux[i].b.coeffs;
         auto& coeffBOut = out[i].b.coeffs;
         for (size_t j = 0; j < param.N; j++) {
-            coeffBOut[j] = static_cast<int8_t>(intModP(coeffBHi[j] - lowSumsB[j], qHi));
+            coeffBOut[j] = static_cast<int8_t>(intModP(static_cast<int32_t>(coeffBHi[j]) - lowSumsB[j], qHi));
         }
     }
 }
@@ -150,14 +148,14 @@ void broadcastCRT(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe
                 auto& coeffInA = inA[k].coeffs;
                 auto& coeffOutA = outA[k].coeffs;
                 for (size_t j = 0; j < param.N; j++) {
-                    auto& valA = coeffInA[j];
+                    auto valA = coeffInA[j];
                     coeffOutA[j] = (valA >= qdHalf || valA < -qdHalf) ? static_cast<int8_t>(intModP(valA, qd)) : valA;
                 }
             }
             auto& inB = in[dh].b;
             auto& outB = out[d][dh].b;
             for (size_t j = 0; j < param.N; j++) {
-                auto& valB = inB.coeffs[j];
+                auto valB = inB.coeffs[j];
                 outB.coeffs[j] = (valB >= qdHalf || valB < -qdHalf) ? static_cast<int8_t>(intModP(valB, qd)) : valB;
             }
         }
