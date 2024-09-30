@@ -1,14 +1,9 @@
 //
 // Created by Xintong Song on 2024/3/15.
 //
-#include <iostream>
 #include <vector>
-#include <numeric>
-#include "yatfhe/torus.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/gadget_decomposition.h"
-#include "yatfhe/ntt.h"
-#include "yautil/tool.h"
 
 using namespace std;
 
