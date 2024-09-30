@@ -86,7 +86,7 @@ TEST(NttTest, NttAddConstantTest) {
 
 TEST(NttTest, NttBasicArithTest) {
     COUNT_TIME("init timer", cout << endl;)
-    const int N = 64;
+    const int N = 1024;
     initGlobalParamsNtt64(N);
     LagrangePolynomial a{N};
     LagrangePolynomial b{N};
@@ -102,11 +102,11 @@ TEST(NttTest, NttBasicArithTest) {
     IntPolynomial navMul{N};
     IntPolynomial navAdd{N};
     IntPolynomial navSub{N};
-    int t = 1;
+    int t = 10;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
-            poly2.coeffs[j] = genIntUniformDist(1, 1);
+            poly0.coeffs[j] = genIntUniformDist(1 <<12, 1 << 24);
+            poly2.coeffs[j] = genIntUniformDist(1<<12, 1<<24);
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");
@@ -120,7 +120,7 @@ TEST(NttTest, NttBasicArithTest) {
             applyIntt(resMul, tmpMul);
         })
         COUNT_TIME("NAIVE_MULT",
-                   polynomialMulNaiveModQ(navMul, poly0, poly2, POLY_Q);)
+                   polynomialMulNaiveModQ(navMul, poly0, poly2, TORUS_Q);)
             for (int i = 0; i < a.N; i++) {
                 tmpAdd.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
                 tmpSub.coeffs[i] = modSub(a.coeffs[i], b.coeffs[i]);

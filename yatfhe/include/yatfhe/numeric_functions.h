@@ -74,9 +74,9 @@ int sqrtFloor(int x);
 template<typename T, typename R>
 T modP(const T a, const R p) {
     auto b = a % p;
-    if (b > p / 2 - 1) {
+    if (b > (p - 1) / 2 ) {
         b -= p;
-    } else if (b < - p / 2) {
+    } else if (b < - ((p+1) / 2)) {
         b += p;
     }
     return b;

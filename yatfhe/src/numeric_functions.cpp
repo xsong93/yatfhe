@@ -91,9 +91,9 @@ int intModP(const int a, const int p) {
 
 int64_t longModP(const int64_t a, const int64_t p) {
     auto b = a % p;
-    if (b > p / 2 - 1) {
+    if (b > (p- 1) / 2 ) {
         b -= p;
-    } else if (b < - p / 2) {
+    } else if (b < - ((p+1) / 2)) {
         b += p;
     }
     return b;

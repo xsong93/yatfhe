@@ -4,6 +4,7 @@
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt64.h"
 #include "yatfhe/numeric_functions.h"
+#include "torus.h"
 #include "yautil/tool.h"
 
 using namespace std;
@@ -89,21 +90,32 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
     LagrangePolynomial res(N);
     DIFRNLaPoly(res, in);
     vector<int64_t> temp_ntt(N);
-    vector<uint32_t> temp_poly(N);
+    vector<int64_t> temp_poly(N);
     for (int i = 0; i < N; i++) {
         if (res.coeffs[i] >= HALF_MOD64) {
             temp_ntt[i] = int64_t(res.coeffs[i] - MOD64);
         } else {
             temp_ntt[i] = int64_t(res.coeffs[i]);
         }
-        temp_poly[i] = uint32_t(temp_ntt[i] & NTT64_MASK);
+//        temp_poly[i] = uint32_t(temp_ntt[i] & NTT64_MASK);
 //        temp_poly = uint32_t(res.coeffs[i] & NTT64_MASK);
-        if (temp_poly[i] >= POLY_MAX) {
-            out.coeffs[i] = int32_t(temp_poly[i] - POLY_Q);
-        } else {
-            out.coeffs[i] = int32_t(temp_poly[i]);
+
+//        if (temp_poly[i] >= POLY_MAX) {
+//            out.coeffs[i] = int32_t(temp_poly[i] - POLY_Q);
+//        } else {
+//            out.coeffs[i] = int32_t(temp_poly[i]);
+//        }
+//    }
+            temp_poly[i] = temp_ntt[i] % TORUS_Q;
+            if (temp_poly[i]  < NEG_HALF_TORUS_Q) {
+                out.coeffs[i] = int32_t(temp_poly[i] + TORUS_Q);
+            } else if (temp_poly[i] > POS_HALF_TORUS_Q){
+                out.coeffs[i] = int32_t(temp_poly[i] - TORUS_Q);
+            } else {
+                out.coeffs[i] = int32_t(temp_poly[i]);
         }
     }
+
 }
 
 void bitRevShuffle(std::vector<NttType>& x) {
