@@ -15,7 +15,6 @@ extern random_device rd;
 extern mt19937 rng;
 extern uniform_int_distribution<Binary> binaryDistrib;
 extern uniform_int_distribution<Torus> uniformTorusDistrib;
-static const int64_t twoP32 = INT64_C(1) << 32; // 2^32
 
 int calLogBase2(int N);
 
