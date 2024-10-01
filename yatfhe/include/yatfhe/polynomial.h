@@ -116,18 +116,26 @@ struct Ntt64Polynomial {
 
 // res += accum
 template<typename PolyType>
-void polynomialAccumulate(PolyType& res, const PolyType& accum) {
+void polynomialAccumulateI32(PolyType& res, const PolyType& accum) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
         res.coeffs[i] += accum.coeffs[i];
     }
 }
 
-template<typename PolyType, typename R>
-void polynomialAccumulateModP(PolyType& res, const PolyType& accum, const R p) {
+template<typename PolyType>
+void polynomialAccumulateT32(PolyType& res, const PolyType& accum) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
-        res.coeffs[i] = static_cast<R>(longModP(res.coeffs[i] + accum.coeffs[i], p));
+        res.coeffs[i] = modAddT32(res.coeffs[i], accum.coeffs[i]);
+    }
+}
+
+template<typename PolyType, typename U>
+void polynomialAccumulateModP(PolyType& res, const PolyType& accum, const U p) {
+    const int N = res.N;
+    for (int i = 0; i < N; i++) {
+        res.coeffs[i] = longModP(static_cast<int64_t>(res.coeffs[i]) + static_cast<int64_t>(accum.coeffs[i]), p);
     }
 }
 
@@ -167,7 +175,7 @@ void polynomialMulAccNaiveT32(TorusPolynomial& res, const TorusPolynomial& poly1
 
 void polynomialMulAccNaiveT32b(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
-//void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum);
+//void polynomialAccumulateI32(TorusPolynomial& res, const TorusPolynomial& accum);
 
 void polynomialAddI32(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
 

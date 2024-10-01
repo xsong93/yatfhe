@@ -166,11 +166,11 @@ void trlweSubNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input
 ///**
 // * accum.a += tlwe.a, accum.b += tlwe.b
 // * */
-//void trlweAccumulate(Trlwe& accum, const Trlwe& tlwe) {
+//void trlweAccumulateI32(Trlwe& accum, const Trlwe& tlwe) {
 //    for (auto i = 0; i < accum.a.size(); i++) {
-//        polynomialAccumulate(accum.a[i], tlwe.a[i]);
+//        polynomialAccumulateI32(accum.a[i], tlwe.a[i]);
 //    }
-//    polynomialAccumulate(accum.b, tlwe.b);
+//    polynomialAccumulateI32(accum.b, tlwe.b);
 //}
 
 // G^-1 * Trlwe = DecomposedTrlwe

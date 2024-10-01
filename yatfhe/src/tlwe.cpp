@@ -63,9 +63,9 @@ Integer symDecTlweSampleToInt(Tlwe& in, const TlweKey& key, const int torusBase)
 
 void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
     const auto newMod = output.mod;
-    output.b = static_cast<int32_t>(modSwitchFromTorus32Pos(input.b, newMod));
+    output.b = static_cast<int32_t>(modSwitchFromTorus32(input.b, newMod));
     for (auto i = 0; i < input.n; i++) {
-        output.a[i] = static_cast<int32_t>(modSwitchFromTorus32Pos(input.a[i], newMod));
+        output.a[i] = static_cast<int32_t>(modSwitchFromTorus32(input.a[i], newMod));
     }
 }
 

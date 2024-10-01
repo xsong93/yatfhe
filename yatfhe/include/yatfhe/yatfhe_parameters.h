@@ -28,7 +28,7 @@ struct YatfheParameters {
     int dftBits {64};
     double lweStdDev {2.98023e-15}; // 2^-15
     // RLWE params
-    int driftPhase {N / torusBase};
+    int driftPhase {N / torusBase / 2};
     double rlweStdDev {2.98023223876953e-25}; // 2^-25
     // RGSW params
     int l2 {4}; // todo

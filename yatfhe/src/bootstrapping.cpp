@@ -5,9 +5,6 @@
 #include "yatfhe/bootstrapping.h"
 #include "yatfhe/keyswitching.h"
 #include "yatfhe/ntt.h"
-#include "yatfhe/crt.h"
-#include "yatfhe/ntt14.h"
-#include "yatfhe/ntt24.h"
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
@@ -113,7 +110,7 @@ void controlMux(Trlwe& res, const Trlwe& input, const int aBarI, const Trgsw& bs
     Trlwe tmp {param.k, param.N};
     trlweRotateMinusOne(tmp, input, aBarI); // res = c1 - c0 = X^aBarI * input - input
     trgswExternalProduct(res, bskI, tmp, param); // res *= bskI
-    trlweAccumulate(res, input); // res += input
+    trlweAccumulateT32(res, input); // res += input
 }
 
 // res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input
@@ -121,7 +118,7 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
     Trlwe tmp {param.k, param.N};
     trlweRotateMinusOne(tmp, input, aBarI); // res = c1 - c0 = X^aBarI * input - input
     trgswExternalProductNtt(res, bskI, tmp, param); // res *= bskI
-    trlweAccumulate(res, input); // res += input
+    trlweAccumulateT32(res, input); // res += input
 }
 
 void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param) {
@@ -134,7 +131,7 @@ void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, 
     trgswExternalProductCRT(res, bskCRT, tmp, param); // res *= bskI
 
     for (size_t i = 0; i < param.d; i++) {
-        trlweAccumulateModP(res[i], inputs[i], static_cast<int8_t>(param.qd[i])); // res += input
+        trlweAccumulateModP(res[i], inputs[i], param.qd[i]); // res += input
     }
 }
 

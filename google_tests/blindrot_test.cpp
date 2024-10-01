@@ -39,12 +39,13 @@ TEST(BlindRot, BlindRot) {
     // pre dec
     IntPolynomial decIn {param.N};
     symDecTrlweToInt(decIn, in2, trlweKey, param.torusBase);
+    printArray(plain.coeffs, "plain");
     printArray(decIn.coeffs, "decIn");
 
     // rots gen
     ScaledTlwe sTlwe {param.N * 2, param.n};
     for (auto i = 0 ; i < sTlwe.n; i++) {
-        sTlwe.a[i] = genIntUniformDist(INT32_MIN, INT32_MAX);
+        sTlwe.a[i] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
     }
 
     // test data gen
@@ -56,6 +57,7 @@ TEST(BlindRot, BlindRot) {
             rot += sTlwe.a[i];
         }
     }
+    cout << "rot:" << rot << endl;
     trlweRotate(rotIn, in2, rot);
     symDecTrlweToInt(rotInP, rotIn, trlweKey, param.torusBase);
     printArray(rotInP.coeffs, "expect");
@@ -76,8 +78,8 @@ TEST(BlindRot, BlindRot) {
 
 TEST(BlindRot, BlindRotLut) {
     YatfheParameters param {};
-//    param.n = 64;
-//    param.torusBase = 512;
+//    param.n = 8;
+//    param.torusBase = 64;
     yatfheInit(param);
 
     // key gen
@@ -100,10 +102,14 @@ TEST(BlindRot, BlindRotLut) {
     auto decPre = symDecTlweSampleToInt(tlwe, tlweKey, param.torusBase);
     cout << "decPre: " << decPre << endl;
     ScaledTlwe sTlwe {param.N * 2, param.n};
+    printTlweAB(tlwe, "tlwe");
     rescaleTlweFromTorus32(sTlwe, tlwe);
+    printTlweAB(sTlwe, "sTlwe");
+    printArray(tlweKey.s, "s");
 
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
+    printArray(v.coeffs, "v");
     Trlwe in2 {param.k, param.N};
     genNoiselessTrlweSample(in2, v, sTlwe);
     printTrlweAB(in2, "input");
@@ -132,27 +138,12 @@ TEST(BlindRot, BlindRotLut) {
     // ks
     Tlwe tmp {ksk.nCurrKey};
     Tlwe tlweKs {ksk.nCurrKey};
-    extractTlweFromTrlwe(tmp, in2, 0);
+    extractTlweFromTrlwe(tmp, in2, param.driftPhase);
     tlweKeySwitch(tlweKs, ksk, tmp, param);
 
     // tlwe dec
     auto out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
     cout << "out: " << out << endl;
-//
-//    extractTlweFromTrlwe(tmp, in2, 1);
-//    tlweKeySwitch(tlweKs, ksk, tmp, param);
-//    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
-//    cout << "out: " << out << endl;
-//
-//    extractTlweFromTrlwe(tmp, in2, 2);
-//    tlweKeySwitch(tlweKs, ksk, tmp, param);
-//    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
-//    cout << "out: " << out << endl;
-//
-//    extractTlweFromTrlwe(tmp, in2, 3);
-//    tlweKeySwitch(tlweKs, ksk, tmp, param);
-//    out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
-//    cout << "out: " << out << endl;
 
     //verify
     for (auto i = 0; i < decP.N; i++) {

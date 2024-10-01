@@ -213,7 +213,7 @@ void polynomialMulAccNaiveT32b(TorusPolynomial& res, const TorusPolynomial& poly
 }
 
 //// res += accum
-//void polynomialAccumulate(TorusPolynomial& res, const TorusPolynomial& accum) {
+//void polynomialAccumulateI32(TorusPolynomial& res, const TorusPolynomial& accum) {
 //    const int N = res.N;
 //    for (int i = 0; i < N; i++) {
 //        res.coeffs[i] += accum.coeffs[i];

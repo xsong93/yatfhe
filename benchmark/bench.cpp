@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     COUNT_TIME("bootstrappingKeyGen", bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);)
     COUNT_TIME("tlweKeySwitchingKeyGen", tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);)
 
-    Integer plain = 2;
+    Integer plain = 3;
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
@@ -47,7 +47,8 @@ int main(int argc, char **argv) {
     COUNT_TIME("rescaleTlweFromTorus32", rescaleTlweFromTorus32(inputModN2, input);) // rescale to mod 2N
     COUNT_TIME("genNoiselessTrlweSample", genNoiselessTrlweSample(accum, v, inputModN2);) // accum = (X^-b) * (0,...,0,v)
     COUNT_TIME("blindRotateNtt", blindRotateNtt(accum, bsKey, inputModN2, param);)
-    COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, accum, 0);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+//    COUNT_TIME("blindRotate", blindRotate(accum, bsKey, inputModN2, param);)
+    COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, accum, param.driftPhase);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     COUNT_TIME("tlweKeySwitch", tlweKeySwitch(output, ksKey, tmp, param);)
 
     auto decAft = symDecTlweSampleToInt(output, tlweKey, param.torusBase);
