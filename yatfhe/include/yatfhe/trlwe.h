@@ -193,7 +193,7 @@ void trlweAccumulateModP(TrlweType& accum, const TrlweType& tlwe, const U p) {
     polynomialAccumulateModP(accum.b, tlwe.b, p);
 }
 
-template<typename TrlweTypeA, typename TrlweTypeB, typename DataType>
+template<typename TrlweTypeA, typename TrlweTypeB>
 void trlweCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
         auto& qd = param.qd[d];
@@ -205,13 +205,13 @@ void trlweCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const Ya
             auto& coeffOutA = outA[k].coeffs;
             auto& coeffInA = inA[k].coeffs;
             for (size_t j = 0; j < param.N; j++) {
-                coeffOutA[j] = static_cast<DataType>(longModP(coeffInA[j], qd));
+                coeffOutA[j] = longModP(coeffInA[j], qd);
             }
         }
         auto& coeffOutB = outB.coeffs;
         auto& coeffInB = inB.coeffs;
         for (size_t j = 0; j < param.N; j++) {
-            coeffOutB[j] = static_cast<DataType>(longModP(coeffInB[j], qd));
+            coeffOutB[j] = longModP(coeffInB[j], qd);
         }
     }
 }

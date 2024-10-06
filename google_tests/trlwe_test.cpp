@@ -73,6 +73,37 @@ TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
     printBanner("TrlweEncDecMultiSampleTest");
 }
 
+TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
+    YatfheParameters param{};
+    yatfheInit(param);
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    Trlwe trlwe {param.k, param.N};
+    TrlweDft trlweDft {param.k, param.N};
+    trlweKeyGen(trlweKey);
+
+    std::vector<int> plain(param.N);
+    std::vector<Torus> in(param.N);
+    for (auto i = 0; i < in.size(); i++) {
+//        plain[i] = (double) genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1) / param.torusBase;
+        plain[i] = genIntUniformDist(-4, 3);
+        in[i] = modSwitchToTorus32(plain[i], param.torusBase);
+    }
+
+    std::vector<Trlwe8> trlweDecomp(param.d, Trlwe8{param.k, param.N});
+    Trlwe trlweRecomp {param.k, param.N};
+    symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
+    printTrlweAB(trlwe, "trlwe");
+    trlweCRTDecomp(trlweDecomp, trlwe, param);
+    trlweCRTRecomp(trlweRecomp, trlweDecomp, param);
+    printTrlweAB(trlweRecomp, "trlweRecomp");
+
+    for (auto i = 0; i < param.k; i++) {
+        ASSERT_EQ(trlweRecomp.a[i].coeffs, trlwe.a[i].coeffs);
+    }
+    ASSERT_EQ(trlweRecomp.b.coeffs, trlwe.b.coeffs);
+    printBanner("TRLWE_CRT_COMPOSITION");
+}
+
 TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
     YatfheParameters param {};
 //    param.torusBase = 1 << 28;
