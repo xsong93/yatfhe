@@ -55,6 +55,17 @@ struct Trlwe8 {
             k(k) {};
 };
 
+struct Trlwe8D {
+    std::vector<Int8PolynomialD> a; // k
+    Int8PolynomialD b; // 1
+    int k;
+
+    Trlwe8D(int k, int N, int d) :
+            a(k, Int8PolynomialD(N, d)),
+            b(Int8PolynomialD(N, d)),
+            k(k) {};
+};
+
 struct TrlweDft{
     std::vector<LagrangePolynomial> a; // k
     LagrangePolynomial b; // 1
@@ -196,7 +207,7 @@ void trlweAccumulateModP(TrlweType& accum, const TrlweType& tlwe, const U p) {
 template<typename TrlweTypeA, typename TrlweTypeB>
 void trlweCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
-        auto& qd = param.qd[d];
+        auto qd = param.qd[d];
         auto& outA = out[d].a;
         auto& outB = out[d].b;
         auto& inA = in.a;
@@ -217,10 +228,36 @@ void trlweCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const Ya
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
+void trlweCRTDecompNO(TrlweTypeA& out, const TrlweTypeB& in, const YatfheParameters& param) {
+    auto& outA = out.a;
+    auto& outB = out.b;
+    auto& inA = in.a;
+    auto& inB = in.b;
+    for (size_t k = 0; k < param.k; k++) {
+        auto& coeffOutA = outA[k].coeffs;
+        auto& coeffInA = inA[k].coeffs;
+        for (size_t j = 0; j < param.N; j++) {
+            auto& coeffOutDA = coeffOutA[j];
+            for (size_t d = 0; d < param.d; d++) {
+                coeffOutDA[d] = longModP(coeffInA[j], param.qd[d]);
+            }
+        }
+    }
+    auto& coeffOutB = outB.coeffs;
+    auto& coeffInB = inB.coeffs;
+    for (size_t j = 0; j < param.N; j++) {
+        auto& coeffOutDB = coeffOutB[j];
+        for (size_t d = 0; d < param.d; d++) {
+            coeffOutDB[d] = longModP(coeffInB[j], param.qd[d]);
+        }
+    }
+}
+
+template<typename TrlweTypeA, typename TrlweTypeB>
 void trlweMCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
-        auto& taoU = param.taoU[d];
-        auto& qd = param.qd[d];
+        auto taoU = param.taoU[d];
+        auto qd = param.qd[d];
         auto& outA = out[d].a;
         auto& outB = out[d].b;
         auto& inA = in.a;
@@ -279,6 +316,35 @@ void trlweCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const Yatfh
             tmpB += rearrB[j][d];
         }
         coeffB[j] = static_cast<Torus>(longModP(tmpB, qCRT));
+    }
+}
+
+template<typename TrlweTypeA, typename TrlweTypeB>
+void trlweCRTRecompNO(TrlweTypeA& out, TrlweTypeB& inCRT, const YatfheParameters& param) {
+    auto& outA = out.a;
+    auto& inA = inCRT.a;
+    auto qCRT = param.qCRT;
+    for (size_t k = 0; k < param.k; k++) {
+        auto& coeffOutA = outA[k].coeffs;
+        auto& coeffInA = inA[k].coeffs;
+        for (size_t j = 0; j < param.N; j++) {
+            long tmpA = 0;
+            auto& coeffInDA = coeffInA[j];
+            for (size_t d = 0; d < param.d; d++) {
+                tmpA += coeffInDA[d] * param.z[d];
+            }
+            coeffOutA[j] = static_cast<Torus>(longModP(tmpA, qCRT));
+        }
+    }
+    auto& coeffOutB = out.b.coeffs;
+    auto& coeffInB = inCRT.b.coeffs;
+    for (size_t j = 0; j < param.N; j++) {
+        long tmpB = 0;
+        auto& coeffInDB = coeffInB[j];
+        for (size_t d = 0; d < param.d; d++) {
+            tmpB += coeffInDB[d] * param.z[d];
+        }
+        coeffOutB[j] = static_cast<Torus>(longModP(tmpB, qCRT));
     }
 }
 

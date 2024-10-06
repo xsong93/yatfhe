@@ -9,6 +9,7 @@
 #include "yatfhe/trglev.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
+#include "yautil/time_counter.h"
 
 TEST(TrlweTest, TrlweEncDecSingleSampleTest) {
     YatfheParameters param {};
@@ -81,6 +82,7 @@ TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
     TrlweDft trlweDft {param.k, param.N};
     trlweKeyGen(trlweKey);
 
+    // data gen
     std::vector<int> plain(param.N);
     std::vector<Torus> in(param.N);
     for (auto i = 0; i < in.size(); i++) {
@@ -88,14 +90,22 @@ TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
         plain[i] = genIntUniformDist(-4, 3);
         in[i] = modSwitchToTorus32(plain[i], param.torusBase);
     }
-
-    std::vector<Trlwe8> trlweDecomp(param.d, Trlwe8{param.k, param.N});
-    Trlwe trlweRecomp {param.k, param.N};
     symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
     printTrlweAB(trlwe, "trlwe");
-    trlweCRTDecomp(trlweDecomp, trlwe, param);
-    trlweCRTRecomp(trlweRecomp, trlweDecomp, param);
+
+    // RD
+    std::vector<Trlwe8> trlweDecomp(param.d, Trlwe8{param.k, param.N});
+    Trlwe trlweRecomp {param.k, param.N};
+    COUNT_TIME("trlweCRTDecomp", trlweCRTDecomp(trlweDecomp, trlwe, param);)
+    COUNT_TIME("trlweCRTRecomp", trlweCRTRecomp(trlweRecomp, trlweDecomp, param);)
     printTrlweAB(trlweRecomp, "trlweRecomp");
+
+    // RD 8d ver.
+    Trlwe8D trlwe8D {param.k, param.N, param.d};
+    Trlwe trlwe8DRecomp {param.k, param.N};
+    COUNT_TIME("trlweCRTDecompNO", trlweCRTDecompNO(trlwe8D, trlwe, param);)
+    COUNT_TIME("trlweCRTRecompNO", trlweCRTRecompNO(trlwe8DRecomp, trlwe8D, param);)
+    printTrlweAB(trlwe8DRecomp, "trlwe8DRecomp");
 
     for (auto i = 0; i < param.k; i++) {
         ASSERT_EQ(trlweRecomp.a[i].coeffs, trlwe.a[i].coeffs);

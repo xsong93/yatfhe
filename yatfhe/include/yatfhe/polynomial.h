@@ -38,6 +38,17 @@ struct Int8Polynomial {
             N(N) {};
 };
 
+struct Int8PolynomialD {
+    std::vector<std::vector<int8_t>> coeffs {}; // N * d
+    int N {};
+    int d {};
+
+    Int8PolynomialD(int N, int d) :
+            coeffs(N, std::vector<int8_t>(d, 0)),
+            N(N),
+            d(d){};
+};
+
 using IntPolynomial = TorusPolynomial;
 using BinPolynomial = IntPolynomial;
 
