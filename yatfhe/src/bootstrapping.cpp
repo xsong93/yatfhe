@@ -38,7 +38,7 @@ void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const Bootstr
     rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(tv, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     trlweMCRTDecomp(accCRT, tv, param);
-    blindRotateCRT(accCRT, bskCRT, inputModN2, param);
+    blindRotateMCRT(accCRT, bskCRT, inputModN2, param);
     trlweCRTRecomp(acc, accCRT, param);
     extractTlweFromTrlwe(tmp, acc, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     tlweKeySwitch(out, ksk, tmp, param);
@@ -71,7 +71,7 @@ void blindRotateNtt(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe&
     }
 }
 
-void blindRotateCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateMCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
     std::vector<Trlwe8> temp(param.d, Trlwe8{param.k, param.N});
     for (size_t i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
@@ -147,9 +147,9 @@ void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameter
     }
 }
 
-void bootstrappingKeyCRTDecomp(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param) {
+void bootstrappingKeyMCRTDecomp(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param) {
     for (size_t i = 0; i < param.n; i++) {
-        trgswCRTDecomp(bskCRT.bskCRT[i], bsk.bsk[i], param);
+        trgswMCRTDecomp(bskCRT.bskCRT[i], bsk.bsk[i], param);
     }
 }
 

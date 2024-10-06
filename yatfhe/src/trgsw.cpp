@@ -122,12 +122,12 @@ Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
     return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
 }
 
-void trgswCRTDecomp(std::vector<TrgswDft24>& out, const Trgsw& in, const YatfheParameters& param) {
+void trgswMCRTDecomp(std::vector<TrgswDft24>& out, const Trgsw& in, const YatfheParameters& param) {
     std::vector<Trgsw8> tmp(param.d, Trgsw8{param.dh, param.k, param.N});
 
     for (size_t d = 0; d < param.d; d++) {
-        auto& taoU = param.taoU[d];
-        auto& qd = param.qd[d];
+        auto taoU = param.taoU[d];
+        auto qd = param.qd[d];
         auto& tmpOut = out[d];
         auto& tmpD = tmp[d];
         for (size_t l = 0; l < param.dh; l++) {
