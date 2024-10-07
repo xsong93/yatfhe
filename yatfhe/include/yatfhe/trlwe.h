@@ -258,7 +258,7 @@ void trlweCRTDecompNO(TrlweTypeA& out, const TrlweTypeB& in, const YatfheParamet
 template<typename TrlweTypeA, typename TrlweTypeB>
 void trlweMCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
-        auto taoU = param.taoU[d];
+        int64_t taoU = param.taoU[d];
         auto qd = param.qd[d];
         auto& outA = out[d].a;
         auto& outB = out[d].b;
@@ -275,6 +275,28 @@ void trlweMCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const Y
         auto& coeffInB = inB.coeffs;
         for (size_t j = 0; j < param.N; j++) {
             coeffOutB[j] = static_cast<int8_t>(longModP(taoU * coeffInB[j], qd));
+        }
+    }
+}
+
+template<typename TrlweType>
+void trlweMCRTToCRT(std::vector<TrlweType>& trlwe, const YatfheParameters& param) {
+    auto dh = param.dh;
+    for (size_t d = 0; d < param.dl; d++) {
+        auto ql = param.ql[d];
+        int64_t taoUInv = param.taoUInv[dh + d];
+        auto& accA = trlwe[dh + d].a;
+        auto& accB = trlwe[dh + d].b;
+        for (size_t k = 0; k < param.k; k++) {
+            auto& coeffA = accA[k].coeffs;
+            for (size_t j = 0; j < param.N; j++) {
+                auto aCopy = coeffA[j];
+                coeffA[j] = static_cast<int8_t>(longModP(taoUInv * aCopy, ql));
+            }
+        }
+        for (size_t j = 0; j < param.N; j++) {
+            auto bCopy = accB.coeffs[j];
+            accB.coeffs[j] = static_cast<int8_t>(longModP(taoUInv * bCopy, ql));
         }
     }
 }

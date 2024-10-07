@@ -83,26 +83,7 @@ void blindRotateMCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskC
         controlMuxCRT(temp, accum, input.a[i], bskCRT.bskCRT[i], param);
         swap(accum, temp);
     }
-
-    // wCRT to CRT
-    auto dh = param.dh;
-    for (size_t d = 0; d < param.dl; d++) {
-        auto ql = param.ql[d];
-        auto taoUInv = param.taoUInv[dh + d];
-        auto& accA = accum[dh + d].a;
-        auto& accB = accum[dh + d].b;
-        for (size_t k = 0; k < param.k; k++) {
-            auto& coeffA = accA[k].coeffs;
-            for (size_t j = 0; j < param.N; j++) {
-                auto aCopy = coeffA[j];
-                coeffA[j] = static_cast<int8_t>(longModP(taoUInv * aCopy, ql));
-            }
-        }
-        for (size_t j = 0; j < param.N; j++) {
-            auto bCopy = accB.coeffs[j];
-            accB.coeffs[j] = static_cast<int8_t>(longModP(taoUInv * bCopy, ql));
-        }
-    }
+    trlweMCRTToCRT(accum, param);
 }
 
 // res = bsk * (c1 - c0) + c0 = bski * [ X^aBarI * input - input] + input
