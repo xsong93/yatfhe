@@ -40,16 +40,16 @@ int main(int argc, char **argv) {
     auto decPre = symDecTlweSampleToInt(input, tlweKey, param.torusBase);
     cout << "decPre: " << decPre << endl;
 
-//    COUNT_TIME("trgswFunctionalBootstrapping", trgswFunctionalBootstrappingNtt(output, input, bsKey, ksKey, v, param);)
     ScaledTlwe inputModN2{param.N * 2, param.n};
     Trlwe tv{param.k, param.N};
     Trlwe acc{param.k, param.N};
     std::vector<Trlwe8> accCRT(param.d, Trlwe8{param.k, param.N});
     Tlwe tmp{ksKey.nCurrKey};
     COUNT_TIME("rescaleTlweFromTorus32", rescaleTlweFromTorus32(inputModN2, input);) // rescale to mod 2N
-    COUNT_TIME("genNoiselessTrlweSample", genNoiselessTrlweSample(tv, v, inputModN2);) // accum = (X^-b) * (0,...,0,v)
+    COUNT_TIME("genNoiselessTrlweSample", genNoiselessTrlweSample(tv, v, inputModN2);) // tv = (X^-b) * (0,...,0,v)
     COUNT_TIME("trlweMCRTDecomp", trlweMCRTDecomp(accCRT, tv, param);)
     COUNT_TIME("blindRotateNtt", blindRotateMCRT(accCRT, bsKeyCRT, inputModN2, param);)
+    COUNT_TIME("trlweMCRTToCRT", trlweMCRTToCRT(accCRT, param);)
     COUNT_TIME("trlweCRTRecomp", trlweCRTRecomp(acc, accCRT, param);)
     COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, acc, param.driftPhase);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     COUNT_TIME("tlweKeySwitch", tlweKeySwitch(output, ksKey, tmp, param);)
