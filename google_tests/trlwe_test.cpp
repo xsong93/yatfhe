@@ -99,6 +99,10 @@ TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
     COUNT_TIME("trlweCRTDecomp", trlweCRTDecomp(trlweDecomp, trlwe, param);)
     COUNT_TIME("trlweCRTRecomp", trlweCRTRecomp(trlweRecomp, trlweDecomp, param);)
     printTrlweAB(trlweRecomp, "trlweRecomp");
+    for (auto i = 0; i < param.k; i++) {
+        ASSERT_EQ(trlweRecomp.a[i].coeffs, trlwe.a[i].coeffs);
+    }
+    ASSERT_EQ(trlweRecomp.b.coeffs, trlwe.b.coeffs);
 
     // RD 8d ver.
     Trlwe8D trlwe8D {param.k, param.N, param.d};
@@ -106,11 +110,11 @@ TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
     COUNT_TIME("trlweCRTDecompNO", trlweCRTDecompNO(trlwe8D, trlwe, param);)
     COUNT_TIME("trlweCRTRecompNO", trlweCRTRecompNO(trlwe8DRecomp, trlwe8D, param);)
     printTrlweAB(trlwe8DRecomp, "trlwe8DRecomp");
-
     for (auto i = 0; i < param.k; i++) {
-        ASSERT_EQ(trlweRecomp.a[i].coeffs, trlwe.a[i].coeffs);
+        ASSERT_EQ(trlwe8DRecomp.a[i].coeffs, trlwe.a[i].coeffs);
     }
-    ASSERT_EQ(trlweRecomp.b.coeffs, trlwe.b.coeffs);
+    ASSERT_EQ(trlwe8DRecomp.b.coeffs, trlwe.b.coeffs);
+
     printBanner("TRLWE_CRT_COMPOSITION");
 }
 

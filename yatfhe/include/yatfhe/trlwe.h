@@ -238,8 +238,9 @@ void trlweCRTDecompNO(TrlweTypeA& out, const TrlweTypeB& in, const YatfheParamet
         auto& coeffInA = inA[k].coeffs;
         for (size_t j = 0; j < param.N; j++) {
             auto& coeffOutDA = coeffOutA[j];
+            auto valA = coeffInA[j];
             for (size_t d = 0; d < param.d; d++) {
-                coeffOutDA[d] = longModP(coeffInA[j], param.qd[d]);
+                coeffOutDA[d] = longModP(valA, param.qd[d]);
             }
         }
     }
@@ -247,8 +248,9 @@ void trlweCRTDecompNO(TrlweTypeA& out, const TrlweTypeB& in, const YatfheParamet
     auto& coeffInB = inB.coeffs;
     for (size_t j = 0; j < param.N; j++) {
         auto& coeffOutDB = coeffOutB[j];
+        auto valB = coeffInB[j];
         for (size_t d = 0; d < param.d; d++) {
-            coeffOutDB[d] = longModP(coeffInB[j], param.qd[d]);
+            coeffOutDB[d] = longModP(valB, param.qd[d]);
         }
     }
 }
@@ -279,32 +281,14 @@ void trlweMCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const Y
 
 template<typename TrlweTypeA, typename TrlweTypeB>
 void trlweCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const YatfheParameters& param) {
-    long rearrA[param.k][param.N][param.d];
-    long rearrB[param.N][param.d];
-
-    for (size_t d = 0; d < param.d; d++) {
-        auto& aModD = inCRT[d].a;
-        auto& coeffBModD = inCRT[d].b.coeffs;
-        auto z = param.z[d];
-        for (size_t k = 0; k < param.k; k++) {
-            auto& coeffAModD = aModD[k].coeffs;
-            for (size_t j = 0; j < param.N; j++) {
-                rearrA[k][j][d] = coeffAModD[j] * z;
-            }
-        }
-        for (size_t j = 0; j < param.N; j++) {
-            rearrB[j][d] = coeffBModD[j] * z;
-        }
-    }
-
-    auto& accA = out.a;
+    auto& outA = out.a;
     auto qCRT = param.qCRT;
     for (size_t k = 0; k < param.k; k++) {
-        auto& coeffA = accA[k].coeffs;
+        auto& coeffA = outA[k].coeffs;
         for (size_t j = 0; j < param.N; j++) {
             long tmpA = 0;
             for (size_t d = 0; d < param.d; d++) {
-                tmpA += rearrA[k][j][d];
+                tmpA += inCRT[d].a[k].coeffs[j] * param.z[d];
             }
             coeffA[j] = static_cast<Torus>(longModP(tmpA, qCRT));
         }
@@ -313,7 +297,7 @@ void trlweCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const Yatfh
     for (size_t j = 0; j < param.N; j++) {
         long tmpB = 0;
         for (size_t d = 0; d < param.d; d++) {
-            tmpB += rearrB[j][d];
+            tmpB += inCRT[d].b.coeffs[j] * param.z[d];
         }
         coeffB[j] = static_cast<Torus>(longModP(tmpB, qCRT));
     }
