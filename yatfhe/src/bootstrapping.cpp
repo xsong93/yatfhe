@@ -4,7 +4,7 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/bootstrapping.h"
 #include "yatfhe/keyswitching.h"
-#include "yatfhe/ntt.h"
+#include "yatfhe/ntt24.h"
 
 void trgswFunctionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
@@ -129,7 +129,20 @@ void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameter
 
 void bootstrappingKeyMCRTDecomp(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param) {
     for (size_t i = 0; i < param.n; i++) {
-        trgswMCRTDecomp(bskCRT.bskCRT[i], bsk.bsk[i], param);
+        trgswMCRTDecomp(bskCRT.bsk8[i], bsk.bsk[i], param);
+        auto& bsk8D = bskCRT.bsk8[i];
+        auto& bskNttD = bskCRT.bskCRT[i];
+        for (size_t d = 0; d < param.d; d++) {
+            auto& bsk8 = bsk8D[d];
+            auto& bskNtt = bskNttD[d];
+            for (size_t l = 0; l < param.dh; l++) {
+                for (size_t k1 = 0; k1 < param.k + 1; k1++) {
+                    auto& nttOut = bskNtt.trlweDftSamples[l][k1];
+                    auto& nttIn = bsk8.trlweSamples[l][k1];
+                    applyNttForAB24(nttOut, nttIn);
+                }
+            }
+        }
     }
 }
 

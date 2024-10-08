@@ -122,38 +122,61 @@ Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
     return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
 }
 
-void trgswMCRTDecomp(std::vector<TrgswDft24>& out, const Trgsw& in, const YatfheParameters& param) {
-    std::vector<Trgsw8> tmp(param.d, Trgsw8{param.dh, param.k, param.N});
-
+void trgswMCRTDecomp(std::vector<Trgsw8>& out, const Trgsw& in, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
-        auto taoU = param.taoU[d];
+        int64_t taoU = param.taoU[d];
         auto qd = param.qd[d];
-        auto& tmpOut = out[d];
-        auto& tmpD = tmp[d];
+        auto& outD = out[d];
         for (size_t l = 0; l < param.dh; l++) {
             for (size_t k1 = 0; k1 < param.k + 1; k1++) {
-                auto& nttOut = tmpOut.trlweDftSamples[l][k1];
-                auto& nttIn = tmpD.trlweSamples[l][k1];
-                auto& rgswInA = in.trlweSamples[l][k1].a;
-                auto& rgswInB = in.trlweSamples[l][k1].b;
-                auto& rgswResA = tmpD.trlweSamples[l][k1].a;
-                auto& rgswResB = tmpD.trlweSamples[l][k1].b;
+                auto& inA = in.trlweSamples[l][k1].a;
+                auto& inB = in.trlweSamples[l][k1].b;
+                auto& outA = outD.trlweSamples[l][k1].a;
+                auto& outB = outD.trlweSamples[l][k1].b;
                 for (size_t k2 = 0; k2 < param.k; k2++) {
-                    auto& coeffResA = rgswResA[k2].coeffs;
-                    auto& coeffInA = rgswInA[k2].coeffs;
+                    auto& coeffOutA = outA[k2].coeffs;
+                    auto& coeffInA = inA[k2].coeffs;
                     for (size_t j = 0; j < param.N; j++) {
-                        coeffResA[j] = static_cast<int8_t>(longModP(taoU * coeffInA[j], qd));
+                        coeffOutA[j] = static_cast<int8_t>(longModP(taoU * coeffInA[j], qd));
                     }
                 }
-                auto& coeffResB = rgswResB.coeffs;
-                auto& coeffInB = rgswInB.coeffs;
+                auto& coeffOutB = outB.coeffs;
+                auto& coeffInB = inB.coeffs;
                 for (size_t j = 0; j < param.N; j++) {
-                    coeffResB[j] = static_cast<int8_t>(longModP(taoU * coeffInB[j], qd));
+                    coeffOutB[j] = static_cast<int8_t>(longModP(taoU * coeffInB[j], qd));
                 }
-                applyNttForAB24(nttOut, nttIn);
             }
         }
     }
+}
+
+//todo
+void trgswMCRTToCRT(Trgsw& out, std::vector<Trgsw8>& in, const YatfheParameters& param) {
+//    for (size_t d = 0; d < param.d; d++) {
+//        int64_t taoU = param.taoU[d];
+//        auto qd = param.qd[d];
+//        auto& outD = out[d];
+//        for (size_t l = 0; l < param.dh; l++) {
+//            for (size_t k1 = 0; k1 < param.k + 1; k1++) {
+//                auto& inA = in.trlweSamples[l][k1].a;
+//                auto& inB = in.trlweSamples[l][k1].b;
+//                auto& outA = outD.trlweSamples[l][k1].a;
+//                auto& outB = outD.trlweSamples[l][k1].b;
+//                for (size_t k2 = 0; k2 < param.k; k2++) {
+//                    auto& coeffOutA = outA[k2].coeffs;
+//                    auto& coeffInA = inA[k2].coeffs;
+//                    for (size_t j = 0; j < param.N; j++) {
+//                        coeffOutA[j] = static_cast<int8_t>(longModP(taoU * coeffInA[j], qd));
+//                    }
+//                }
+//                auto& coeffOutB = outB.coeffs;
+//                auto& coeffInB = inB.coeffs;
+//                for (size_t j = 0; j < param.N; j++) {
+//                    coeffOutB[j] = static_cast<int8_t>(longModP(taoU * coeffInB[j], qd));
+//                }
+//            }
+//        }
+//    }
 }
 
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
