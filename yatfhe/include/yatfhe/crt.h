@@ -28,7 +28,7 @@ int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfhePar
 
 void approxCRTReconstructPoly(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q);
 
-void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param);
+void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param);
 
 void broadcastCRT(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param);
 

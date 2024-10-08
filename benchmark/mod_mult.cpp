@@ -4,6 +4,7 @@
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt14.h"
 #include "yatfhe/ntt16.h"
+#include "yatfhe/ntt24.h"
 #include "yatfhe/ntt64.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yautil/initializer.h"
@@ -64,6 +65,8 @@ int main() {
     Ntt16 b1 = 65535;
     Ntt14 a14 = 11280;
     Ntt14 b14 = 11111;
+    Ntt24 a24 = 16777216;
+    Ntt24 b24 = 16777216;
 
     int n = param.N * param.l * param.n;
     cout << "test on " << n << " samples" << endl;
@@ -88,6 +91,10 @@ int main() {
 
     COUNT_TIME("14", {
         for (auto i = 0; i < n; i++) { modMULT14(a14, b14); }
+    })
+
+    COUNT_TIME("24", {
+        for (auto i = 0; i < n; i++) { modMULT24(a24, b24); }
     })
 
     conv(param.N, param.k);

@@ -9,6 +9,7 @@
 #include "yautil/tool.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"
+#include "yatfhe/crt.h"
 #include "yautil/time_counter.h"
 #include "yautil/initializer.h"
 
@@ -186,6 +187,44 @@ TEST(DecompositionTest, DecomposeTrlweTest) {
 //        ASSERT_EQ(dec1.coeffs[j], plain);
 //    }
     printBanner("DecomposeTrlweTest");
+}
+
+TEST(DecompositionTest, TRLWE_SYNC_GD) {
+    YatfheParameters param{};
+    param.N = 2;
+    yatfheInit(param);
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    Trlwe trlwe {param.k, param.N};
+    TrlweDft trlweDft {param.k, param.N};
+    trlweKeyGen(trlweKey);
+
+    // data gen
+    std::vector<int> plain(param.N);
+    std::vector<Torus> in(param.N);
+    for (auto i = 0; i < in.size(); i++) {
+        plain[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
+        in[i] = modSwitchToTorus32(plain[i], param.torusBase);
+    }
+    symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
+    printTrlweAB(trlwe, "trlwe");
+
+    // RD
+    std::vector<Trlwe8> trlweDecomp(param.d, Trlwe8{param.k, param.N});
+    std::vector<Trlwe8> trlweSGD(param.dh, Trlwe8{param.k, param.N});
+    std::vector<std::vector<Trlwe8>> trlweDB(param.d, std::vector<Trlwe8>(param.dh, Trlwe8{param.k, param.N}));
+    Trlwe trlweRecomp {param.k, param.N};
+    trlweMCRTDecomp(trlweDecomp, trlwe, param);
+    syncGadgetDecomp(trlweSGD,  trlweDecomp, param);
+    broadcastCRT(trlweDB, trlweSGD, param);
+    trlweMCRTToCRT(trlweDecomp, param);
+    trlweCRTRecomp(trlweRecomp, trlweDecomp, param);
+    printTrlweAB(trlweRecomp, "trlweRecomp");
+    for (auto i = 0; i < param.k; i++) {
+        ASSERT_EQ(trlweRecomp.a[i].coeffs, trlwe.a[i].coeffs);
+    }
+    ASSERT_EQ(trlweRecomp.b.coeffs, trlwe.b.coeffs);
+
+    printBanner("TRLWE_SYNC_GD");
 }
 
 TEST(DecompositionTest, DecomposedAddSub) {

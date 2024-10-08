@@ -4,6 +4,7 @@
 #include "yatfhe/crt.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/trlwe.h"
+#include "yautil/tool.h"
 
 int calApproxCRTError(const std::vector<int>& f_tilde, const std::vector<int>& coeffs) {
     int infNorm = 0;
@@ -98,14 +99,14 @@ int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfhePar
     return static_cast<int32_t>(longModP(acc, param.qCRT));
 }
 
-void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, const YatfheParameters& param) {
+void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
     int32_t lowSumsA[param.k][param.N];
     int32_t lowSumsB[param.N];
     for (size_t k = 0; k < param.k; k++) {
         for (size_t j = 0; j < param.N; j++) {
             lowSumsA[k][j] = 0;
             for (size_t u = 0; u < param.dl; u++) {
-                auto aLo = aux[u + param.dh].a[k].coeffs[j];
+                auto aLo = in[u + param.dh].a[k].coeffs[j];
                 lowSumsA[k][j] += param.qLowDivQl[u] * aLo;
             }
         }
@@ -113,14 +114,14 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, 
     for (size_t j = 0; j < param.N; j++) {
         lowSumsB[j] = 0;
         for (size_t u = 0; u < param.dl; u++) {
-            auto bLo = aux[u + param.dh].b.coeffs[j];
+            auto bLo = in[u + param.dh].b.coeffs[j];
             lowSumsB[j] += param.qLowDivQl[u] * bLo;
         }
     }
     for (size_t i = 0; i < param.dh; i++) {
         auto qHi = param.qh[i];
         auto& outA = out[i].a;
-        auto& inA = aux[i].a;
+        auto& inA = in[i].a;
         for (size_t k = 0; k < param.k; k++) {
             auto& coeffAOut = outA[k].coeffs;
             auto& coeffAHi = inA[k].coeffs;
@@ -128,7 +129,7 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& aux, 
                 coeffAOut[j] = static_cast<int8_t>(intModP(static_cast<int32_t>(coeffAHi[j]) - lowSumsA[k][j], qHi));
             }
         }
-        auto& coeffBHi = aux[i].b.coeffs;
+        auto& coeffBHi = in[i].b.coeffs;
         auto& coeffBOut = out[i].b.coeffs;
         for (size_t j = 0; j < param.N; j++) {
             coeffBOut[j] = static_cast<int8_t>(intModP(static_cast<int32_t>(coeffBHi[j]) - lowSumsB[j], qHi));

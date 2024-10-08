@@ -130,8 +130,7 @@ TEST(TrlweTest, TRLWE_MCRT_COMPOSITION) {
     std::vector<int> plain(param.N);
     std::vector<Torus> in(param.N);
     for (auto i = 0; i < in.size(); i++) {
-//        plain[i] = (double) genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1) / param.torusBase;
-        plain[i] = genIntUniformDist(-4, 3);
+        plain[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
         in[i] = modSwitchToTorus32(plain[i], param.torusBase);
     }
     symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);

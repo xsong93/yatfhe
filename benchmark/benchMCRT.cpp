@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     COUNT_TIME("rescaleTlweFromTorus32", rescaleTlweFromTorus32(inputModN2, input);) // rescale to mod 2N
     COUNT_TIME("genNoiselessTrlweSample", genNoiselessTrlweSample(tv, v, inputModN2);) // tv = (X^-b) * (0,...,0,v)
     COUNT_TIME("trlweMCRTDecomp", trlweMCRTDecomp(accCRT, tv, param);)
-    COUNT_TIME("blindRotateNtt", blindRotateMCRT(accCRT, bsKeyCRT, inputModN2, param);)
+    COUNT_TIME("blindRotateMCRT", blindRotateMCRT(accCRT, bsKeyCRT, inputModN2, param);)
     COUNT_TIME("trlweMCRTToCRT", trlweMCRTToCRT(accCRT, param);)
     COUNT_TIME("trlweCRTRecomp", trlweCRTRecomp(acc, accCRT, param);)
     COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, acc, param.driftPhase);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
