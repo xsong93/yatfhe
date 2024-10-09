@@ -7,6 +7,7 @@
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/gadget_decomposition.h"
 #include "yatfhe/trglev.h"
+#include "yatfhe/crt.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 #include "yautil/time_counter.h"
@@ -149,6 +150,59 @@ TEST(TrlweTest, TRLWE_MCRT_COMPOSITION) {
     ASSERT_EQ(trlweRecomp.b.coeffs, trlwe.b.coeffs);
 
     printBanner("TRLWE_MCRT_COMPOSITION");
+}
+
+TEST(TrlweTest, TRLWE_APPROX_CRT_DECOMP) {
+    YatfheParameters param{};
+    yatfheInit(param);
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    Trlwe trlwe {param.k, param.N};
+    TrlweDft trlweDft {param.k, param.N};
+    trlweKeyGen(trlweKey);
+
+    // data gen
+    std::vector<int> plain(param.N);
+    std::vector<Torus> in(param.N);
+    for (auto i = 0; i < in.size(); i++) {
+        plain[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
+        in[i] = modSwitchToTorus32(plain[i], param.torusBase);
+    }
+    symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
+    printTrlweAB(trlwe, "trlwe");
+
+    // RD
+    std::vector<Trlwe8> trlweDecomp(param.d, Trlwe8{param.k, param.N});
+    std::vector<Trlwe8> trlweGadDecomp(param.d, Trlwe8{param.k, param.N});
+    Trlwe trlweRecomp {param.k, param.N};
+    COUNT_TIME("trlweMCRTDecomp", trlweMCRTDecomp(trlweDecomp, trlwe, param);)
+    COUNT_TIME("trlweApproxCRTDecomp", trlweApproxCRTDecomp(trlweGadDecomp, trlweDecomp, param);)
+    COUNT_TIME("trlweMCRTRecomp", trlweMCRTRecomp(trlweRecomp, trlweGadDecomp, param);)
+    printTrlweAB(trlweRecomp, "trlweRecomp");
+    int errA = 0;
+    int errB = 0;
+    for (auto i = 0; i < param.k; i++) {
+        for (auto j = 0; j < param.N; j++) {
+            errA = std::max(errA, std::abs(trlweRecomp.a[i].coeffs[j] - trlwe.a[i].coeffs[j]));
+        }
+    }
+    for (auto j = 0; j < param.N; j++) {
+        errB = std::max(errB, std::abs(trlweRecomp.b.coeffs[j] - trlwe.b.coeffs[j]));
+    }
+    int maxErr = param.dl * param.qLow / 2;
+    cout <<"errA: " << errA << ", errB: "<< errB << ", maxE: " << maxErr << endl << endl;
+    ASSERT_LE(errA, maxErr);
+    ASSERT_LE(errB, maxErr);
+
+    // Dec
+    TorusPolynomial ori{param.N};
+    TorusPolynomial gd{param.N};
+    symDecTrlweToInt(ori, trlwe, trlweKey, param.torusBase);
+    symDecTrlweToInt(gd, trlweRecomp, trlweKey, param.torusBase);
+    printArray(ori.coeffs, "ori");
+    printArray(gd.coeffs, "gd");
+    ASSERT_EQ(ori.coeffs, gd.coeffs);
+
+    printBanner("TRLWE_APPROX_CRT_DECOMP");
 }
 
 TEST(TrlweTest, TrlweAddSubMultiSampleTest) {

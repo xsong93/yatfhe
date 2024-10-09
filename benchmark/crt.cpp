@@ -41,7 +41,7 @@ int main() {
             t1[i].b.coeffs[j] = (int8_t)intModP(j, 256);
         }
     }
-    syncGadgetDecomp(t2, t1, p);
+    trlweApproxCRTDecomp(t2, t1, p);
 //    for (size_t i = 0; i < p.dh; i++) {
 //        for (size_t j = 0; j < p.N; j++) {
 //            for (size_t k = 0; k < p.k; k++) {

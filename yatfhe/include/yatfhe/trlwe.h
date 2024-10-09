@@ -302,6 +302,30 @@ void trlweMCRTToCRT(std::vector<TrlweType>& trlwe, const YatfheParameters& param
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
+void trlweMCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inMCRT, const YatfheParameters& param) {
+    auto& outA = out.a;
+    auto qCRT = param.qCRT;
+    for (size_t k = 0; k < param.k; k++) {
+        auto& coeffA = outA[k].coeffs;
+        for (size_t j = 0; j < param.N; j++) {
+            long tmpA = 0;
+            for (size_t d = 0; d < param.dh; d++) {
+                tmpA += inMCRT[d].a[k].coeffs[j] * param.w[d];
+            }
+            coeffA[j] = static_cast<Torus>(longModP(tmpA, qCRT));
+        }
+    }
+    auto& coeffB = out.b.coeffs;
+    for (size_t j = 0; j < param.N; j++) {
+        long tmpB = 0;
+        for (size_t d = 0; d < param.dh; d++) {
+            tmpB += inMCRT[d].b.coeffs[j] * param.w[d];
+        }
+        coeffB[j] = static_cast<Torus>(longModP(tmpB, qCRT));
+    }
+}
+
+template<typename TrlweTypeA, typename TrlweTypeB>
 void trlweCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const YatfheParameters& param) {
     auto& outA = out.a;
     auto qCRT = param.qCRT;

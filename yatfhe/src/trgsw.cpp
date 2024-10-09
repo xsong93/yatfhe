@@ -314,8 +314,8 @@ void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<Trgs
     std::vector<Trlwe8> tmpD(param.dh, Trlwe8{param.k, param.N});
     std::vector<std::vector<Trlwe8>> tmpDB(param.d, std::vector<Trlwe8>(param.dh, Trlwe8{param.k, param.N}));
 
-    syncGadgetDecomp(tmpD, trlweInput, param);
-    broadcastCRT(tmpDB, tmpD, param);
+    trlweApproxCRTDecomp(tmpD, trlweInput, param);
+    trlweApproxCRTBroadcast(tmpDB, tmpD, param);
 
     for (size_t d = 0; d < param.d; d++) {
         auto& rgswIn = trgswInput[d];
@@ -345,8 +345,8 @@ void trgswExternalProductCRTNTT(std::vector<Trlwe8>& output, const std::vector<T
     std::vector<std::vector<TrlweDft24>> tmpDBNtt(param.d, std::vector<TrlweDft24>(param.dh, TrlweDft24{param.k, param.N}));
     std::vector<TrlweDft24> trlweDftRes(param.d, TrlweDft24{param.k, param.N});
 
-    syncGadgetDecomp(tmpD, trlweInput, param);
-    broadcastCRT(tmpDB, tmpD, param);
+    trlweApproxCRTDecomp(tmpD, trlweInput, param);
+    trlweApproxCRTBroadcast(tmpDB, tmpD, param);
 
     // ntt
     for (size_t d = 0; d < param.d; d++) {

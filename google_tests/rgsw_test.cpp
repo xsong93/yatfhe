@@ -96,24 +96,20 @@ TEST(RgswTest, RgswMultTestNaive) {
 
         // trgsw enc
         Trgsw trgsw {param};
-        TrgswDft trgswDft {param};
         Integer mu1 = genIntUniformDist(0, 3);
         trgswEncrypt(trgsw, param, trgswKey, mu1);
         printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
-        Integer mu2p = genIntUniformDist(INT32_MIN, INT32_MAX);
+        Integer mu2p = genIntUniformDist(-param.torusBase / 2, (param.torusBase - 1) / 2);
         Torus mu2 = modSwitchToTorus32(mu2p, param.torusBase);
         Trlwe out {param.k, param.N};
-//        DoublePolynomial decPre {param.N};
-//        DoublePolynomial decAft {param.N};
-        IntPolynomial decPreP {param.N};
-        IntPolynomial decAftP {param.N};
         symEncTrlweSingleSample(in2, trlweKey, mu2);
         printTrlweAB(in2, "trlwe");
 
         // trlwe dec pre-mult
+        IntPolynomial decPreP {param.N};
         symDecTrlweToInt(decPreP, in2, trlweKey, param.torusBase);
         printArray(decPreP.coeffs, "decPreP");
 
@@ -122,13 +118,80 @@ TEST(RgswTest, RgswMultTestNaive) {
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
+        IntPolynomial decAftP {param.N};
         symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
         printArray(decAftP.coeffs, "decAftP");
+        Integer multPlain = intModP(mu1 * mu2p, param.torusBase);
+        printf("Plain mult: %d * %d = %d\n", mu1, mu2p, multPlain);
         for (auto i = 0 ; i < decAftP.N; i++) {
-            ASSERT_EQ(intModP(mu1 * mu2p, param.torusBase), decAftP.coeffs[i]);
+            ASSERT_EQ(multPlain, decAftP.coeffs[i]);
         }
     }
     printBanner("RgswMultTestNaive");
+}
+
+//todo
+TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
+    YatfheParameters param {};
+//    param.N = 1024;
+//    param.radixBits = 4;
+//    param.l = 3;
+//    param.k = 1;
+    yatfheInit(param);
+    int ti = 0;
+    while (ti++ < 1) {
+        cout << "iter: " << ti << endl;
+        // ken gen
+        TrgswKey trgswKey {param};
+        TrlweKey& trlweKey = trgswKey.trlweKey;
+        trlweKeyGen(trlweKey);
+
+        // trgsw enc
+        Trgsw trgsw {param};
+        Integer mu1 = genIntUniformDist(0, 3);
+        mu1 = 1;
+        trgswEncrypt(trgsw, param, trgswKey, mu1);
+        printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
+
+        // trlwe enc
+        Trlwe in2 {param.k, param.N};
+        Integer mu2 = genIntUniformDist(-param.torusBase / 2, (param.torusBase - 1) / 2);
+        Torus mu2T = modSwitchToTorus32(mu2, param.torusBase);
+        symEncTrlweSingleSample(in2, trlweKey, mu2T);
+        printTrlweAB(in2, "trlwe");
+
+        // trlwe dec pre-mult
+        IntPolynomial decPreP {param.N};
+        symDecTrlweToInt(decPreP, in2, trlweKey, param.torusBase);
+        printArray(decPreP.coeffs, "decPreP");
+
+        // GD
+        std::vector<Trlwe8> trlweD(param.d, Trlwe8{param.k, param.N});
+        trlweMCRTDecomp(trlweD, in2, param);
+        std::vector<Trgsw8> trgswD(param.d, Trgsw8(param.dh, param.k, param.N));
+        trgswMCRTDecomp(trgswD, trgsw, param);
+
+        // trgsw mult
+        std::vector<Trlwe8> outD(param.d, Trlwe8{param.k, param.N});
+        COUNT_TIME("trgswExternalProductCRT", trgswExternalProductCRT(outD, trgswD, trlweD, param);)
+
+        // Recomp
+        Trlwe out {param.k, param.N};
+        trlweMCRTToCRT(outD, param);
+        trlweCRTRecomp(out, outD, param);
+        printTrlweAB(out, "out");
+
+        // trlwe dec aft-mult
+        IntPolynomial decAftP {param.N};
+        symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
+        printArray(decAftP.coeffs, "decAftP");
+        Integer multPlain = intModP(mu1 * mu2, param.torusBase);
+        printf("Plain mult: %d * %d = %d\n", mu1, mu2, multPlain);
+        for (auto i = 0 ; i < decAftP.N; i++) {
+            ASSERT_EQ(multPlain, decAftP.coeffs[i]);
+        }
+    }
+    printBanner("RGSW_MULT_MCRT_NAIVE");
 }
 
 TEST(RgswTest, RgswMultTestNTT) {

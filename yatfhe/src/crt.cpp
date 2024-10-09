@@ -99,14 +99,15 @@ int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfhePar
     return static_cast<int32_t>(longModP(acc, param.qCRT));
 }
 
-void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
+void trlweApproxCRTDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
     int32_t lowSumsA[param.k][param.N];
     int32_t lowSumsB[param.N];
+    auto dh = param.dh;
     for (size_t k = 0; k < param.k; k++) {
         for (size_t j = 0; j < param.N; j++) {
             lowSumsA[k][j] = 0;
             for (size_t u = 0; u < param.dl; u++) {
-                auto aLo = in[u + param.dh].a[k].coeffs[j];
+                auto aLo = in[u + dh].a[k].coeffs[j];
                 lowSumsA[k][j] += param.qLowDivQl[u] * aLo;
             }
         }
@@ -114,7 +115,7 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, c
     for (size_t j = 0; j < param.N; j++) {
         lowSumsB[j] = 0;
         for (size_t u = 0; u < param.dl; u++) {
-            auto bLo = in[u + param.dh].b.coeffs[j];
+            auto bLo = in[u + dh].b.coeffs[j];
             lowSumsB[j] += param.qLowDivQl[u] * bLo;
         }
     }
@@ -138,7 +139,7 @@ void syncGadgetDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, c
 }
 
 // l -> l*d
-void broadcastCRT(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
+void trlweApproxCRTBroadcast(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
         auto qd = param.qd[d];
         auto qdHalf = param.qdHalf[d];
