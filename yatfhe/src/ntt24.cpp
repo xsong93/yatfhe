@@ -219,23 +219,34 @@ void DIF_RN24(Ntt24Polynomial& RES, const Ntt24Polynomial& IN) {
     }
 }
 
-void applyIntt24(Int8Polynomial & RES, const Ntt24Polynomial& IN) {
-    auto N = IN.N;
+void applyIntt24(Int8Polynomial& out, const Ntt24Polynomial& in, const int q) {
+    auto N = in.N;
     Ntt24Polynomial res(N);
-    DIF_RN24(res,IN);
+    DIF_RN24(res, in);
     int32_t temp_ntt;
-    uint8_t temp_poly;
+    int32_t temp_poly;
+    int qHalf = q / 2;
+    int loHalf = -qHalf;
+    int hiHalf = (q % 2 == 0) ? (qHalf - 1) : qHalf;
     for (int i = 0; i < N; i++) {
         if (res.coeffs[i] >= HALF_MOD24) {
             temp_ntt = static_cast<int32_t>(res.coeffs[i] - MOD24);
         } else {
             temp_ntt = static_cast<int32_t>(res.coeffs[i]);
         }
-        temp_poly = static_cast<uint8_t>(temp_ntt & NTT24_MASK);
-        if (temp_poly >= POLY_MAX8) {
-            RES.coeffs[i] = static_cast<int8_t>(temp_poly - (POLY_MAX8 << 1));
+//        temp_poly = static_cast<uint8_t>(temp_ntt & NTT24_MASK);
+//        if (temp_poly >= POLY_MAX8) {
+//            RES.coeffs[i] = static_cast<int8_t>(temp_poly - (POLY_MAX8 << 1));
+//        } else {
+//            RES.coeffs[i] = static_cast<int8_t>(temp_poly);
+//        }
+        temp_poly = temp_ntt % q;
+        if (temp_poly < loHalf) {
+            out.coeffs[i] = static_cast<int8_t>(temp_poly + q);
+        } else if (temp_poly > hiHalf){
+            out.coeffs[i] = static_cast<int8_t>(temp_poly - q);
         } else {
-            RES.coeffs[i] = static_cast<int8_t>(temp_poly);
+            out.coeffs[i] = static_cast<int8_t>(temp_poly);
         }
     }
 }

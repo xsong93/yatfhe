@@ -227,7 +227,7 @@ void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& t
     }
 }
 
-void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, Trlwe& trlweInput, const YatfheParameters& param) {
+void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto level = trgswDftInput.l;
     const auto N = trlweInput.b.N;
@@ -310,7 +310,36 @@ void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, 
     applyInttForAB(output, trlweDftRes);
 }*/
 
-void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
+void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<Trgsw8>& trgswInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
+    std::vector<Trlwe8> tmpD(param.dh, Trlwe8{param.k, param.N});
+    std::vector<std::vector<Trlwe8>> tmpDB(param.d, std::vector<Trlwe8>(param.dh, Trlwe8{param.k, param.N}));
+
+    syncGadgetDecomp(tmpD, trlweInput, param);
+    broadcastCRT(tmpDB, tmpD, param);
+
+    for (size_t d = 0; d < param.d; d++) {
+        auto& rgswIn = trgswInput[d];
+        auto& rlweResA = output[d].a;
+        auto& rlweResB = output[d].b;
+        auto qd = param.qd[d];
+        for (size_t l = 0; l < param.dh; l++) {
+            auto& decompA = tmpDB[d][l].a;
+            auto& decompB = tmpDB[d][l].b;
+            for (size_t k = 0; k < param.k + 1; k++) {
+                auto& rgswA = rgswIn.trlweSamples[l][k].a;
+                auto& rgswB = rgswIn.trlweSamples[l][k].b;
+                auto& decomp = (k < param.k) ? decompA[k] : decompB;
+                for (size_t ka = 0; ka < param.k + 1; ka++) {
+                    auto& rgsw = (ka < param.k) ? rgswA[ka] : rgswB;
+                    auto& rlwe = (ka < param.k) ? rlweResA[ka] : rlweResB;
+                    polynomialMulAccNaiveI8(rlwe, decomp, rgsw, qd);
+                }
+            }
+        }
+    }
+}
+
+void trgswExternalProductCRTNTT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
     std::vector<Trlwe8> tmpD(param.dh, Trlwe8{param.k, param.N});
     std::vector<std::vector<Trlwe8>> tmpDB(param.d, std::vector<Trlwe8>(param.dh, Trlwe8{param.k, param.N}));
     std::vector<std::vector<TrlweDft24>> tmpDBNtt(param.d, std::vector<TrlweDft24>(param.dh, TrlweDft24{param.k, param.N}));
@@ -388,9 +417,10 @@ void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<Trgs
 
     // intt
     for (size_t d = 0; d < param.d; d++) {
+        auto qd = param.qd[d];
         for (size_t k = 0; k < param.k; k++) {
-            applyIntt24(output[d].a[k], trlweDftRes[d].a[k]);
+            applyIntt24(output[d].a[k], trlweDftRes[d].a[k], qd);
         }
-        applyIntt24(output[d].b, trlweDftRes[d].b);
+        applyIntt24(output[d].b, trlweDftRes[d].b, qd);
     }
 }

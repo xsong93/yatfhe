@@ -178,7 +178,9 @@ void polynomialMulNaiveT32(TorusPolynomial& res, const TorusPolynomial& poly1, c
 
 void polynomialMulNaiveModQ(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2, int64_t q);
 
-void polynomialMulNaiveModQ8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, int q);
+void polynomialMulNaiveI8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, int q);
+
+void polynomialMulAccNaiveI8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, int q);
 
 void polynomialMulAccNaiveI32(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
 

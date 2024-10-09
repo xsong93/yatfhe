@@ -152,7 +152,7 @@ void polynomialMulNaiveModQ(IntPolynomial& res, const IntPolynomial& poly1, cons
     }
 }
 
-void polynomialMulNaiveModQ8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, const int q) {
+void polynomialMulNaiveI8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, const int q) {
     const int N = res.N;
     int tmp;
     for (auto i = 0; i < N; i++) {
@@ -165,6 +165,22 @@ void polynomialMulNaiveModQ8(Int8Polynomial& res, const Int8Polynomial& poly1, c
             }
         }
         res.coeffs[i] = static_cast<int8_t>(intModP(tmp, q));
+    }
+}
+
+void polynomialMulAccNaiveI8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, const int q) {
+    const int N = res.N;
+    int tmp;
+    for (auto i = 0; i < N; i++) {
+        tmp = 0;
+        for (auto j = 0; j < N; j++) {
+            if (j <= i) {
+                tmp += modMulQ(poly1.coeffs[j], poly2.coeffs[i - j], q);
+            } else {
+                tmp -= modMulQ(poly1.coeffs[j], poly2.coeffs[N + i - j], q);
+            }
+        }
+        res.coeffs[i] = static_cast<int8_t>(intModP(tmp + res.coeffs[i], q));
     }
 }
 

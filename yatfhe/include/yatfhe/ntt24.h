@@ -50,9 +50,9 @@ extern TwRom24 TW_ROM24;
 
 //----------------------------------------------------------------------------------
 void genTW_ROM24(TwRom24& tw_rom);
-void genNWCparam24(TwParam24& nwc_tw,const int n, const TwRom24& tw_rom, const std::string& str);
+void genNWCparam24(TwParam24& nwc_tw, int n, const TwRom24& tw_rom, const std::string& str);
 void applyNtt24(Ntt24Polynomial& RES, const Int8Polynomial& IN);
-void applyIntt24(Int8Polynomial & RES, const Ntt24Polynomial& IN);
+void applyIntt24(Int8Polynomial& out, const Ntt24Polynomial& in, int q);
 Ntt24 POW24(Ntt24 BASE, Ntt24 EXP);
 Ntt24 modINV24(Ntt24 in);
 Ntt24 modADD24(Ntt24 a, Ntt24 b);
@@ -70,12 +70,12 @@ void applyNttForAB24(T& out, R& in) {
     applyNtt24(out.b, in.b);
 }
 
-template <typename T, typename R>
-void applyInttForAB24(T& out, R& in) {
+template <typename T, typename R, typename U>
+void applyInttForAB24(T& out, R& in, U q) {
     for (auto row = 0; row < in.a.size(); row++) {
-        applyINtt24(out.a[row], in.a[row]);
+        applyIntt24(out.a[row], in.a[row], q);
     }
-    applyINtt24(out.b, in.b);
+    applyIntt24(out.b, in.b, q);
 }
 
 void calModularInnerProductNtt24(Ntt24Polynomial& out, const Ntt24Polynomial& in1, const Ntt24Polynomial& in2);

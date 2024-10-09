@@ -102,8 +102,10 @@ void trgswCRTRecomp(Trgsw& out, const std::vector<Trgsw8>& in, const YatfheParam
 
 void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
-void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, Trlwe& trlweInput, const YatfheParameters& param);
+void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
-void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
+void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<Trgsw8>& trgswInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
+
+void trgswExternalProductCRTNTT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

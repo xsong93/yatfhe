@@ -108,7 +108,7 @@ void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, 
         trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input
     }
 
-    trgswExternalProductCRT(res, bskCRT, tmp, param); // res *= bskI
+    trgswExternalProductCRTNTT(res, bskCRT, tmp, param); // res *= bskI
 
     for (size_t i = 0; i < param.d; i++) {
         trlweAccumulateModP(res[i], inputs[i], param.qd[i]); // res += input
