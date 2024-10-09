@@ -47,7 +47,7 @@ void printElement(int index, const T& value) {
 
 template <typename T>
 void printTlweAB(const T& in, const string& msg) {
-    cout << msg << ": a: [";
+    cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET << ": a: [";
     for (int i = 0; i < in.n; i++) {
         cout << i << ":" << ANSI_COLOR_YELLOW << in.a[i] << ANSI_COLOR_RESET << " ";
     }
@@ -68,7 +68,7 @@ void printDecomposedTrlweNttAB(const DecomposedTrlweDft& in, const string& msg);
 
 template <typename T>
 void printArray(const vector<T>& in, const string& msg) {
-    cout << msg <<": [";
+    cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET <<": [";
     for (int i = 0; i < in.size(); i++) {
 //        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] << ANSI_COLOR_RESET <<" ";
 //        printf("%d:%s%d%s ", i, ANSI_COLOR_YELLOW, in[i], ANSI_COLOR_RESET);
@@ -79,7 +79,7 @@ void printArray(const vector<T>& in, const string& msg) {
 
 template <typename T, size_t N>
 void printArray(const T (&in)[N], const string& msg) {
-    cout << msg <<": [";
+    cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET <<": [";
     for (size_t i = 0; i < N; i++) {
 //        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] << ANSI_COLOR_RESET <<" ";
 //        printf("%d:%s%d%s ", i, ANSI_COLOR_YELLOW, in[i], ANSI_COLOR_RESET);
@@ -92,7 +92,7 @@ void printPolyMat(const vector<vector<IntPolynomial>>& in, const string& msg);
 
 template <typename T>
 void printPolyVec(const vector<T>& in, const string& msg) {
-    cout << msg << ": [";
+    cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET << ": [";
     for (int i = 0; i < in.size(); i++) {
         for (int j = 0; j < in[0].N; j++) {
             cout << i << "," << j << ":" << ANSI_COLOR_YELLOW <<  in[i].coeffs[j] << ANSI_COLOR_RESET  <<" ";

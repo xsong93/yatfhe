@@ -47,6 +47,38 @@ TEST(RgswTest, RgswEncDecTest) {
     printBanner("RgswEncDecTest");
 }
 
+TEST(RgswTest, RGSW_MCRT_DECOMPOSITION) {
+    YatfheParameters param {};
+    yatfheInit(param);
+
+    // ken gen
+    TrgswKey trgswKey {param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    trlweKeyGen(trlweKey);
+
+    // trgsw enc
+    Trgsw trgsw {param};
+    TrgswDft trgswDft {param};
+    Integer plain = 7;
+    trgswEncrypt(trgsw, param, trgswKey, plain);
+
+    // GD
+    std::vector<Trgsw8> trgswD(param.d, Trgsw8(param.dh, param.k, param.N));
+    Trgsw trgswRe {param};
+    trgswMCRTDecomp(trgswD, trgsw, param);
+    trgswMCRTToCRT(trgswD, param);
+    trgswCRTRecomp(trgswRe, trgswD, param);
+    printTrgsw(trgsw, "trgsw");
+    printTrgsw(trgswRe, "trgswRe");
+
+    // trgsw dec
+    Integer dec = trgswDecrypt(trgswRe, param, trgswKey);
+    cout << "plain: " << plain << endl;
+    cout << "dec: " << dec << endl;
+    ASSERT_EQ(plain, dec);
+    printBanner("RGSW_MCRT_DECOMPOSITION");
+}
+
 TEST(RgswTest, RgswMultTestNaive) {
     YatfheParameters param {};
 //    param.N = 1024;
