@@ -16,7 +16,7 @@ TEST(RgswTest, RgswEncDecTest) {
     YatfheParameters param {};
     yatfheInit(param);
 
-    // ken gen
+    // key gen
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     trlweKeyGen(trlweKey);
@@ -51,7 +51,7 @@ TEST(RgswTest, RGSW_MCRT_DECOMPOSITION) {
     YatfheParameters param {};
     yatfheInit(param);
 
-    // ken gen
+    // key gen
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     trlweKeyGen(trlweKey);
@@ -89,7 +89,7 @@ TEST(RgswTest, RgswMultTestNaive) {
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
-        // ken gen
+        // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
         trlweKeyGen(trlweKey);
@@ -133,15 +133,12 @@ TEST(RgswTest, RgswMultTestNaive) {
 //todo
 TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
     YatfheParameters param {};
-//    param.N = 1024;
-//    param.radixBits = 4;
-//    param.l = 3;
-//    param.k = 1;
+    param.N = 4;
     yatfheInit(param);
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
-        // ken gen
+        // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
         trlweKeyGen(trlweKey);
@@ -156,6 +153,7 @@ TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
         // trlwe enc
         Trlwe in2 {param.k, param.N};
         Integer mu2 = genIntUniformDist(-param.torusBase / 2, (param.torusBase - 1) / 2);
+        mu2 = 0;
         Torus mu2T = modSwitchToTorus32(mu2, param.torusBase);
         symEncTrlweSingleSample(in2, trlweKey, mu2T);
         printTrlweAB(in2, "trlwe");
@@ -201,7 +199,7 @@ TEST(RgswTest, RgswMultTestNTT) {
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
-        // ken gen
+        // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
         trlweKeyGen(trlweKey);
@@ -267,7 +265,7 @@ TEST(RgswTest, RgswMultTestNTT14) {
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
-        // ken gen
+        // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
         trlweKeyGen(trlweKey);
