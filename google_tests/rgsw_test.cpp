@@ -8,6 +8,7 @@
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlgsw.h"
 #include "yatfhe/numeric_functions.h"
+#include "yatfhe/ntt24.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 #include "yautil/time_counter.h"
@@ -167,7 +168,7 @@ TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
 
         // trgsw mult
         std::vector<Trlwe8> outD(param.d, Trlwe8{param.k, param.N});
-        COUNT_TIME("trgswExternalProductCRT", trgswExternalProductCRT(outD, trgswD, trlweD, param);)
+        COUNT_TIME("trgswExternalProductApproxCRT", trgswExternalProductApproxCRT(outD, trgswD, trlweD, param);)
 
         // Recomp
         Trlwe out {param.k, param.N};
@@ -186,6 +187,71 @@ TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
         }
     }
     printBanner("RGSW_MULT_MCRT_NAIVE");
+}
+
+TEST(RgswTest, RGSW_MULT_MCRT_NTT) {
+    YatfheParameters param {};
+//    param.N = 32;
+    yatfheInit(param);
+    int ti = 0;
+    while (ti++ < 10) {
+        cout << "iter: " << ti << endl;
+        // key gen
+        TrgswKey trgswKey {param};
+        TrlweKey& trlweKey = trgswKey.trlweKey;
+        trlweKeyGen(trlweKey);
+
+        // trgsw enc
+        Trgsw trgsw {param};
+        Integer mu1 = genIntUniformDist(0, 3);
+        trgswEncryptApproxCRT(trgsw, param, trgswKey, mu1);
+
+        // trlwe enc
+        Trlwe in2 {param.k, param.N};
+        Integer mu2 = genIntUniformDist(-param.torusBase / 2, (param.torusBase - 1) / 2);
+        Torus mu2T = modSwitchToTorus32(mu2, param.torusBase);
+        symEncTrlweSingleSample(in2, trlweKey, mu2T);
+        printTrlweAB(in2, "trlwe");
+
+        // trlwe dec pre-mult
+        IntPolynomial decPreP {param.N};
+        symDecTrlweToInt(decPreP, in2, trlweKey, param.torusBase);
+        printArray(decPreP.coeffs, "decPreP");
+
+        // GD
+        std::vector<Trlwe8> trlweD(param.d, Trlwe8{param.k, param.N});
+        trlweMCRTDecomp(trlweD, in2, param);
+        std::vector<Trgsw8> trgswD(param.d, Trgsw8(param.dh, param.k, param.N));
+        trgswMCRTDecomp(trgswD, trgsw, param);
+
+        // NTT
+        std::vector<TrgswDft24> trgswDDft(param.d, TrgswDft24(param.dh, param.k, param.N));
+        std::vector<Trgsw8> trgswDI(param.d, Trgsw8(param.dh, param.k, param.N));
+        for (size_t d = 0; d < param.d; d++) {
+            applyNttForRgsw24(trgswDDft[d], trgswD[d]);
+        }
+
+        // trgsw mult
+        std::vector<Trlwe8> outD(param.d, Trlwe8{param.k, param.N});
+        COUNT_TIME("trgswExternalProductApproxCRTNtt", trgswExternalProductApproxCRTNtt(outD, trgswDDft, trlweD, param);)
+
+        // Recomp
+        Trlwe out {param.k, param.N};
+        trlweMCRTToCRT(outD, param);
+        trlweCRTRecomp(out, outD, param);
+        printTrlweAB(out, "out");
+
+        // trlwe dec aft-mult
+        IntPolynomial decAftP {param.N};
+        symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
+        printArray(decAftP.coeffs, "decAftP");
+        Integer multPlain = intModP(mu1 * mu2, param.torusBase);
+        printf("Plain mult: %d * %d = %d\n", mu1, mu2, multPlain);
+        for (auto i = 0 ; i < decAftP.N; i++) {
+            ASSERT_EQ(multPlain, decAftP.coeffs[i]);
+        }
+    }
+    printBanner("RGSW_MULT_MCRT_NTT");
 }
 
 TEST(RgswTest, RgswMultTestNTT) {

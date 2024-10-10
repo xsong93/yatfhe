@@ -38,7 +38,7 @@ void trgswFunctionalBootstrappingCRT(Tlwe& out, const Tlwe& input, const Bootstr
     rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(tv, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     trlweMCRTDecomp(accCRT, tv, param);
-    blindRotateMCRT(accCRT, bskCRT, inputModN2, param);
+    blindRotateApproxCRTNtt(accCRT, bskCRT, inputModN2, param);
     trlweCRTRecomp(acc, accCRT, param);
     extractTlweFromTrlwe(tmp, acc, 0); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     tlweKeySwitch(out, ksk, tmp, param);
@@ -71,7 +71,7 @@ void blindRotateNtt(Trlwe& accum, const BootstrappingKey& bsk, const ScaledTlwe&
     }
 }
 
-void blindRotateMCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateApproxCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
     std::vector<Trlwe8> temp(param.d, Trlwe8{param.k, param.N});
     for (size_t i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
@@ -80,7 +80,21 @@ void blindRotateMCRT(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskC
         for (size_t d = 0; d < param.d; d++) {
             temp[d] = Trlwe8{param.k, param.N};
         }
-        controlMuxCRT(temp, accum, input.a[i], bskCRT.bskCRT[i], param);
+        controlMuxApproxCRT(temp, accum, input.a[i], bskCRT.bsk8[i], param);
+        swap(accum, temp);
+    }
+}
+
+void blindRotateApproxCRTNtt(std::vector<Trlwe8>& accum, const BootstrappingKeyCRT& bskCRT, const ScaledTlwe& input, const YatfheParameters& param) {
+    std::vector<Trlwe8> temp(param.d, Trlwe8{param.k, param.N});
+    for (size_t i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        for (size_t d = 0; d < param.d; d++) {
+            temp[d] = Trlwe8{param.k, param.N};
+        }
+        controlMuxApproxCRTNtt(temp, accum, input.a[i], bskCRT.bskCRT[i], param);
         swap(accum, temp);
     }
 }
@@ -101,14 +115,28 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
     trlweAccumulateT32(res, input); // res += input
 }
 
-void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param) {
+void controlMuxApproxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<Trgsw8>& bskCRT, const YatfheParameters& param) {
     std::vector<Trlwe8> tmp(param.d, Trlwe8{param.k, param.N});
 
     for (size_t i = 0; i < param.d; i++) {
         trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input
     }
 
-    trgswExternalProductCRTNTT(res, bskCRT, tmp, param); // res *= bskI
+    trgswExternalProductApproxCRT(res, bskCRT, tmp, param); // res *= bskI
+
+    for (size_t i = 0; i < param.d; i++) {
+        trlweAccumulateModP(res[i], inputs[i], param.qd[i]); // res += input
+    }
+}
+
+void controlMuxApproxCRTNtt(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param) {
+    std::vector<Trlwe8> tmp(param.d, Trlwe8{param.k, param.N});
+
+    for (size_t i = 0; i < param.d; i++) {
+        trlweRotateMinusOne8(tmp[i], inputs[i], aBarI, param.qd[i]); // res = c1 - c0 = X^aBarI * input - input
+    }
+
+    trgswExternalProductApproxCRTNtt(res, bskCRT, tmp, param); // res *= bskI
 
     for (size_t i = 0; i < param.d; i++) {
         trlweAccumulateModP(res[i], inputs[i], param.qd[i]); // res += input
@@ -143,27 +171,7 @@ void bootstrappingKeyMCRTDecomp(BootstrappingKeyCRT& bskCRT, const Bootstrapping
         for (size_t d = 0; d < param.d; d++) {
             auto& bsk8 = bsk8D[d];
             auto& bskNtt = bskNttD[d];
-            for (size_t l = 0; l < param.dh; l++) {
-                for (size_t k1 = 0; k1 < param.k + 1; k1++) {
-                    auto& nttOut = bskNtt.trlweDftSamples[l][k1];
-                    auto& nttIn = bsk8.trlweSamples[l][k1];
-                    applyNttForAB24(nttOut, nttIn);
-                }
-            }
+            applyNttForRgsw24(bskNtt, bsk8);
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

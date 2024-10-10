@@ -62,6 +62,32 @@ Ntt24 modSUB24(Ntt24 a, Ntt24 b);
 Ntt24 modMULT24(Ntt24 a, Ntt24 b);
 void initGlobalParamsNtt24(int N);
 
+template <typename RgswDftType, typename RgswType>
+void applyNttForRgsw24(RgswDftType& out, RgswType& in) {
+    auto level = in.l;
+    auto k = in.k;
+    for (size_t l = 0; l < level; l++) {
+        for (size_t k1 = 0; k1 < k + 1; k1++) {
+            auto& nttOut = out.trlweDftSamples[l][k1];
+            auto& nttIn = in.trlweSamples[l][k1];
+            applyNttForAB24(nttOut, nttIn);
+        }
+    }
+}
+
+template <typename RgswDftType, typename RgswType, typename U>
+void applyInttForRgsw24(RgswType& out, RgswDftType& in, U q) {
+    auto level = out.l;
+    auto k = out.k;
+    for (size_t l = 0; l < level; l++) {
+        for (size_t k1 = 0; k1 < k + 1; k1++) {
+            auto& dftIn = in.trlweDftSamples[l][k1];
+            auto& rgswOut = out.trlweSamples[l][k1];
+            applyInttForAB24(rgswOut, dftIn, q);
+        }
+    }
+}
+
 template <typename T, typename R>
 void applyNttForAB24(T& out, R& in) {
     for (auto row = 0; row < in.a.size(); row++) {

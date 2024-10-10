@@ -334,7 +334,7 @@ void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, 
     applyInttForAB(output, trlweDftRes);
 }*/
 
-void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<Trgsw8>& trgswInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
+void trgswExternalProductApproxCRT(std::vector<Trlwe8>& output, const std::vector<Trgsw8>& trgswInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
     std::vector<Trlwe8> tmpD(param.dh, Trlwe8{param.k, param.N});
     std::vector<std::vector<Trlwe8>> tmpDB(param.d, std::vector<Trlwe8>(param.dh, Trlwe8{param.k, param.N}));
 
@@ -363,7 +363,7 @@ void trgswExternalProductCRT(std::vector<Trlwe8>& output, const std::vector<Trgs
     }
 }
 
-void trgswExternalProductCRTNTT(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
+void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
     std::vector<Trlwe8> tmpD(param.dh, Trlwe8{param.k, param.N});
     std::vector<std::vector<Trlwe8>> tmpDB(param.d, std::vector<Trlwe8>(param.dh, Trlwe8{param.k, param.N}));
     std::vector<std::vector<TrlweDft24>> tmpDBNtt(param.d, std::vector<TrlweDft24>(param.dh, TrlweDft24{param.k, param.N}));
