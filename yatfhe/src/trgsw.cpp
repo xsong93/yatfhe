@@ -86,6 +86,25 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, cons
     }
 }
 
+void trgswAddIntegerApproxCRT(Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        auto decomposedMu = modMulT32(mu, param.w[lvl]);
+        for (auto row = 0; row < param.k + 1; row++) {
+
+            // add to a_lii
+            if (row < param.k) {
+//                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].a[row].coeffs[0], decomposedMu);
+                continue;
+            }
+
+            // add to b_lk
+//            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
+            trgsw.trlweSamples[lvl][row].b.coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].b.coeffs[0], decomposedMu);
+        }
+    }
+}
+
 void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
     trgswEncZero(trgsw, param, trgswKey);
     trgswAddInteger(trgsw, mu, param);
@@ -103,6 +122,11 @@ void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& t
 void trgswEncryptNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
     trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey);
     trgswAddIntegerNtt(trgswDft, trgsw, mu, param);
+}
+
+void trgswEncryptApproxCRT(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
+    trgswEncZero(trgsw, param, trgswKey);
+    trgswAddIntegerApproxCRT(trgsw, mu, param);
 }
 
 // To decrypt, it is sufficient to decrypt the last GLev ciphertext, which is a GLev encryption of m/B^l.

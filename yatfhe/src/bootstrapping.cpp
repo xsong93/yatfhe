@@ -127,6 +127,14 @@ void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameter
     }
 }
 
+void bootstrappingKeyGenApproxCRT(BootstrappingKeyCRT& bskCRT, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey) {
+    BootstrappingKey bsk{param};
+    for (auto i = 0; i < bsk.n; i++) {
+        trgswEncryptApproxCRT(bsk.bsk[i], param, trgswKey, tlweKey.s[i]);
+    }
+    bootstrappingKeyMCRTDecomp(bskCRT, bsk, param);
+}
+
 void bootstrappingKeyMCRTDecomp(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param) {
     for (size_t i = 0; i < param.n; i++) {
         trgswMCRTDecomp(bskCRT.bsk8[i], bsk.bsk[i], param);

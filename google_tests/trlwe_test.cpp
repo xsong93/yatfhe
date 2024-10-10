@@ -152,7 +152,7 @@ TEST(TrlweTest, TRLWE_MCRT_COMPOSITION) {
     printBanner("TRLWE_MCRT_COMPOSITION");
 }
 
-TEST(TrlweTest, TRLWE_APPROX_CRT_DECOMP) {
+TEST(TrlweTest, TRLWE_APPROX_CRT_COMPOSITION) {
     YatfheParameters param{};
     yatfheInit(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
@@ -176,7 +176,7 @@ TEST(TrlweTest, TRLWE_APPROX_CRT_DECOMP) {
     Trlwe trlweRecomp {param.k, param.N};
     COUNT_TIME("trlweMCRTDecomp", trlweMCRTDecomp(trlweDecomp, trlwe, param);)
     COUNT_TIME("trlweApproxCRTDecomp", trlweApproxCRTDecomp(trlweGadDecomp, trlweDecomp, param);)
-    COUNT_TIME("trlweMCRTRecomp", trlweMCRTRecomp(trlweRecomp, trlweGadDecomp, param);)
+    COUNT_TIME("trlweApproxCRTRecomp", trlweApproxCRTRecomp(trlweRecomp, trlweGadDecomp, param);)
     printTrlweAB(trlweRecomp, "trlweRecomp");
     int errA = 0;
     int errB = 0;
@@ -202,7 +202,7 @@ TEST(TrlweTest, TRLWE_APPROX_CRT_DECOMP) {
     printArray(gd.coeffs, "gd");
     ASSERT_EQ(ori.coeffs, gd.coeffs);
 
-    printBanner("TRLWE_APPROX_CRT_DECOMP");
+    printBanner("TRLWE_APPROX_CRT_COMPOSITION");
 }
 
 TEST(TrlweTest, TrlweAddSubMultiSampleTest) {

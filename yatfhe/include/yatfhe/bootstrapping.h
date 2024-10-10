@@ -57,9 +57,9 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, int aBarI, const TrgswDft& bs
 
 void controlMuxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param);
 
-void controlMuxCRT(Trlwe8& res, const std::vector<Trlwe8>& inputs, int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param);
-
 void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey);
+
+void bootstrappingKeyGenApproxCRT(BootstrappingKeyCRT& bskCRT, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey);
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey);
 

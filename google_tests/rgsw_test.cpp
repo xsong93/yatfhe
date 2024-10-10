@@ -130,13 +130,12 @@ TEST(RgswTest, RgswMultTestNaive) {
     printBanner("RgswMultTestNaive");
 }
 
-//todo
 TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
     YatfheParameters param {};
-    param.N = 4;
+//    param.N = 32;
     yatfheInit(param);
     int ti = 0;
-    while (ti++ < 1) {
+    while (ti++ < 10) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
@@ -146,14 +145,11 @@ TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
         // trgsw enc
         Trgsw trgsw {param};
         Integer mu1 = genIntUniformDist(0, 3);
-        mu1 = 1;
-        trgswEncrypt(trgsw, param, trgswKey, mu1);
-        printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
+        trgswEncryptApproxCRT(trgsw, param, trgswKey, mu1);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
         Integer mu2 = genIntUniformDist(-param.torusBase / 2, (param.torusBase - 1) / 2);
-        mu2 = 0;
         Torus mu2T = modSwitchToTorus32(mu2, param.torusBase);
         symEncTrlweSingleSample(in2, trlweKey, mu2T);
         printTrlweAB(in2, "trlwe");

@@ -302,7 +302,7 @@ void trlweMCRTToCRT(std::vector<TrlweType>& trlwe, const YatfheParameters& param
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
-void trlweMCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inMCRT, const YatfheParameters& param) {
+void trlweApproxCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inMCRT, const YatfheParameters& param) {
     auto& outA = out.a;
     auto qCRT = param.qCRT;
     for (size_t k = 0; k < param.k; k++) {

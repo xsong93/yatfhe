@@ -18,14 +18,12 @@ int main(int argc, char **argv) {
     TlweKey tlweKey{param.n, param.lweStdDev};
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    BootstrappingKey bsKey{param};
     BootstrappingKeyCRT bsKeyCRT{param};
     TlweKeySwitchingKey ksKey{param};
     COUNT_TIME("lweKeyGen", lweKeyGen(tlweKey);)
     COUNT_TIME("trlweKeyGen", trlweKeyGen(trlweKey);)
-    COUNT_TIME("bootstrappingKeyGen", bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);)
+    COUNT_TIME("bootstrappingKeyGenApproxCRT", bootstrappingKeyGenApproxCRT(bsKeyCRT, param, trgswKey, tlweKey);)
     COUNT_TIME("tlweKeySwitchingKeyGen", tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);)
-    COUNT_TIME("bootstrappingKeyMCRTDecomp", bootstrappingKeyMCRTDecomp(bsKeyCRT, bsKey, param);)
 
     Integer plain = 3;
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
