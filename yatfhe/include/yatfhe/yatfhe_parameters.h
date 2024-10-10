@@ -40,21 +40,21 @@ struct YatfheParameters {
     int digitMask {radixBase - 1};
     int unfolding {1};
     // CRT params
-    int d {4}; // # of primes
-    int dh {2};
-    int dl{2};
-    int qd[4] {QD_CRT[0], QD_CRT[1], QD_CRT[2], QD_CRT[3]};
-    int qdHalf[4] {qd[0]/2, qd[1]/2, qd[2]/2, qd[3]/2};
-    int qh[2] {qd[0], qd[1]};
-    int ql[2] {qd[2], qd[3]};
+    int d{NUM_PRIMES}; // # of primes
+    int dh{NUM_HIGH_PRIMES};
+    int dl{NUM_LOW_PRIMES};
+    int qd[NUM_PRIMES] {QD_CRT[0], QD_CRT[1], QD_CRT[2], QD_CRT[3]};
+    int qdHalf[NUM_PRIMES] {qd[0]/2, qd[1]/2, qd[2]/2, qd[3]/2};
+    int qh[NUM_HIGH_PRIMES] {qd[0], qd[1]};
+    int ql[NUM_LOW_PRIMES] {qd[2], qd[3]};
     int qHigh {qd[0] * qd[1]};
     int qLow {qd[2] * qd[3]};
     long qCRT{static_cast<long>(qHigh) * static_cast<long>(qLow)};
-    int qLowDivQl[2] {qLow / ql[0], qLow / ql[1]};
-    int taoU[4] {1, 1, 1, 1};
-    int taoUInv[4] {1, 1, 1, 1};
-    long w[2] {1, 1};
-    long z[4] {1, 1, 1, 1};
+    int qLowDivQl[NUM_LOW_PRIMES] {qLow / ql[0], qLow / ql[1]};
+    int taoU[NUM_PRIMES] {1, 1, 1, 1};
+    int taoUInv[NUM_PRIMES] {1, 1, 1, 1};
+    long w[NUM_HIGH_PRIMES] {1, 1};
+    long z[NUM_PRIMES] {1, 1, 1, 1};
 };
 
 #endif //HLS_YATFHE_YATFHE_PARAMETERS_H
