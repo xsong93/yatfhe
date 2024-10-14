@@ -8,7 +8,6 @@
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"
 #include "yatfhe/gadget_decomposition.h"
-#include "yautil/tool.h"
 
 using namespace std;
 

@@ -4,7 +4,6 @@
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"
-#include "yautil/tool.h"
 
 /**
  * For a random rotator input, this method converts the rotator to a value within the range of polynomial length.

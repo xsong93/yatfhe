@@ -4,7 +4,6 @@
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlgsw.h"
 #include "yatfhe/ntt14.h"
-#include "yautil/tool.h"
 
 void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
     Trgsw trgsw {param};

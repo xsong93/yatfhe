@@ -4,7 +4,6 @@
 #include <iostream>
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric_functions.h"
-#include "yautil/tool.h"
 
 using namespace std;
 

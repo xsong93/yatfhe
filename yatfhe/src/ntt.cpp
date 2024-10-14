@@ -3,9 +3,7 @@
 //
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt64.h"
-#include "yatfhe/numeric_functions.h"
-#include "torus.h"
-#include "yautil/tool.h"
+#include "yatfhe/torus.h"
 
 using namespace std;
 

@@ -9,7 +9,7 @@
 #include <string>
 #include <gmp.h>
 #include "yatfhe/polynomial.h"
-#include "numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 
 constexpr Ntt64 MOD64 = 0xffffffff00000001;
 constexpr Ntt64 HALF_MOD64 = (MOD64 + 1) >> 1;

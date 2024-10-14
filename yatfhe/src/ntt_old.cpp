@@ -1,11 +1,10 @@
 //
 // Created by Xintong Song on 2024/1/11.
 //
-#include <iostream>
+
 #include "yatfhe/ntt_old.h"
 #include "yautil/ntt_constants.h"
 #include "yautil/tool.h"
-#include "yatfhe/numeric_functions.h"
 using namespace std;
 
 // Function to perform Number Theoretic Transform (NTT)

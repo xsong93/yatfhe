@@ -5,7 +5,6 @@
 #include <vector>
 #include "yautil/tool.h"
 #include "yatfhe/trlwe.h"
-#include "yatfhe/trgsw.h"
 
 using namespace std;
 

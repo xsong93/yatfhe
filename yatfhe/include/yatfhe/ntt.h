@@ -7,7 +7,7 @@
 
 #include <vector>
 #include "yatfhe/polynomial.h"
-#include "numeric_functions.h"
+#include "yatfhe/numeric_functions.h"
 
 constexpr uint32_t POLY_MAX = 1 << 31;
 constexpr uint64_t POLY_Q = 1l << 32;

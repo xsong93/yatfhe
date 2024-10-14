@@ -13,14 +13,6 @@ TimeCounter::TimeCounter() {
     printTime("init timer");
 }
 
-void TimeCounter::lock () {
-    mux.lock();
-}
-
-void TimeCounter::unlock () {
-    mux.unlock();
-}
-
 void TimeCounter::resetTime() {
     time = high_resolution_clock::now();
 }

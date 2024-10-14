@@ -2,7 +2,7 @@
 // Created by Xintong Song on 2024/1/15.
 //
 
-#include"yautil/ntt_constants.h"
+#include "yautil/ntt_constants.h"
 
 #include <cstdint>
 #include <cstdlib>

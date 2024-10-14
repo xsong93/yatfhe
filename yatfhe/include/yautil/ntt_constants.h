@@ -8,8 +8,6 @@
 #include <cstdint>
 #include "yatfhe/torus.h"
 
-// todo: adapt ntt/intt to arbitrary polynomial length
-
 extern NttType phi_normal_2[1024];
 extern NttType phi_inverse_2[1024];
 

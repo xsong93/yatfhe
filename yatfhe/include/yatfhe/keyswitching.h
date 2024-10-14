@@ -6,7 +6,7 @@
 #define HLS_YATFHE_KEYSWITCHING_H
 
 #include <vector>
-#include "tlwe.h"
+#include "yatfhe/tlwe.h"
 
 using namespace std;
 

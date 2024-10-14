@@ -281,59 +281,6 @@ void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, const
     applyInttForAB(output, trlweDftRes);
 }
 
-/*//todo
-void trgswExternalProductSplitNtt(Trlwe& output, const TrgswDft& trgswDftInput, Trlwe& trlweInput, const YatfheParameters& param) {
-    const auto k = trlweInput.k;
-    const auto level = trgswDftInput.l;
-    const auto N = trlweInput.b.N;
-    TrlweDft trlweDftRes {k, N};
-    DecomposedTrlwe decomposedTrlwe {param};
-    DecomposedTrlweDft decomposedTrlweDft {param, param.l};
-
-//    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
-    for (auto row = 0; row < k + 1; row++) {
-        auto& currIn = (row < k) ? trlweInput.a[row] : trlweInput.b;
-        for (auto j = 0; j < N; j++) {
-            DecomposedData d {level};
-            gadgetDecompose(d, currIn.coeffs[j], param);
-            for (auto lvl = 0; lvl < level; lvl++) {
-                auto& currOut = (row < k) ? decomposedTrlwe.rlwes[lvl].a[row] : decomposedTrlwe.rlwes[lvl].b;
-                currOut.coeffs[j] = d.value[lvl] * d.sign;
-            }
-        }
-    }
-
-//#pragma omp parallel for
-    for (auto i = 0; i < decomposedTrlwe.l; i++) {
-        for (auto row = 0; row < decomposedTrlwe.rlwes[i].a.size(); row++) {
-            applyNtt(decomposedTrlweDft.rlweDfts[i].a[row], decomposedTrlwe.rlwes[i].a[row]);
-        }
-        applyNtt(decomposedTrlweDft.rlweDfts[i].b, decomposedTrlwe.rlwes[i].b);
-    }
-
-//#pragma omp parallel for collapse(2) private(out)
-    for (auto lvl = 0; lvl < level; lvl++) {
-        for (auto col = 0; col < k; col++) {
-            for (auto col2 = 0; col2 < k + 1; col2++) {
-                auto& out = (col2 < k) ? trlweDftRes.a[col2] : trlweDftRes.b;
-                auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][col].a[col2]
-                                         : trgswDftInput.trlweDftSamples[lvl][col].b;
-                calModularInnerProductNtt(out, decomposedTrlweDft.rlweDfts[lvl].a[col], curr2);
-            }
-        }
-    }
-
-    for (auto lvl = 0; lvl < level; lvl++) {
-        for (auto col2 = 0; col2 < k + 1; col2++) {
-            auto& out = (col2 < k) ? trlweDftRes.a[col2] : trlweDftRes.b;
-            auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][k].a[col2]
-                                     : trgswDftInput.trlweDftSamples[lvl][k].b;
-            calModularInnerProductNtt(out, decomposedTrlweDft.rlweDfts[lvl].b, curr2);
-        }
-    }
-    applyInttForAB(output, trlweDftRes);
-}*/
-
 void trgswExternalProductApproxCRT(std::vector<Trlwe8>& output, const std::vector<Trgsw8>& trgswInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param) {
     std::vector<Trlwe8> tmpD(param.dh, Trlwe8{param.k, param.N});
     std::vector<std::vector<Trlwe8>> tmpDB(param.d, std::vector<Trlwe8>(param.dh, Trlwe8{param.k, param.N}));
@@ -381,40 +328,6 @@ void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::ve
             applyNtt24(tmpDBNtt[d][dh].b, tmpDB[d][dh].b);
         }
     }
-
-/*    for (size_t d = 0; d < param.d; d++) {
-        auto& rgswIn = trgswDftInput[d];
-        auto& rlweResA = trlweDftRes[d].a;
-        auto& rlweResB = trlweDftRes[d].b;
-        for (size_t l = 0; l < param.dh; l++) {
-            auto& decompNttA = tmpDBNtt[d][l].a;
-            auto& decompNttB = tmpDBNtt[d][l].b;
-            for (size_t k = 0; k < param.k; k++) {
-                auto& rgswNttA = rgswIn.trlweDftSamples[l][k].a;
-                auto& rgswNttB = rgswIn.trlweDftSamples[l][k].b;
-                for (size_t ka = 0; ka < param.k; ka++) {
-                    for (size_t j = 0; j < param.N; j++) {
-                        auto tmpAA = modMULT24(decompNttA[ka].coeffs[j], rgswNttA[ka].coeffs[j]);
-                        auto tmpAB = modMULT24(decompNttA[ka].coeffs[j], rgswNttB.coeffs[j]);
-                        rlweResA[ka].coeffs[j] = modADD24(rlweResA[ka].coeffs[j], tmpAA);
-                        rlweResB.coeffs[j] = modADD24(rlweResB.coeffs[j], tmpAB);
-                    }
-                }
-            }
-            auto& rgswNttAk = rgswIn.trlweDftSamples[l][param.k].a;
-            auto& rgswNttBk = rgswIn.trlweDftSamples[l][param.k].b;
-            for (size_t ka = 0; ka < param.k; ka++) {
-                for (size_t j = 0; j < param.N; j++) {
-                    auto tmpBA = modMULT24(decompNttB.coeffs[j], rgswNttAk[ka].coeffs[j]);
-                    rlweResA[ka].coeffs[j] = modADD24(rlweResA[ka].coeffs[j], tmpBA);
-                }
-            }
-            for (size_t j = 0; j < param.N; j++) {
-                auto tmpBB = modMULT24(decompNttB.coeffs[j], rgswNttBk.coeffs[j]);
-                rlweResB.coeffs[j] = modADD24(rlweResB.coeffs[j], tmpBB);
-            }
-        }
-    }*/
 
     for (size_t d = 0; d < param.d; d++) {
         auto& rgswIn = trgswDftInput[d];

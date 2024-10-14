@@ -4,7 +4,7 @@
 #ifndef HLS_YATFHE_YATFHE_PARAMETERS_H
 #define HLS_YATFHE_YATFHE_PARAMETERS_H
 
-#include "torus.h"
+#include "yatfhe/torus.h"
 #include "yautil/control_helper.h"
 
 struct YatfheParameters {
