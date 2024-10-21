@@ -20,6 +20,13 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GMPXX REQUIRED IMPORTED_TARGET gmpxx)
 target_link_libraries(yatfhe_lib PkgConfig::GMPXX)
 
+# Specify where to install the headers and library
+install(TARGETS yatfhe_lib
+        ARCHIVE DESTINATION /usr/local/lib  # Static library installation path
+        LIBRARY DESTINATION /usr/local/lib  # Shared library installation path
+        RUNTIME DESTINATION /usr/local/bin  # Executable installation path (if needed)
+)
+
 # Add installation command for headers
-install(DIRECTORY include/yatfhe DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-install(DIRECTORY include/yautil DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+install(DIRECTORY include/yatfhe DESTINATION /usr/local/include)
+install(DIRECTORY include/yautil DESTINATION /usr/local/include)

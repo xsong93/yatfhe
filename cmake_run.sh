@@ -1,5 +1,6 @@
 # /bin/bash
 
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local -B CMAKE_BUILD/
-cd CMAKE_BUILD/
+rm -rf CMAKE_BUILD
+mkdir CMAKE_BUILD && cd CMAKE_BUILD
+cmake ..
 sudo make install -j8

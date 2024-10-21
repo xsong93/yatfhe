@@ -13,8 +13,9 @@ struct Tlwe {
     std::vector<Torus> a {}; // n
     Torus b {};
     int n {};
+    size_t bytes {};
 
-    explicit Tlwe(int n) : n(n), a(n), b(0) {};
+    explicit Tlwe(int n) : n(n), a(n), b(0), bytes(sizeof(Torus) * (n+1)) {};
 };
 
 struct ScaledTlwe {
