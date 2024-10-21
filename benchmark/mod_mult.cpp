@@ -10,67 +10,6 @@
 #include "yautil/initializer.h"
 #include "yautil/time_counter.h"
 
-void conv(const int N, const int k) {
-    vector<LagrangePolynomial> a(k, LagrangePolynomial(N));
-    vector<LagrangePolynomial> b(k, LagrangePolynomial(N));
-    vector<Ntt14Polynomial> a14(k, Ntt14Polynomial(N));
-    vector<Ntt14Polynomial> b14(k, Ntt14Polynomial(N));
-    vector<Ntt24Polynomial> a24(k, Ntt24Polynomial(N));
-    vector<Ntt24Polynomial> b24(k, Ntt24Polynomial(N));
-
-    LagrangePolynomial tmpMul{N};
-    Ntt14Polynomial tmpMul14{N};
-    Ntt24Polynomial tmpMul24{N};
-
-    vector<TorusPolynomial> poly0(k, TorusPolynomial(N));
-    vector<TorusPolynomial> poly2(k, TorusPolynomial(N));
-    vector<Int8Polynomial> poly3(k, Int8Polynomial(N));
-    vector<Int8Polynomial> poly4(k, Int8Polynomial(N));
-    TorusPolynomial resMul{N};
-    Int8Polynomial resMul2{N};
-    for (int t = 0; t < 1; ++t) {
-        for (auto i = 0; i < k; i++) {
-            for (auto j = 0; j < N; j++) {
-                poly0[i].coeffs[j] = genIntUniformDist(CHAR_MIN, CHAR_MAX);
-                poly2[i].coeffs[j] = genIntUniformDist(0, 1);
-                poly3[i].coeffs[j] = genIntUniformDist(CHAR_MIN, CHAR_MAX);
-                poly4[i].coeffs[j] = genIntUniformDist(0, 1);
-            }
-        }
-
-        COUNT_TIME("NTT_CONV64", {
-            for (auto i = 0; i < k; i++) {
-                applyNtt(a[i], poly0[i]);
-                applyNtt(b[i], poly2[i]);
-            }
-            for (auto i = 0; i < k; i++) {
-                calModularInnerProductNtt(tmpMul, a[i], b[i]);
-            }
-            applyIntt(resMul, tmpMul);
-        })
-
-        COUNT_TIME("NTT_CONV14", {
-            for (auto i = 0; i < k; i++) {
-                applyNtt14(a14[i], poly0[i]);
-                applyNtt14(b14[i], poly2[i]);
-            }
-            for (auto i = 0; i < k; i++) {
-                calModularInnerProductNtt14(tmpMul14, a14[i], b14[i]);
-            }
-            applyIntt14(resMul, tmpMul14);
-        })
-        COUNT_TIME("NTT_CONV24", {
-            for (auto i = 0; i < k; i++) {
-                applyNtt24(a24[i], poly3[i]);
-                applyNtt24(b24[i], poly4[i]);
-            }
-            for (auto i = 0; i < k; i++) {
-                calModularInnerProductNtt24(tmpMul24, a24[i], b24[i]);
-            }
-            applyIntt24(resMul2, tmpMul24, 256);
-        })
-    }
-}
 
 int main() {
     YatfheParameters param {};
@@ -114,8 +53,6 @@ int main() {
     COUNT_TIME("24", {
         for (auto i = 0; i < n; i++) { modMULT24(a24, b24); }
     })
-
-    conv(param.N, param.k);
 
     const int N = 1024;
     IntPolynomial poly0{N};

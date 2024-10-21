@@ -1,7 +1,6 @@
 //
 // Created by Xintong Song on 2023/12/25.
 //
-//#include <omp.h>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt.h"

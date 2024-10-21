@@ -57,10 +57,6 @@ int main() {
     cout << longModP(p.taoU[2] * p.taoUInv[2], p.qd[2]) << endl;
     cout << longModP(p.taoU[3] * p.taoUInv[3], p.qd[3]) << endl;
 
-    cout << longModP(INT64_MIN, TORUS_Q) << endl;
-    cout << barrettReduceT32(INT64_MIN) << endl;
-    COUNT_TIME("longModP", for(size_t i = 0; i < 10000; i++){longModP(INT64_MIN, TORUS_Q);})
-    COUNT_TIME("barrettReduceT32", for(size_t i = 0; i < 10000; i++){barrettReduceT32(INT64_MIN);})
 /*    std::vector<std::vector<std::vector<long>>> iii(1000, std::vector<std::vector<long>>(1000, std::vector<long>(1000, 0)));
 
     COUNT_TIME("n3",

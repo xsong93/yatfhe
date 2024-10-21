@@ -120,10 +120,23 @@ uint64_t mulhi64(uint64_t a, uint64_t b) {
 
 int64_t barrettReduceT32(int64_t in) {
     auto x = static_cast<uint64_t>(in < 0 ? -in : in);
-    uint64_t q = mulhi64(x, BARRETT_CONSTANT);
-    q = x - q * TORUS_Q;
-    q = (q >= TORUS_Q) ? q - TORUS_Q : q;
-    return in < 0 ? -static_cast<int64_t>(q) : static_cast<int64_t>(q);
+    uint64_t r = mulhi64(x, BARRETT_CONSTANT);
+    r = x - r * TORUS_Q;
+    if (r >= TORUS_Q) {
+        r -= TORUS_Q;
+    }
+    return in < 0 ? -static_cast<int64_t>(r) : static_cast<int64_t>(r);
+}
+
+int64_t montgomoryReduceT32(int64_t in) {
+    auto x = static_cast<uint64_t>(in < 0 ? -in : in);
+//    uint32_t xModR = x & 0xFFFFFFFF;
+    uint64_t u = (x * 926404979) & 0xFFFFFFFF;
+    uint64_t r = (x + u * TORUS_Q) >> 32;
+    if (r >= TORUS_Q) {
+        r -= TORUS_Q;
+    }
+    return in < 0 ? -static_cast<int64_t>(r) : static_cast<int64_t>(r);
 }
 
 Torus modAddT32(Torus in1, Torus in2) {

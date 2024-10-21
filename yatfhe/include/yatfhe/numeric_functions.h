@@ -44,6 +44,8 @@ int64_t longModP(int64_t a, int64_t p);
 
 int64_t barrettReduceT32(int64_t in);
 
+int64_t montgomoryReduceT32(int64_t in);
+
 Torus modAddT32(Torus in1, Torus in2);
 
 Torus modSubT32(Torus in1, Torus in2);
