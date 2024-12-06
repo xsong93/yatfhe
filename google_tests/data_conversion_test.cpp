@@ -99,15 +99,15 @@ TEST(DataConvTest, SCALE_TLWE) {
         ScaledTlwe inputModN2{param.N * 2, param.n};
         rescaleTlweFromTorus32(inputModN2, input);
 
-//        printTlweAB(input, "input");
-//        printTlweAB(inputModN2, "inputModN2");
+        printTlweAB(input, "input");
+        printTlweAB(inputModN2, "inputModN2");
 
         for (size_t i = 0; i < param.n; i++) {
-            ASSERT_LT(inputModN2.a[i], param.N * 2);
-            ASSERT_GE(inputModN2.a[i], 0);
+            ASSERT_LT(inputModN2.a[i], param.N);
+            ASSERT_GE(inputModN2.a[i], -param.N);
         }
-        ASSERT_LE(inputModN2.b, param.N * 2);
-        ASSERT_GE(inputModN2.b, 0);
+        ASSERT_LE(inputModN2.b, param.N);
+        ASSERT_GE(inputModN2.b, -param.N);
     }
     printBanner("SCALE_TLWE");
 }
