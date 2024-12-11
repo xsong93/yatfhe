@@ -35,7 +35,8 @@ void trglevMultConst(Trlwe& output, const Trglev& input, const Integer num, cons
             auto& curr = (r < k) ? output.a[r] : output.b;
             for (auto l1 = 0; l1 < d.l; l1++) {
                 auto& currTglev = (r < k) ? input.trlwes[l1].a[r] : input.trlwes[l1].b;
-                curr.coeffs[j] += currTglev.coeffs[j] * d.value[l1] * d.sign;
+//                curr.coeffs[j] += currTglev.coeffs[j] * d.value[l1] * d.sign;
+                curr.coeffs[j] = modAddT32(curr.coeffs[j], modMulT32(currTglev.coeffs[j], d.value[l1] * d.sign));
             }
         }
     }

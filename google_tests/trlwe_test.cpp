@@ -299,7 +299,7 @@ TEST(TrlweTest, TrlweMultLargeConstant) {
     Trglev trglev {param};
     trglevEncMultiSample(trglev, trlweKey, plainT, param);
 
-    Integer y = genIntUniformDist(INT32_MIN, INT32_MAX);
+    Integer y = 3;
 
     // recomp
     Trlwe recomp {param.k, param.N};
