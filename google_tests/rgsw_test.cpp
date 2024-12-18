@@ -103,10 +103,16 @@ TEST(RgswTest, RgswMultTestNaive) {
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
-        Integer mu2p = genIntUniformDist(-param.torusBase / 2, (param.torusBase - 1) / 2);
-        Torus mu2 = modSwitchToTorus32(mu2p, param.torusBase);
+        IntPolynomial mu2p{param.N};
+        IntPolynomial multPlain{param.N};
+        std::vector<Torus> mu2t(param.N);
+        for (size_t i = 0; i < param.N; i++) {
+            mu2p.coeffs[i] = intModP(i, param.torusBase);
+            mu2t[i] = modSwitchToTorus32(mu2p.coeffs[i], param.torusBase);
+            multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu1, param.torusBase);
+        }
         Trlwe out {param.k, param.N};
-        symEncTrlweSingleSample(in2, trlweKey, mu2);
+        symEncTrlweMultiSample(in2, trlweKey, mu2t);
         printTrlweAB(in2, "trlwe");
 
         // trlwe dec pre-mult
@@ -122,13 +128,75 @@ TEST(RgswTest, RgswMultTestNaive) {
         IntPolynomial decAftP {param.N};
         symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
         printArray(decAftP.coeffs, "decAftP");
-        Integer multPlain = intModP(mu1 * mu2p, param.torusBase);
-        printf("Plain mult: %d * %d = %d\n", mu1, mu2p, multPlain);
+        printArray(multPlain.coeffs, "Plain mult");
         for (auto i = 0 ; i < decAftP.N; i++) {
-            ASSERT_EQ(multPlain, decAftP.coeffs[i]);
+            ASSERT_EQ(multPlain.coeffs[i], decAftP.coeffs[i]);
         }
     }
     printBanner("RgswMultTestNaive");
+}
+
+TEST(RgswTest, RGSW_ROT) {
+    YatfheParameters param {};
+//    param.N = 1024;
+//    param.radixBits = 4;
+//    param.l = 3;
+//    param.k = 1;
+    yatfheInit(param);
+    int ti = 0;
+    while (ti++ < 10) {
+        cout << "iter: " << ti << endl;
+        // key gen
+        TrgswKey trgswKey {param};
+        TrlweKey& trlweKey = trgswKey.trlweKey;
+        trlweKeyGen(trlweKey);
+
+        // trgsw enc
+        Trgsw trgsw {param};
+        Integer mu1 = genIntUniformDist(0, 3);
+//        Integer mu1 = 1;
+        int rotN = 1;
+        trgswEncrypt(trgsw, param, trgswKey, mu1);
+        COUNT_TIME("trgswRotate", trgswRotate(trgsw, rotN, param);)
+        printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
+
+        // trlwe enc
+        Trlwe in2 {param.k, param.N};
+        IntPolynomial mu2p{param.N};
+        IntPolynomial multPlain{param.N};
+        std::vector<Torus> mu2t(param.N);
+        for (size_t i = 0; i < param.N; i++) {
+            mu2p.coeffs[i] = intModP(i, param.torusBase);
+            mu2t[i] = modSwitchToTorus32(mu2p.coeffs[i], param.torusBase);
+            multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu1, param.torusBase);
+        }
+        Trlwe out {param.k, param.N};
+        symEncTrlweMultiSample(in2, trlweKey, mu2t);
+        printTrlweAB(in2, "trlwe");
+
+        // trlwe dec pre-mult
+        IntPolynomial decPreP {param.N};
+        symDecTrlweToInt(decPreP, in2, trlweKey, param.torusBase);
+        printArray(decPreP.coeffs, "decPreP");
+
+        // trgsw mult
+        COUNT_TIME("trgswExternalProduct", trgswExternalProduct(out, trgsw, in2, param);)
+        printTrlweAB(out, "out");
+
+        // trlwe dec aft-mult
+        IntPolynomial decAftP {param.N};
+        symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
+        printArray(decAftP.coeffs, "decAftP");
+        printArray(multPlain.coeffs, "Plain mult");
+
+        TorusPolynomial res{param.N};
+        torusPolynomialRotate(res, -rotN, decAftP);
+        printArray(res.coeffs, "res");
+        for (auto i = 0 ; i < res.N; i++) {
+            ASSERT_EQ(multPlain.coeffs[i], res.coeffs[i]);
+        }
+    }
+    printBanner("RGSW_ROT");
 }
 
 TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {

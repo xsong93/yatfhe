@@ -73,7 +73,7 @@ TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
     printBanner("TrlweEncDecMultiSampleTest");
 }
 
-TEST(TrlweTest, TRLWE_ROT_TEST) {
+TEST(TrlweTest, TRLWE_ROT) {
     YatfheParameters param{};
     yatfheInit(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
@@ -108,7 +108,7 @@ TEST(TrlweTest, TRLWE_ROT_TEST) {
     for (auto i = 0; i < plain.size(); i++) {
         ASSERT_EQ(plain[i], res.coeffs[i]);
     }
-    printBanner("TrlweEncDecMultiSampleTest");
+    printBanner("TRLWE_ROT");
 }
 
 TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
