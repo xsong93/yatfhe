@@ -65,12 +65,48 @@ TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
     symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
     printTrlweAB(trlwe, "trlwe");
     symDecTrlweToIntNtt(output, trlweDft, trlweKey, param.torusBase);
-//    symEncTrlweMultiSample(trlwe, trlweKey, in);
-//    symDecTrlweToDouble(output, trlwe, trlweKey, param.torusBase);
 
     printArray(output.coeffs, "output");
     for (auto i = 0; i < plain.size(); i++) {
         ASSERT_EQ(plain[i], output.coeffs[i]);
+    }
+    printBanner("TrlweEncDecMultiSampleTest");
+}
+
+TEST(TrlweTest, TRLWE_ROT_TEST) {
+    YatfheParameters param{};
+    yatfheInit(param);
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    Trlwe trlwe {param.k, param.N};
+    TrlweDft trlweDft {param.k, param.N};
+    trlweKeyGen(trlweKey);
+
+    std::vector<int> plain(param.N);
+    std::vector<Torus> in(param.N);
+    for (auto i = 0; i < in.size(); i++) {
+//        plain[i] = (double) genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1) / param.torusBase;
+        plain[i] = genIntUniformDist(-4, 3);
+        in[i] = modSwitchToTorus32(plain[i], param.torusBase);
+    }
+    printArray(plain, "plain");
+
+    IntPolynomial output {param.N};
+//    symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
+//    printTrlweAB(trlwe, "trlwe");
+//    symDecTrlweToIntNtt(output, trlweDft, trlweKey, param.torusBase);
+
+    int rotN = 1;
+    symEncTrlweMultiSample(trlwe, trlweKey, in);
+    Trlwe rot{param.k, param.N};
+    trlweRotate(rot, trlwe, rotN);
+    symDecTrlweToInt(output, rot, trlweKey, param.torusBase);
+
+    printArray(output.coeffs, "output");
+    TorusPolynomial res{param.N};
+    torusPolynomialRotate(res, -rotN, output);
+    printArray(res.coeffs, "res");
+    for (auto i = 0; i < plain.size(); i++) {
+        ASSERT_EQ(plain[i], res.coeffs[i]);
     }
     printBanner("TrlweEncDecMultiSampleTest");
 }
