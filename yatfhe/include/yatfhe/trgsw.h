@@ -78,6 +78,8 @@ struct TrgswKey {
         trlweKey(TrlweKey(p)) {};
 };
 
+void trgswRotate(Trgsw& trgsw, int rot, const YatfheParameters& param);
+
 void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
 
 void trgswAddInteger(Trgsw& trgsw, Integer mu, const YatfheParameters& param);

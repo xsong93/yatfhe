@@ -35,6 +35,7 @@ void trgswAddInteger(Trgsw& trgsw, const Integer mu, const YatfheParameters& par
     // (                         1/B )
     // ( a_0  a_1          a_k-1  b  )
 
+    int pos = 0;
     for (auto lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
         // todo: decompose on second level
@@ -43,13 +44,23 @@ void trgswAddInteger(Trgsw& trgsw, const Integer mu, const YatfheParameters& par
             // add to a_lii
             if (row < param.k) {
 //                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
-                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].a[row].coeffs[0], decomposedMu);
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[pos] = modAddT32(trgsw.trlweSamples[lvl][row].a[row].coeffs[pos], decomposedMu);
                 continue;
             }
 
             // add to b_lk
 //            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
-            trgsw.trlweSamples[lvl][row].b.coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].b.coeffs[0], decomposedMu);
+            trgsw.trlweSamples[lvl][row].b.coeffs[pos] = modAddT32(trgsw.trlweSamples[lvl][row].b.coeffs[pos], decomposedMu);
+        }
+    }
+}
+
+void trgswRotate(Trgsw& trgsw, const int rot, const YatfheParameters& param) {
+    Trlwe rotT{param.k, param.N};
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        for (auto row = 0; row < param.k + 1; row++) {
+            rotT = trgsw.trlweSamples[lvl][row];
+            trlweRotate(trgsw.trlweSamples[lvl][row], rotT, rot);
         }
     }
 }
