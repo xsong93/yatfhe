@@ -80,8 +80,10 @@ void torusPolynomialRotate(TorusPolynomial& out, const int a, const TorusPolynom
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
+    Torus tmp = 0;
     for (auto i = 0; i < N; i++) {
-        out.coeffs[i] = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
+        tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
+        out.coeffs[i] = static_cast<Torus>(longModP(tmp, TORUS_Q));
     }
 }
 
@@ -94,6 +96,17 @@ void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const Toru
     for (auto i = 0; i < N; i++) {
         tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
         out.coeffs[i] = modSubT32(tmp, input.coeffs[i]);
+    }
+}
+
+void intPolynomialRotate(IntPolynomial& out, const int a, const IntPolynomial& input, const int64_t p) {
+    const auto N = input.N;
+    int aTrue, isWrap;
+    validateRotator(aTrue, isWrap, a, N);
+    Integer tmp;
+    for (auto i = 0; i < N; i++) {
+        tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
+        out.coeffs[i] = static_cast<Integer>(longModP(tmp, p));
     }
 }
 

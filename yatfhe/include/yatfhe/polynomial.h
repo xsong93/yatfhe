@@ -170,6 +170,8 @@ void torusPolynomialRotate(TorusPolynomial& out, int a, const TorusPolynomial& i
 
 void torusPolynomialRotateMinusOne(TorusPolynomial& out, int a, const TorusPolynomial& input);
 
+void intPolynomialRotate(IntPolynomial& out, int a, const IntPolynomial& input, int64_t p);
+
 void int8PolynomialRotate(Int8Polynomial& out, int a, const Int8Polynomial& input, int modP);
 
 void int8PolynomialRotateMinusOne(Int8Polynomial& out, int a, const Int8Polynomial& input, int modP);
