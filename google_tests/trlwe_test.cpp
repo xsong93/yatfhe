@@ -73,6 +73,49 @@ TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
     printBanner("TrlweEncDecMultiSampleTest");
 }
 
+TEST(TrlweTest, TRLWE_ENCS) {
+    YatfheParameters param{};
+    yatfheInit(param);
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    Trlwe trlwe {param.k, param.N};
+    TrlweDft trlweDft {param.k, param.N};
+    trlweKeyGen(trlweKey);
+
+    std::vector<IntPolynomial> plain(param.k, TorusPolynomial(param.N));
+    std::vector<TorusPolynomial> in(param.k, TorusPolynomial(param.N));
+    std::vector<TorusPolynomial> negativeS(param.k, TorusPolynomial(param.N));
+    for (size_t i = 0; i < param.k; i++) {
+        for (size_t j = 0; j < param.N; j++) {
+            plain[i].coeffs[j] = 0;
+            in[i].coeffs[j] = modSwitchToTorus32(plain[i].coeffs[j], param.torusBase);
+            negativeS[i].coeffs[j] = -trlweKey.s[i].coeffs[j];
+        }
+    }
+    plain[0].coeffs[0] = 1;
+    in[0].coeffs[0] = modSwitchToTorus32(plain[0].coeffs[0], param.torusBase);
+
+    TorusPolynomial sXm{param.N};
+    for (size_t i = 0; i < param.k; i++) {
+        polynomialMulAccNaiveT32(sXm, in[i], negativeS[i]);
+    }
+    printArray(sXm.coeffs, "-sXm");
+
+    // RLWE(-sm) = RLWE(0) - m * (-1, 0) = (a + m, as + e) [DM'21]
+    Trlwe encSxM{param.k, param.N};
+    symEncTrlweSingleSample(encSxM, trlweKey, 0);
+    for (size_t i = 0; i < param.k; i++) {
+        polynomialAddT32(encSxM.a[i], encSxM.a[i], in[i]);
+    }
+
+    TorusPolynomial res{param.N};
+    symDecTrlweToTorus(res, encSxM, trlweKey, param.torusBase);
+    printArray(res.coeffs, "res");
+
+    ASSERT_EQ(res.coeffs, sXm.coeffs);
+
+    printBanner("TRLWE_ENCS");
+}
+
 TEST(TrlweTest, TRLWE_ROT) {
     YatfheParameters param{};
     yatfheInit(param);
