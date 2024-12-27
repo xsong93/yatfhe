@@ -86,3 +86,39 @@ TEST(PolynomialTest, POLY_MULT) {
     printArray(polyI8C.coeffs, "polyI8C");
     printBanner("POLY_MULT");
 }
+
+TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP) {
+    YatfheParameters param {};
+    param.N = 64;
+    TorusPolynomial polyT32A{param.N};
+    TorusPolynomial polyT32B{param.N};
+    TorusPolynomial polyT32B1{param.N};
+    TorusPolynomial polyT32C{param.N};
+    TorusPolynomial polyT32C1{param.N};
+
+    for (size_t i = 0; i < param.N; i++) {
+        polyT32A.coeffs[i] = -1;
+        polyT32B.coeffs[i] = genIntUniformDist(0, 1);
+        polyT32B1.coeffs[i] = genIntUniformDist(0, 1);
+    }
+    printArray(polyT32A.coeffs, "polyT32A");
+    printArray(polyT32B.coeffs, "polyT32B");
+    printArray(polyT32B1.coeffs, "polyT32B1");
+
+    TorusPolynomial BplusB1{param.N};
+    TorusPolynomial addBefore{param.N};
+    polynomialAddT32(BplusB1, polyT32B, polyT32B1);
+    polynomialMulNaiveT32(addBefore, polyT32A, BplusB1);
+
+    TorusPolynomial addAfter{param.N};
+    polynomialMulNaiveT32(polyT32C, polyT32A, polyT32B);
+    polynomialMulNaiveT32(polyT32C1, polyT32A, polyT32B1);
+    polynomialAddT32(addAfter, polyT32C, polyT32C1);
+
+    printArray(addBefore.coeffs, "addBeforeConv");
+    printArray(addAfter.coeffs, "addAfterConv");
+
+    ASSERT_EQ(addBefore.coeffs, addAfter.coeffs);
+
+    printBanner("POLY_EXTERNAL_SUMPROP");
+}
