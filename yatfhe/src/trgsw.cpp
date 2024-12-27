@@ -9,6 +9,23 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/crt.h"
+#include "yautil/tool.h"
+
+//todo
+void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const YatfheParameters& param, const TrgswKey& trgswKey) {
+    std::vector<TorusPolynomial> muPoly(param.k, TorusPolynomial(param.N));
+    int pos = 0;
+    for (size_t lvl = 0; lvl < param.l; lvl++) {
+        auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
+        muPoly[0].coeffs[pos] = decomposedMu;
+        symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly[0].coeffs);
+        symEncTrlweSingleSample(trgswMP.c[lvl], trgswKey.trlweKey, 0);
+        muPoly[0].coeffs[pos] = mu;
+        for (size_t i = 0; i < param.k; i++) {
+            polynomialAddT32(trgswMP.c[lvl].a[i], trgswMP.c[lvl].a[i], muPoly[i]);
+        }
+    }
+}
 
 // trgsw(0): [trlwe(0)]  (k+1)l rows
 void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
@@ -21,7 +38,7 @@ void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& t
 
 // output += mu * G^T
 void trgswAddInteger(Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
-    // add the diagonal matrix (mu * G^T)_ijk to the output
+/*    // add the diagonal matrix (mu * G^T)_ijk to the output
     //       ( 1/B^l                         )
     //      .                              . .
     //    .                              .   .
@@ -33,7 +50,7 @@ void trgswAddInteger(Trgsw& trgsw, const Integer mu, const YatfheParameters& par
     // (                  .          )   .
     // (                      .      ) .
     // (                         1/B )
-    // ( a_0  a_1          a_k-1  b  )
+    // ( a_0  a_1          a_k-1  b  )*/
 
     int pos = 0;
     for (auto lvl = 0; lvl < param.l; lvl++) {
@@ -370,4 +387,31 @@ void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::ve
         }
         applyIntt24(output[d].b, trlweDftRes[d].b, qd);
     }
+}
+
+//todo
+void trgswMPExternalProduct(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param) {
+    const auto k = param.k;
+    const auto N = param.N;
+    const auto level = param.l;
+    DecomposedTrlwe decomposedTrlwe{param};
+    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+
+    Trlwe resA{k, N};
+    Trlwe resB{k, N};
+    for (size_t lvl = 0; lvl < level; lvl++) {
+        auto& cA = trgswMPInput.c[lvl].a;
+        auto& cB = trgswMPInput.c[lvl].b;
+        auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
+        auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
+        auto& inA = decomposedTrlwe.rlwes[lvl].a;
+        auto& inB = decomposedTrlwe.rlwes[lvl].b;
+        for(size_t i = 0; i < k; i++) {
+            polynomialMulAccNaiveT32(resA.a[i], inA[i], cA[i]);
+            polynomialMulAccNaiveT32(resA.b, inA[i], cB);
+            polynomialMulAccNaiveT32(resB.a[i], inB, cPrimeA[i]);
+        }
+        polynomialMulAccNaiveT32(resB.b, inB, cPrimeB);
+    }
+    trlweAdd(output, resB, resA);
 }

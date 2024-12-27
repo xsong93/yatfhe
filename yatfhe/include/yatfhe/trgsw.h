@@ -9,6 +9,17 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/trlwe.h"
 
+struct TrgswMP {
+    std::vector<Trlwe> c;
+    std::vector<Trlwe> cPrime;
+    int l;
+
+    explicit TrgswMP(const YatfheParameters& p) :
+            c(p.l, Trlwe(p.k, p.N)),
+            cPrime(p.l, Trlwe(p.k, p.N)),
+            l(p.l) {};
+};
+
 struct Trgsw {
     std::vector<std::vector<Trlwe>> trlweSamples {};
     int l;
@@ -80,6 +91,8 @@ struct TrgswKey {
 
 void trgswRotate(Trgsw& trgsw, int rot, const YatfheParameters& param);
 
+void trgswMPEncrypt(TrgswMP& trgswMP, Integer mu, const YatfheParameters& param, const TrgswKey& trgswKey);
+
 void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
 
 void trgswAddInteger(Trgsw& trgsw, Integer mu, const YatfheParameters& param);
@@ -111,5 +124,7 @@ void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, const Tr
 void trgswExternalProductApproxCRT(std::vector<Trlwe8>& output, const std::vector<Trgsw8>& trgswInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
 
 void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
+
+void trgswMPExternalProduct(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

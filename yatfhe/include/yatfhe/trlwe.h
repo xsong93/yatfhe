@@ -26,16 +26,25 @@ struct Rlwe {
 struct Trlwe {
     std::vector<TorusPolynomial> a; // k
     TorusPolynomial b; // 1
+    int N;
     int k;
 
     Trlwe(int k, int N) :
         a(k, TorusPolynomial(N)),
         b(TorusPolynomial(N)),
+        N(N),
         k(k) {};
 
-    Trlwe(int k, int N, int val) :
+    Trlwe(int k, int N, Torus val) :
             a(k, TorusPolynomial(N, val)),
             b(TorusPolynomial(N, val)),
+            N(N),
+            k(k) {};
+
+    Trlwe(int k, int N, Torus valA, Torus valB) :
+            a(k, TorusPolynomial(N, valA)),
+            b(TorusPolynomial(N, valB)),
+            N(N),
             k(k) {};
 };
 
