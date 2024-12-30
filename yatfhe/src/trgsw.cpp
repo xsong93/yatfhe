@@ -20,7 +20,6 @@ void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const YatfheParameters& 
         muPoly[0].coeffs[pos] = decomposedMu;
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly[0].coeffs);
         symEncTrlweSingleSample(trgswMP.c[lvl], trgswKey.trlweKey, 0);
-        muPoly[0].coeffs[pos] = mu;
         for (size_t i = 0; i < param.k; i++) {
             polynomialAddT32(trgswMP.c[lvl].a[i], trgswMP.c[lvl].a[i], muPoly[i]);
         }
@@ -389,7 +388,6 @@ void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::ve
     }
 }
 
-//todo
 void trgswMPExternalProduct(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = param.k;
     const auto N = param.N;
@@ -407,9 +405,11 @@ void trgswMPExternalProduct(Trlwe& output, const TrgswMP& trgswMPInput, const Tr
         auto& inA = decomposedTrlwe.rlwes[lvl].a;
         auto& inB = decomposedTrlwe.rlwes[lvl].b;
         for(size_t i = 0; i < k; i++) {
-            polynomialMulAccNaiveT32(resA.a[i], inA[i], cA[i]);
-            polynomialMulAccNaiveT32(resA.b, inA[i], cB);
+            for(size_t i2 = 0; i2 < k; i2++) {
+                polynomialMulAccNaiveT32(resA.a[i], inA[i2], cA[i]);
+            }
             polynomialMulAccNaiveT32(resB.a[i], inB, cPrimeA[i]);
+            polynomialMulAccNaiveT32(resA.b, inA[i], cB);
         }
         polynomialMulAccNaiveT32(resB.b, inB, cPrimeB);
     }
