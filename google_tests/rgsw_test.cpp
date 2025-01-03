@@ -138,7 +138,7 @@ TEST(RgswTest, RgswMultTestNaive) {
 
 TEST(RgswTest, RGSWMP_MULT_NAIVE) {
     YatfheParameters param {};
-//    param.N = 1024;
+//    param.N = 4;
 //    param.radixBits = 4;
 //    param.l = 3;
 //    param.k = 1;
@@ -153,9 +153,8 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE) {
 
         // trgsw enc
         TrgswMP trgswMP {param};
-        Integer mu1 = 0;
+        Integer mu1 = 1;
         trgswMPEncrypt(trgswMP, mu1, param, trgswKey);
-//        printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -163,22 +162,22 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE) {
         IntPolynomial multPlain{param.N};
         std::vector<Torus> mu2t(param.N);
         for (size_t i = 0; i < param.N; i++) {
-            mu2p.coeffs[i] = 0;
+            mu2p.coeffs[i] = i;
             mu2t[i] = modSwitchToTorus32(mu2p.coeffs[i], param.torusBase);
             multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu1, param.torusBase);
         }
         Trlwe out {param.k, param.N};
         symEncTrlweMultiSample(in2, trlweKey, mu2t);
-        printTrlweAB(in2, "trlwe");
+//        printTrlweAB(in2, "trlwe");
 
         // trlwe dec pre-mult
         IntPolynomial decPreP {param.N};
         symDecTrlweToInt(decPreP, in2, trlweKey, param.torusBase);
-        printArray(decPreP.coeffs, "decPreP");
+        printArray(decPreP.coeffs, "mu in");
 
         // trgsw mult
         COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProduct(out, trgswMP, in2, param);)
-        printTrlweAB(out, "out");
+//        printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
         IntPolynomial decAftP {param.N};
@@ -189,7 +188,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE) {
             ASSERT_EQ(multPlain.coeffs[i], decAftP.coeffs[i]);
         }
     }
-    printBanner("RgswMultTestNaive");
+    printBanner("RGSWMP_MULT_NAIVE");
 }
 
 TEST(RgswTest, RGSW_ROT) {
@@ -439,7 +438,6 @@ TEST(RgswTest, RgswMultTestNTT) {
     }
     printBanner("RgswMultTestNTT");
 }
-
 
 //todo: trlgsw
 TEST(RgswTest, RgswMultTestNTT14) {

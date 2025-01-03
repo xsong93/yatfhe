@@ -10,12 +10,12 @@
 #include "yatfhe/trlwe.h"
 
 struct TrgswMP {
-    std::vector<Trlwe> c;
+    std::vector<std::vector<Trlwe>> c;
     std::vector<Trlwe> cPrime;
     int l;
 
     explicit TrgswMP(const YatfheParameters& p) :
-            c(p.l, Trlwe(p.k, p.N)),
+            c(p.l, std::vector<Trlwe>(p.k, Trlwe(p.k, p.N))),
             cPrime(p.l, Trlwe(p.k, p.N)),
             l(p.l) {};
 };

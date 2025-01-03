@@ -9,19 +9,21 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/crt.h"
-#include "yautil/tool.h"
 
-//todo
 void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const YatfheParameters& param, const TrgswKey& trgswKey) {
-    std::vector<TorusPolynomial> muPoly(param.k, TorusPolynomial(param.N));
+    TorusPolynomial muPoly{param.N};
     int pos = 0;
     for (size_t lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
-        muPoly[0].coeffs[pos] = decomposedMu;
-        symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly[0].coeffs);
-        symEncTrlweSingleSample(trgswMP.c[lvl], trgswKey.trlweKey, 0);
-        for (size_t i = 0; i < param.k; i++) {
-            polynomialAddT32(trgswMP.c[lvl].a[i], trgswMP.c[lvl].a[i], muPoly[i]);
+        muPoly.coeffs[pos] = decomposedMu;
+        symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+        for (size_t k = 0; k < param.k; k++) {
+            symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+            for (size_t i = 0; i < param.k; i++) {
+                if (i == k) {
+                    polynomialAddT32(trgswMP.c[lvl][k].a[i], trgswMP.c[lvl][k].a[i], muPoly);
+                }
+            }
         }
     }
 }
@@ -398,18 +400,19 @@ void trgswMPExternalProduct(Trlwe& output, const TrgswMP& trgswMPInput, const Tr
     Trlwe resA{k, N};
     Trlwe resB{k, N};
     for (size_t lvl = 0; lvl < level; lvl++) {
-        auto& cA = trgswMPInput.c[lvl].a;
-        auto& cB = trgswMPInput.c[lvl].b;
+        auto& c = trgswMPInput.c[lvl];
         auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
         auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
         auto& inA = decomposedTrlwe.rlwes[lvl].a;
         auto& inB = decomposedTrlwe.rlwes[lvl].b;
         for(size_t i = 0; i < k; i++) {
-            for(size_t i2 = 0; i2 < k; i2++) {
-                polynomialMulAccNaiveT32(resA.a[i], inA[i2], cA[i]);
+            auto& ciA = c[i].a;
+            auto& ciB = c[i].b;
+            for (size_t i2 = 0; i2 < k; i2++) {
+                polynomialMulAccNaiveT32(resA.a[i2], inA[i], ciA[i2]);
             }
+            polynomialMulAccNaiveT32(resA.b, inA[i], ciB);
             polynomialMulAccNaiveT32(resB.a[i], inB, cPrimeA[i]);
-            polynomialMulAccNaiveT32(resA.b, inA[i], cB);
         }
         polynomialMulAccNaiveT32(resB.b, inB, cPrimeB);
     }
