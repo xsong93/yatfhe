@@ -91,27 +91,42 @@ TEST(TrlweTest, TRLWE_ENCS) {
             negativeS[i].coeffs[j] = -trlweKey.s[i].coeffs[j];
         }
     }
-    plain[0].coeffs[0] = 1;
-    in[0].coeffs[0] = modSwitchToTorus32(plain[0].coeffs[0], param.torusBase);
+    int pos = 0;
+    int val = 1;
+    in[0].coeffs[pos] = modSwitchToTorus32(val, param.torusBase);
+    in[1].coeffs[pos] = modSwitchToTorus32(val, param.torusBase);
 
-    TorusPolynomial sXm{param.N};
+    std::vector<TorusPolynomial> sXm(param.k, TorusPolynomial(param.N));
     for (size_t i = 0; i < param.k; i++) {
-        polynomialMulAccNaiveT32(sXm, in[i], negativeS[i]);
+        polynomialMulNaiveT32(sXm[i], in[i], negativeS[i]);
     }
-    printArray(sXm.coeffs, "-sXm");
+    printArray(sXm[0].coeffs, "-sXm 0");
+    printArray(sXm[1].coeffs, "-sXm 1");
 
     // RLWE(-sm) = RLWE(0) - m * (-1, 0) = (a + m, as + e) [DM'21]
-    Trlwe encSxM{param.k, param.N};
-    symEncTrlweSingleSample(encSxM, trlweKey, 0);
+    Trlwe encSxM0{param.k, param.N};
+    Trlwe encSxM1{param.k, param.N};
+    symEncTrlweSingleSample(encSxM0, trlweKey, 0);
+    symEncTrlweSingleSample(encSxM1, trlweKey, 0);
+    in[0].coeffs[pos] = modSwitchToTorus32(val, param.torusBase);
+    in[1].coeffs[pos] = modSwitchToTorus32(0, param.torusBase);
     for (size_t i = 0; i < param.k; i++) {
-        polynomialAddT32(encSxM.a[i], encSxM.a[i], in[i]);
+        polynomialAddT32(encSxM0.a[i], encSxM0.a[i], in[i]);
+    }
+    in[0].coeffs[pos] = modSwitchToTorus32(0, param.torusBase);
+    in[1].coeffs[pos] = modSwitchToTorus32(val, param.torusBase);
+    for (size_t i = 0; i < param.k; i++) {
+        polynomialAddT32(encSxM1.a[i], encSxM1.a[i], in[i]);
     }
 
-    TorusPolynomial res{param.N};
-    symDecTrlweToTorus(res, encSxM, trlweKey, param.torusBase);
-    printArray(res.coeffs, "res");
+    std::vector<TorusPolynomial> res(param.k, TorusPolynomial(param.N));
+    symDecTrlweToTorus(res[0], encSxM0, trlweKey, param.torusBase);
+    symDecTrlweToTorus(res[1], encSxM1, trlweKey, param.torusBase);
+    printArray(res[0].coeffs, "res 0");
+    printArray(res[1].coeffs, "res 1");
 
-    ASSERT_EQ(res.coeffs, sXm.coeffs);
+    ASSERT_EQ(res[0].coeffs, sXm[0].coeffs);
+    ASSERT_EQ(res[1].coeffs, sXm[1].coeffs);
 
     printBanner("TRLWE_ENCS");
 }

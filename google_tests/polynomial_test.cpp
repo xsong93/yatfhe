@@ -122,3 +122,57 @@ TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP) {
 
     printBanner("POLY_EXTERNAL_SUMPROP");
 }
+
+TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP2) {
+    YatfheParameters param {};
+    param.N = 64;
+    TorusPolynomial polyT32A{param.N};
+    TorusPolynomial polyT32B{param.N};
+    TorusPolynomial polyT32B1{param.N};
+    TorusPolynomial polyT32B2{param.N};
+    TorusPolynomial polyT32C{param.N};
+    TorusPolynomial polyT32C1{param.N};
+    TorusPolynomial polyT32C2{param.N};
+
+    for (size_t i = 0; i < param.N; i++) {
+        polyT32A.coeffs[i] = -1;
+        polyT32B.coeffs[i] = genIntUniformDist(0, 1);
+        polyT32B1.coeffs[i] = genIntUniformDist(0, 1);
+        polyT32B2.coeffs[i] = genIntUniformDist(0, 1);
+        polyT32C.coeffs[i] = genIntUniformDist(0, 1);
+        polyT32C1.coeffs[i] = genIntUniformDist(0, 1);
+        polyT32C2.coeffs[i] = genIntUniformDist(0, 1);
+    }
+
+    // A * (B * C + B1 * C1 + B2 * C2)
+    TorusPolynomial bXc{param.N};
+    polynomialMulAccNaiveT32(bXc, polyT32B, polyT32C);
+    polynomialMulAccNaiveT32(bXc, polyT32B1, polyT32C1);
+    polynomialMulAccNaiveT32(bXc, polyT32B2, polyT32C2);
+    TorusPolynomial bXcXA{param.N};
+    polynomialMulNaiveT32(bXcXA, polyT32A, bXc);
+
+    // (A * B) * C + (A * B1) * C1 + (A * B2) * C2
+    TorusPolynomial aXb{param.N};
+    TorusPolynomial aXb1{param.N};
+    TorusPolynomial aXb2{param.N};
+    TorusPolynomial aXbXc{param.N};
+    TorusPolynomial aXb1Xc1{param.N};
+    TorusPolynomial aXb2Xc2{param.N};
+    TorusPolynomial aDbDc{param.N};
+    polynomialMulNaiveT32(aXb, polyT32A, polyT32B);
+    polynomialMulNaiveT32(aXb1, polyT32A, polyT32B1);
+    polynomialMulNaiveT32(aXb2, polyT32A, polyT32B2);
+    polynomialMulNaiveT32(aXbXc, aXb, polyT32C);
+    polynomialMulNaiveT32(aXb1Xc1, aXb1, polyT32C1);
+    polynomialMulNaiveT32(aXb2Xc2, aXb2, polyT32C2);
+    polynomialAddT32(aDbDc, aXbXc, aXb1Xc1);
+    polynomialAddT32(aDbDc, aDbDc, aXb2Xc2);
+
+    printArray(bXcXA.coeffs, "dotBefore");
+    printArray(aDbDc.coeffs, "dotAfter");
+
+    ASSERT_EQ(bXcXA.coeffs, aDbDc.coeffs);
+
+    printBanner("POLY_EXTERNAL_SUMPROP2");
+}
