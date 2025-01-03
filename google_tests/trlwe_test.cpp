@@ -104,24 +104,19 @@ TEST(TrlweTest, TRLWE_ENCS) {
     printArray(sXm[1].coeffs, "-sXm 1");
 
     // RLWE(-sm) = RLWE(0) - m * (-1, 0) = (a + m, as + e) [DM'21]
-    Trlwe encSxM0{param.k, param.N};
-    Trlwe encSxM1{param.k, param.N};
-    symEncTrlweSingleSample(encSxM0, trlweKey, 0);
-    symEncTrlweSingleSample(encSxM1, trlweKey, 0);
-    in[0].coeffs[pos] = modSwitchToTorus32(val, param.torusBase);
-    in[1].coeffs[pos] = modSwitchToTorus32(0, param.torusBase);
-    for (size_t i = 0; i < param.k; i++) {
-        polynomialAddT32(encSxM0.a[i], encSxM0.a[i], in[i]);
-    }
-    in[0].coeffs[pos] = modSwitchToTorus32(0, param.torusBase);
-    in[1].coeffs[pos] = modSwitchToTorus32(val, param.torusBase);
-    for (size_t i = 0; i < param.k; i++) {
-        polynomialAddT32(encSxM1.a[i], encSxM1.a[i], in[i]);
+    std::vector<Trlwe> encSxM(param.k, Trlwe{param.k, param.N});
+    for (size_t k = 0; k < param.k; k++) {
+        symEncTrlweSingleSample(encSxM[k], trlweKey, 0);
+        for (size_t i = 0; i < param.k; i++) {
+            if (i == k) {
+                polynomialAddT32(encSxM[k].a[i], encSxM[k].a[i], in[i]);
+            }
+        }
     }
 
     std::vector<TorusPolynomial> res(param.k, TorusPolynomial(param.N));
-    symDecTrlweToTorus(res[0], encSxM0, trlweKey, param.torusBase);
-    symDecTrlweToTorus(res[1], encSxM1, trlweKey, param.torusBase);
+    symDecTrlweToTorus(res[0], encSxM[0], trlweKey, param.torusBase);
+    symDecTrlweToTorus(res[1], encSxM[1], trlweKey, param.torusBase);
     printArray(res[0].coeffs, "res 0");
     printArray(res[1].coeffs, "res 1");
 
