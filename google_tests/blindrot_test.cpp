@@ -64,6 +64,18 @@ TEST(BlindRot, BlindRot) {
 
     blindRotate(in2, bsk, sTlwe, param);
 
+    // trgsw enc X^rot
+    Trgsw trgswXRot {param};
+    Trlwe trlweInCopy {param.k, param.N};
+    Trlwe trlwe {param.k, param.N};
+    trgswEncrypt(trgswXRot, param, trgswKey, 1);
+    trgswRotate(trgswXRot, rot, param);
+    symEncTrlweMultiSample(trlweInCopy, trlweKey, plainT.coeffs);
+    trgswExternalProduct(trlwe, trgswXRot, trlweInCopy, param);
+    IntPolynomial trlweDec {param.N};
+    symDecTrlweToInt(trlweDec, trlwe, trlweKey, param.torusBase);
+    printArray(trlweDec.coeffs, "encXRot");
+
     // dec
     IntPolynomial decP {param.N};
     symDecTrlweToInt(decP, in2, trlweKey, param.torusBase);
