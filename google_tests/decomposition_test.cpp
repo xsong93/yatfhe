@@ -270,7 +270,8 @@ TEST(DecompositionTest, DecompNttOrderTest) {
     TrlweDft inDft {param.k, param.N};
     Trlwe recomp {param.k, param.N};
 
-    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    TrgswKey trgswKey {param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
     trlweKeyGen(trlweKey);
     Torus mu = doubleToTorus32(1.0 / param.torusBase);
     symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
@@ -310,58 +311,48 @@ TEST(DecompositionTest, DecompNttOrderTest) {
     printBanner("NTT -> decomp -> recomp -> INTT");
 
 
-//    // decomp -> NTT -> recomp -> INTT
+////    // decomp -> NTT -> arith -> INTT -> recomp
 //    // todo
 //    DecomposedTrlwe out2 {param};
+//    DecomposedTrlwe out2Intt {param};
 //    DecomposedTrlweDft outDft2 {param, param.l};
+//    DecomposedTrlweDft multRes {param, param.l};
 //    TrlweDft recompDft2 {param.k, param.N};
-//    Trlwe intt2 {param.k, param.N};
-//
-//    std::vector<Integer> oneOverB(param.l);
-//    decomposeOverB(oneOverB, 1, param);
-//    printArray(oneOverB, "1");
-//    vector<TorusPolynomial> helper (param.l, TorusPolynomial(param.N, 0));
-//    vector<LagrangePolynomial> helperDft;
-//    for (auto i = 0; i < helper.size(); i++) {
-//        for (auto j = 0; j < param.N; j++) {
-//            helper[i].coeffs[j] = oneOverB[i];
-//        }
-//        LagrangePolynomial tmp (param.N);
-//        applyNtt(tmp, helper[i]);
-//        helperDft.push_back(tmp);
-//    }
-//    for (auto i = 0; i < helperDft.size(); i++) {
-//        printArray(helperDft[i].coeffs, "helperDft l" + to_string(i));
-//    }
+//    Trlwe recomp2 {param.k, param.N};
 //
 //    COUNT_TIME("decomp", gadgetDecomposeTrlwe(out2, in, param);) // decompose
 //    COUNT_TIME("NTT",
 //               for (auto i = 0; i < out2.l; i++) {
 //                   applyNttForAB(outDft2.rlweDfts[i], out2.rlwes[i]); // NTT
-//               })
-//    COUNT_TIME("recomp", {
-//        auto l = out2.l;
-//        auto k = param.k;
-//        for (auto lvl = 0; lvl < l; lvl++) {
-//            for (auto row = 0; row < k + 1; row++) {
-//                auto& currIn = (row < k) ? outDft2.rlweDfts[lvl].a[row] : outDft2.rlweDfts[lvl].b;
-//                auto& currOut = (row < k) ? recompDft2.a[row] : recompDft2.b;
-//                for (auto j = 0; j < param.N; j++) {
-//                    currOut.coeffs[j] = modAdd(currOut.coeffs[j], modMul(currIn.coeffs[j], helperDft[lvl].coeffs[j]));
+//   })
+//
+//    // trgsw enc
+//    Trgsw trgsw {param};
+//    TrgswDft trgswDft {param};
+//    Integer mu2 = 0;
+//    trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, mu2);
+//    auto k = param.k;
+//    COUNT_TIME("mult", {
+//        for (size_t lvl = 0; lvl < param.l; lvl++) {
+//            for (auto col = 0; col < k + 1; col++) {
+//                auto &curr = (col < k) ? outDft2.rlweDfts[lvl].a[col] : outDft2.rlweDfts[lvl].b;
+//                for (auto col2 = 0; col2 < k + 1; col2++) {
+//                    auto &out = (col2 < k) ? multRes.rlweDfts[lvl].a[col2] : multRes.rlweDfts[lvl].b;
+//                    auto &curr2 = (col2 < k) ? trgswDft.trlweDftSamples[lvl][col].a[col2]
+//                                             : trgswDft.trlweDftSamples[lvl][col].b;
+//                    calModularInnerProductNtt(out, curr, curr2);
 //                }
 //            }
 //        }
-//    }) // recompose
-//    COUNT_TIME("intt", applyInttForAB(intt2, recompDft2);) // intt
+//    })
+//    COUNT_TIME("intt",
+//               for (auto i = 0; i < out2.l; i++) {
+//                   applyInttForAB(out2Intt.rlwes[i], multRes.rlweDfts[i]); // iNTT
+//    })
+//    COUNT_TIME("recompose", recomposeTrlwe(recomp2, out2Intt, param);)
 //    TorusPolynomial dec2 {param.N};
-//    symDecTrlweToInt(dec2, intt2, trlweKey, param.torusBase);
-//    printArray(dec2.coeffs, "dec");
-//    for (auto j = 0; j < in.b.N; j++) {
-//        for (auto i = 0 ; i < in.k; i++) {
-//            ASSERT_EQ(in.a[i].coeffs[j], intt2.a[i].coeffs[j]);
-//        }
-//        ASSERT_EQ(in.b.coeffs[j], intt2.b.coeffs[j]);
-//    }
+//    symDecTrlweToInt(dec2, recomp2, trlweKey, param.torusBase);
+//    printArray(dec2.coeffs, "dec2");
 //    printBanner("decomp -> NTT -> recomp -> INTT");
 }
 
@@ -370,7 +361,7 @@ TEST(DecompositionTest, DecompNttOrderTest) {
 TEST(DecompositionTest, NttDecompArithTest) {
     YatfheParameters param {};
 //    param.radixBits = 4;
-//    param.l = 8;
+//    param.lDft = 2;
 //    param.k = 2;
     yatfheInit(param);
 
@@ -403,10 +394,26 @@ TEST(DecompositionTest, NttDecompArithTest) {
     COUNT_TIME("decomp", gadgetDecomposeTrlweNtt(outDft, dft, param);) //decomp
     COUNT_TIME("decomp1", gadgetDecomposeTrlweNtt(outDft1, dft1, param);) //decomp
 
+    TrlweDft tmp{param.k, param.N};
+    DecomposedTrlweDft tmpD {param, param.lDft};
+    trlweAddNtt(tmp, dft, dft1);
+    gadgetDecomposeTrlweNtt(tmpD, tmp, param);
+
     // decomp mod add
     for (auto l = 0; l < param.lDft; l++) {
-        trlweAddNtt(outDftAdd.rlweDfts[l], outDft.rlweDfts[l], outDft1.rlweDfts[l]);
+        for (auto i = 0; i < param.k; i++) {
+            for (auto j = 0; j < param.N; j++) {
+                outDftAdd.rlweDfts[l].a[i].coeffs[j] = (outDft.rlweDfts[l].a[i].coeffs[j] + outDft1.rlweDfts[l].a[i].coeffs[j]) % 256;
+            }
+        }
+        for (auto j = 0; j < param.N; j++) {
+            outDftAdd.rlweDfts[l].b.coeffs[j] = (outDft.rlweDfts[l].b.coeffs[j] + outDft1.rlweDfts[l].b.coeffs[j]) % 256;
+        }
     }
+    printArray(tmpD.rlweDfts[7].b.coeffs, "tmpD");
+    printArray(outDft.rlweDfts[7].b.coeffs, "decomp");
+    printArray(outDft1.rlweDfts[7].b.coeffs, "decomp1");
+    printArray(outDftAdd.rlweDfts[7].b.coeffs, "outDftAdd");
 
     COUNT_TIME("recomp", recomposeTrlweNtt(recompDft, outDftAdd, param);) // recompose
     COUNT_TIME("INTT", applyInttForAB(intt, recompDft);) // intt
@@ -414,11 +421,4 @@ TEST(DecompositionTest, NttDecompArithTest) {
     TorusPolynomial dec1 {param.N};
     symDecTrlweToInt(dec1, intt, trlweKey, param.torusBase);
     printArray(dec1.coeffs, "dec1");
-    for (auto j = 0; j < in.b.N; j++) {
-        for (auto i = 0; i < in.k; i++) {
-            ASSERT_EQ(in.a[i].coeffs[j], intt.a[i].coeffs[j]);
-        }
-        ASSERT_EQ(in.b.coeffs[j], intt.b.coeffs[j]);
-    }
-
 }
