@@ -12,6 +12,45 @@
 #include "yautil/initializer.h"
 #include "yautil/time_counter.h"
 
+TEST(TrlweTest, TRLWE_RED_TEST) {
+    YatfheParameters param {};
+    yatfheInit(param);
+
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    Trlwe trlwe {param.k, param.N};
+    Trlwe intt {param.k, param.N};
+    TrlweDft trlweDft {param.k, param.N};
+    trlweKeyGen(trlweKey);
+
+    double plain =  -1.0 / param.torusBase;
+    Torus mu = doubleToTorus32(plain);
+
+    DoublePolynomial output {param.N};
+    symEncTrlweSingleSample(trlwe, trlweKey, mu);
+
+    // cut off
+    int thres = 16;
+    for (size_t i = 0; i < param.k; i++) {
+        for (size_t j = 0; j < param.N; j++) {
+            auto tmp = trlwe.a[i].coeffs[j] >> thres;
+            trlwe.a[i].coeffs[j] = tmp << thres;
+        }
+    }
+    for (size_t j = 0; j < param.N; j++) {
+        auto tmp = trlwe.b.coeffs[j] >> thres;
+        trlwe.b.coeffs[j] = tmp << thres;
+    }
+
+    symDecTrlweToDouble(output, trlwe, trlweKey, param.torusBase);
+
+    cout << "mu:" << plain <<endl;
+    printArray(output.coeffs, "output");
+    for (auto coeff: output.coeffs) {
+        ASSERT_EQ(plain, coeff);
+    }
+    printBanner("TRLWE_RED_TEST");
+}
+
 TEST(TrlweTest, TrlweEncDecSingleSampleTest) {
     YatfheParameters param {};
     param.k = 5;

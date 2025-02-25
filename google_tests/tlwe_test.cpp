@@ -8,6 +8,33 @@
 #include "yautil/tool.h"
 #include "yatfhe/tglev.h"
 
+TEST(TlweTest, RED_TEST) {
+    const YatfheParameters param {};
+
+    TlweKey tlweKey {param.n, param.lweStdDev};
+    lweKeyGen(tlweKey);
+
+    int plain = genIntUniformDist(-param.torusBase/2, param.torusBase/2 - 1);
+    Torus mu = modSwitchToTorus32(plain, param.torusBase);
+    Tlwe input {param.n};
+    symEncTlweSample(input, mu, tlweKey);
+
+    // saw off
+    int thres = 16;
+    for (size_t j = 0; j < param.N; j++) {
+        auto tmp = input.a[j] >> thres;
+        input.a[j] = tmp << thres;
+    }
+    auto tmp = input.b >> thres;
+    input.b = tmp << thres;
+
+    cout << "msg:" << intModP(plain, param.torusBase) << endl;
+    cout << "mu:" << mu << endl;
+    cout << "decPre:" << symDecTlweSampleToInt(input, tlweKey, param.torusBase) << endl;
+    ASSERT_EQ(intModP(plain, param.torusBase), symDecTlweSampleToInt(input, tlweKey, param.torusBase));
+    printBanner("RED_TEST");
+}
+
 TEST(TlweTest, EncDecTest) {
     const YatfheParameters param {};
 
