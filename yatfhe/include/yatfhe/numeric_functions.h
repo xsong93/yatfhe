@@ -102,6 +102,13 @@ void vectorMultConst(vector<T>& output, vector<T>& input1, R num) {
     }
 }
 
+template <typename T, typename R, typename U>
+void vectorMultConstModQ(vector<T>& output, vector<T>& input1, R num, U q) {
+    for (auto i = 0; i < output.size(); i++) {
+        output[i] = (T) modMulQ(input1[i], num, q);
+    }
+}
+
 template <typename T, typename R>
 void vectorDotMultConst(vector<T>& output, vector<T>& input1, vector<R>& nums) {
     for (auto i = 0; i < output.size(); i++) {
