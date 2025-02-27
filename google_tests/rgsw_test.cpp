@@ -209,10 +209,15 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
         trlweKeyGen(trlweKey);
 
         // trgsw enc
-        TrgswMP trgswMP {param};
-        Integer mu1 = 1;
-        trgswMPEncryptLow(trgswMP, mu1, param, trgswKey);
-
+        int loop = 5;
+        std::vector<TrgswMP> trgsws(loop, TrgswMP{param});
+        Integer mu = 1;
+        for (size_t i = 0; i < loop; i++) {
+            Integer mui = 3;
+            mu *= mui;
+            trgswMPEncryptLow(trgsws[i], mui, param, trgswKey);
+        }
+        cout << "mu: " << mu << endl;
         // trlwe enc
         Trlwe in2 {param.k, param.N};
         IntPolynomial mu2p{param.N};
@@ -221,7 +226,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
         for (size_t i = 0; i < param.N; i++) {
             mu2p.coeffs[i] = i;
             mu2t[i] = modSwitchToTorus32(mu2p.coeffs[i], param.torusBase);
-            multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu1, param.torusBase);
+            multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu, param.torusBase);
         }
         Trlwe out {param.k, param.N};
         symEncTrlweMultiSample(in2, trlweKey, mu2t);
@@ -232,12 +237,18 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
         symDecTrlweToInt(decPreP, in2, trlweKey, param.torusBase);
         printArray(decPreP.coeffs, "mu in");
 
-        DecomposedTrlwe in2D{param};
-        gadgetDecomposeTrlwe(in2D, in2, param);
+        DecomposedTrlwe outD{param};
+        gadgetDecomposeTrlwe(outD, in2, param);
 
         // trgsw mult
-        DecomposedTrlwe outD {param};
-        COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProductDecomp(outD, trgswMP, in2D, param);)
+        DecomposedTrlwe tmp{param};
+        for (size_t i = 0; i < loop; i++) {
+            tmp = DecomposedTrlwe{param};
+            trgswMPExternalProductDecomp(tmp, trgsws[i], outD, param);
+            swap(outD, tmp);
+        }
+//        COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProductDecomp(tmp, trgswMP, in2D, param);)
+//        COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProductDecomp(outD, trgswMP2, tmp, param);)
         recomposeTrlwe(out, outD, param);
 //        printDecomposedTrlweAB(outD, "outD");
 //        printTrlweAB(out, "out");
