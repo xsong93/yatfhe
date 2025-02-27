@@ -28,6 +28,21 @@ void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const YatfheParameters& 
     }
 }
 
+void trgswMPEncryptLow(TrgswMP& trgswMP, const Integer mu, const YatfheParameters& param, const TrgswKey& trgswKey) {
+    TorusPolynomial muPoly{param.N};
+    int pos = 0;
+    muPoly.coeffs[pos] = mu;
+    symEncTrlweMultiSample(trgswMP.cPrime[0], trgswKey.trlweKey, muPoly.coeffs);
+    for (size_t k = 0; k < param.k; k++) {
+        symEncTrlweSingleSample(trgswMP.c[0][k], trgswKey.trlweKey, 0);
+        for (size_t i = 0; i < param.k; i++) {
+            if (i == k) {
+                polynomialAddT32(trgswMP.c[0][k].a[i], trgswMP.c[0][k].a[i], muPoly);
+            }
+        }
+    }
+}
+
 // trgsw(0): [trlwe(0)]  (k+1)l rows
 void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
     for (auto lvl = 0; lvl < param.l; lvl++) {
@@ -417,4 +432,39 @@ void trgswMPExternalProduct(Trlwe& output, const TrgswMP& trgswMPInput, const Tr
         polynomialMulAccNaiveT32(resB.b, inB, cPrimeB);
     }
     trlweAdd(output, resB, resA);
+}
+
+void trgswMPExternalProductDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param) {
+    const auto k = param.k;
+    const auto N = param.N;
+    const auto level = param.l;
+
+    DecomposedTrlwe resA{param};
+    DecomposedTrlwe resB{param};
+    for (size_t lvl = 0; lvl < level; lvl++) {
+        auto& c = trgswMPInput.c[0];
+        auto& cPrimeA = trgswMPInput.cPrime[0].a;
+        auto& cPrimeB = trgswMPInput.cPrime[0].b;
+        auto& inA = trlweInput.rlwes[lvl].a;
+        auto& inB = trlweInput.rlwes[lvl].b;
+        for(size_t i = 0; i < k; i++) {
+            auto& ciA = c[i].a;
+            auto& ciB = c[i].b;
+            for (size_t i2 = 0; i2 < k; i2++) {
+                polynomialMulAccNaiveT32(resA.rlwes[lvl].a[i2], inA[i], ciA[i2]);
+            }
+            polynomialMulAccNaiveT32(resA.rlwes[lvl].b, inA[i], ciB);
+            polynomialMulAccNaiveT32(resB.rlwes[lvl].a[i], inB, cPrimeA[i]);
+        }
+        polynomialMulAccNaiveT32(resB.rlwes[lvl].b, inB, cPrimeB);
+    }
+    for (size_t lvl = 0; lvl < level; lvl++) {
+        auto& out = output.rlwes[lvl];
+        auto& a = resA.rlwes[lvl];
+        auto& b = resB.rlwes[lvl];
+        for (auto i = 0; i < param.k; i++) {
+            polynomialAddT32(out.a[i], a.a[i], b.a[i]);
+        }
+        polynomialAddT32(out.b, a.b, b.b);
+    }
 }
