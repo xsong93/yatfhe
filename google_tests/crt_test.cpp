@@ -10,6 +10,7 @@
 
 TEST(CRT, APPROX_CRT) {
     YatfheParameters p {};
+    p.q = Q_CRT;
     yatfheInit(p);
     std::vector<int> coeffs = {656381177, -1322693974, 749894848, 1618033988};
     int Qlow = 55687;
@@ -38,11 +39,12 @@ TEST(CRT, APPROX_CRT) {
 
 TEST(CRT, EXACT_CRT) {
     YatfheParameters p {};
+    p.q = Q_CRT;
     yatfheInit(p);
 //    std::vector<int32_t> coeffs = {656381177, -1322693974, 749894848, 1618033988};
     std::vector<int32_t> coeffs(p.N);
     for (size_t i = 0; i < p.N; i++) {
-        coeffs[i] = genIntUniformDist(INT_MIN_CRT, INT_MAX_CRT);
+        coeffs[i] = genIntUniformDist(INT_MIN_VALUE, INT_MAX_VALUE);
     }
     std::vector<std::vector<int8_t>> f(p.d, std::vector<int8_t>(coeffs.size(), 0));
     std::vector<std::vector<int8_t>> f2(coeffs.size(), std::vector<int8_t>(p.d, 0));
@@ -69,6 +71,7 @@ TEST(CRT, EXACT_CRT) {
 
 TEST(CRT, TRLWE_CRT) {
     YatfheParameters param{};
+    param.q = Q_CRT;
     yatfheInit(param);
     //todo
     printBanner("TRLWE_CRT");

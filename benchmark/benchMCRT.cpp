@@ -12,6 +12,7 @@
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
+    param.q = Q_CRT;
     yatfheInit(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 

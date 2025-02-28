@@ -51,6 +51,7 @@ TEST(RgswTest, RgswEncDecTest) {
 
 TEST(RgswTest, RGSW_MCRT_DECOMPOSITION) {
     YatfheParameters param {};
+    param.q = Q_CRT;
     yatfheInit(param);
 
     // key gen
@@ -548,6 +549,7 @@ TEST(RgswTest, RGSW_ROT) {
 
 TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
     YatfheParameters param {};
+    param.q = Q_CRT;
 //    param.N = 32;
     yatfheInit(param);
     int ti = 0;
@@ -606,6 +608,7 @@ TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
 
 TEST(RgswTest, RGSW_MULT_MCRT_NTT) {
     YatfheParameters param {};
+    param.q = Q_CRT;
 //    param.N = 32;
     yatfheInit(param);
     int ti = 0;

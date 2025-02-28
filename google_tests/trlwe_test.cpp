@@ -205,6 +205,7 @@ TEST(TrlweTest, TRLWE_ROT) {
 
 TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
     YatfheParameters param{};
+    param.q = Q_CRT;
     yatfheInit(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
@@ -221,7 +222,6 @@ TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
     }
     symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
     printTrlweAB(trlwe, "trlwe");
-
     // RD
     std::vector<Trlwe8> trlweDecomp(param.d, Trlwe8{param.k, param.N});
     Trlwe trlweRecomp {param.k, param.N};
@@ -249,6 +249,7 @@ TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
 
 TEST(TrlweTest, TRLWE_MCRT_COMPOSITION) {
     YatfheParameters param{};
+    param.q = Q_CRT;
     yatfheInit(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
@@ -282,6 +283,7 @@ TEST(TrlweTest, TRLWE_MCRT_COMPOSITION) {
 
 TEST(TrlweTest, TRLWE_APPROX_CRT_COMPOSITION) {
     YatfheParameters param{};
+    param.q = Q_CRT;
     yatfheInit(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};

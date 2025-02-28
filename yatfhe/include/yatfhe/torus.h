@@ -27,26 +27,21 @@ const int32_t NUM_HIGH_PRIMES{2};
 const int32_t NUM_LOW_PRIMES{2};
 //const Integer QD_CRT[NUM_PRIMES] {251, 19, 17, 13};
 const Integer QD_CRT[NUM_PRIMES] {251, 241, 239, 233};
+const uint64_t Q_32 = INT64_C(1) << 32;
+const int64_t Q_CRT = static_cast<int64_t>(QD_CRT[0]) * QD_CRT[1] * QD_CRT[2] * QD_CRT[3];
+const uint64_t BARRETT_CONSTANT = UINT64_MAX / (uint64_t)Q_CRT;  // μ = floor(2^64 / TORUS_Q)
 
-#ifdef USE_CRT
-const int64_t TORUS_Q {static_cast<int64_t>(QD_CRT[0]) * QD_CRT[1] * QD_CRT[2] * QD_CRT[3]};
-#else
-const uint64_t TORUS_Q = INT64_C(1) << 32;
-#endif
-
-const Integer INT_MAX_CRT = static_cast<Integer>((TORUS_Q - 1) >> 1);
-const Integer INT_MIN_CRT = static_cast<Integer>(-(TORUS_Q >> 1));
-const Integer TORUS_MAX = INT_MAX_CRT;
-const Integer TORUS_MIN = INT_MIN_CRT;
-const uint64_t BARRETT_CONSTANT = UINT64_MAX / (uint64_t)TORUS_Q;  // μ = floor(2^64 / TORUS_Q)
+extern uint64_t TORUS_Q;
+extern Integer INT_MAX_VALUE;
+extern Integer INT_MIN_VALUE;
+extern Integer TORUS_MAX;
+extern Integer TORUS_MIN;
 
 #else
 using Torus = int64_t;
 using UnsignedInteger = uint64_t;
 using Integer = int64_t;
 using Binary = Integer;
-const Integer TorusMax = INT64_MAX;
-const Integer TorusMin = INT64_MIN;
 #endif
 
 #endif //HLS_YATFHE_TORUS_H

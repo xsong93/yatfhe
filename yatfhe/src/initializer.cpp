@@ -7,6 +7,12 @@
 #include "yautil/time_counter.h"
 #include "yatfhe/numeric_functions.h"
 
+uint64_t TORUS_Q = Q_32;
+Integer INT_MAX_VALUE = static_cast<Integer>((TORUS_Q - 1) >> 1);
+Integer INT_MIN_VALUE = static_cast<Integer>(-(TORUS_Q >> 1));
+Integer TORUS_MAX = INT_MAX_VALUE;
+Integer TORUS_MIN = INT_MIN_VALUE;
+
 void calGadgetVectorW(YatfheParameters& param) {
     auto qCRT = param.qCRT;
     for (size_t i = 0; i < param.dh; i++) {
@@ -27,6 +33,7 @@ void calGadgetVectorZ(YatfheParameters& param) {
 }
 
 void yatfheInit(YatfheParameters& param) {
+    TORUS_Q = param.q;
     initGlobalParamsNtt64(param.N);
     initGlobalParamsNtt24(param.N);
     for (size_t d = 0; d < param.dl; d++) {
