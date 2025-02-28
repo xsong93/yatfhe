@@ -192,12 +192,13 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE) {
     printBanner("RGSWMP_MULT_NAIVE");
 }
 
-TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
+// chaining multiplication only works for exact decomp when multiplier is greater than 1
+TEST(RgswTest, RGSWMP_MULT_NAIVE_CHAIN) {
     YatfheParameters param {};
 //    param.n = 805;
 //    param.N = 512;
 //    param.radixBits = 10;
-//    param.l = 4;
+    param.l = 4;
 //    param.k = 3;
     yatfheInit(param);
     int ti = 0;
@@ -209,7 +210,75 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
         trlweKeyGen(trlweKey);
 
         // trgsw enc
-        int loop = 5;
+        int loop = param.n;
+        std::vector<Trgsw> trgsws(loop, Trgsw{param});
+        std::vector<TrgswDft> trgswDfts(loop, TrgswDft{param});
+        Integer mu = 1;
+        for (size_t i = 0; i < loop; i++) {
+            Integer mui = 3;
+            mu *= mui;
+            trgswEncryptNtt(trgsws[i], trgswDfts[i], param, trgswKey, mui);
+        }
+        cout << "mu: " << mu << endl;
+        // trlwe enc
+        Trlwe in2 {param.k, param.N};
+        TrlweDft in2Dft{param.k, param.N};
+        IntPolynomial mu2p{param.N};
+        IntPolynomial multPlain{param.N};
+        std::vector<Torus> mu2t(param.N);
+        for (size_t i = 0; i < param.N; i++) {
+            mu2p.coeffs[i] = i;
+            mu2t[i] = modSwitchToTorus32(mu2p.coeffs[i], param.torusBase);
+            multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu, param.torusBase);
+        }
+        symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, mu2t);
+//        printTrlweAB(in2, "trlwe");
+
+        // trlwe dec pre-mult
+        IntPolynomial decPreP {param.N};
+        symDecTrlweToInt(decPreP, in2, trlweKey, param.torusBase);
+        printArray(decPreP.coeffs, "mu in");
+
+        // trgsw mult
+        Trlwe tmp{param.k, param.N};
+        for (size_t i = 0; i < loop; i++) {
+            tmp = Trlwe{param.k, param.N};
+            trgswExternalProductNtt(tmp, trgswDfts[i], in2, param);
+            swap(in2, tmp);
+        }
+//        printTrlweAB(out, "out");
+
+        // trlwe dec aft-mult
+        IntPolynomial decAftP {param.N};
+        symDecTrlweToInt(decAftP, in2, trlweKey, param.torusBase);
+        printArray(decAftP.coeffs, "decAftP");
+        printArray(multPlain.coeffs, "Plain mult");
+        for (auto i = 0 ; i < decAftP.N; i++) {
+            ASSERT_EQ(multPlain.coeffs[i], decAftP.coeffs[i]);
+        }
+    }
+    printBanner("RGSWMP_MULT_NAIVE_CHAIN");
+}
+
+// chaining multiplication only works for exact decomp when multiplier is greater than 1
+TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
+    YatfheParameters param {};
+//    param.n = 805;
+//    param.N = 512;
+//    param.radixBits = 10;
+    param.l = 4;
+//    param.k = 3;
+    yatfheInit(param);
+    int ti = 0;
+    while (ti++ < 1) {
+        cout << "iter: " << ti << endl;
+        // key gen
+        TrgswKey trgswKey {param};
+        TrlweKey& trlweKey = trgswKey.trlweKey;
+        trlweKeyGen(trlweKey);
+
+        // trgsw enc
+        int loop = param.n;
         std::vector<TrgswMP> trgsws(loop, TrgswMP{param});
         Integer mu = 1;
         for (size_t i = 0; i < loop; i++) {
