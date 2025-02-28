@@ -10,7 +10,7 @@
 #include "yatfhe/polynomial.h"
 #include "yatfhe/crt.h"
 
-void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const YatfheParameters& param, const TrgswKey& trgswKey) {
+void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param) {
     TorusPolynomial muPoly{param.N};
     int pos = 0;
     for (size_t lvl = 0; lvl < param.l; lvl++) {
@@ -28,7 +28,27 @@ void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const YatfheParameters& 
     }
 }
 
-void trgswMPEncryptLow(TrgswMP& trgswMP, const Integer mu, const YatfheParameters& param, const TrgswKey& trgswKey) {
+void trgswMPEncryptNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param) {
+    TorusPolynomial muPoly{param.N};
+    int pos = 0;
+    for (size_t lvl = 0; lvl < param.l; lvl++) {
+        auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
+        muPoly.coeffs[pos] = decomposedMu;
+        symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+        applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
+        for (size_t k = 0; k < param.k; k++) {
+            symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+            for (size_t i = 0; i < param.k; i++) {
+                if (i == k) {
+                    polynomialAddT32(trgswMP.c[lvl][k].a[i], trgswMP.c[lvl][k].a[i], muPoly);
+                }
+            }
+            applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+        }
+    }
+}
+
+void trgswMPEncryptLow(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param) {
     TorusPolynomial muPoly{param.N};
     int pos = 0;
     muPoly.coeffs[pos] = mu;
@@ -40,6 +60,23 @@ void trgswMPEncryptLow(TrgswMP& trgswMP, const Integer mu, const YatfheParameter
                 polynomialAddT32(trgswMP.c[0][k].a[i], trgswMP.c[0][k].a[i], muPoly);
             }
         }
+    }
+}
+
+void trgswMPEncryptLowNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param) {
+    TorusPolynomial muPoly{param.N};
+    int pos = 0;
+    muPoly.coeffs[pos] = mu;
+    symEncTrlweMultiSample(trgswMP.cPrime[0], trgswKey.trlweKey, muPoly.coeffs);
+    applyNttForAB(trgswMPDft.cPrime[0], trgswMP.cPrime[0]);
+    for (size_t k = 0; k < param.k; k++) {
+        symEncTrlweSingleSample(trgswMP.c[0][k], trgswKey.trlweKey, 0);
+        for (size_t i = 0; i < param.k; i++) {
+            if (i == k) {
+                polynomialAddT32(trgswMP.c[0][k].a[i], trgswMP.c[0][k].a[i], muPoly);
+            }
+        }
+        applyNttForAB(trgswMPDft.c[0][k], trgswMP.c[0][k]);
     }
 }
 
@@ -434,9 +471,43 @@ void trgswMPExternalProduct(Trlwe& output, const TrgswMP& trgswMPInput, const Tr
     trlweAdd(output, resB, resA);
 }
 
-void trgswMPExternalProductDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param) {
+void trgswMPExternalProductNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = param.k;
     const auto N = param.N;
+    const auto level = param.l;
+    DecomposedTrlwe decomposedTrlwe{param};
+    DecomposedTrlweDft decomposedTrlweDft{param, param.l};
+    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+    for (auto i = 0; i < param.l; i++) {
+        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.rlwes[i]);
+    }
+
+    TrlweDft resA{k, N};
+    TrlweDft resB{k, N};
+    for (size_t lvl = 0; lvl < level; lvl++) {
+        auto& c = trgswMPInput.c[lvl];
+        auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
+        auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
+        auto& inA = decomposedTrlweDft.rlweDfts[lvl].a;
+        auto& inB = decomposedTrlweDft.rlweDfts[lvl].b;
+        for(size_t i = 0; i < k; i++) {
+            auto& ciA = c[i].a;
+            auto& ciB = c[i].b;
+            for (size_t i2 = 0; i2 < k; i2++) {
+                calModularInnerProductNtt(resA.a[i2], inA[i], ciA[i2]);
+            }
+            calModularInnerProductNtt(resA.b, inA[i], ciB);
+            calModularInnerProductNtt(resB.a[i], inB, cPrimeA[i]);
+        }
+        calModularInnerProductNtt(resB.b, inB, cPrimeB);
+    }
+    TrlweDft tmp{k, N};
+    trlweAddNtt(tmp, resB, resA);
+    applyInttForAB(output, tmp);
+}
+
+void trgswMPExternalProductDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param) {
+    const auto k = param.k;
     const auto level = param.l;
 
     DecomposedTrlwe resA{param};
@@ -466,5 +537,36 @@ void trgswMPExternalProductDecomp(DecomposedTrlwe& output, const TrgswMP& trgswM
             polynomialAddT32(out.a[i], a.a[i], b.a[i]);
         }
         polynomialAddT32(out.b, a.b, b.b);
+    }
+}
+
+void trgswMPExternalProductDecompNtt(DecomposedTrlweDft& output, const TrgswMPDft& trgswMPInput, const DecomposedTrlweDft& trlweInput, const YatfheParameters& param) {
+    const auto k = param.k;
+    const auto level = param.l;
+
+    DecomposedTrlweDft resA{param, level};
+    DecomposedTrlweDft resB{param, level};
+    for (size_t lvl = 0; lvl < level; lvl++) {
+        auto& c = trgswMPInput.c[0];
+        auto& cPrimeA = trgswMPInput.cPrime[0].a;
+        auto& cPrimeB = trgswMPInput.cPrime[0].b;
+        auto& inA = trlweInput.rlweDfts[lvl].a;
+        auto& inB = trlweInput.rlweDfts[lvl].b;
+        for(size_t i = 0; i < k; i++) {
+            auto& ciA = c[i].a;
+            auto& ciB = c[i].b;
+            for (size_t i2 = 0; i2 < k; i2++) {
+                calModularInnerProductNtt(resA.rlweDfts[lvl].a[i2], inA[i], ciA[i2]);
+            }
+            calModularInnerProductNtt(resA.rlweDfts[lvl].b, inA[i], ciB);
+            calModularInnerProductNtt(resB.rlweDfts[lvl].a[i], inB, cPrimeA[i]);
+        }
+        calModularInnerProductNtt(resB.rlweDfts[lvl].b, inB, cPrimeB);
+    }
+    for (size_t lvl = 0; lvl < level; lvl++) {
+        auto& out = output.rlweDfts[lvl];
+        auto& a = resA.rlweDfts[lvl];
+        auto& b = resB.rlweDfts[lvl];
+        trlweAddNtt(out, a, b);
     }
 }

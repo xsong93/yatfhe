@@ -20,6 +20,17 @@ struct TrgswMP {
             l(p.l) {};
 };
 
+struct TrgswMPDft {
+    std::vector<std::vector<TrlweDft>> c;
+    std::vector<TrlweDft> cPrime;
+    int l;
+
+    explicit TrgswMPDft(const YatfheParameters& p) :
+            c(p.l, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N))),
+            cPrime(p.l, TrlweDft(p.k, p.N)),
+            l(p.l) {};
+};
+
 struct Trgsw {
     std::vector<std::vector<Trlwe>> trlweSamples {};
     int l;
@@ -91,9 +102,13 @@ struct TrgswKey {
 
 void trgswRotate(Trgsw& trgsw, int rot, const YatfheParameters& param);
 
-void trgswMPEncrypt(TrgswMP& trgswMP, Integer mu, const YatfheParameters& param, const TrgswKey& trgswKey);
+void trgswMPEncrypt(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
 
-void trgswMPEncryptLow(TrgswMP& trgswMP, Integer mu, const YatfheParameters& param, const TrgswKey& trgswKey);
+void trgswMPEncryptNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
+
+void trgswMPEncryptLow(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
+
+void trgswMPEncryptLowNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
 
 void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
 
@@ -129,6 +144,10 @@ void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::ve
 
 void trgswMPExternalProduct(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
+void trgswMPExternalProductNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param);
+
 void trgswMPExternalProductDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param);
+
+void trgswMPExternalProductDecompNtt(DecomposedTrlweDft& output, const TrgswMPDft& trgswMPInput, const DecomposedTrlweDft& trlweInput, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H
