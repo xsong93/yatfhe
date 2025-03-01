@@ -9,3 +9,5 @@ add_subdirectory(google_tests)
 
 
 #add_subdirectory(ntl)
+
+option(INSTALL_HEADERS "Install headers to system directories" OFF)

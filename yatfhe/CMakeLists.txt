@@ -28,5 +28,12 @@ install(TARGETS yatfhe_lib
 )
 
 # Add installation command for headers
-install(DIRECTORY include/yatfhe DESTINATION /usr/local/include)
-install(DIRECTORY include/yautil DESTINATION /usr/local/include)
+
+if(INSTALL_HEADERS)
+    add_custom_command(
+            TARGET yatfhe_lib PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E remove_directory /usr/local/include/yatfhe /usr/local/include/yautil
+    )
+    install(DIRECTORY include/yatfhe DESTINATION /usr/local/include)
+    install(DIRECTORY include/yautil DESTINATION /usr/local/include)
+endif ()

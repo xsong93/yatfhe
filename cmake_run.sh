@@ -1,6 +1,6 @@
-# /bin/bash
+#! /bin/bash
 
 rm -rf CMAKE_BUILD
 mkdir CMAKE_BUILD && cd CMAKE_BUILD
-cmake ..
+cmake .. -DINSTALL_HEADERS=ON
 sudo make install -j8

@@ -17,7 +17,7 @@ void lweKeyGen(TlweKey& key) {
 void symEncTlweSample(Tlwe& tlweSample, const Torus message, const TlweKey& key) {
     int64_t tmp = 0;
     for (auto i = 0; i < key.n; i++) {
-        tlweSample.a[i] = uniformTorusDistrib(rng);
+        tlweSample.a[i] = uniformTorusDistrib()(rng);
         if (key.s[i] != 0) {
             tmp += static_cast<int64_t>(tlweSample.a[i]) * key.s[i];
         }

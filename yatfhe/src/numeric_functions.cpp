@@ -7,10 +7,10 @@
 #include "yatfhe/torus.h"
 
 using namespace std;
+
 random_device rd;
 mt19937 rng(rd());
 uniform_int_distribution<Binary> binaryDistrib(0, 1);
-uniform_int_distribution<Torus> uniformTorusDistrib(TORUS_MIN, TORUS_MAX);
 
 int calLogBase2(int N) {
     int res = 0;
@@ -18,6 +18,11 @@ int calLogBase2(int N) {
         res ++;
     }
     return res;
+}
+
+uniform_int_distribution<Torus>& uniformTorusDistrib() {
+    static uniform_int_distribution<Torus> instance(TORUS_MIN, TORUS_MAX);
+    return instance;
 }
 
 Integer genIntUniformDist(const Integer lowerBound, const Integer upperBound) {
@@ -214,7 +219,7 @@ uint32_t modSwitchFromTorus32Pos(Torus in, uint32_t newMod) {
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {
     for (auto& coeff : coeffs) {
-        coeff = uniformTorusDistrib(rng);
+        coeff = uniformTorusDistrib()(rng);
     }
 }
 

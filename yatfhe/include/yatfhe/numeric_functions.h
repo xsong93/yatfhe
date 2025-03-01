@@ -14,7 +14,8 @@ using namespace std;
 extern random_device rd;
 extern mt19937 rng;
 extern uniform_int_distribution<Binary> binaryDistrib;
-extern uniform_int_distribution<Torus> uniformTorusDistrib;
+
+uniform_int_distribution<Torus>& uniformTorusDistrib();
 
 int calLogBase2(int N);
 
