@@ -101,6 +101,7 @@ TEST(NttTest, NttBasicArithTest) {
     LagrangePolynomial b{N};
     LagrangePolynomial c{N};
     LagrangePolynomial tmpMul{N};
+    LagrangePolynomial tmpMul1{N};
     LagrangePolynomial tmpAdd{N};
     LagrangePolynomial tmpSub{N};
 
@@ -108,6 +109,8 @@ TEST(NttTest, NttBasicArithTest) {
     IntPolynomial poly1{N};
     IntPolynomial poly2{N};
     IntPolynomial resMul{N};
+    IntPolynomial resMul1{N};
+    IntPolynomial resMul2{N};
     IntPolynomial resAdd{N};
     IntPolynomial resSub{N};
     IntPolynomial navMul{N};
@@ -116,15 +119,15 @@ TEST(NttTest, NttBasicArithTest) {
     int t = 1;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = genIntUniformDist(1 <<12, 1 << 15);
+            poly0.coeffs[j] = genIntUniformDist(1 << 12, 1 << 15);
             poly1.coeffs[j] = genIntUniformDist(1 << 12, 1 << 15);
-            poly2.coeffs[j] = genIntUniformDist(1 << 12, 1 << 15);
+            poly2.coeffs[j] = genIntUniformDist(1 << 12, 1 << 24);
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly1.coeffs, "poly1");
         printArray(poly2.coeffs, "poly2");
 
-        COUNT_TIME("NTT_MULT", {
+        COUNT_TIME("NTT_MULT_CHAINING", {
             applyNtt(a, poly0);
             applyNtt(b, poly1);
             applyNtt(c, poly2);
@@ -134,8 +137,22 @@ TEST(NttTest, NttBasicArithTest) {
             }
             applyIntt(resMul, tmpMul);
         })
+        COUNT_TIME("NTT_MULT_NORMAL", {
+            applyNtt(a, poly0);
+            applyNtt(b, poly1);
+            applyNtt(c, poly2);
+            for (int i = 0; i < a.N; i++) {
+                tmpMul.coeffs[i] = fastmm_opt(a.coeffs[i], b.coeffs[i]);
+            }
+            applyIntt(resMul1, tmpMul);
+            applyNtt(tmpMul1 ,resMul1);
+            for (int i = 0; i < a.N; i++) {
+                tmpMul.coeffs[i] = fastmm_opt(tmpMul1.coeffs[i], c.coeffs[i]);
+            }
+            applyIntt(resMul2, tmpMul);
+        })
         COUNT_TIME("NAIVE_MULT",
-           IntPolynomial tmp{N};
+            IntPolynomial tmp{N};
             polynomialMulNaiveModQ(tmp, poly0, poly1, TORUS_Q);
             polynomialMulNaiveModQ(navMul, tmp, poly2, TORUS_Q);
         )
@@ -150,13 +167,14 @@ TEST(NttTest, NttBasicArithTest) {
         polynomialSubI32(navSub, poly0, poly1);
 
         printArray(resMul.coeffs, "resMul");
-        printArray(navMul.coeffs, "navMul");
+        printArray(resMul2.coeffs, "resMul2");
+        printArray(navMul.coeffs, "TRUE");
 
-        for (int i = 0; i < navMul.N; i++) {
-            EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
+        EXPECT_EQ(resMul2.coeffs, navMul.coeffs);
+        EXPECT_NE(resMul.coeffs, navMul.coeffs); // overflow
 //            EXPECT_EQ(resAdd.coeffs[i], navAdd.coeffs[i]);
 //            EXPECT_EQ(resSub.coeffs[i], navSub.coeffs[i]);
-        }
+
     }
     printBanner("NttBasicArithTest");
 }
