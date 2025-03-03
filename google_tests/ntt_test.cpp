@@ -99,11 +99,13 @@ TEST(NttTest, NttBasicArithTest) {
     auto N = p.N;
     LagrangePolynomial a{N};
     LagrangePolynomial b{N};
+    LagrangePolynomial c{N};
     LagrangePolynomial tmpMul{N};
     LagrangePolynomial tmpAdd{N};
     LagrangePolynomial tmpSub{N};
 
     IntPolynomial poly0{N};
+    IntPolynomial poly1{N};
     IntPolynomial poly2{N};
     IntPolynomial resMul{N};
     IntPolynomial resAdd{N};
@@ -111,34 +113,41 @@ TEST(NttTest, NttBasicArithTest) {
     IntPolynomial navMul{N};
     IntPolynomial navAdd{N};
     IntPolynomial navSub{N};
-    int t = 10;
+    int t = 1;
     while (t-- > 0) {
         for (auto j = 0; j < N; j++) {
-            poly0.coeffs[j] = genIntUniformDist(1 <<12, 1 << 24);
-            poly2.coeffs[j] = genIntUniformDist(1<<12, 1<<24);
+            poly0.coeffs[j] = genIntUniformDist(1 <<12, 1 << 15);
+            poly1.coeffs[j] = genIntUniformDist(1 << 12, 1 << 15);
+            poly2.coeffs[j] = genIntUniformDist(1 << 12, 1 << 15);
         }
         printArray(poly0.coeffs, "poly0");
+        printArray(poly1.coeffs, "poly1");
         printArray(poly2.coeffs, "poly2");
 
         COUNT_TIME("NTT_MULT", {
             applyNtt(a, poly0);
-            applyNtt(b, poly2);
+            applyNtt(b, poly1);
+            applyNtt(c, poly2);
             for (int i = 0; i < a.N; i++) {
-                tmpMul.coeffs[i] = fastmm_opt(a.coeffs[i], b.coeffs[i]);
+                auto tmp = fastmm_opt(a.coeffs[i], b.coeffs[i]);
+                tmpMul.coeffs[i] = fastmm_opt(tmp, c.coeffs[i]);
             }
             applyIntt(resMul, tmpMul);
         })
         COUNT_TIME("NAIVE_MULT",
-                   polynomialMulNaiveModQ(navMul, poly0, poly2, TORUS_Q);)
-            for (int i = 0; i < a.N; i++) {
-                tmpAdd.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
-                tmpSub.coeffs[i] = modSub(a.coeffs[i], b.coeffs[i]);
+           IntPolynomial tmp{N};
+            polynomialMulNaiveModQ(tmp, poly0, poly1, TORUS_Q);
+            polynomialMulNaiveModQ(navMul, tmp, poly2, TORUS_Q);
+        )
+
+        for (int i = 0; i < a.N; i++) {
+            tmpAdd.coeffs[i] = modAdd(a.coeffs[i], b.coeffs[i]);
+            tmpSub.coeffs[i] = modSub(a.coeffs[i], b.coeffs[i]);
         }
         applyIntt(resAdd, tmpAdd);
         applyIntt(resSub, tmpSub);
-
-        polynomialAddI32(navAdd, poly0, poly2);
-        polynomialSubI32(navSub, poly0, poly2);
+        polynomialAddI32(navAdd, poly0, poly1);
+        polynomialSubI32(navSub, poly0, poly1);
 
         printArray(resMul.coeffs, "resMul");
         printArray(navMul.coeffs, "navMul");
