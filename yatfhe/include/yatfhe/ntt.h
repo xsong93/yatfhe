@@ -15,24 +15,6 @@ const string STR_NTT = "NWC-DIT-NR-NNT";
 const string STR_INTT = "NWC-DIF-RN-INNT";
 using namespace std;
 
-int findModulus(int vecLen, int minimum);
-
-bool isPrimitiveRoot(int g, int degree, int mod);
-
-int findPrimitiveRoot(int degree, int totient, int mod);
-
-void applyNtt(LagrangePolynomial& out, const IntPolynomial& in);
-
-void applyNtt32(IntPolynomial& output, const IntPolynomial& input, int root, int mod);
-
-void applyIntt32(IntPolynomial& output, IntPolynomial& input, int root, int mod);
-
-int modMul32(int in1, int in2, int mod);
-
-void circularConvolve(IntPolynomial& output, IntPolynomial& poly1, IntPolynomial& poly2, int mod);
-
-void applyIntt(IntPolynomial& out, const LagrangePolynomial& in);
-
 template <typename T, typename R>
 void applyNttForAB(T& out, R& in) {
     for (auto row = 0; row < in.a.size(); row++) {
@@ -70,6 +52,10 @@ void bitRev(std::vector<T>& x) {
         }
     }
 }
+
+void applyNtt(LagrangePolynomial& out, const IntPolynomial& in);
+
+void applyIntt(IntPolynomial& out, const LagrangePolynomial& in);
 
 void bitRevShuffle(std::vector<NttType>& x);
 
