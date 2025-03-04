@@ -27,7 +27,7 @@ TEST(Ntt32Test, PowInvTest) {
 
 TEST(Ntt32Test, NttIntt32Test) {
     YatfheParameters p{};
-    p.q = 1062862849;
+    p.q = Q_32P;
     yatfheInit(p);
 
     auto N = p.N;
@@ -54,7 +54,7 @@ TEST(Ntt32Test, NttIntt32Test) {
 
 TEST(Ntt32Test, Ntt32BasicArithTest) {
     YatfheParameters p{};
-    p.q = 1062862849;
+    p.q = Q_32P;
     yatfheInit(p);
 
     auto N = p.N;
