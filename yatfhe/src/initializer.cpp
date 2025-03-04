@@ -4,6 +4,7 @@
 #include "yautil/initializer.h"
 #include "yatfhe/ntt14.h"
 #include "yatfhe/ntt24.h"
+#include "yatfhe/ntt32.h"
 #include "yatfhe/ntt64.h"
 #include "yautil/time_counter.h"
 #include "yatfhe/numeric_functions.h"
@@ -40,6 +41,7 @@ void yatfheInit(YatfheParameters& param) {
     TORUS_MAX = INT_MAX_VALUE;
     TORUS_MIN = INT_MIN_VALUE;
     initGlobalParamsNtt64(param.N);
+    initGlobalParamsNtt32(param.N);
     initGlobalParamsNtt24(param.N);
     initGlobalParamsNtt14(param.N);
     for (size_t d = 0; d < param.dl; d++) {

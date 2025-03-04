@@ -78,6 +78,19 @@ struct DoublePolynomial {
             coeffs(N, value) {};
 };
 
+struct Ntt32Polynomial {
+    std::vector<Ntt32> coeffs {}; // N
+    int N {};
+
+    explicit Ntt32Polynomial(int N) :
+            N(N),
+            coeffs(N, 0) {};
+
+    Ntt32Polynomial(int N, Ntt32 value) :
+            N(N),
+            coeffs(N, value) {};
+};
+
 struct Ntt24Polynomial {
     std::vector<Ntt24> coeffs {}; // N
     int N {};
