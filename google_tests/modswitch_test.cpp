@@ -6,10 +6,12 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
+#include "yautil/initializer.h"
 
 TEST(ModSwitchTest, ModDownTest) {
-    const YatfheParameters param {};
+    YatfheParameters param {};
     const int modPQ = 256;
+    yatfheInit(param);
 
     TlweKey tlweKey {param.n, param.lweStdDev};
     lweKeyGen(tlweKey);

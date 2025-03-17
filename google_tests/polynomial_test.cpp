@@ -7,12 +7,14 @@
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/tlwe.h"
 #include "yautil/tool.h"
+#include "yautil/initializer.h"
 
 TEST(PolynomialTest, PolynomialRounding) {
     YatfheParameters param {};
 //    param.torusBase = 8;
 //    param.N = 1024;
 //    param.n = 4;
+    yatfheInit(param);
     TorusPolynomial v {param.N};
     std::vector<Integer> d(param.N);
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
@@ -52,6 +54,7 @@ TEST(PolynomialTest, PolynomialRounding) {
 TEST(PolynomialTest, POLY_MULT) {
     YatfheParameters param {};
     param.N = 64;
+    yatfheInit(param);
     IntPolynomial polyI32A{param.N};
     IntPolynomial polyI32B{param.N};
     IntPolynomial polyI32C{param.N};
@@ -90,6 +93,7 @@ TEST(PolynomialTest, POLY_MULT) {
 TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP) {
     YatfheParameters param {};
     param.N = 64;
+    yatfheInit(param);
     TorusPolynomial polyT32A{param.N};
     TorusPolynomial polyT32B{param.N};
     TorusPolynomial polyT32B1{param.N};
@@ -126,6 +130,7 @@ TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP) {
 TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP2) {
     YatfheParameters param {};
     param.N = 64;
+    yatfheInit(param);
     TorusPolynomial polyT32A{param.N};
     TorusPolynomial polyT32B{param.N};
     TorusPolynomial polyT32B1{param.N};
