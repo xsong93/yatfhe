@@ -28,12 +28,12 @@ const int32_t NUM_HIGH_PRIMES{2};
 const int32_t NUM_LOW_PRIMES{2};
 //const Integer QD_CRT[NUM_PRIMES] {251, 19, 17, 13};
 const Integer QD_CRT[NUM_PRIMES] {251, 241, 239, 233};
-const uint64_t Q_32 = INT64_C(1) << 32;
+const int64_t Q_32 = INT64_C(1) << 32;
 const uint32_t Q_32P = 16760833;
 const int64_t Q_CRT = static_cast<int64_t>(QD_CRT[0]) * QD_CRT[1] * QD_CRT[2] * QD_CRT[3];
 const uint64_t BARRETT_CONSTANT = UINT64_MAX / (uint64_t)Q_CRT;  // μ = floor(2^64 / TORUS_Q)
 
-extern uint64_t TORUS_Q;
+extern int64_t TORUS_Q;
 extern Integer INT_MAX_VALUE;
 extern Integer INT_MIN_VALUE;
 extern Integer TORUS_MAX;

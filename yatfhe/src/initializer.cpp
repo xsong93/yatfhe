@@ -9,7 +9,7 @@
 #include "yautil/time_counter.h"
 #include "yatfhe/numeric_functions.h"
 
-uint64_t TORUS_Q;
+int64_t TORUS_Q;
 Integer INT_MAX_VALUE;
 Integer INT_MIN_VALUE;
 Integer TORUS_MAX;

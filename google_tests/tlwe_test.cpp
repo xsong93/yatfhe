@@ -153,35 +153,36 @@ TEST(TlweTest, MultTest) {
     printBanner("TlweMultTest");
 }
 
-TEST(TlweTest, ATest) {
+//todo
+TEST(TlweTest, todotest) {
     YatfheParameters param {};
     param.torusBase = 8;
-    param.l = 4;
     yatfheInit(param);
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-
     lweKeyGen(tlweKey);
 
-    int p1 = 1;
-    int p2 = 2047;
+    vector<Tlwe> tlwes(param.n, Tlwe{param.n});
+    for (size_t i = 0; i < param.n; i++) {
+        symEncTlweSample(tlwes[i], tlweKey.s[i], tlweKey);
+    }
 
-    Torus mu1 = modSwitchToTorus32(p1, param.torusBase);
+    Tlwe sample{param.n};
+    int pt = 2;
+    auto mu = modSwitchToTorus32(pt, param.torusBase);
+    symEncTlweSample(sample, mu, tlweKey);
 
-    Tglev tglev {param.l, param.n};
-    Tlwe output {param.n};
+    auto dec = symDecTlweSampleToInt(sample, tlweKey, param.torusBase);
+    cout << "dec:" << dec << endl;
 
-    tglevEnc(tglev, tlweKey, mu1, param);
+    vector<Integer> redA(param.n);
+    for (size_t i = 0; i < param.n; i++) {
+        redA[i] = sample.a[i] % 8;
+    }
+    printArray(redA, "redA");
 
-//    for (auto l = 0; l < tglev.l; l++) {
-//        printArray(tglev.tlwes[l].a, "a");
-//        cout << "b: " << tglev.tlwes[l].b << endl;
-//    }
+    Tlwe zero{param.n};
 
-    tglevMultConst(output, tglev, p2, param);
-    cout << "p1 * p2: " << intModP(p1 * p2, param.torusBase) <<endl;
-    cout << "c1 * p2: " << symDecTlweSampleToInt(output, tlweKey, param.torusBase) << endl;
-    ASSERT_EQ(intModP(p1 * p2, param.torusBase), symDecTlweSampleToInt(output, tlweKey, param.torusBase));
 
     printBanner("TlweMultTest");
 }

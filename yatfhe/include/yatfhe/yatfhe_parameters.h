@@ -23,7 +23,7 @@ struct YatfheParameters {
 #endif
     // LWE params
     int torusBits {32};
-    uint64_t q {Q_32};
+    int64_t q {Q_32};
     int torusBase {8}; // p|q
     int dftBits {64};
     double lweStdDev {2.98023e-15}; // 2^-15
