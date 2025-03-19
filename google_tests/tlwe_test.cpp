@@ -69,22 +69,22 @@ TEST(TlweTest, EncDecTest) {
 //
 //    Tlwe input8 {param.n};
 //    for (auto i = 0; i < param.n; i++) {
-//        input8.a[i] = modSwitchFromTorus32(input.a[i], 128);
+//        input8.a[i] = modSwitchFromTorus32(input.a[i], 1024);
 //    }
-//    input8.b = modSwitchFromTorus32(input.b, 128);
+//    input8.b = modSwitchFromTorus32(input.b, 1024);
 //    printTlweAB(input8, "in8");
 //
 //    Torus aXs = 0;
 //    for (auto i = 0; i < tlweKey.n; i++) {
 //        aXs += input8.a[i] * tlweKey.s[i];
-//        aXs = aXs % (128);
+//        aXs = aXs % (1024);
 //    }
 //    cout <<"aXs:"<<aXs<<endl;
-//    cout <<"b-aXs:"<<(input8.b - aXs) % (128)<<endl;
+//    cout <<"b-aXs:"<<(input8.b - aXs) % (1024)<<endl;
 //
 //    cout <<"msg:"<<mu<<endl;
-//    cout <<"decPre:"<<symDecTlweSampleToInt(input, tlweKey, 128)<<endl;
-//    ASSERT_EQ(mu, symDecTlweSampleToInt(input, tlweKey, 128));
+//    cout <<"decPre:"<<symDecTlweSampleToInt(input, tlweKey, 1024)<<endl;
+//    ASSERT_EQ(mu, symDecTlweSampleToInt(input, tlweKey, 1024));
 //    printBanner("EncDecTest2");
 //}
 
@@ -164,9 +164,10 @@ TEST(TlweTest, todotest) {
 
     vector<Tlwe> tlwes(param.n, Tlwe{param.n});
     for (size_t i = 0; i < param.n; i++) {
-        symEncTlweSample(tlwes[i], tlweKey.s[i], tlweKey);
+        symEncTlweSample(tlwes[i], modSwitchToTorus32(tlweKey.s[i], 1024), tlweKey);
+        cout << "s:" << symDecTlweSampleToInt(tlwes[i], tlweKey, 1024) << ", ";
     }
-
+    cout << endl;
     Tlwe sample{param.n};
     int pt = 2;
     auto mu = modSwitchToTorus32(pt, param.torusBase);
@@ -175,14 +176,37 @@ TEST(TlweTest, todotest) {
     auto dec = symDecTlweSampleToInt(sample, tlweKey, param.torusBase);
     cout << "dec:" << dec << endl;
 
+    ScaledTlwe inputModN2 {1024, param.n};
+    rescaleTlweFromTorus32(inputModN2, sample); // rescale to mod 2N
+
     vector<Integer> redA(param.n);
     for (size_t i = 0; i < param.n; i++) {
-        redA[i] = sample.a[i] % 8;
+        redA[i] = inputModN2.a[i] % 1024;
     }
+    Integer redB = inputModN2.b % 1024;
     printArray(redA, "redA");
+    cout << "redB:" << redB << endl;
 
     Tlwe zero{param.n};
+    symEncTlweSample(zero, 0, tlweKey);
+    zero.b = modAddT32(zero.b, modSwitchToTorus32(redB, 1024));
+    cout << "decB:" << symDecTlweSampleToInt(zero, tlweKey, 1024) << endl;
 
+    for (size_t i = 0; i < param.n; i++) {
+        for (size_t j = 0; j < param.n; j++) {
+            tlwes[i].a[j] = modMulT32(tlwes[i].a[j], redA[i]);
+        }
+        tlwes[i].b = modMulT32(tlwes[i].b, redA[i]);
+        cout << "as:" << symDecTlweSampleToInt(tlwes[i], tlweKey, 1024) << ", ";
+        for (size_t j = 0; j < param.n; j++) {
+            zero.a[j] = modSubT32(zero.a[j], tlwes[i].a[j]);
+        }
+        zero.b = modSubT32(zero.b, tlwes[i].b);
+    }
+    cout << endl;
+
+    auto dec1 = symDecTlweSampleToInt(zero, tlweKey, 8);
+    cout << "dec1:" << dec1 << endl;
 
     printBanner("TlweMultTest");
 }
