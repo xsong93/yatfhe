@@ -60,6 +60,17 @@ Integer symDecTlweSampleToInt(Tlwe& in, const TlweKey& key, const int torusBase)
     return modSwitchFromTorus32(roundTorusError(modSubT32(in.b, aXs), torusBase), torusBase);
 }
 
+Torus calTlweError(Tlwe& in, const TlweKey& key, Torus mu) {
+    int64_t tmp = 0;
+    for (auto i = 0; i < key.n; i++) {
+        if (key.s[i] != 0) {
+            tmp += static_cast<int64_t>(in.a[i]) * key.s[i];
+        }
+    }
+    auto aXs = static_cast<Torus>(longModP(tmp, TORUS_Q));
+    return modSubT32(in.b, aXs) - mu;
+}
+
 void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input) {
     const auto newMod = output.mod;
     output.b = static_cast<int32_t>(modSwitchFromTorus32(input.b, newMod));

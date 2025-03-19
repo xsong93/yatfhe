@@ -207,6 +207,8 @@ TEST(TlweTest, todotest) {
 
     auto dec1 = symDecTlweSampleToInt(zero, tlweKey, 8);
     cout << "dec1:" << dec1 << endl;
+    cout <<"err0:" << calTlweError(sample, tlweKey, mu) << endl;
+    cout <<"err1:" << calTlweError(zero, tlweKey, modSwitchToTorus32(pt, 8)) << endl;
 
     printBanner("TlweMultTest");
 }

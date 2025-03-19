@@ -49,6 +49,8 @@ Torus symDecTlweSampleToTorus(Tlwe& in, const TlweKey& key, int torusBase);
 
 Integer symDecTlweSampleToInt(Tlwe& in, const TlweKey& key, int torusBase);
 
+Torus calTlweError(Tlwe& in, const TlweKey& key, Torus mu);
+
 void lweAdd(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
 
 void lweSub(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
