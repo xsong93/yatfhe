@@ -90,6 +90,7 @@ TEST(BlindRot, BlindRot) {
 
 TEST(BlindRot, BLIND_ROT_APPROX_CRT) {
     YatfheParameters param {};
+    param.q = Q_CRT;
     param.n = 64;
     param.N = 32;
     yatfheInit(param);
@@ -161,7 +162,8 @@ TEST(BlindRot, BLIND_ROT_APPROX_CRT) {
 
 TEST(BlindRot, BLIND_ROT_APPROX_CRT_NTT) {
     YatfheParameters param {};
-    param.n = 64;
+    param.q = Q_CRT;
+//    param.n = 64;
 //    param.N = 32;
     yatfheInit(param);
 
@@ -232,7 +234,6 @@ TEST(BlindRot, BLIND_ROT_APPROX_CRT_NTT) {
 
 TEST(BlindRot, BlindRotLut) {
     YatfheParameters param {};
-//    param.n = 8;
 //    param.torusBase = 64;
     yatfheInit(param);
 
@@ -245,7 +246,9 @@ TEST(BlindRot, BlindRotLut) {
     BootstrappingKey bsk {param};
     bootstrappingKeyGen(bsk, param, trgswKey, tlweKey);
     TlweKeySwitchingKey ksk {param};
-    tlweKeySwitchingKeyGen(ksk, trlweKey, tlweKey, param);
+    TlweKey tlweKsKey = tlweKey;
+    tlweKsKey.sigma = param.rlweStdDev;
+    tlweKeySwitchingKeyGen(ksk, trlweKey, tlweKsKey, param);
 
     // data gen
     Integer in = 3;

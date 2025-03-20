@@ -222,6 +222,8 @@ TEST(DecompositionTest, DecomposedAddSub) {
 // Actually, identical logic with DecomposeOverB test.
 TEST(DecompositionTest, DecomposedMult) {
     YatfheParameters param {};
+    param.q = Q_32;
+    yatfheInit(param);
 //    param.radixBits = 4;
 //    param.ksLevel = 8;
     DecomposedData da {param.ksLevel};

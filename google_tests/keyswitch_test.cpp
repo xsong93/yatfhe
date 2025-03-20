@@ -11,16 +11,18 @@
 
 TEST(KSKTest, KSKTest) {
     YatfheParameters param {};
+    param.torusBase = 128;
     yatfheInit(param);
     TlweKey tlweKey {param.n, param.lweStdDev};
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
     lweKeyGen(tlweKey);
     trlweKeyGen(trlweKey);
-    tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);
+    TlweKey tlweKsKey = tlweKey;
+    tlweKsKey.sigma = param.rlweStdDev;
+    tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKsKey, param);
     TlweKey inKey(param.k * param.N, param.lweStdDev);
     convertTrlweKeyToTlweKey(inKey, trlweKey);
-    param.torusBase = 1 << 8;
     for (int i = - param.torusBase / 2; i < param.torusBase / 2; i++) {
         Integer plainMsg = i;
         Torus mu = modSwitchToTorus32(plainMsg, param.torusBase);

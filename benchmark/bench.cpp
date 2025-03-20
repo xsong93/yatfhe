@@ -22,7 +22,9 @@ int main(int argc, char **argv) {
     COUNT_TIME("lweKeyGen", lweKeyGen(tlweKey);)
     COUNT_TIME("trlweKeyGen", trlweKeyGen(trlweKey);)
     COUNT_TIME("bootstrappingKeyGen", bootstrappingKeyGen(bsKey, param, trgswKey, tlweKey);)
-    COUNT_TIME("tlweKeySwitchingKeyGen", tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKey, param);)
+    TlweKey tlweKsKey = tlweKey;
+    tlweKsKey.sigma = param.rlweStdDev;
+    COUNT_TIME("tlweKeySwitchingKeyGen", tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKsKey, param);)
 
     Integer plain = 3;
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
