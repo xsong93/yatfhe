@@ -8,7 +8,7 @@
 void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
     Trgsw trgsw {param};
     trgswEncZero(trgsw, param, trgswKey);
-    trgswAddInteger(trgsw, mu, param);
+    trgswAddInteger(trgsw, mu, 0, param);
     for (auto lvl = 0; lvl < param.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
             DecomposedTrlwe decomposedTrlwe {param, param.l2};

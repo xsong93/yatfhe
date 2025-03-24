@@ -203,6 +203,54 @@ TEST(TrlweTest, TRLWE_ROT) {
     printBanner("TRLWE_ROT");
 }
 
+TEST(TrlweTest, TRLWE_ROT_MUL) {
+    YatfheParameters param{};
+    yatfheInit(param);
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    Trlwe trlwe {param.k, param.N};
+    Trlwe trlwe1 {param.k, param.N};
+    trlweKeyGen(trlweKey);
+
+    std::vector<int> plain(param.N);
+    std::vector<Torus> in(param.N);
+    plain[0] = 1;
+    in[0] = modSwitchToTorus32(plain[0], param.torusBase);
+    printArray(plain, "plain");
+
+    std::vector<int> plain1(param.N);
+    std::vector<Torus> in1(param.N);
+    for (auto i = 0; i < in.size(); i++) {
+        plain1[i] = 3;
+        in1[i] = modSwitchToTorus32(plain[i], param.torusBase);
+    }
+    printArray(plain1, "plain1");
+
+    IntPolynomial output {param.N};
+
+    int rotN = 1;
+    symEncTrlweMultiSample(trlwe, trlweKey, in);
+    symEncTrlweMultiSample(trlwe1, trlweKey, in1);
+    Trlwe rot{param.k, param.N};
+    for (size_t i = 0; i < param.k; i++) {
+        polynomialMulAccNaiveT32(rot.a[i], trlwe.a[0], trlwe1.a[i]);
+        polynomialMulAccNaiveT32(rot.a[i], trlwe.a[1], trlwe1.a[i]);
+        polynomialMulAccNaiveT32(rot.a[i], trlwe.b, trlwe1.a[i]);
+    }
+    polynomialMulAccNaiveT32(rot.b, trlwe.a[0], trlwe1.b);
+    polynomialMulAccNaiveT32(rot.b, trlwe.a[1], trlwe1.b);
+    polynomialMulAccNaiveT32(rot.b, trlwe.b, trlwe1.b);
+    symDecTrlweToInt(output, rot, trlweKey, param.torusBase);
+
+    printArray(output.coeffs, "output");
+    TorusPolynomial res{param.N};
+    torusPolynomialRotate(res, -rotN, output);
+    printArray(res.coeffs, "res");
+    for (auto i = 0; i < plain.size(); i++) {
+        ASSERT_EQ(plain[i], res.coeffs[i]);
+    }
+    printBanner("TRLWE_ROT");
+}
+
 TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
     YatfheParameters param{};
     param.q = Q_CRT;

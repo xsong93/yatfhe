@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     TlweKeySwitchingKey ksKey{param};
     COUNT_TIME("lweKeyGen", lweKeyGen(tlweKey);)
     COUNT_TIME("trlweKeyGen", trlweKeyGen(trlweKey);)
-    COUNT_TIME("bootstrappingKeyGenApproxCRT", bootstrappingKeyGenApproxCRT(bsKeyCRT, param, trgswKey, tlweKey);)
+    COUNT_TIME("bootstrappingKeyGenApproxCRT", bootstrappingKeyGenApproxCRT(bsKeyCRT, trgswKey, tlweKey, param);)
     TlweKey tlweKsKey = tlweKey;
     tlweKsKey.sigma = param.rlweStdDev;
     COUNT_TIME("tlweKeySwitchingKeyGen", tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKsKey, param);)
@@ -59,6 +59,7 @@ int main(int argc, char **argv) {
 
     auto decAft = symDecTlweSampleToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;
+    cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
 
     return 0;
 }

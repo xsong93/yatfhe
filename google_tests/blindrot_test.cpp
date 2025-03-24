@@ -23,7 +23,7 @@ TEST(BlindRot, BlindRot) {
     TrlweKey& trlweKey = trgswKey.trlweKey;
     trlweKeyGen(trlweKey);
     BootstrappingKey bsk {param};
-    bootstrappingKeyGen(bsk, param, trgswKey, tlweKey);
+    bootstrappingKeyGen(bsk, trgswKey, tlweKey, param);
 
     // data gen
     Trlwe in2 {param.k, param.N};
@@ -68,7 +68,7 @@ TEST(BlindRot, BlindRot) {
     Trgsw trgswXRot {param};
     Trlwe trlweInCopy {param.k, param.N};
     Trlwe trlwe {param.k, param.N};
-    trgswEncrypt(trgswXRot, param, trgswKey, 1);
+    trgswEncrypt(trgswXRot, 1, trgswKey, 0, param);
     trgswRotate(trgswXRot, rot, param);
     symEncTrlweMultiSample(trlweInCopy, trlweKey, plainT.coeffs);
     trgswExternalProduct(trlwe, trgswXRot, trlweInCopy, param);
@@ -102,7 +102,7 @@ TEST(BlindRot, BLIND_ROT_APPROX_CRT) {
     TrlweKey& trlweKey = trgswKey.trlweKey;
     trlweKeyGen(trlweKey);
     BootstrappingKeyCRT bsKeyCRT{param};
-    bootstrappingKeyGenApproxCRT(bsKeyCRT, param, trgswKey, tlweKey);
+    bootstrappingKeyGenApproxCRT(bsKeyCRT, trgswKey, tlweKey, param);
 
     // data gen
     Trlwe in2 {param.k, param.N};
@@ -174,7 +174,7 @@ TEST(BlindRot, BLIND_ROT_APPROX_CRT_NTT) {
     TrlweKey& trlweKey = trgswKey.trlweKey;
     trlweKeyGen(trlweKey);
     BootstrappingKeyCRT bsKeyCRT{param};
-    bootstrappingKeyGenApproxCRT(bsKeyCRT, param, trgswKey, tlweKey);
+    bootstrappingKeyGenApproxCRT(bsKeyCRT, trgswKey, tlweKey, param);
 
     // data gen
     Trlwe in2 {param.k, param.N};
@@ -244,7 +244,7 @@ TEST(BlindRot, BlindRotLut) {
     TrlweKey& trlweKey = trgswKey.trlweKey;
     trlweKeyGen(trlweKey);
     BootstrappingKey bsk {param};
-    bootstrappingKeyGen(bsk, param, trgswKey, tlweKey);
+    bootstrappingKeyGen(bsk, trgswKey, tlweKey, param);
     TlweKeySwitchingKey ksk {param};
     TlweKey tlweKsKey = tlweKey;
     tlweKsKey.sigma = param.rlweStdDev;

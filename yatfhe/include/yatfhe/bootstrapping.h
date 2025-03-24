@@ -63,11 +63,13 @@ void controlMuxApproxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& in
 
 void controlMuxApproxCRTNtt(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param);
 
-void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey);
+void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
-void bootstrappingKeyGenApproxCRT(BootstrappingKeyCRT& bskCRT, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey);
+void bootstrappingKeyGenApproxCRT(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
-void bootstrappingKeyGen(BootstrappingKey& bsk, const YatfheParameters& param, TrgswKey& trgswKey, const TlweKey& tlweKey);
+void bootstrappingKeyGen(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
+
+void bootstrappingKeyGenRing(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
 void bootstrappingKeyMCRTDecomp(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param);
 

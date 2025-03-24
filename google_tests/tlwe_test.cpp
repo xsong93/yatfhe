@@ -158,14 +158,15 @@ TEST(TlweTest, todotest) {
     YatfheParameters param {};
     param.torusBase = 8;
     yatfheInit(param);
+    int scale = Q_32 >> 1;
 
     TlweKey tlweKey {param.n, param.lweStdDev};
     lweKeyGen(tlweKey);
 
     vector<Tlwe> tlwes(param.n, Tlwe{param.n});
     for (size_t i = 0; i < param.n; i++) {
-        symEncTlweSample(tlwes[i], modSwitchToTorus32(tlweKey.s[i], 1024), tlweKey);
-        cout << "s:" << symDecTlweSampleToInt(tlwes[i], tlweKey, 1024) << ", ";
+        symEncTlweSample(tlwes[i], modSwitchToTorus32(tlweKey.s[i], scale), tlweKey);
+        cout << "s:" << symDecTlweSampleToInt(tlwes[i], tlweKey, scale) << ", ";
     }
     cout << endl;
     Tlwe sample{param.n};
@@ -176,28 +177,28 @@ TEST(TlweTest, todotest) {
     auto dec = symDecTlweSampleToInt(sample, tlweKey, param.torusBase);
     cout << "dec:" << dec << endl;
 
-    ScaledTlwe inputModN2 {1024, param.n};
-    rescaleTlweFromTorus32(inputModN2, sample); // rescale to mod 2N
+    ScaledTlwe inputModN2 {scale, param.n};
+    rescaleTlweFromTorus32(inputModN2, sample);
 
     vector<Integer> redA(param.n);
     for (size_t i = 0; i < param.n; i++) {
-        redA[i] = inputModN2.a[i] % 1024;
+        redA[i] = inputModN2.a[i] % scale;
     }
-    Integer redB = inputModN2.b % 1024;
+    Integer redB = inputModN2.b % scale;
     printArray(redA, "redA");
     cout << "redB:" << redB << endl;
 
     Tlwe zero{param.n};
     symEncTlweSample(zero, 0, tlweKey);
-    zero.b = modAddT32(zero.b, modSwitchToTorus32(redB, 1024));
-    cout << "decB:" << symDecTlweSampleToInt(zero, tlweKey, 1024) << endl;
+    zero.b = modAddT32(zero.b, modSwitchToTorus32(redB, scale));
+    cout << "decB:" << symDecTlweSampleToInt(zero, tlweKey, scale) << endl;
 
     for (size_t i = 0; i < param.n; i++) {
         for (size_t j = 0; j < param.n; j++) {
             tlwes[i].a[j] = modMulT32(tlwes[i].a[j], redA[i]);
         }
         tlwes[i].b = modMulT32(tlwes[i].b, redA[i]);
-        cout << "as:" << symDecTlweSampleToInt(tlwes[i], tlweKey, 1024) << ", ";
+        cout << "as:" << symDecTlweSampleToInt(tlwes[i], tlweKey, scale) << ", ";
         for (size_t j = 0; j < param.n; j++) {
             zero.a[j] = modSubT32(zero.a[j], tlwes[i].a[j]);
         }

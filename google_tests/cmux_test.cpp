@@ -29,7 +29,7 @@ TEST(Cmux, Cmux) {
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
         Integer mu1 = genIntUniformDist(0, 1);
-        trgswEncrypt(trgsw, param, trgswKey, mu1);
+        trgswEncrypt(trgsw, mu1, trgswKey, 0, param);
         printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
 
         // data gen

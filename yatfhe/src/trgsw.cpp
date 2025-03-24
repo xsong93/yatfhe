@@ -10,9 +10,8 @@
 #include "yatfhe/polynomial.h"
 #include "yatfhe/crt.h"
 
-void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param) {
+void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
     TorusPolynomial muPoly{param.N};
-    int pos = 0;
     for (size_t lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
         muPoly.coeffs[pos] = decomposedMu;
@@ -28,9 +27,8 @@ void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey
     }
 }
 
-void trgswMPEncryptNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param) {
+void trgswMPEncryptNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
     TorusPolynomial muPoly{param.N};
-    int pos = 0;
     for (size_t lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
         muPoly.coeffs[pos] = decomposedMu;
@@ -90,7 +88,7 @@ void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& t
 }
 
 // output += mu * G^T
-void trgswAddInteger(Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
+void trgswAddInteger(Trgsw& trgsw, const Integer mu, const int pos, const YatfheParameters& param) {
 /*    // add the diagonal matrix (mu * G^T)_ijk to the output
     //       ( 1/B^l                         )
     //      .                              . .
@@ -105,7 +103,6 @@ void trgswAddInteger(Trgsw& trgsw, const Integer mu, const YatfheParameters& par
     // (                         1/B )
     // ( a_0  a_1          a_k-1  b  )*/
 
-    int pos = 0;
     for (auto lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
         // todo: decompose on second level
@@ -145,7 +142,7 @@ void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 }
 
 // output += mu * G^T
-void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
+void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, const int pos, const YatfheParameters& param) {
     for (auto lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
         for (auto row = 0; row < param.k + 1; row++) {
@@ -153,14 +150,14 @@ void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, cons
             // add to a_lii
             if (row < param.k) {
 //                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
-                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].a[row].coeffs[0], decomposedMu);
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].a[row].coeffs[pos], decomposedMu);
                 applyNtt(trgswDft.trlweDftSamples[lvl][row].a[row], trgsw.trlweSamples[lvl][row].a[row]);
                 continue;
             }
 
             // add to b_lk
 //            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
-            trgsw.trlweSamples[lvl][row].b.coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].b.coeffs[0], decomposedMu);
+            trgsw.trlweSamples[lvl][row].b.coeffs[0] = modAddT32(trgsw.trlweSamples[lvl][row].b.coeffs[pos], decomposedMu);
             applyNtt(trgswDft.trlweDftSamples[lvl][row].b , trgsw.trlweSamples[lvl][row].b);
         }
     }
@@ -185,9 +182,9 @@ void trgswAddIntegerApproxCRT(Trgsw& trgsw, const Integer mu, const YatfheParame
     }
 }
 
-void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
+void trgswEncrypt(Trgsw& trgsw, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
     trgswEncZero(trgsw, param, trgswKey);
-    trgswAddInteger(trgsw, mu, param);
+    trgswAddInteger(trgsw, mu, pos, param);
 }
 
 /**
@@ -199,9 +196,9 @@ void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& t
  * @param trgswKey TrgswKey
  * @param mu Message.
  */
-void trgswEncryptNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
+void trgswEncryptNtt(Trgsw& trgsw, TrgswDft& trgswDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
     trgswEncZeroNtt(trgsw, trgswDft, param, trgswKey);
-    trgswAddIntegerNtt(trgswDft, trgsw, mu, param);
+    trgswAddIntegerNtt(trgswDft, trgsw, mu, pos, param);
 }
 
 void trgswEncryptApproxCRT(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {

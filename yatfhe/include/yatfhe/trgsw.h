@@ -102,9 +102,9 @@ struct TrgswKey {
 
 void trgswRotate(Trgsw& trgsw, int rot, const YatfheParameters& param);
 
-void trgswMPEncrypt(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
+void trgswMPEncrypt(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
-void trgswMPEncryptNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
+void trgswMPEncryptNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
 void trgswMPEncryptLow(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
 
@@ -112,15 +112,15 @@ void trgswMPEncryptLowNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, 
 
 void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-void trgswAddInteger(Trgsw& trgsw, Integer mu, const YatfheParameters& param);
+void trgswAddInteger(Trgsw& trgsw, Integer mu, const int pos, const YatfheParameters& param);
 
 void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const YatfheParameters& param);
+void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const int pos, const YatfheParameters& param);
 
-void trgswEncrypt(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
+void trgswEncrypt(Trgsw& trgsw, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
-void trgswEncryptNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
+void trgswEncryptNtt(Trgsw& trgsw, TrgswDft& trgswDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
 void trgswEncryptApproxCRT(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
 

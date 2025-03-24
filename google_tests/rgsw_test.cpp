@@ -27,7 +27,7 @@ TEST(RgswTest, RgswEncDecTest) {
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};
     Integer plain = 7;
-    trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, plain);
+    trgswEncryptNtt(trgsw, trgswDft, plain, trgswKey, 0, param);
 //    trgswEncrypt(trgsw, param, trgswKey, plain);
 
 //
@@ -63,7 +63,7 @@ TEST(RgswTest, RGSW_MCRT_DECOMPOSITION) {
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};
     Integer plain = 7;
-    trgswEncrypt(trgsw, param, trgswKey, plain);
+    trgswEncrypt(trgsw, plain, trgswKey, 0, param);
 
     // GD
     std::vector<Trgsw8> trgswD(param.d, Trgsw8(param.dh, param.k, param.N));
@@ -100,7 +100,7 @@ TEST(RgswTest, RgswMultTestNaive) {
         // trgsw enc
         Trgsw trgsw {param};
         Integer mu1 = genIntUniformDist(0, 3);
-        trgswEncrypt(trgsw, param, trgswKey, mu1);
+        trgswEncrypt(trgsw, mu1, trgswKey, 0, param);
         printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
 
         // trlwe enc
@@ -157,7 +157,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE) {
         // trgsw enc
         TrgswMP trgswMP {param};
         Integer mu1 = 1;
-        trgswMPEncrypt(trgswMP, mu1, trgswKey, param);
+        trgswMPEncrypt(trgswMP, mu1, trgswKey, 0, param);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -219,7 +219,7 @@ TEST(RgswTest, RGSW_MULT_NAIVE_CHAIN_NTT) {
         for (size_t i = 0; i < loop; i++) {
             Integer mui = 3;
             mu *= mui;
-            trgswEncryptNtt(trgsws[i], trgswDfts[i], param, trgswKey, mui);
+            trgswEncryptNtt(trgsws[i], trgswDfts[i], mui, trgswKey, 0, param);
         }
         cout << "mu: " << mu << endl;
         // trlwe enc
@@ -286,7 +286,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_CHAIN_NTT) {
         for (size_t i = 0; i < loop; i++) {
             Integer mui = 3;
             mu *= mui;
-            trgswMPEncryptNtt(trgsws[i], trgswDfts[i], mui, trgswKey, param);
+            trgswMPEncryptNtt(trgsws[i], trgswDfts[i], mui, trgswKey, 0, param);
         }
         cout << "mu: " << mu << endl;
         // trlwe enc
@@ -502,9 +502,9 @@ TEST(RgswTest, RGSW_ROT) {
         Trgsw trgsw{param};
 //        Integer mu1 = genIntUniformDist(0, 3);
         Integer mu1 = 1;
-        int rotN = 513;
-        trgswEncrypt(trgsw, param, trgswKey, mu1);
-        COUNT_TIME("trgswRotate", trgswRotate(trgsw, rotN, param);)
+        int rotN = 1;
+        trgswEncrypt(trgsw, mu1, trgswKey, 1, param);
+//        COUNT_TIME("trgswRotate", trgswRotate(trgsw, rotN, param);)
         printf("trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
 
         // trlwe enc
@@ -690,7 +690,7 @@ TEST(RgswTest, RgswMultTestNTT) {
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
         Integer mu1 = genIntUniformDist(0, 3);
-        trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, mu1);
+        trgswEncryptNtt(trgsw, trgswDft, mu1, trgswKey, 0, param);
         printf( "trgsw dec: %d.\n", trgswDecryptNtt(trgswDft, param, trgswKey));
 
         // trlwe enc
@@ -756,7 +756,7 @@ TEST(RgswTest, RgswMultTestNTT14) {
         TrgswDft trgswDft {param};
 //        Integer mu1 = genIntUniformDist(1, 3);
         Integer mu1 = 3;
-        trgswEncryptNtt(trgsw, trgswDft, param, trgswKey, mu1);
+        trgswEncryptNtt(trgsw, trgswDft, mu1, trgswKey, 0, param);
 
         Trlgsw trlgsw {param};
         TrlgswDft14 trlgswDft14 {param};
