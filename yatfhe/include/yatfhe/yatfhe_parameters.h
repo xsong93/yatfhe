@@ -24,6 +24,7 @@ struct YatfheParameters {
     // LWE params
     int torusBits {32};
     int64_t q {Q_32};
+    uint64_t qNtt {Q_50P};
     int torusBase {8}; // p|q
     int dftBits {64};
     double lweStdDev {3.0517578125e-05}; // 2^-15

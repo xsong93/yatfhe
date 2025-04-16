@@ -95,15 +95,6 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
         } else {
             temp_ntt = int64_t(res.coeffs[i]);
         }
-//        temp_poly[i] = uint32_t(temp_ntt[i] & NTT64_MASK);
-//        temp_poly = uint32_t(res.coeffs[i] & NTT64_MASK);
-
-//        if (temp_poly[i] >= POLY_MAX) {
-//            out.coeffs[i] = int32_t(temp_poly[i] - POLY_Q);
-//        } else {
-//            out.coeffs[i] = int32_t(temp_poly[i]);
-//        }
-//    }
             temp_poly = temp_ntt % TORUS_Q;
             if (temp_poly  < TORUS_MIN) {
                 out.coeffs[i] = int32_t(temp_poly + TORUS_Q);
@@ -113,7 +104,6 @@ void applyIntt(IntPolynomial& out, const LagrangePolynomial& in) {
                 out.coeffs[i] = int32_t(temp_poly);
         }
     }
-
 }
 
 void bitRevShuffle(std::vector<NttType>& x) {

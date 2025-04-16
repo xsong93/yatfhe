@@ -20,6 +20,11 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GMPXX REQUIRED IMPORTED_TARGET gmpxx)
 target_link_libraries(yatfhe_lib PkgConfig::GMPXX)
 
+# link HEXL
+message("Linking HEXL")
+find_package(HEXL REQUIRED)
+target_link_libraries(yatfhe_lib HEXL::hexl)
+
 # Specify where to install the headers and library
 install(TARGETS yatfhe_lib
         ARCHIVE DESTINATION /usr/local/lib  # Static library installation path

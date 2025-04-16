@@ -1,0 +1,68 @@
+//
+// Created by Xintong on 25-4-16.
+//
+
+#include "yatfhe/ntt_hexl.h"
+#include "yatfhe/polynomial.h"
+#include "yautil/tool.h"
+
+using namespace intel::hexl;
+
+NTT& nttHexl() {
+    static NTT nttHexl;
+    return nttHexl;
+}
+
+void initNttHexl(uint64_t degree, uint64_t q) {
+    static bool initialized = false;
+    if (!initialized) {
+        nttHexl() = NTT(degree, q);
+        initialized = true;
+    }
+}
+
+void printHexlParams() {
+    cout << "q: " << nttHexl().GetModulus() <<
+    ", N: "<< nttHexl().GetDegree() <<
+    ", ROU: " <<nttHexl().GetMinimalRootOfUnity()<<endl;
+}
+
+
+void applyNttHexl(LagrangePolynomial& out, const TorusPolynomial& in) {
+    auto N = in.N;
+    auto q = nttHexl().GetModulus();
+    for (size_t i = 0; i < N; i++) {
+        if (in.coeffs[i] >= 0){
+            out.coeffs[i] = Ntt64(in.coeffs[i]);
+        } else {
+            out.coeffs[i] = Ntt64(in.coeffs[i] + q);
+        }
+    }
+    nttHexl().ComputeForward(out.coeffs.data(), out.coeffs.data(), 1, 1);
+}
+
+void applyInttHexl(TorusPolynomial& out, const LagrangePolynomial& in) {
+    auto N = in.N;
+    auto q = nttHexl().GetModulus();
+    auto halfQ = (q + 1) >> 1;
+    std::vector<uint64_t> tmp(N);
+    nttHexl().ComputeInverse(tmp.data(), in.coeffs.data(), 1, 1);
+    int64_t temp_ntt;
+    int64_t temp_poly;
+    for (int i = 0; i < N; i++) {
+        if (tmp[i] >= halfQ) {
+            temp_ntt = int64_t(tmp[i] - q);
+        } else {
+            temp_ntt = int64_t(tmp[i]);
+        }
+        temp_poly = temp_ntt % TORUS_Q;
+//        temp_poly = ReduceMod<2>();
+        if (temp_poly < TORUS_MIN) {
+            out.coeffs[i] = Torus(temp_poly + TORUS_Q);
+        } else if (temp_poly > TORUS_MAX){
+            out.coeffs[i] = Torus(temp_poly - TORUS_Q);
+        } else {
+            out.coeffs[i] = Torus(temp_poly);
+        }
+    }
+}

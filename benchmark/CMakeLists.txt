@@ -1,4 +1,3 @@
-project(benchmark)
 
 add_executable(benchmark bench.cpp)
 add_executable(benchmarkCRT benchMCRT.cpp)
