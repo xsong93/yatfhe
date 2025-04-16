@@ -8,61 +8,79 @@
 
 using namespace intel::hexl;
 
-NTT& nttHexl() {
-    static NTT nttHexl;
-    return nttHexl;
-}
+namespace NttHexl {
 
-void initNttHexl(uint64_t degree, uint64_t q) {
-    static bool initialized = false;
-    if (!initialized) {
-        nttHexl() = NTT(degree, q);
-        initialized = true;
+    NTT &nttHexl() {
+        static NTT nttHexl;
+        return nttHexl;
     }
-}
 
-void printHexlParams() {
-    cout << "q: " << nttHexl().GetModulus() <<
-    ", N: "<< nttHexl().GetDegree() <<
-    ", ROU: " <<nttHexl().GetMinimalRootOfUnity()<<endl;
-}
-
-
-void applyNttHexl(LagrangePolynomial& out, const TorusPolynomial& in) {
-    auto N = in.N;
-    auto q = nttHexl().GetModulus();
-    for (size_t i = 0; i < N; i++) {
-        if (in.coeffs[i] >= 0){
-            out.coeffs[i] = Ntt64(in.coeffs[i]);
-        } else {
-            out.coeffs[i] = Ntt64(in.coeffs[i] + q);
+    void initNttHexl(uint64_t degree, uint64_t q) {
+        static bool initialized = false;
+        if (!initialized) {
+            nttHexl() = NTT(degree, q);
+            initialized = true;
         }
     }
-    nttHexl().ComputeForward(out.coeffs.data(), out.coeffs.data(), 1, 1);
-}
 
-void applyInttHexl(TorusPolynomial& out, const LagrangePolynomial& in) {
-    auto N = in.N;
-    auto q = nttHexl().GetModulus();
-    auto halfQ = (q + 1) >> 1;
-    std::vector<uint64_t> tmp(N);
-    nttHexl().ComputeInverse(tmp.data(), in.coeffs.data(), 1, 1);
-    int64_t temp_ntt;
-    int64_t temp_poly;
-    for (int i = 0; i < N; i++) {
-        if (tmp[i] >= halfQ) {
-            temp_ntt = int64_t(tmp[i] - q);
-        } else {
-            temp_ntt = int64_t(tmp[i]);
+    void printHexlParams() {
+        cout << "q: " << nttHexl().GetModulus() <<
+             ", N: " << nttHexl().GetDegree() <<
+             ", ROU: " << nttHexl().GetMinimalRootOfUnity() << endl;
+    }
+
+
+    void applyNtt(LagrangePolynomial &out, const TorusPolynomial &in) {
+        auto N = in.N;
+        auto q = nttHexl().GetModulus();
+        for (size_t i = 0; i < N; i++) {
+            if (in.coeffs[i] >= 0) {
+                out.coeffs[i] = Ntt64(in.coeffs[i]);
+            } else {
+                out.coeffs[i] = Ntt64(in.coeffs[i] + q);
+            }
         }
-        temp_poly = temp_ntt % TORUS_Q;
+        nttHexl().ComputeForward(out.coeffs.data(), out.coeffs.data(), 1, 1);
+    }
+
+    void applyIntt(TorusPolynomial &out, const LagrangePolynomial &in) {
+        auto N = in.N;
+        auto q = nttHexl().GetModulus();
+        auto halfQ = (q + 1) >> 1;
+        std::vector<uint64_t> tmp(N);
+        nttHexl().ComputeInverse(tmp.data(), in.coeffs.data(), 1, 1);
+        int64_t temp_ntt;
+        int64_t temp_poly;
+        for (int i = 0; i < N; i++) {
+            if (tmp[i] >= halfQ) {
+                temp_ntt = int64_t(tmp[i] - q);
+            } else {
+                temp_ntt = int64_t(tmp[i]);
+            }
+            temp_poly = temp_ntt % TORUS_Q;
 //        temp_poly = ReduceMod<2>();
-        if (temp_poly < TORUS_MIN) {
-            out.coeffs[i] = Torus(temp_poly + TORUS_Q);
-        } else if (temp_poly > TORUS_MAX){
-            out.coeffs[i] = Torus(temp_poly - TORUS_Q);
-        } else {
-            out.coeffs[i] = Torus(temp_poly);
+            if (temp_poly < TORUS_MIN) {
+                out.coeffs[i] = Torus(temp_poly + TORUS_Q);
+            } else if (temp_poly > TORUS_MAX) {
+                out.coeffs[i] = Torus(temp_poly - TORUS_Q);
+            } else {
+                out.coeffs[i] = Torus(temp_poly);
+            }
         }
+    }
+
+    void calModularInnerProductNtt(LagrangePolynomial& res, const vector<LagrangePolynomial>& in1, const vector<LagrangePolynomial>& in2) {
+        for (auto i = 0; i < in1.size(); i++) {
+            calModularInnerProductNtt(res, in1[i], in2[i]);
+        }
+    }
+
+    void calModularInnerProductNtt(LagrangePolynomial &acc, const LagrangePolynomial &in1, const LagrangePolynomial &in2) {
+        auto N = in2.N;
+        auto q = nttHexl().GetModulus();
+        LagrangePolynomial tmp{N};
+        LagrangePolynomial tmp1 = acc;
+        EltwiseMultMod(tmp.coeffs.data(), in1.coeffs.data(), in2.coeffs.data(), N, q, 1);
+        EltwiseAddMod(acc.coeffs.data(), tmp.coeffs.data(), tmp1.coeffs.data(), N, q);
     }
 }

@@ -19,7 +19,7 @@ TEST(HEXL_TEST, NTT_INTT) {
 
     auto N = param.N;
 
-    printHexlParams();
+    NttHexl::printHexlParams();
     TorusPolynomial in{N};
     LagrangePolynomial nttHexl{N};
     LagrangePolynomial ntt{N};
@@ -29,8 +29,8 @@ TEST(HEXL_TEST, NTT_INTT) {
         in.coeffs[i] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
     }
 
-    COUNT_TIME("HEXL", applyNttHexl(nttHexl, in);)
-    COUNT_TIME("HEXL", applyInttHexl(outHexl, nttHexl);)
+    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl, in);)
+    COUNT_TIME("HEXL", NttHexl::applyIntt(outHexl, nttHexl);)
     COUNT_TIME("n32", applyNtt(ntt, in);)
     COUNT_TIME("n32", applyIntt(out, ntt);)
 
@@ -79,13 +79,13 @@ TEST(HEXL_TEST, POLY_MULT) {
 //        printArray(poly4.coeffs, "poly4");
 
         COUNT_TIME("HEXL_MULT", {
-            applyNttHexl(a, poly0);
-            applyNttHexl(b, poly1);
+            NttHexl::applyNtt(a, poly0);
+            NttHexl::applyNtt(b, poly1);
 //            applyNtt32(c, poly2);
 //            applyNtt32(d, poly3);
 //            applyNtt32(e, poly4);
             EltwiseMultMod(tmpMul1.coeffs.data(), a.coeffs.data(), b.coeffs.data(), N, p.qNtt, 1);
-            applyInttHexl(resMul1, tmpMul1);
+            NttHexl::applyIntt(resMul1, tmpMul1);
         })
         COUNT_TIME("NTT_MULT", {
             applyNtt(a, poly0);

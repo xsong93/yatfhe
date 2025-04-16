@@ -6,10 +6,11 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
-#include "yatfhe/ntt.h"
+#include "yatfhe/ntt_hexl.h"
 #include "yatfhe/gadget_decomposition.h"
 
 using namespace std;
+using namespace NttHexl;
 
 void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, double sigma) {
     initCoeffsWithGaussianNoiseSingleSample(trlwe.b.coeffs, mu, sigma);
@@ -238,7 +239,7 @@ void recomposeTrlweNtt(TrlweDft& output, const DecomposedTrlweDft& input, const 
             auto& currIn = (row < k) ? input.rlweDfts[lvl].a[row] : input.rlweDfts[lvl].b;
             auto& currOut = (row < k) ? output.a[row] : output.b;
             for (auto j = 0; j < N; j++) {
-                currOut.coeffs[j] = modAdd(currOut.coeffs[j], currIn.coeffs[j] << (param.dftBits - (lvl + 1) * param.radixBits));
+                currOut.coeffs[j] = AddUIntMod(currOut.coeffs[j], currIn.coeffs[j] << (param.dftBits - (lvl + 1) * param.radixBits), param.qNtt);
             }
         }
     }

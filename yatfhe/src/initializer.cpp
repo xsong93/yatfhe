@@ -41,7 +41,7 @@ void yatfheInit(YatfheParameters& param) {
     INT_MIN_VALUE = static_cast<Integer>(-(TORUS_Q >> 1));
     TORUS_MAX = INT_MAX_VALUE;
     TORUS_MIN = INT_MIN_VALUE;
-    initNttHexl(param.N, param.qNtt);
+    NttHexl::initNttHexl(param.N, param.qNtt);
     initGlobalParamsNtt64(param.N);
     initGlobalParamsNtt32(param.N);
     initGlobalParamsNtt24(param.N);

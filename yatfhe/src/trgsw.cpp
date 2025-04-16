@@ -3,12 +3,15 @@
 //
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
-#include "yatfhe/ntt.h"
+//#include "yatfhe/ntt.h"
 #include "yatfhe/ntt24.h"
+#include "yatfhe/ntt_hexl.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/crt.h"
+
+using namespace NttHexl;
 
 void trgswMPEncrypt(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
     TorusPolynomial muPoly{param.N};
@@ -351,6 +354,10 @@ void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswDftInput, const
                 auto& out = (col2 < k) ? trlweDftRes.a[col2] : trlweDftRes.b;
                 auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][col].a[col2]
                                          : trgswDftInput.trlweDftSamples[lvl][col].b;
+                LagrangePolynomial tmp{N};
+//                EltwiseMultMod(tmp.coeffs.data(), curr.coeffs.data(), curr2.coeffs.data(), N, param.qNtt, 1);
+//                EltwiseAddMod(out.coeffs.data(), out.coeffs.data(), tmp.coeffs.data(), N, param.qNtt);
+//                calModularInnerProductNttHexl(out, curr, curr2, N, param.qNtt);
                 calModularInnerProductNtt(out, curr, curr2);
             }
         }
