@@ -39,7 +39,7 @@ struct YatfheParameters {
     int radixBase {1 << radixBits};  // 2^b
     int baseOverTwo {radixBase / 2}; // B / 2 threshold
     int digitMask {radixBase - 1};
-    int unfolding {1};
+    int unfold {1};
     // CRT params
     int d{NUM_PRIMES}; // # of primes
     int dh{NUM_HIGH_PRIMES};

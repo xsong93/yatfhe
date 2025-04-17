@@ -144,9 +144,12 @@ void controlMuxApproxCRTNtt(std::vector<Trlwe8>& res, const std::vector<Trlwe8>&
 }
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
-    if (bsk.unfolding == 1) {
-        bootstrappingKeyGenWoUnfolding(bsk, trgswKey, tlweKey, param);
+    if (bsk.unfold == 1) {
+        bootstrappingKeyGenNormal(bsk, trgswKey, tlweKey, param);
+        return;
     }
+    // todo
+    // bootstrappingKeyGenFold(bsk, trgswKey, tlweKey, param);
 }
 
 void bootstrappingKeyGenRing(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
@@ -155,7 +158,7 @@ void bootstrappingKeyGenRing(BootstrappingKey& bsk, TrgswKey& trgswKey, const Tl
     }
 }
 
-void bootstrappingKeyGenWoUnfolding(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+void bootstrappingKeyGenNormal(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
     for (auto i = 0; i < bsk.n; i++) {
         trgswEncryptNtt(bsk.bsk[i], bsk.bskDft[i], tlweKey.s[i], trgswKey, 0, param);
     }

@@ -124,7 +124,6 @@ TEST(HEXL_TEST, NTT_ROT) {
     auto N = param.N;
     auto q = param.qNtt;
 
-    NttHexl::printHexlParams();
     TorusPolynomial in{N};
     TorusPolynomial in1{N};
     TorusPolynomial in2{N};
@@ -148,9 +147,10 @@ TEST(HEXL_TEST, NTT_ROT) {
     printArray(nttHexl1.coeffs, "ntt1");
     printArray(nttHexl2.coeffs, "ntt2");
 
-    for (size_t i = 0; i < N; i++) {
-        EltwiseMultMod(tmp.coeffs.data(), nttHexl.coeffs.data(), nttHexl1.coeffs.data(), N, q, 1);
-    }
+    COUNT_TIME("NTT_ROT",
+        for (size_t i = 0; i < N; i++) {
+            EltwiseMultMod(tmp.coeffs.data(), nttHexl.coeffs.data(), nttHexl1.coeffs.data(), N, q, 1);
+        })
 
     COUNT_TIME("HEXL", NttHexl::applyIntt(outHexl, tmp);)
 
