@@ -57,7 +57,6 @@ TEST(CRT, EXACT_CRT) {
 
     COUNT_TIME("exactCRTDecomp", for(size_t i = 0; i < 10000; i++){exactCRTDecomp(f, coeffs, p);})
     COUNT_TIME("exactCRTReconstruct", for(size_t i = 0; i < 10000; i++){exactCRTReconstruct(f_tilde, f, p);})
-
     COUNT_TIME("exactCRTDecompIO", for(size_t i = 0; i < 10000; i++){ exactCRTDecompIO(f2, coeffs, p);})
     COUNT_TIME("exactCRTReconstructIO", for(size_t i = 0; i < 10000; i++){ exactCRTReconstructIO(f_tilde, f2, p);})
 

@@ -7,10 +7,8 @@
 
 #include <gmp.h>
 #include <vector>
-#include <string>
 #include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
-#include "yatfhe/numeric_functions.h"
 
 constexpr uint32_t MOD32 = Q_32P;
 constexpr uint32_t HALF_MOD32 = (MOD32 + 1) >> 1;

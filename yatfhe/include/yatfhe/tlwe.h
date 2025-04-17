@@ -7,7 +7,6 @@
 
 #include <vector>
 #include "yatfhe/torus.h"
-#include "yatfhe/yatfhe_parameters.h"
 
 struct Tlwe {
     std::vector<Torus> a {}; // n
@@ -15,7 +14,7 @@ struct Tlwe {
     int n {};
     size_t bytes {};
 
-    explicit Tlwe(int n) : n(n), a(n), b(0), bytes(sizeof(Torus) * (n+1)) {};
+    explicit Tlwe(int n) : a(n), b(0), n(n), bytes(sizeof(Torus) * (n+1)) {};
 };
 
 struct ScaledTlwe {
@@ -24,7 +23,7 @@ struct ScaledTlwe {
     int n {};
     int mod {};
 
-    ScaledTlwe(int mod, int n) : mod(mod), n(n), a(n), b(0) {};
+    ScaledTlwe(int mod, int n) : a(n), b(0), n(n), mod(mod) {};
 };
 
 struct TlweKey {
@@ -32,9 +31,9 @@ struct TlweKey {
     double sigma {};
     std::vector<Binary> s {}; // n
 
-    TlweKey(int n, double sigma) : n(n), s(n), sigma(sigma) {};
+    TlweKey(int n, double sigma) : n(n), sigma(sigma), s(n) {};
 
-    explicit TlweKey(int n) : n(n), s(n), sigma(0) {};
+    explicit TlweKey(int n) : n(n), sigma(0), s(n) {};
 };
 
 void lweKeyGen(TlweKey& key);

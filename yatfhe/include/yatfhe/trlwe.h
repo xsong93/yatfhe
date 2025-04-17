@@ -166,18 +166,18 @@ struct TrlweKey {
     double sigma {};
 
     explicit TrlweKey(const YatfheParameters& param):
+            s(param.k, TorusPolynomial(param.N)),
+            sDft(param.k, LagrangePolynomial(param.N)),
             k(param.k),
             N(param.N),
-            sigma(param.rlweStdDev),
-            s(param.k, TorusPolynomial(param.N)),
-            sDft(param.k, LagrangePolynomial(param.N)) {};
+            sigma(param.rlweStdDev) {};
 
     TrlweKey(int k, int N, double sigma):
+        s(k, TorusPolynomial(N)),
+        sDft(k, LagrangePolynomial(N)),
         k(k),
         N(N),
-        sigma(sigma),
-        s(k, TorusPolynomial(N)),
-        sDft(k, LagrangePolynomial(N)) {};
+        sigma(sigma) {};
 };
 
 template <typename T>

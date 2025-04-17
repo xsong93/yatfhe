@@ -574,3 +574,27 @@ void trgswMPExternalProductDecompNtt(DecomposedTrlweDft& output, const TrgswMPDf
         trlweAddNtt(out, a, b);
     }
 }
+
+//todo
+void trgswMPInternalProduct(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l;
+    for (size_t l = 0; l < L; l++) {
+        trgswMPExternalProduct(output.cPrime[l], input1, input2.cPrime[l], param);
+        for (size_t k = 0; k < K; k++) {
+            trgswMPExternalProduct(output.c[l][k], input1, input2.c[l][k], param);
+        }
+    }
+}
+
+//todo
+void trgswMPInternalProductNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l;
+    for (size_t l = 0; l < L; l++) {
+        trgswMPExternalProductNtt(output.cPrime[l], input2, input1.cPrime[l], param);
+        for (size_t k = 0; k < K; k++) {
+            trgswMPExternalProductNtt(output.c[l][k], input2, input1.c[l][k], param);
+        }
+    }
+}

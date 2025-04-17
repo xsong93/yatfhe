@@ -6,6 +6,7 @@
 #define HLS_YATFHE_TGLEV_H
 
 #include <iostream>
+#include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
 
 struct Tglev {

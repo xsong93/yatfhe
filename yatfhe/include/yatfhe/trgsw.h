@@ -150,4 +150,8 @@ void trgswMPExternalProductDecomp(DecomposedTrlwe& output, const TrgswMP& trgswM
 
 void trgswMPExternalProductDecompNtt(DecomposedTrlweDft& output, const TrgswMPDft& trgswMPInput, const DecomposedTrlweDft& trlweInput, const YatfheParameters& param);
 
+void trgswMPInternalProduct(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const YatfheParameters& param);
+
+void trgswMPInternalProductNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param);
+
 #endif //HLS_YATFHE_TRGSW_H
