@@ -113,3 +113,48 @@ TEST(HEXL_TEST, POLY_MULT) {
     }
     printBanner("Ntt32BasicArithTest");
 }
+
+TEST(HEXL_TEST, NTT_ROT) {
+    YatfheParameters param {};
+    param.N = 1024;
+//    param.qNtt = 7681;
+    yatfheInit(param);
+    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
+
+    auto N = param.N;
+    auto q = param.qNtt;
+
+    NttHexl::printHexlParams();
+    TorusPolynomial in{N};
+    TorusPolynomial in1{N};
+    TorusPolynomial in2{N};
+    LagrangePolynomial nttHexl{N};
+    LagrangePolynomial nttHexl1{N};
+    LagrangePolynomial nttHexl2{N};
+    LagrangePolynomial tmp{N};
+    TorusPolynomial outHexl{N};
+    for (auto i = 0; i < N; i++) {
+        in.coeffs[i] = genIntUniformDist(-4, 4);
+    }
+    int r = 3;
+    in1.coeffs[r] = 1;
+    torusPolynomialRotate(in2, r, in);
+
+    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl, in);)
+    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl1, in1);)
+    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl2, in2);)
+
+    printArray(nttHexl.coeffs, "ntt");
+    printArray(nttHexl1.coeffs, "ntt1");
+    printArray(nttHexl2.coeffs, "ntt2");
+
+    for (size_t i = 0; i < N; i++) {
+        EltwiseMultMod(tmp.coeffs.data(), nttHexl.coeffs.data(), nttHexl1.coeffs.data(), N, q, 1);
+    }
+
+    COUNT_TIME("HEXL", NttHexl::applyIntt(outHexl, tmp);)
+
+    printArray(in.coeffs, "in");
+    printArray(outHexl.coeffs, "outHexl");
+    ASSERT_EQ(in2.coeffs, outHexl.coeffs);
+}
