@@ -42,10 +42,10 @@ void yatfheInit(YatfheParameters& param) {
     TORUS_MAX = INT_MAX_VALUE;
     TORUS_MIN = INT_MIN_VALUE;
     NttHexl::initNttHexl(param.N, param.qNtt);
-    initGlobalParamsNtt64(param.N);
-    initGlobalParamsNtt32(param.N);
-    initGlobalParamsNtt24(param.N);
-    initGlobalParamsNtt14(param.N);
+    NttNative64::initGlobalParamsNtt(param.N);
+    NttNative32::initGlobalParamsNtt(param.N);
+    NttNative24::initGlobalParamsNtt(param.N);
+    NttNative14::initGlobalParamsNtt(param.N);
     for (size_t d = 0; d < param.dl; d++) {
         auto& dh = param.dh;
         param.taoU[dh + d] = static_cast<int>((modInverse(param.qLow / param.ql[d], param.ql[d])));

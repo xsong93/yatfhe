@@ -5,6 +5,8 @@
 #include "yatfhe/trlgsw.h"
 #include "yatfhe/ntt14.h"
 
+using namespace NttNative14;
+
 void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
     Trgsw trgsw {param};
     trgswEncZero(trgsw, param, trgswKey);
@@ -20,7 +22,8 @@ void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfhePa
                     }
                     trlgsw.trgsws[lvl2].trlweSamples[lvl][row].b.coeffs[j] = decomposedTrlwe.rlwes[lvl2].b.coeffs[j];
                 }
-                applyNttForAB14(trlgswDft14.trgswDfts[lvl2].trlweDftSamples[lvl][row], trlgsw.trgsws[lvl2].trlweSamples[lvl][row]);
+                applyNttForAB(trlgswDft14.trgswDfts[lvl2].trlweDftSamples[lvl][row],
+                              trlgsw.trgsws[lvl2].trlweSamples[lvl][row]);
 //                printTrgsw(trlgsw.trgsws[lvl2], "lvl2_" + to_string(lvl2));
             }
         }
@@ -83,7 +86,7 @@ void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Inp
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
     for (auto i = 0; i < decomposedTrlwe.l; i++) {
-        applyNttForAB14(decomposedTrlweDft14.rlweDfts[i], decomposedTrlwe.rlwes[i]);
+        applyNttForAB(decomposedTrlweDft14.rlweDfts[i], decomposedTrlwe.rlwes[i]);
     }
 
 ////#pragma omp parallel for collapse(2) private(out)
@@ -95,11 +98,11 @@ void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Inp
 //                    auto &out = (col2 < k) ? trlweDftRes14[lvl2].a[col2] : trlweDftRes14[lvl2].b;
 //                    auto &curr2 = (col2 < k) ? trlgswDft14Input.trgswDfts[lvl2].trlweDftSamples[lvl][col].a[col2]
 //                                             : trlgswDft14Input.trgswDfts[lvl2].trlweDftSamples[lvl][col].b;
-//                    calModularInnerProductNtt14(out, curr, curr2);
+//                    calModularInnerProductNtt(out, curr, curr2);
 //                }
 //            }
 //        }
-//        applyInttForAB14(decomposedTrlweIntt.rlwes[lvl2], trlweDftRes14[lvl2]);
+//        applyInttForAB(decomposedTrlweIntt.rlwes[lvl2], trlweDftRes14[lvl2]);
 //    }
     for (auto lvl = 0; lvl < level1; lvl++) {
         for (auto col = 0; col < k + 1; col++) {
@@ -109,13 +112,13 @@ void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Inp
                     auto &out = (col2 < k) ? trlweDftRes14[lvl2].a[col2] : trlweDftRes14[lvl2].b;
                     auto &curr2 = (col2 < k) ? trlgswDft14Input.trgswDfts[lvl2].trlweDftSamples[lvl][col].a[col2]
                                              : trlgswDft14Input.trgswDfts[lvl2].trlweDftSamples[lvl][col].b;
-                    calModularInnerProductNtt14(out, curr, curr2);
+                    calModularInnerProductNtt(out, curr, curr2);
                 }
             }
         }
     }
     for (auto lvl2 = 0; lvl2 < level2; lvl2++) {
-        applyInttForAB14(decomposedTrlweIntt.rlwes[lvl2], trlweDftRes14[lvl2]);
+        applyInttForAB(decomposedTrlweIntt.rlwes[lvl2], trlweDftRes14[lvl2]);
     }
     recomposeTrlwe(output, decomposedTrlweIntt, param);
 }

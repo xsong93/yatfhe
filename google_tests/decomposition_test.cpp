@@ -8,10 +8,12 @@
 #include "yatfhe/gadget_decomposition.h"
 #include "yautil/tool.h"
 #include "yatfhe/numeric_functions.h"
-#include "yatfhe/ntt.h"
+#include "yatfhe/ntt_hexl.h"
 #include "yatfhe/crt.h"
 #include "yautil/time_counter.h"
 #include "yautil/initializer.h"
+
+using namespace NttHexl;
 
 UnsignedInteger powInt(UnsignedInteger base, UnsignedInteger exponent) {
     UnsignedInteger result = 1;

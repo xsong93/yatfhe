@@ -11,29 +11,31 @@
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 
+using namespace NttNative16;
+
 TEST(Ntt16Test, ModMultTest) {
     const int N = 512;
-    initGlobalParamsNtt16(N);
+    initGlobalParamsNtt(N);
     Ntt16 a = 59923;
     Ntt16 b = 65535;
-    auto add = modADD16(a, b);
-    auto sub = modSUB16(a, b);
-    auto mul = modMULT16(a, b);
-    auto mul2 = modMULT16R(a, b);
-    auto inv = modINV16(a);
-    auto pow = POW16(a, 3);
+    auto add = modADD(a, b);
+    auto sub = modSUB(a, b);
+    auto mul = modMULT(a, b);
+    auto mul2 = modMULTR(a, b);
+    auto inv = modINV(a);
+    auto pow = POW(a, 3);
     printf("a+b: %d, a-b: %d, a*b: %d, inv: %d, pow: %d\n", add, sub, mul, inv, pow);
     ASSERT_EQ(add, 59921);
     ASSERT_EQ(sub, 59925);
     ASSERT_EQ(mul, 11228);
     ASSERT_EQ(mul2, mul);
     ASSERT_EQ(inv, 36831);
-    ASSERT_EQ(pow, ((uint32_t (a * a) % MOD16) * a) %MOD16);
+    ASSERT_EQ(pow, ((uint32_t (a * a) % MOD) * a) % MOD);
 }
 
 TEST(Ntt16Test, NttIntt16Test) {
     const int N = 1024;
-    initGlobalParamsNtt16(N);
+    initGlobalParamsNtt(N);
     Ntt16Polynomial resNtt{N};
     IntPolynomial a1{N};
     IntPolynomial resIntt{N};
@@ -42,8 +44,8 @@ TEST(Ntt16Test, NttIntt16Test) {
 //        a1.coeffs[i] = -1;
     }
 
-    applyNtt16(resNtt, a1);
-    applyIntt16(resIntt, resNtt);
+    applyNtt(resNtt, a1);
+    applyIntt(resIntt, resNtt);
     printArray(resNtt.coeffs, "resNtt");
     printArray(a1.coeffs, "orig");
     printArray(resIntt.coeffs, "intt");

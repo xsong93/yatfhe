@@ -807,7 +807,7 @@ TEST(RgswTest, RGSW_MULT_MCRT_NTT) {
         std::vector<TrgswDft24> trgswDDft(param.d, TrgswDft24(param.dh, param.k, param.N));
         std::vector<Trgsw8> trgswDI(param.d, Trgsw8(param.dh, param.k, param.N));
         for (size_t d = 0; d < param.d; d++) {
-            applyNttForRgsw24(trgswDDft[d], trgswD[d]);
+            NttNative24::applyNttForRgsw(trgswDDft[d], trgswD[d]);
         }
 
         // trgsw mult

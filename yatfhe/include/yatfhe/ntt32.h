@@ -10,97 +10,114 @@
 #include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
 
-constexpr uint32_t MOD32 = Q_32P;
-constexpr uint32_t HALF_MOD32 = (MOD32 + 1) >> 1;
-constexpr int32_t PRIM_ROOT32 = 7;
+namespace NttNative32 {
 
-struct TwRom32 {
-    int N {};
-    std::vector<Ntt32> w_rom {};
-    std::vector<Ntt32> inv_w_rom {};
-    std::vector<Ntt32> phi_rom {};
-    std::vector<Ntt32> inv_phi_rom {};
+    constexpr uint32_t MOD = Q_32P;
+    constexpr uint32_t HALF_MOD = (MOD + 1) >> 1;
+    constexpr int32_t PRIM_ROOT = 7;
 
-    TwRom32() : N(), w_rom(), phi_rom(), inv_w_rom(), inv_phi_rom() {};
-    explicit TwRom32(int n) :
-            N(n), w_rom(n>>1), phi_rom(n), inv_w_rom(n>>1), inv_phi_rom(n) {};
-    static void initTwRom(TwRom32& twRom, const int n) {
-        twRom = TwRom32(n);
-    }
-};
+    struct TwRom {
+        int N{};
+        std::vector<Ntt32> w_rom{};
+        std::vector<Ntt32> inv_w_rom{};
+        std::vector<Ntt32> phi_rom{};
+        std::vector<Ntt32> inv_phi_rom{};
 
-struct TwParam32 {
-    std::vector<std::vector<Ntt32>> tw_factor {};
-    TwParam32(): tw_factor() {};
+        TwRom() : N(), w_rom(), phi_rom(), inv_w_rom(), inv_phi_rom() {};
 
-    explicit TwParam32(int n):
-            tw_factor(n, std::vector<Ntt32>()) {};
+        explicit TwRom(int n) :
+                N(n), w_rom(n >> 1), phi_rom(n), inv_w_rom(n >> 1), inv_phi_rom(n) {};
 
-    static void initTwParam(TwParam32& twParam, const int n) {
-        twParam = TwParam32(n);
-    }
-};
+        static void initTwRom(TwRom &twRom, const int n) {
+            twRom = TwRom(n);
+        }
+    };
 
-extern TwParam32 NWC_TW32;
-extern TwParam32 NWC_ITW32;
-extern TwRom32 TW_ROM32;
+    struct TwParam {
+        std::vector<std::vector<Ntt32>> tw_factor{};
+
+        TwParam() : tw_factor() {};
+
+        explicit TwParam(int n) :
+                tw_factor(n, std::vector<Ntt32>()) {};
+
+        static void initTwParam(TwParam &twParam, const int n) {
+            twParam = TwParam(n);
+        }
+    };
+
+    extern TwParam NWC_TW;
+    extern TwParam NWC_ITW;
+    extern TwRom TW_ROM;
 
 //----------------------------------------------------------------------------------
-void genTW_ROM32(TwRom32& tw_rom);
-void genNWCparam32(TwParam32& nwc_tw, int n, const TwRom32& tw_rom, const std::string& str);
-void applyNtt32(Ntt32Polynomial& RES, const TorusPolynomial& IN);
-void applyIntt32(TorusPolynomial& out, const Ntt32Polynomial& in);
-Ntt32 POW32(Ntt32 BASE, Ntt32 EXP);
-Ntt32 modINV32(Ntt32 in);
-Ntt32 modADD32(Ntt32 a, Ntt32 b);
-Ntt32 modADDscale32(Ntt32 a, Ntt32 b);
-Ntt32 modSUBscale32(Ntt32 a, Ntt32 b);
-Ntt32 modSUB32(Ntt32 a, Ntt32 b);
-Ntt32 modMULT32(Ntt32 a, Ntt32 b);
-void initGlobalParamsNtt32(int N);
+    void genTW_ROM(TwRom &tw_rom);
 
-template <typename RgswDftType, typename RgswType>
-void applyNttForRgsw32(RgswDftType& out, RgswType& in) {
-    auto level = in.l;
-    auto k = in.k;
-    for (size_t l = 0; l < level; l++) {
-        for (size_t k1 = 0; k1 < k + 1; k1++) {
-            auto& nttOut = out.trlweDftSamples[l][k1];
-            auto& nttIn = in.trlweSamples[l][k1];
-            applyNttForAB32(nttOut, nttIn);
+    void genNWCparam(TwParam &nwc_tw, int n, const TwRom &tw_rom, const std::string &str);
+
+    void applyNtt(Ntt32Polynomial &RES, const TorusPolynomial &IN);
+
+    void applyIntt(TorusPolynomial &out, const Ntt32Polynomial &in);
+
+    Ntt32 POW(Ntt32 BASE, Ntt32 EXP);
+
+    Ntt32 modINV(Ntt32 in);
+
+    Ntt32 modADD(Ntt32 a, Ntt32 b);
+
+    Ntt32 modADDscale(Ntt32 a, Ntt32 b);
+
+    Ntt32 modSUBscale(Ntt32 a, Ntt32 b);
+
+    Ntt32 modSUB(Ntt32 a, Ntt32 b);
+
+    Ntt32 modMULT(Ntt32 a, Ntt32 b);
+
+    void initGlobalParamsNtt(int N);
+
+    template<typename T, typename R>
+    void applyNttForAB(T &out, R &in) {
+        for (auto row = 0; row < in.a.size(); row++) {
+            applyNtt(out.a[row], in.a[row]);
+        }
+        applyNtt(out.b, in.b);
+    }
+
+    template<typename T, typename R>
+    void applyInttForAB(T &out, R &in) {
+        for (auto row = 0; row < in.a.size(); row++) {
+            applyIntt(out.a[row], in.a[row]);
+        }
+        applyIntt(out.b, in.b);
+    }
+
+    template<typename RgswDftType, typename RgswType>
+    void applyNttForRgsw(RgswDftType &out, RgswType &in) {
+        auto level = in.l;
+        auto k = in.k;
+        for (size_t l = 0; l < level; l++) {
+            for (size_t k1 = 0; k1 < k + 1; k1++) {
+                auto &nttOut = out.trlweDftSamples[l][k1];
+                auto &nttIn = in.trlweSamples[l][k1];
+                applyNttForAB(nttOut, nttIn);
+            }
         }
     }
-}
 
-template <typename RgswDftType, typename RgswType>
-void applyInttForRgsw32(RgswType& out, RgswDftType& in) {
-    auto level = out.l;
-    auto k = out.k;
-    for (size_t l = 0; l < level; l++) {
-        for (size_t k1 = 0; k1 < k + 1; k1++) {
-            auto& dftIn = in.trlweDftSamples[l][k1];
-            auto& rgswOut = out.trlweSamples[l][k1];
-            applyInttForAB32(rgswOut, dftIn);
+    template<typename RgswDftType, typename RgswType>
+    void applyInttForRgsw(RgswType &out, RgswDftType &in) {
+        auto level = out.l;
+        auto k = out.k;
+        for (size_t l = 0; l < level; l++) {
+            for (size_t k1 = 0; k1 < k + 1; k1++) {
+                auto &dftIn = in.trlweDftSamples[l][k1];
+                auto &rgswOut = out.trlweSamples[l][k1];
+                applyInttForAB(rgswOut, dftIn);
+            }
         }
     }
-}
 
-template <typename T, typename R>
-void applyNttForAB32(T& out, R& in) {
-    for (auto row = 0; row < in.a.size(); row++) {
-        applyNtt32(out.a[row], in.a[row]);
-    }
-    applyNtt32(out.b, in.b);
+    void calModularInnerProductNtt(Ntt32Polynomial &out, const Ntt32Polynomial &in1, const Ntt32Polynomial &in2);
 }
-
-template <typename T, typename R>
-void applyInttForAB32(T& out, R& in) {
-    for (auto row = 0; row < in.a.size(); row++) {
-        applyIntt32(out.a[row], in.a[row]);
-    }
-    applyIntt32(out.b, in.b);
-}
-
-void calModularInnerProductNtt32(Ntt32Polynomial& out, const Ntt32Polynomial& in1, const Ntt32Polynomial& in2);
 
 #endif //HLS_YATFHE_NTT32_H

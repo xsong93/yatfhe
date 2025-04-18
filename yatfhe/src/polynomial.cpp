@@ -3,7 +3,9 @@
 //
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
-#include "yatfhe/ntt.h"
+#include "yatfhe/ntt_hexl.h"
+
+using namespace NttHexl;
 
 /**
  * For a random rotator input, this method converts the rotator to a value within the range of polynomial length.
@@ -291,7 +293,7 @@ void polynomialSubT32(TorusPolynomial& res, const TorusPolynomial& poly1, const 
 }
 
 void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, const int value, const int position) {
-    IntPolynomial tmp {lagrangePolynomial.N};
+    TorusPolynomial tmp {lagrangePolynomial.N};
     tmp.coeffs[position] = value;
     applyNtt(lagrangePolynomial, tmp);
 }
@@ -299,19 +301,22 @@ void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomia
 // accum += poly
 void lagrangePolynomialAccumulate(LagrangePolynomial& accum, LagrangePolynomial& poly) {
     const auto N = accum.N;
+    const auto q = NttHexl::nttHexl().GetModulus();
     for (auto i = 0; i < N; i++) {
-        accum.coeffs[i] += modAdd(accum.coeffs[i], poly.coeffs[i]);
+        accum.coeffs[i] += AddUIntMod(accum.coeffs[i], poly.coeffs[i], q);
     }
 }
 
 void lagrangePolynomialAdd(LagrangePolynomial& output, const LagrangePolynomial& input1, const LagrangePolynomial& input2) {
+    const auto q = NttHexl::nttHexl().GetModulus();
     for (auto i = 0; i < input1.N; i++) {
-        output.coeffs[i] = modAdd(input1.coeffs[i], input2.coeffs[i]);
+        output.coeffs[i] = AddUIntMod(input1.coeffs[i], input2.coeffs[i], q);
     }
 }
 
 void lagrangePolynomialSub(LagrangePolynomial& output, const LagrangePolynomial& input1, const LagrangePolynomial& input2) {
+    const auto q = NttHexl::nttHexl().GetModulus();
     for (auto i = 0; i < input1.N; i++) {
-        output.coeffs[i] = modSub(input1.coeffs[i], input2.coeffs[i]);
+        output.coeffs[i] = SubUIntMod(input1.coeffs[i], input2.coeffs[i], q);
     }
 }

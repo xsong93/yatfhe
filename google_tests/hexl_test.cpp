@@ -8,18 +8,15 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/initializer.h"
-#include "yatfhe/ntt.h"
+#include "yatfhe/ntt64.h"
 #include <gtest/gtest.h>
 
 TEST(HEXL_TEST, NTT_INTT) {
     YatfheParameters param {};
     param.N = 1024;
     yatfheInit(param);
-    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
     auto N = param.N;
-
-    NttHexl::printHexlParams();
     TorusPolynomial in{N};
     LagrangePolynomial nttHexl{N};
     LagrangePolynomial ntt{N};
@@ -29,10 +26,10 @@ TEST(HEXL_TEST, NTT_INTT) {
         in.coeffs[i] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
     }
 
-    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl, in);)
-    COUNT_TIME("HEXL", NttHexl::applyIntt(outHexl, nttHexl);)
-    COUNT_TIME("n32", applyNtt(ntt, in);)
-    COUNT_TIME("n32", applyIntt(out, ntt);)
+    COUNT_TIME("HEXL_NTT", NttHexl::applyNtt(nttHexl, in);)
+    COUNT_TIME("HEXL_INTT", NttHexl::applyIntt(outHexl, nttHexl);)
+    COUNT_TIME("NATIVE_NTT", NttNative64::applyNtt(ntt, in);)
+    COUNT_TIME("NATIVE_INTT", NttNative64::applyIntt(out, ntt);)
 
     printArray(in.coeffs, "in");
     printArray(outHexl.coeffs, "outHexl");
@@ -68,41 +65,26 @@ TEST(HEXL_TEST, POLY_MULT) {
         for (auto j = 0; j < N; j++) {
             poly0.coeffs[j] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
             poly1.coeffs[j] = genIntUniformDist(0, 1);
-//            poly2.coeffs[j] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
-//            poly3.coeffs[j] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
-//            poly4.coeffs[j] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
         }
         printArray(poly0.coeffs, "poly0");
         printArray(poly1.coeffs, "poly1");
-//        printArray(poly2.coeffs, "poly2");
-//        printArray(poly3.coeffs, "poly3");
-//        printArray(poly4.coeffs, "poly4");
 
         COUNT_TIME("HEXL_MULT", {
             NttHexl::applyNtt(a, poly0);
             NttHexl::applyNtt(b, poly1);
-//            applyNtt32(c, poly2);
-//            applyNtt32(d, poly3);
-//            applyNtt32(e, poly4);
             EltwiseMultMod(tmpMul1.coeffs.data(), a.coeffs.data(), b.coeffs.data(), N, p.qNtt, 1);
             NttHexl::applyIntt(resMul1, tmpMul1);
         })
         COUNT_TIME("NTT_MULT", {
-            applyNtt(a, poly0);
-            applyNtt(b, poly1);
-//            applyNtt32(c, poly2);
-//            applyNtt32(d, poly3);
-//            applyNtt32(e, poly4);
-            calModularInnerProductNtt(tmpMul2, a, b);
-            applyIntt(resMul2, tmpMul2);
+            NttNative64::applyNtt(a, poly0);
+            NttNative64::applyNtt(b, poly1);
+            NttNative64::calModularInnerProductNtt(tmpMul2, a, b);
+            NttNative64::applyIntt(resMul2, tmpMul2);
         })
         COUNT_TIME("NAIVE_MULT", {
             TorusPolynomial tmp{N};
             TorusPolynomial tmp1{N};
             polynomialMulNaiveModQ(navMul, poly0, poly1, TORUS_Q);
-//            polynomialMulNaiveModQ(tmp1, tmp, poly2, TORUS_Q);
-//            polynomialMulNaiveModQ(tmp, tmp1, poly3, TORUS_Q);
-//            polynomialMulNaiveModQ(navMul, tmp, poly4, TORUS_Q);
         })
 
         printArray(resMul1.coeffs, "resMul1");

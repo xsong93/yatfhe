@@ -12,98 +12,115 @@
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
 
-constexpr int32_t MOD24 = (1 << 24) - (1 << 14) + 1;
-constexpr uint32_t HALF_MOD24 = (MOD24 + 1) >> 1;
-constexpr int32_t PRIM_ROOT24 = 7;
-constexpr int32_t NTT24_MASK = 0xff;
+namespace NttNative24 {
 
-struct TwRom24 {
-    int N {};
-    std::vector<Ntt24> w_rom {};
-    std::vector<Ntt24> inv_w_rom {};
-    std::vector<Ntt24> phi_rom {};
-    std::vector<Ntt24> inv_phi_rom {};
+    constexpr int32_t MOD = (1 << 24) - (1 << 14) + 1;
+    constexpr uint32_t HALF_MOD = (MOD + 1) >> 1;
+    constexpr int32_t PRIM_ROOT = 7;
+    constexpr int32_t NTT_MASK = 0xff;
 
-    TwRom24() : N(), w_rom(), phi_rom(), inv_w_rom(), inv_phi_rom() {};
-    explicit TwRom24(int n) :
-            N(n), w_rom(n>>1), phi_rom(n), inv_w_rom(n>>1), inv_phi_rom(n) {};
-    static void initTwRom(TwRom24& twRom, const int n) {
-        twRom = TwRom24(n);
-    }
-};
+    struct TwRom {
+        int N{};
+        std::vector<Ntt24> w_rom{};
+        std::vector<Ntt24> inv_w_rom{};
+        std::vector<Ntt24> phi_rom{};
+        std::vector<Ntt24> inv_phi_rom{};
 
-struct TwParam24 {
-    std::vector<std::vector<Ntt24>> tw_factor {};
-    TwParam24(): tw_factor() {};
+        TwRom() : N(), w_rom(), phi_rom(), inv_w_rom(), inv_phi_rom() {};
 
-    explicit TwParam24(int n):
-            tw_factor(n, std::vector<Ntt24>()) {};
+        explicit TwRom(int n) :
+                N(n), w_rom(n >> 1), phi_rom(n), inv_w_rom(n >> 1), inv_phi_rom(n) {};
 
-    static void initTwParam(TwParam24& twParam, const int n) {
-        twParam = TwParam24(n);
-    }
-};
+        static void initTwRom(TwRom &twRom, const int n) {
+            twRom = TwRom(n);
+        }
+    };
 
-extern TwParam24 NWC_TW24;
-extern TwParam24 NWC_ITW24;
-extern TwRom24 TW_ROM24;
+    struct TwParam {
+        std::vector<std::vector<Ntt24>> tw_factor{};
+
+        TwParam() : tw_factor() {};
+
+        explicit TwParam(int n) :
+                tw_factor(n, std::vector<Ntt24>()) {};
+
+        static void initTwParam(TwParam &twParam, const int n) {
+            twParam = TwParam(n);
+        }
+    };
+
+    extern TwParam NWC_TW;
+    extern TwParam NWC_ITW;
+    extern TwRom TW_ROM;
 
 //----------------------------------------------------------------------------------
-void genTW_ROM24(TwRom24& tw_rom);
-void genNWCparam24(TwParam24& nwc_tw, int n, const TwRom24& tw_rom, const std::string& str);
-void applyNtt24(Ntt24Polynomial& RES, const Int8Polynomial& IN);
-void applyIntt24(Int8Polynomial& out, const Ntt24Polynomial& in, int q);
-Ntt24 POW24(Ntt24 BASE, Ntt24 EXP);
-Ntt24 modINV24(Ntt24 in);
-Ntt24 modADD24(Ntt24 a, Ntt24 b);
-Ntt24 modADDscale24(Ntt24 a, Ntt24 b);
-Ntt24 modSUBscale24(Ntt24 a, Ntt24 b);
-Ntt24 modSUB24(Ntt24 a, Ntt24 b);
-Ntt24 modMULT24(Ntt24 a, Ntt24 b);
-void initGlobalParamsNtt24(int N);
+    void genTW_ROM(TwRom &tw_rom);
 
-template <typename RgswDftType, typename RgswType>
-void applyNttForRgsw24(RgswDftType& out, RgswType& in) {
-    auto level = in.l;
-    auto k = in.k;
-    for (size_t l = 0; l < level; l++) {
-        for (size_t k1 = 0; k1 < k + 1; k1++) {
-            auto& nttOut = out.trlweDftSamples[l][k1];
-            auto& nttIn = in.trlweSamples[l][k1];
-            applyNttForAB24(nttOut, nttIn);
+    void genNWCparam(TwParam &nwc_tw, int n, const TwRom &tw_rom, const std::string &str);
+
+    void applyNtt(Ntt24Polynomial &RES, const Int8Polynomial &IN);
+
+    void applyIntt(Int8Polynomial &out, const Ntt24Polynomial &in, int q);
+
+    Ntt24 POW(Ntt24 BASE, Ntt24 EXP);
+
+    Ntt24 modINV(Ntt24 in);
+
+    Ntt24 modADD(Ntt24 a, Ntt24 b);
+
+    Ntt24 modADDscale(Ntt24 a, Ntt24 b);
+
+    Ntt24 modSUBscale(Ntt24 a, Ntt24 b);
+
+    Ntt24 modSUB(Ntt24 a, Ntt24 b);
+
+    Ntt24 modMULT(Ntt24 a, Ntt24 b);
+
+    void initGlobalParamsNtt(int N);
+
+    template<typename T, typename R>
+    void applyNttForAB(T &out, R &in) {
+        for (auto row = 0; row < in.a.size(); row++) {
+            applyNtt(out.a[row], in.a[row]);
+        }
+        applyNtt(out.b, in.b);
+    }
+
+    template<typename T, typename R, typename U>
+    void applyInttForAB(T &out, R &in, U q) {
+        for (auto row = 0; row < in.a.size(); row++) {
+            applyIntt(out.a[row], in.a[row], q);
+        }
+        applyIntt(out.b, in.b, q);
+    }
+
+    template<typename RgswDftType, typename RgswType>
+    void applyNttForRgsw(RgswDftType &out, RgswType &in) {
+        auto level = in.l;
+        auto k = in.k;
+        for (size_t l = 0; l < level; l++) {
+            for (size_t k1 = 0; k1 < k + 1; k1++) {
+                auto &nttOut = out.trlweDftSamples[l][k1];
+                auto &nttIn = in.trlweSamples[l][k1];
+                applyNttForAB(nttOut, nttIn);
+            }
         }
     }
-}
 
-template <typename RgswDftType, typename RgswType, typename U>
-void applyInttForRgsw24(RgswType& out, RgswDftType& in, U q) {
-    auto level = out.l;
-    auto k = out.k;
-    for (size_t l = 0; l < level; l++) {
-        for (size_t k1 = 0; k1 < k + 1; k1++) {
-            auto& dftIn = in.trlweDftSamples[l][k1];
-            auto& rgswOut = out.trlweSamples[l][k1];
-            applyInttForAB24(rgswOut, dftIn, q);
+    template<typename RgswDftType, typename RgswType, typename U>
+    void applyInttForRgsw(RgswType &out, RgswDftType &in, U q) {
+        auto level = out.l;
+        auto k = out.k;
+        for (size_t l = 0; l < level; l++) {
+            for (size_t k1 = 0; k1 < k + 1; k1++) {
+                auto &dftIn = in.trlweDftSamples[l][k1];
+                auto &rgswOut = out.trlweSamples[l][k1];
+                applyInttForAB(rgswOut, dftIn, q);
+            }
         }
     }
-}
 
-template <typename T, typename R>
-void applyNttForAB24(T& out, R& in) {
-    for (auto row = 0; row < in.a.size(); row++) {
-        applyNtt24(out.a[row], in.a[row]);
-    }
-    applyNtt24(out.b, in.b);
+    void calModularInnerProductNtt(Ntt24Polynomial &out, const Ntt24Polynomial &in1, const Ntt24Polynomial &in2);
 }
-
-template <typename T, typename R, typename U>
-void applyInttForAB24(T& out, R& in, U q) {
-    for (auto row = 0; row < in.a.size(); row++) {
-        applyIntt24(out.a[row], in.a[row], q);
-    }
-    applyIntt24(out.b, in.b, q);
-}
-
-void calModularInnerProductNtt24(Ntt24Polynomial& out, const Ntt24Polynomial& in1, const Ntt24Polynomial& in2);
 
 #endif //HLS_YATFHE_NTT24_H

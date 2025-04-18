@@ -10,14 +10,16 @@
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 
+using namespace NttNative32;
+
 TEST(Ntt32Test, PowInvTest) {
     std::vector<Ntt32> a(0);
     std::vector<Ntt32> b(0);
     std::vector<Ntt32> c(0);
     for (int i = 1; i < 100; i++) {
-        a.push_back(POW32(i, i));
-        b.push_back(modINV32(a[i-1]));
-        c.push_back(modInverse(a[i-1], MOD32));
+        a.push_back(POW(i, i));
+        b.push_back(modINV(a[i - 1]));
+        c.push_back(modInverse(a[i-1], MOD));
     }
     printArray(a, "a");
     printArray(b, "b");
@@ -38,8 +40,8 @@ TEST(Ntt32Test, NttIntt32Test) {
         a1.coeffs[i] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
     }
 
-    applyNtt32(resNtt, a1);
-    applyIntt32(resIntt, resNtt);
+    applyNtt(resNtt, a1);
+    applyIntt(resIntt, resNtt);
     printArray(resNtt.coeffs, "resNtt");
     printArray(a1.coeffs, "orig");
     printArray(resIntt.coeffs, "intt");
@@ -90,18 +92,18 @@ TEST(Ntt32Test, Ntt32BasicArithTest) {
         printArray(poly4.coeffs, "poly4");
 
         COUNT_TIME("NTT_MULT", {
-            applyNtt32(a, poly0);
-            applyNtt32(b, poly1);
-            applyNtt32(c, poly2);
-            applyNtt32(d, poly3);
-            applyNtt32(e, poly4);
+            applyNtt(a, poly0);
+            applyNtt(b, poly1);
+            applyNtt(c, poly2);
+            applyNtt(d, poly3);
+            applyNtt(e, poly4);
             for (int i = 0; i < a.N; i++) {
-                auto tmp = modMULT32(a.coeffs[i], b.coeffs[i]);
-                tmp = modMULT32(tmp, c.coeffs[i]);
-                tmp = modMULT32(tmp, d.coeffs[i]);
-                tmpMul.coeffs[i] = modMULT32(tmp, e.coeffs[i]);
+                auto tmp = modMULT(a.coeffs[i], b.coeffs[i]);
+                tmp = modMULT(tmp, c.coeffs[i]);
+                tmp = modMULT(tmp, d.coeffs[i]);
+                tmpMul.coeffs[i] = modMULT(tmp, e.coeffs[i]);
             }
-            applyIntt32(resMul, tmpMul);
+            applyIntt(resMul, tmpMul);
         })
         COUNT_TIME("NAIVE_MULT", {
             TorusPolynomial tmp{N};

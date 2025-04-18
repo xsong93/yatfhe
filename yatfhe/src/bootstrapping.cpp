@@ -149,10 +149,10 @@ void bootstrappingKeyGen(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
         return;
     }
     // todo
-    // bootstrappingKeyGenFold(bsk, trgswKey, tlweKey, param);
+     bootstrappingKeyGenFold(bsk, trgswKey, tlweKey, param);
 }
 
-void bootstrappingKeyGenRing(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+void bootstrappingKeyGenFold(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
     for (auto i = 0; i < bsk.n; i++) {
         trgswEncryptNtt(bsk.bsk[i], bsk.bskDft[i], 1, trgswKey, 1 - tlweKey.s[i], param);
     }
@@ -180,7 +180,7 @@ void bootstrappingKeyMCRTDecomp(BootstrappingKeyCRT& bskCRT, const Bootstrapping
         for (size_t d = 0; d < param.d; d++) {
             auto& bsk8 = bsk8D[d];
             auto& bskNtt = bskNttD[d];
-            applyNttForRgsw24(bskNtt, bsk8);
+            NttNative24::applyNttForRgsw(bskNtt, bsk8);
         }
     }
 }

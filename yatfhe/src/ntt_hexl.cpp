@@ -29,7 +29,6 @@ namespace NttHexl {
              ", ROU: " << nttHexl().GetMinimalRootOfUnity() << endl;
     }
 
-
     void applyNtt(LagrangePolynomial &out, const TorusPolynomial &in) {
         auto N = in.N;
         auto q = nttHexl().GetModulus();
@@ -49,22 +48,14 @@ namespace NttHexl {
         auto halfQ = (q + 1) >> 1;
         std::vector<uint64_t> tmp(N);
         nttHexl().ComputeInverse(tmp.data(), in.coeffs.data(), 1, 1);
-        int64_t temp_ntt;
-        int64_t temp_poly;
         for (int i = 0; i < N; i++) {
             if (tmp[i] >= halfQ) {
-                temp_ntt = int64_t(tmp[i] - q);
-            } else {
-                temp_ntt = int64_t(tmp[i]);
+                tmp[i] -= q;
             }
-            temp_poly = temp_ntt % TORUS_Q;
-//        temp_poly = ReduceMod<2>();
-            if (temp_poly < TORUS_MIN) {
-                out.coeffs[i] = Torus(temp_poly + TORUS_Q);
-            } else if (temp_poly > TORUS_MAX) {
-                out.coeffs[i] = Torus(temp_poly - TORUS_Q);
+            if (tmp[i] > TORUS_MAX) {
+                out.coeffs[i] = Torus(tmp[i] - TORUS_Q);
             } else {
-                out.coeffs[i] = Torus(temp_poly);
+                out.coeffs[i] = Torus(tmp[i]);
             }
         }
     }

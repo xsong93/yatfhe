@@ -11,6 +11,9 @@
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 
+using namespace NttNative;
+using namespace NttNative64;
+
 std::vector<int> extractValues(const std::string& input) {
     std::vector<int> result;
     std::istringstream iss(input);
@@ -292,9 +295,9 @@ TEST(NttTest, DiffBaseTest) {
     for (auto i = 0; i < N; i++) {
         a1.coeffs[i] = genIntUniformDist(1, 1);
     }
-    applyNtt14(resNtt14, a1);
+    NttNative14::applyNtt(resNtt14, a1);
     applyNtt(resNtt64, a1);
-//    applyIntt14(resIntt, resNtt);
+//    applyIntt(resIntt, resNtt);
     printArray(resNtt14.coeffs, "resNtt14");
     printArray(resNtt64.coeffs, "resNtt64");
 

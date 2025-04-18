@@ -9,14 +9,16 @@
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 
+using namespace NttNative24;
+
 TEST(Ntt24Test, PowInvTest) {
     std::vector<Ntt24> a(0);
     std::vector<Ntt24> b(0);
     std::vector<Ntt24> c(0);
     for (int i = 1; i < 100; i++) {
-        a.push_back(POW24(i, i));
-        b.push_back(modINV24(a[i-1]));
-        c.push_back(modInverse(a[i-1], MOD24));
+        a.push_back(POW(i, i));
+        b.push_back(modINV(a[i - 1]));
+        c.push_back(modInverse(a[i-1], MOD));
     }
     printArray(a, "a");
     printArray(b, "b");
@@ -26,7 +28,7 @@ TEST(Ntt24Test, PowInvTest) {
 
 TEST(Ntt24Test, NttIntt24Test) {
     const int N = 512;
-    initGlobalParamsNtt24(N);
+    initGlobalParamsNtt(N);
     Ntt24Polynomial resNtt{N};
     Int8Polynomial a1{N};
     Int8Polynomial resIntt{N};
@@ -36,8 +38,8 @@ TEST(Ntt24Test, NttIntt24Test) {
 //        a1.coeffs[i] = 65536;
     }
 
-    applyNtt24(resNtt, a1);
-    applyIntt24(resIntt, resNtt, q);
+    applyNtt(resNtt, a1);
+    applyIntt(resIntt, resNtt, q);
     printArray(resNtt.coeffs, "resNtt");
     printArray(a1.coeffs, "orig");
     printArray(resIntt.coeffs, "intt");
@@ -53,7 +55,7 @@ TEST(Ntt24Test, NttIntt24Test) {
 TEST(Ntt24Test, Ntt24BasicArithTest) {
     COUNT_TIME("init timer", cout << endl;)
     const int N = 512;
-    initGlobalParamsNtt24(N);
+    initGlobalParamsNtt(N);
     Ntt24Polynomial a{N};
     Ntt24Polynomial b{N};
     Ntt24Polynomial tmpMul{N};
@@ -74,12 +76,12 @@ TEST(Ntt24Test, Ntt24BasicArithTest) {
         printArray(poly2.coeffs, "poly2");
 
         COUNT_TIME("NTT_MULT", {
-            applyNtt24(a, poly0);
-            applyNtt24(b, poly2);
+            applyNtt(a, poly0);
+            applyNtt(b, poly2);
             for (int i = 0; i < a.N; i++) {
-                tmpMul.coeffs[i] = modMULT24(a.coeffs[i], b.coeffs[i]);
+                tmpMul.coeffs[i] = modMULT(a.coeffs[i], b.coeffs[i]);
             }
-            applyIntt24(resMul, tmpMul, q);
+            applyIntt(resMul, tmpMul, q);
         })
         COUNT_TIME("NAIVE_MULT",
                    polynomialMulNaiveI8(navMul, poly0, poly2, q);)

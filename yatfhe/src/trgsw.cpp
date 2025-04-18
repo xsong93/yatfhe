@@ -407,9 +407,9 @@ void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::ve
     for (size_t d = 0; d < param.d; d++) {
         for (size_t dh = 0; dh < param.dh; dh++) {
             for (size_t k = 0; k < param.k; k++) {
-                applyNtt24(tmpDBNtt[d][dh].a[k], tmpDB[d][dh].a[k]);
+                NttNative24::applyNtt(tmpDBNtt[d][dh].a[k], tmpDB[d][dh].a[k]);
             }
-            applyNtt24(tmpDBNtt[d][dh].b, tmpDB[d][dh].b);
+            NttNative24::applyNtt(tmpDBNtt[d][dh].b, tmpDB[d][dh].b);
         }
     }
 
@@ -428,8 +428,8 @@ void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::ve
                     auto& rgswNtt = (ka < param.k) ? rgswNttA[ka] : rgswNttB;
                     auto& rlweRes = (ka < param.k) ? rlweResA[ka] : rlweResB;
                     for (size_t j = 0; j < param.N; j++) {
-                        auto tmp = modMULT24(decompNtt.coeffs[j], rgswNtt.coeffs[j]);
-                        rlweRes.coeffs[j] = modADD24(rlweRes.coeffs[j], tmp);
+                        auto tmp = NttNative24::modMULT(decompNtt.coeffs[j], rgswNtt.coeffs[j]);
+                        rlweRes.coeffs[j] = NttNative24::modADD(rlweRes.coeffs[j], tmp);
                     }
                 }
             }
@@ -440,9 +440,9 @@ void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::ve
     for (size_t d = 0; d < param.d; d++) {
         auto qd = param.qd[d];
         for (size_t k = 0; k < param.k; k++) {
-            applyIntt24(output[d].a[k], trlweDftRes[d].a[k], qd);
+            NttNative24::applyIntt(output[d].a[k], trlweDftRes[d].a[k], qd);
         }
-        applyIntt24(output[d].b, trlweDftRes[d].b, qd);
+        NttNative24::applyIntt(output[d].b, trlweDftRes[d].b, qd);
     }
 }
 
