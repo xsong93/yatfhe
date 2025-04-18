@@ -10,23 +10,27 @@
 #include "yatfhe/trgsw.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/keyswitching.h"
+#include "yatfhe/key_patterns.h"
 
 using namespace std;
 
 struct BootstrappingKey {
-    vector<TrgswDft> bskDft {}; // n
-    vector<Trgsw> bsk {}; // n
+    vector<TrgswDft> bskDft {};
+    vector<Trgsw> bsk {};
     int n {};
-    int k {};
-    int N {};
-    int l {};
-    int unfold {};
+    int group {};
 
-    explicit BootstrappingKey(const YatfheParameters& parameters) :
-        n(parameters.n),
-        unfold(parameters.unfold),
-        bsk(parameters.n, Trgsw(parameters)),
-        bskDft(parameters.n,TrgswDft(parameters)) {};
+    explicit BootstrappingKey(const YatfheParameters& p) : group(p.group) {
+        if (group == 1) {
+            n = p.n;
+            bsk = vector<Trgsw>(p.n, Trgsw(p));
+            bskDft = vector<TrgswDft>(p.n, TrgswDft(p));
+        } else {
+            n = p.n / group * (1 << group);
+            bsk = vector<Trgsw>(p.n / group * (1 << group), Trgsw(p));
+            bskDft = vector<TrgswDft>(p.n / group * (1 << group), TrgswDft(p));
+        }
+    };
 };
 
 struct BootstrappingKeyCRT {
@@ -65,7 +69,7 @@ void controlMuxApproxCRTNtt(std::vector<Trlwe8>& res, const std::vector<Trlwe8>&
 
 void bootstrappingKeyGenNormal(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
-void bootstrappingKeyGenFold(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
+void bootstrappingKeyGenGroup(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
 void bootstrappingKeyGenApproxCRT(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 

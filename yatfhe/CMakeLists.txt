@@ -5,7 +5,8 @@ file(GLOB SOURCES
         ./src/*.cpp
 )
 
-set(SOURCE_FILES ${SOURCES})
+set(SOURCE_FILES ${SOURCES}
+        include/yatfhe/key_patterns.h)
 add_library(yatfhe_lib STATIC ${SOURCE_FILES})
 
 #target_include_directories(yatfhe_lib PRIVATE

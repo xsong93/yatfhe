@@ -144,17 +144,26 @@ void controlMuxApproxCRTNtt(std::vector<Trlwe8>& res, const std::vector<Trlwe8>&
 }
 
 void bootstrappingKeyGen(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
-    if (bsk.unfold == 1) {
+    if (bsk.group == 1) {
         bootstrappingKeyGenNormal(bsk, trgswKey, tlweKey, param);
         return;
     }
-    // todo
-     bootstrappingKeyGenFold(bsk, trgswKey, tlweKey, param);
+    bootstrappingKeyGenGroup(bsk, trgswKey, tlweKey, param);
 }
 
-void bootstrappingKeyGenFold(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
-    for (auto i = 0; i < bsk.n; i++) {
-        trgswEncryptNtt(bsk.bsk[i], bsk.bskDft[i], 1, trgswKey, 1 - tlweKey.s[i], param);
+void bootstrappingKeyGenGroup(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+    int j = 0;
+    auto batchSize = 1 << param.group;
+    for (auto i = 0; i < tlweKey.n; i = i + 2) {
+        auto s1 = tlweKey.s[i];
+        auto s2 = tlweKey.s[i + 1];
+        int combined = (s1 << 1) | s2;
+
+#pragma unroll(4)
+        for (int k = 0; k < batchSize; ++k) {
+            trgswEncryptNtt(bsk.bsk[j + k], bsk.bskDft[j + k], KEY_PATTERNS2[combined][k], trgswKey, 0, param);
+        }
+        j += batchSize;
     }
 }
 
