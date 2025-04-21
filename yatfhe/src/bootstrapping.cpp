@@ -8,7 +8,7 @@
 #include "yatfhe/ntt24.h"
 #include "yatfhe/key_patterns.h"
 
-void functionalBootstrapping(Tlwe& out, const Tlwe& input, BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
+void functionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
     Trlwe accum {param.k, param.N};
     Tlwe tmp {ksk.nCurrKey};
@@ -19,7 +19,7 @@ void functionalBootstrapping(Tlwe& out, const Tlwe& input, BootstrappingKey& bsk
     switchKeyForTlwe(out, ksk, tmp, param);
 }
 
-void functionalBootstrappingNtt(Tlwe& out, const Tlwe& input, BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
+void functionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
     Trlwe accum {param.k, param.N};
     Tlwe tmp {ksk.nCurrKey};

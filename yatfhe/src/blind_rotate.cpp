@@ -4,7 +4,7 @@
 #include "yatfhe/blind_rotate.h"
 #include "yatfhe/cmux.h"
 
-void blindRotateNormal(Trlwe& accum, vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
@@ -28,7 +28,7 @@ void blindRotateNormalNtt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
     }
 }
 
-void blindRotateGroup2(Trlwe& accum, vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     Trgsw tmp1{param}, tmp2{param}, tmp3{param};
     int j = 0;
@@ -36,9 +36,9 @@ void blindRotateGroup2(Trlwe& accum, vector<Trgsw>& bsk, const ScaledTlwe& input
     for (auto i = 0; i < param.n; i = i + 2) {
         auto a1 = input.a[i];
         auto a2 = input.a[i + 1];
-        auto& bsk1 = bsk[j];
+        auto bsk1 = bsk[j];
         auto& bsk2 = bsk[j + 1];
-        auto& bsk3 = bsk[j + 2];
+        auto bsk3 = bsk[j + 2];
         auto& bsk4 = bsk[j + 3];
 
         rotateTrgsw(bsk1, a1, param);
@@ -57,7 +57,7 @@ void blindRotateGroup2(Trlwe& accum, vector<Trgsw>& bsk, const ScaledTlwe& input
 }
 
 //todo
-void blindRotateGroup2Ntt(Trlwe& accum, vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     TrgswDft tmp1{param}, tmp2{param}, tmp3{param};
     int j = 0;
@@ -65,9 +65,9 @@ void blindRotateGroup2Ntt(Trlwe& accum, vector<TrgswDft>& bskDft, const ScaledTl
     for (auto i = 0; i < param.n; i = i + 2) {
         auto a1 = input.a[i];
         auto a2 = input.a[i + 1];
-        auto& bsk1 = bskDft[j];
+        auto bsk1 = bskDft[j];
         auto& bsk2 = bskDft[j + 1];
-        auto& bsk3 = bskDft[j + 2];
+        auto bsk3 = bskDft[j + 2];
         auto& bsk4 = bskDft[j + 3];
 
         rotateTrgswNtt(bsk1, a1, param);
@@ -88,7 +88,7 @@ void blindRotateGroup2Ntt(Trlwe& accum, vector<TrgswDft>& bskDft, const ScaledTl
 /**
  * Multiply the accumulator by X^sum(bara_i * s_i)
  * */
-void blindRotate(Trlwe& accum, vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotate(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     switch(param.group) {
         case 2:
             blindRotateGroup2(accum, bsk, input, param);
@@ -98,7 +98,7 @@ void blindRotate(Trlwe& accum, vector<Trgsw>& bsk, const ScaledTlwe& input, cons
     }
 }
 
-void blindRotateNtt(Trlwe& accum, vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateNtt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
     switch(param.group) {
         case 2:
             blindRotateGroup2Ntt(accum, bskDft, input, param);

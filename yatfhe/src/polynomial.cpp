@@ -5,8 +5,6 @@
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt_hexl.h"
 
-using namespace NttHexl;
-
 /**
  * For a random rotator input, this method converts the rotator to a value within the range of polynomial length.
  * Besides, in order to correctly show the negacyclic property, use a bit indicator to keep track of the negative signs after rotation.
@@ -262,10 +260,19 @@ void subTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, cons
     }
 }
 
+void rotateNttPolynomial(NttPolynomial& res, const NttPolynomial& in, int r) {
+    auto N = res.N;
+    int rTrue, isWrap;
+    validateRotator(rTrue, isWrap, r, N);
+    auto q = NttHexl::getNttHexl().GetModulus();
+    auto roter = NttHexl::getNttRoterPoly(rTrue).coeffs.data();
+    NttHexl::EltwiseSignedMultMod(res.coeffs.data(), in.coeffs.data(), roter, isWrap, N, q, 1);
+}
+
 void genNttPolynomialWithValueAt(NttPolynomial& lagrangePolynomial, const int value, const int position) {
     TorusPolynomial tmp{lagrangePolynomial.N};
     tmp.coeffs[position] = value;
-    applyNtt(lagrangePolynomial, tmp);
+    NttHexl::applyNtt(lagrangePolynomial, tmp);
 }
 
 // accum += poly

@@ -172,6 +172,8 @@ void generateTestPolynomial(TorusPolynomial& v, int modP, int modQ);
 
 void rotateTorusPolynomial(TorusPolynomial& out, int a, const TorusPolynomial& input);
 
+void rotateTorusPolynomialInplace(TorusPolynomial& input, int a);
+
 void rotateTorusPolynomialMinusOne(TorusPolynomial& out, int a, const TorusPolynomial& input);
 
 void rotateIntPolynomial(IntPolynomial& out, int a, const IntPolynomial& input, int64_t p);
@@ -201,6 +203,8 @@ void addSubIntPolynomialWithOffset(IntPolynomial& poly, int offset, bool isAdd);
 void subIntPolynomial(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
 
 void subTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
+
+void rotateNttPolynomial(NttPolynomial& res, const NttPolynomial& in, int r);
 
 void genNttPolynomialWithValueAt(NttPolynomial& lagrangePolynomial, int value, int position);
 

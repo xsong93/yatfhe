@@ -98,41 +98,33 @@ TEST(HEXL_TEST, POLY_MULT) {
 
 TEST(HEXL_TEST, NTT_ROT) {
     YatfheParameters param {};
-    param.N = 1024;
-//    param.qNtt = 7681;
+    // param.N = 4;
+    // param.qNtt = 7681;
     initYatfhe(param);
-    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
     auto N = param.N;
-    auto q = param.qNtt;
 
     TorusPolynomial in{N};
-    TorusPolynomial roter{N};
+    TorusPolynomial in2{N};
     TorusPolynomial ref{N};
-    NttPolynomial nttHexl{N};
-    NttPolynomial roterNtt{N};
+    NttPolynomial nttHexl{N}, nttHexl2{N};
     NttPolynomial tmp{N};
     TorusPolynomial res{N};
     for (auto i = 0; i < N; i++) {
         in.coeffs[i] = genIntUniformDist(-4, 4);
+        in2.coeffs[i] = -in.coeffs[i];
     }
-    int r = genIntUniformDist(0, param.N);
-    roter.coeffs[r] = 1;
+    int r = genIntUniformDist(0, N);
+    cout << "r:" << r << endl;
     COUNT_TIME("torusPolynomialRotate", rotateTorusPolynomial(ref, r, in));
-
     COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl, in);)
-    COUNT_TIME("HEXL", NttHexl::applyNtt(roterNtt, roter);)
-
-    printArray(nttHexl.coeffs, "inNtt");
-    printArray(roterNtt.coeffs, "roterNtt");
-    printArray(NttHexl::getNttRoterPoly(r).coeffs, "mapNtt");
-    ASSERT_EQ(NttHexl::getNttRoterPoly(r).coeffs, roterNtt.coeffs);
-
-    COUNT_TIME("NTT_ROT", NttHexl::rotateNttPolynomial(tmp, nttHexl, r);)
-
+    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl2, in2);)
+    printArray(nttHexl.coeffs, "in");
+    printArray(nttHexl2.coeffs, "in2");
+    COUNT_TIME("NTT_ROT", rotateNttPolynomial(tmp, nttHexl, r);)
     COUNT_TIME("HEXL", NttHexl::applyIntt(res, tmp);)
-
     printArray(in.coeffs, "in");
+    printArray(ref.coeffs, "ref");
     printArray(res.coeffs, "res");
     ASSERT_EQ(ref.coeffs, res.coeffs);
 }

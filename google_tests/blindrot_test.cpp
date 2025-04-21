@@ -85,10 +85,87 @@ TEST(BLIND_ROT, BLIND_ROT) {
     printArray(decP.coeffs, "real");
 
     //verify
-    for (auto i = 0; i < decP.N; i++) {
-        ASSERT_EQ(rotInP.coeffs[i], decP.coeffs[i]);
-    }
+    ASSERT_EQ(rotInP.coeffs, decP.coeffs);
     printBanner("BLIND_ROT");
+}
+
+TEST(BLIND_ROT, BLIND_ROT_NTT) {
+    YatfheParameters param{};
+    // param.n = 64;
+    param.group = 2;
+    initYatfhe(param);
+
+    // key gen
+    TlweKey tlweKey{param.n, param.lweStdDev};
+    genTlweKey(tlweKey);
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    genTrlweKey(trlweKey);
+    BootstrappingKey bsk {param};
+    genBootstrappingKey(bsk, trgswKey, tlweKey, param);
+
+    // data gen
+    Trlwe in2{param.k, param.N};
+    TrlweDft in2Dft{param.k, param.N};
+    IntPolynomial plain{param.N}; // Z/pZ
+    TorusPolynomial plainT {param.N};
+    for (auto i = 0; i < plain.N; i++) {
+        plain.coeffs[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
+        plainT.coeffs[i] = modSwitchToTorus32(plain.coeffs[i], param.torusBase);
+    }
+    symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, plainT.coeffs);
+    printTrlweAB(in2, "input");
+
+    // pre dec
+    IntPolynomial decIn{param.N};
+    symDecTrlweToIntNtt(decIn, in2Dft, trlweKey, param.torusBase);
+    printArray(plain.coeffs, "plain");
+    printArray(decIn.coeffs, "decIn");
+
+    // rots gen
+    ScaledTlwe sTlwe {param.N * 2, param.n};
+    for (auto i = 0 ; i < sTlwe.n; i++) {
+        sTlwe.a[i] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
+    }
+
+    // test data gen
+    int rot = 0;
+    IntPolynomial rotInP{param.N};
+    TrlweDft rotInDft{param.k, param.N};
+    for (auto i = 0 ; i < param.n; i++) {
+        if (tlweKey.s[i] == 1) {
+            rot += sTlwe.a[i];
+        }
+    }
+    cout << "rot:" << rot << endl;
+    rotateTrlweNtt(rotInDft, in2Dft, rot);
+    symDecTrlweToIntNtt(rotInP, rotInDft, trlweKey, param.torusBase);
+    printArray(rotInP.coeffs, "expect");
+
+    COUNT_TIME("blindRotateNtt", blindRotateNtt(in2, bsk.bskDft, sTlwe, param);)
+
+    // trgsw enc X^rot
+    Trgsw trgswXRot{param};
+    TrgswDft trgswXRotDft{param};
+    Trlwe trlweInCopy{param.k, param.N};
+    TrlweDft trlweInCopyDft{param.k, param.N};
+    Trlwe trlwe{param.k, param.N};
+    encryptTrgswNtt(trgswXRot, trgswXRotDft, 1, trgswKey, 0, param);
+    rotateTrgswNtt(trgswXRotDft, rot, param);
+    symEncTrlweMultiSampleNtt(trlweInCopy, trlweInCopyDft, trlweKey, plainT.coeffs);
+    externalProductTrgswNtt(trlwe, trgswXRotDft, trlweInCopy, param);
+    IntPolynomial trlweDec {param.N};
+    symDecTrlweToInt(trlweDec, trlwe, trlweKey, param.torusBase);
+    printArray(trlweDec.coeffs, "encXRot");
+
+    // dec
+    IntPolynomial decP {param.N};
+    symDecTrlweToInt(decP, in2, trlweKey, param.torusBase);
+    printArray(decP.coeffs, "real");
+
+    //verify
+    ASSERT_EQ(rotInP.coeffs, decP.coeffs);
+    printBanner("BLIND_ROT_NTT");
 }
 
 TEST(BLIND_ROT, BLIND_ROT_APPROX_CRT) {

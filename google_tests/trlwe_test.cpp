@@ -185,23 +185,27 @@ TEST(TrlweTest, TRLWE_ROT) {
     printArray(plain, "plain");
 
     IntPolynomial output {param.N};
-//    symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
-//    printTrlweAB(trlwe, "trlwe");
-//    symDecTrlweToIntNtt(output, trlweDft, trlweKey, param.torusBase);
 
-    int rotN = 1;
-    symEncTrlweMultiSample(trlwe, trlweKey, in);
+    int rotN = -1;
+    symEncTrlweMultiSampleNtt(trlwe, trlweDft, trlweKey, in);
+
     Trlwe rot{param.k, param.N};
-    rotateTrlwe(rot, trlwe, rotN);
+    COUNT_TIME("rotateTrlwe", rotateTrlwe(rot, trlwe, rotN);)
     symDecTrlweToInt(output, rot, trlweKey, param.torusBase);
-
     printArray(output.coeffs, "output");
     TorusPolynomial res{param.N};
     rotateTorusPolynomial(res, -rotN, output);
     printArray(res.coeffs, "res");
-    for (auto i = 0; i < plain.size(); i++) {
-        ASSERT_EQ(plain[i], res.coeffs[i]);
-    }
+    ASSERT_EQ(plain, res.coeffs);
+
+    TrlweDft rotDft {param.k, param.N};
+    COUNT_TIME("rotateTrlweNtt", rotateTrlweNtt(rotDft, trlweDft, rotN);)
+    symDecTrlweToIntNtt(output, rotDft, trlweKey, param.torusBase);
+    printArray(output.coeffs, "outputDft");
+    rotateTorusPolynomial(res, -rotN, output);
+    printArray(res.coeffs, "resDft");
+    ASSERT_EQ(plain, res.coeffs);
+
     printBanner("TRLWE_ROT");
 }
 

@@ -157,7 +157,7 @@ void subTrgswNtt(TrgswDftType& out, const TrgswDftType& in1, const TrgswDftType&
 
 void rotateTrgsw(Trgsw& trgsw, int rot, const YatfheParameters& param);
 
-void rotateTrgswNtt(TrgswDft& trgswDft, const int rot, const YatfheParameters& param);
+void rotateTrgswNtt(TrgswDft& trgswDft, int rot, const YatfheParameters& param);
 
 void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
@@ -169,15 +169,15 @@ void encryptLowTrgswMPNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, 
 
 void encZeroTrgsw(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-void addIntegerToTrgsw(Trgsw& trgsw, Integer mu, const int pos, const YatfheParameters& param);
+void addIntegerToTrgsw(Trgsw& trgsw, Integer mu, int pos, const YatfheParameters& param);
 
 void encZeroTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const int pos, const YatfheParameters& param);
+void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, int pos, const YatfheParameters& param);
 
-void encryptTrgsw(Trgsw& trgsw, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+void encryptTrgsw(Trgsw& trgsw, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);
 
-void encryptTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+void encryptTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);
 
 void encryptTrgswApproxCRT(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
 
