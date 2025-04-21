@@ -6,6 +6,7 @@
 #define HLS_YATFHE_TRGSW_H
 
 #include <vector>
+#include <hexl/hexl.hpp>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/trlwe.h"
 
@@ -13,22 +14,26 @@ struct TrgswMP {
     std::vector<std::vector<Trlwe>> c;
     std::vector<Trlwe> cPrime;
     int l;
+    int k;
 
     explicit TrgswMP(const YatfheParameters& p) :
             c(p.l, std::vector<Trlwe>(p.k, Trlwe(p.k, p.N))),
             cPrime(p.l, Trlwe(p.k, p.N)),
-            l(p.l) {};
+            l(p.l),
+            k(p.k) {};
 };
 
 struct TrgswMPDft {
     std::vector<std::vector<TrlweDft>> c;
     std::vector<TrlweDft> cPrime;
     int l;
+    int k;
 
     explicit TrgswMPDft(const YatfheParameters& p) :
             c(p.l, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N))),
             cPrime(p.l, TrlweDft(p.k, p.N)),
-            l(p.l) {};
+            l(p.l),
+            k(p.k) {};
 };
 
 struct Trgsw {
@@ -63,34 +68,41 @@ struct Trgsw8 {
 struct TrgswDft {
     std::vector<std::vector<TrlweDft>> trlweDftSamples; // l *  (k + 1)
     int l;
+    int k;
 //    int bgBit;
 
     explicit TrgswDft(const YatfheParameters& p) :
 //            trlweDftSamples(p.k + 1, std::vector<TrlweDft>(p.l, TrlweDft(p.k, p.N))),
             trlweDftSamples(p.l, std::vector<TrlweDft>(p.k + 1, TrlweDft(p.k, p.N))),
-            l(p.l) {};
+            l(p.l),
+            k(p.k) {};
 };
 
 struct TrgswDft14 {
     std::vector<std::vector<TrlweDft14>> trlweDftSamples; // l *  (k + 1)
     int l;
+    int k;
 
     explicit TrgswDft14(const YatfheParameters& p) :
             trlweDftSamples(p.l, std::vector<TrlweDft14>(p.k + 1, TrlweDft14(p.k, p.N))),
-            l(p.l) {};
+            l(p.l),
+            k(p.k) {};
 };
 
 struct TrgswDft24 {
     std::vector<std::vector<TrlweDft24>> trlweDftSamples; // l *  (k + 1)
     int l;
+    int k;
 
     explicit TrgswDft24(const YatfheParameters& p) :
             trlweDftSamples(p.l, std::vector<TrlweDft24>(p.k + 1, TrlweDft24(p.k, p.N))),
-            l(p.l) {};
+            l(p.l),
+            k(p.k) {};
 
     TrgswDft24(const int l, const int k, const int N) :
             trlweDftSamples(l, std::vector<TrlweDft24>(k + 1, TrlweDft24(k, N))),
-            l(l) {};
+            l(l),
+            k(k) {};
 };
 
 struct TrgswKey {
@@ -100,7 +112,53 @@ struct TrgswKey {
         trlweKey(TrlweKey(p)) {};
 };
 
+template<typename TrgswType>
+void trgswAdd(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+    auto L = out.l;
+    auto K = out.k;
+    for (size_t l = 0; l < L; l++) {
+        for (size_t k = 0; k < K + 1; k++) {
+            trlweAdd(out.trlweSamples[l][k], in1.trlweSamples[l][k], in2.trlweSamples[l][k]);
+        }
+    }
+}
+
+template<typename TrgswDftType>
+void trgswAddNtt(TrgswDftType& out, const TrgswDftType& in1, const TrgswDftType& in2) {
+    auto L = out.l;
+    auto K = out.k;
+    for (size_t l = 0; l < L; l++) {
+        for (size_t k = 0; k < K + 1; k++) {
+            trlweAddNtt(out.trlweDftSamples[l][k], in1.trlweDftSamples[l][k], in2.trlweDftSamples[l][k]);
+        }
+    }
+}
+
+template<typename TrgswType>
+void trgswSub(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+    auto L = out.l;
+    auto K = out.k;
+    for (size_t l = 0; l < L; l++) {
+        for (size_t k = 0; k < K + 1; k++) {
+            trlweSub(out.trlweSamples[l][k], in1.trlweSamples[l][k], in2.trlweSamples[l][k]);
+        }
+    }
+}
+
+template<typename TrgswDftType>
+void trgswSubNtt(TrgswDftType& out, const TrgswDftType& in1, const TrgswDftType& in2) {
+    auto L = out.l;
+    auto K = out.k;
+    for (size_t l = 0; l < L; l++) {
+        for (size_t k = 0; k < K + 1; k++) {
+            trlweSubNtt(out.trlweDftSamples[l][k], in1.trlweDftSamples[l][k], in2.trlweDftSamples[l][k]);
+        }
+    }
+}
+
 void trgswRotate(Trgsw& trgsw, int rot, const YatfheParameters& param);
+
+void trgswRotateNtt(TrgswDft& trgswDft, const int rot, const YatfheParameters& param);
 
 void trgswMPEncrypt(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 

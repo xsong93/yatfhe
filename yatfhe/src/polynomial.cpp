@@ -260,6 +260,12 @@ void polynomialAddI32(IntPolynomial& res, const IntPolynomial& poly1, const IntP
 
 void polynomialAddT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
+    if (TORUS_Q == Q_32) {
+        for (int i = 0; i < N; i++) {
+            res.coeffs[i] = poly1.coeffs[i] + poly2.coeffs[i];
+        }
+        return;
+    }
     for (int i = 0; i < N; i++) {
         res.coeffs[i] = modAddT32(poly1.coeffs[i], poly2.coeffs[i]);
     }
@@ -287,6 +293,12 @@ void polynomialSubI32(IntPolynomial& res, const IntPolynomial& poly1, const IntP
 
 void polynomialSubT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
+    if (TORUS_Q == Q_32) {
+        for (int i = 0; i < N; i++) {
+            res.coeffs[i] = poly1.coeffs[i] - poly2.coeffs[i];
+        }
+        return;
+    }
     for (int i = 0; i < N; i++) {
         res.coeffs[i] = modSubT32(poly1.coeffs[i], poly2.coeffs[i]);
     }

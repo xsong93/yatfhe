@@ -180,6 +180,38 @@ struct TrlweKey {
         sigma(sigma) {};
 };
 
+template<typename TrlweType>
+void trlweAdd(TrlweType& output, const TrlweType& input1, const TrlweType& input2) {
+    for (auto i = 0; i < output.a.size(); i++) {
+        polynomialAddT32(output.a[i], input1.a[i], input2.a[i]);
+    }
+    polynomialAddT32(output.b, input1.b, input2.b);
+}
+
+template<typename TrlweType>
+void trlweSub(TrlweType& output, const TrlweType& input1, const TrlweType& input2) {
+    for (auto i = 0; i < output.a.size(); i++) {
+        polynomialSubT32(output.a[i], input1.a[i], input2.a[i]);
+    }
+    polynomialSubT32(output.b, input1.b, input2.b);
+}
+
+template<typename TrlweDftType>
+void trlweAddNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
+    for (auto i = 0; i < output.a.size(); i++) {
+        lagrangePolynomialAdd(output.a[i], input1.a[i], input2.a[i]);
+    }
+    lagrangePolynomialAdd(output.b, input1.b, input2.b);
+}
+
+template<typename TrlweDftType>
+void trlweSubNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
+    for (auto i = 0; i < output.a.size(); i++) {
+        lagrangePolynomialSub(output.a[i], input1.a[i], input2.a[i]);
+    }
+    lagrangePolynomialSub(output.b, input1.b, input2.b);
+}
+
 template <typename T>
 void trlweSetZero(std::vector<T>& a, T& b) {
     std::fill(a.begin(), a.end(), T(b.N, 0));
@@ -411,14 +443,6 @@ void symDecTrlweNtt(DoublePolynomial& output, const TrlweDft& trlweDft, const Tr
 
 void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key);
 
-void trlweAdd(Trlwe& output, const Trlwe& input1, const Trlwe& input2);
-
-void trlweSub(Trlwe& output, const Trlwe& input1, const Trlwe& input2);
-
-void trlweAddNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2);
-
-void trlweSubNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2);
-
 //void trlweAccumulateI32(Trlwe& accum, const Trlwe& tlwe);
 
 void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param);
@@ -434,6 +458,8 @@ void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);
 void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey);
 
 void trlweRotate(Trlwe& res, const Trlwe& input, int a);
+
+void trlweRotateNtt(TrlweDft& res, const TrlweDft& input, const int r);
 
 void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, int a);
 

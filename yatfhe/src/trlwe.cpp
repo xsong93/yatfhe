@@ -135,34 +135,6 @@ void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const Scale
     torusPolynomialRotate(accum.b, -barb, v);
 }
 
-void trlweAdd(Trlwe& output, const Trlwe& input1, const Trlwe& input2) {
-    for (auto i = 0; i < output.a.size(); i++) {
-        polynomialAddT32(output.a[i], input1.a[i], input2.a[i]);
-    }
-    polynomialAddT32(output.b, input1.b, input2.b);
-}
-
-void trlweSub(Trlwe& output, const Trlwe& input1, const Trlwe& input2) {
-    for (auto i = 0; i < output.a.size(); i++) {
-        polynomialSubT32(output.a[i], input1.a[i], input2.a[i]);
-    }
-    polynomialSubT32(output.b, input1.b, input2.b);
-}
-
-void trlweAddNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2) {
-    for (auto i = 0; i < output.a.size(); i++) {
-        lagrangePolynomialAdd(output.a[i], input1.a[i], input2.a[i]);
-    }
-    lagrangePolynomialAdd(output.b, input1.b, input2.b);
-}
-
-void trlweSubNtt(TrlweDft& output, const TrlweDft& input1, const TrlweDft& input2) {
-    for (auto i = 0; i < output.a.size(); i++) {
-        lagrangePolynomialSub(output.a[i], input1.a[i], input2.a[i]);
-    }
-    lagrangePolynomialSub(output.b, input1.b, input2.b);
-}
-
 ///**
 // * accum.a += tlwe.a, accum.b += tlwe.b
 // * */
@@ -272,6 +244,13 @@ void trlweRotate(Trlwe& res, const Trlwe& input, const int a) {
         torusPolynomialRotate(res.a[i], a, input.a[i]);
     }
     torusPolynomialRotate(res.b, a, input.b);
+}
+
+void trlweRotateNtt(TrlweDft& res, const TrlweDft& input, const int r) {
+    for (auto i = 0; i < input.a.size(); i++) {
+        lagrangePolynomialRotate(res.a[i], input.a[i], r);
+    }
+    lagrangePolynomialRotate(res.b, input.b, r);
 }
 
 // res = X^a * input - input

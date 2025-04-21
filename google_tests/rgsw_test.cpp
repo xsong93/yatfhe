@@ -49,6 +49,106 @@ TEST(RgswTest, RgswEncDecTest) {
     printBanner("RgswEncDecTest");
 }
 
+TEST(RgswTest, RGSW_ADD) {
+    YatfheParameters param{};
+    yatfheInit(param);
+
+    // key gen
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    trlweKeyGen(trlweKey);
+
+    // trgsw enc
+    Trgsw trgsw1{param}, trgsw2{param}, res{param};
+    TrgswDft trgswDft1{param}, trgswDft2{param}, resDft{param};
+    Integer dec, plainAdd;
+    Integer plain1, plain2;
+    plain1 = 1;
+    plain2 = 0;
+    trgswEncryptNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
+    trgswEncryptNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
+    trgswAdd(res, trgsw1, trgsw2);
+    trgswAddNtt(resDft, trgswDft1, trgswDft2);
+
+    // trgsw dec
+    dec = trgswDecrypt(res, param, trgswKey);
+    plainAdd = intModP(plain1 + plain2, param.torusBase);
+    cout << "plain: " << plainAdd << endl;
+    cout << "dec: " << dec << endl;
+    ASSERT_EQ(plainAdd, dec);
+
+    dec = trgswDecryptNtt(resDft, param, trgswKey);
+    ASSERT_EQ(plainAdd, dec);
+
+    plain1 = 3;
+    plain2 = -1;
+    trgswEncryptNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
+    trgswEncryptNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
+    trgswAdd(res, trgsw1, trgsw2);
+    trgswAddNtt(resDft, trgswDft1, trgswDft2);
+
+    // trgsw dec
+    dec = trgswDecrypt(res, param, trgswKey);
+    plainAdd = intModP(plain1 + plain2, param.torusBase);
+    cout << "plain: " << plainAdd << endl;
+    cout << "dec: " << dec << endl;
+    ASSERT_EQ(plainAdd, dec);
+
+    dec = trgswDecryptNtt(resDft, param, trgswKey);
+    ASSERT_EQ(plainAdd, dec);
+    printBanner("RGSW_ADD");
+}
+
+TEST(RgswTest, RGSW_SUB) {
+    YatfheParameters param{};
+    yatfheInit(param);
+
+    // key gen
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    trlweKeyGen(trlweKey);
+
+    // trgsw enc
+    Trgsw trgsw1{param}, trgsw2{param}, res{param};
+    TrgswDft trgswDft1{param}, trgswDft2{param}, resDft{param};
+    Integer dec, plainSub;
+    Integer plain1, plain2;
+    plain1 = 1;
+    plain2 = 0;
+    trgswEncryptNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
+    trgswEncryptNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
+    trgswSub(res, trgsw1, trgsw2);
+    trgswSubNtt(resDft, trgswDft1, trgswDft2);
+
+    // trgsw dec
+    dec = trgswDecrypt(res, param, trgswKey);
+    plainSub = intModP(plain1 - plain2, param.torusBase);
+    cout << "plain: " << plainSub << endl;
+    cout << "dec: " << dec << endl;
+    ASSERT_EQ(plainSub, dec);
+
+    dec = trgswDecryptNtt(resDft, param, trgswKey);
+    ASSERT_EQ(plainSub, dec);
+
+    plain1 = 1;
+    plain2 = -1;
+    trgswEncryptNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
+    trgswEncryptNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
+    trgswSub(res, trgsw1, trgsw2);
+    trgswSubNtt(resDft, trgswDft1, trgswDft2);
+
+    // trgsw dec
+    dec = trgswDecrypt(res, param, trgswKey);
+    plainSub = intModP(plain1 - plain2, param.torusBase);
+    cout << "plain: " << plainSub << endl;
+    cout << "dec: " << dec << endl;
+    ASSERT_EQ(plainSub, dec);
+
+    dec = trgswDecryptNtt(resDft, param, trgswKey);
+    ASSERT_EQ(plainSub, dec);
+    printBanner("RGSW_SUB");
+}
+
 TEST(RgswTest, RGSW_MCRT_DECOMPOSITION) {
     YatfheParameters param {};
     param.q = Q_CRT;

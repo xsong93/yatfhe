@@ -10,10 +10,12 @@
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
+#include "yautil/time_counter.h"
 
-TEST(BlindRot, BlindRot) {
+TEST(BLIND_ROT, BLIND_ROT) {
     YatfheParameters param {};
     param.n = 64;
+    param.group = 2;
     yatfheInit(param);
 
     // key gen
@@ -62,7 +64,7 @@ TEST(BlindRot, BlindRot) {
     symDecTrlweToInt(rotInP, rotIn, trlweKey, param.torusBase);
     printArray(rotInP.coeffs, "expect");
 
-    blindRotate(in2, bsk, sTlwe, param);
+    COUNT_TIME("blindRotate", blindRotate(in2, bsk.bsk, sTlwe, param);)
 
     // trgsw enc X^rot
     Trgsw trgswXRot {param};
@@ -85,10 +87,10 @@ TEST(BlindRot, BlindRot) {
     for (auto i = 0; i < decP.N; i++) {
         ASSERT_EQ(rotInP.coeffs[i], decP.coeffs[i]);
     }
-    printBanner("BlindRot");
+    printBanner("BLIND_ROT");
 }
 
-TEST(BlindRot, BLIND_ROT_APPROX_CRT) {
+TEST(BLIND_ROT, BLIND_ROT_APPROX_CRT) {
     YatfheParameters param {};
     param.q = Q_CRT;
     param.n = 64;
@@ -144,7 +146,7 @@ TEST(BlindRot, BLIND_ROT_APPROX_CRT) {
     printArray(rotInP.coeffs, "expect");
 
     trlweMCRTDecomp(rotCRT, in2, param);
-    blindRotateApproxCRT(rotCRT, bsKeyCRT, sTlwe, param);
+    blindRotateApproxCRT(rotCRT, bsKeyCRT.bsk8, sTlwe, param);
     trlweMCRTToCRT(rotCRT, param);
     trlweCRTRecomp(resMCRT, rotCRT, param);
 
@@ -160,7 +162,7 @@ TEST(BlindRot, BLIND_ROT_APPROX_CRT) {
     printBanner("BLIND_ROT_APPROX_CRT");
 }
 
-TEST(BlindRot, BLIND_ROT_APPROX_CRT_NTT) {
+TEST(BLIND_ROT, BLIND_ROT_APPROX_CRT_NTT) {
     YatfheParameters param {};
     param.q = Q_CRT;
 //    param.n = 64;
@@ -216,7 +218,7 @@ TEST(BlindRot, BLIND_ROT_APPROX_CRT_NTT) {
     printArray(rotInP.coeffs, "expect");
 
     trlweMCRTDecomp(rotCRT, in2, param);
-    blindRotateApproxCRTNtt(rotCRT, bsKeyCRT, sTlwe, param);
+    blindRotateApproxCRTNtt(rotCRT, bsKeyCRT.bskCRT, sTlwe, param);
     trlweMCRTToCRT(rotCRT, param);
     trlweCRTRecomp(resMCRT, rotCRT, param);
 
@@ -232,9 +234,10 @@ TEST(BlindRot, BLIND_ROT_APPROX_CRT_NTT) {
     printBanner("BLIND_ROT_APPROX_CRT_NTT");
 }
 
-TEST(BlindRot, BlindRotLut) {
+TEST(BLIND_ROT, BLIND_ROT_LUT) {
     YatfheParameters param {};
-//    param.torusBase = 64;
+    param.n = 64;
+    param.group = 2;
     yatfheInit(param);
 
     // key gen
@@ -284,7 +287,7 @@ TEST(BlindRot, BlindRotLut) {
     torusPolyToIntPoly(rotInP, rotIn, param.torusBase);
     printArray(rotInP.coeffs, "expect");
 
-    blindRotate(in2, bsk, sTlwe, param);
+    COUNT_TIME("blindRotate", blindRotate(in2, bsk.bsk, sTlwe, param);)
     printTrlweAB(in2, "aft brot");
 
     // trlwe dec
@@ -307,5 +310,5 @@ TEST(BlindRot, BlindRotLut) {
         ASSERT_NEAR(rotInP.coeffs[i], decP.coeffs[i], 1);
     }
     ASSERT_NEAR(in, out, 1);
-    printBanner("BlindRotLut");
+    printBanner("BLIND_ROT_LUT");
 }

@@ -126,11 +126,27 @@ void trgswAddInteger(Trgsw& trgsw, const Integer mu, const int pos, const Yatfhe
 }
 
 void trgswRotate(Trgsw& trgsw, const int rot, const YatfheParameters& param) {
+    if (rot % param.N * 2 == 0) {
+        return;
+    }
     Trlwe rotT{param.k, param.N};
     for (auto lvl = 0; lvl < param.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
             rotT = trgsw.trlweSamples[lvl][row];
             trlweRotate(trgsw.trlweSamples[lvl][row], rotT, rot);
+        }
+    }
+}
+
+void trgswRotateNtt(TrgswDft& trgswDft, const int rot, const YatfheParameters& param) {
+    if (rot % param.N * 2 == 0) {
+        return;
+    }
+    TrlweDft rotT{param.k, param.N};
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        for (auto row = 0; row < param.k + 1; row++) {
+            rotT = trgswDft.trlweDftSamples[lvl][row];
+            trlweRotateNtt(trgswDft.trlweDftSamples[lvl][row], rotT, rot);
         }
     }
 }
