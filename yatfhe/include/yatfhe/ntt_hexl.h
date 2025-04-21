@@ -19,9 +19,15 @@ namespace NttHexl {
 
     void printHexlParams();
 
+    LagrangePolynomial& getNttRoterPoly(int32_t r);
+
+    void initNttRotMap(int32_t degree);
+
     void applyNtt(LagrangePolynomial &out, const TorusPolynomial &in);
 
     void applyIntt(TorusPolynomial &out, const LagrangePolynomial &in);
+
+    void lagrangePolynomialRotate(LagrangePolynomial& res, const LagrangePolynomial& in, int r);
 
     void calModularInnerProductNtt(LagrangePolynomial& res, const vector<LagrangePolynomial>& in1, const vector<LagrangePolynomial>& in2);
 

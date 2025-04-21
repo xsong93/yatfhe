@@ -29,6 +29,29 @@ namespace NttHexl {
              ", ROU: " << nttHexl().GetMinimalRootOfUnity() << endl;
     }
 
+    std::unordered_map<int32_t, LagrangePolynomial>& getNttRotMap() {
+        static std::unordered_map<int32_t, LagrangePolynomial> nttRotMap;
+        return nttRotMap;
+    }
+
+    LagrangePolynomial& getNttRoterPoly(int32_t r) {
+        return getNttRotMap().find(r)->second;
+    }
+
+    void initNttRotMap(int32_t degree) {
+        static bool initialized = false;
+        if (!initialized) {
+            for (int32_t i = 0; i < degree; i++) {
+                LagrangePolynomial tmp{degree};
+                TorusPolynomial tmpT{degree};
+                tmpT.coeffs[i] = 1;
+                applyNtt(tmp, tmpT);
+                getNttRotMap().insert({i, std::move(tmp)});
+            }
+            initialized = true;
+        }
+    }
+
     void applyNtt(LagrangePolynomial &out, const TorusPolynomial &in) {
         auto N = in.N;
         auto q = nttHexl().GetModulus();
@@ -58,6 +81,13 @@ namespace NttHexl {
                 out.coeffs[i] = Torus(tmp[i]);
             }
         }
+    }
+
+    void lagrangePolynomialRotate(LagrangePolynomial& res, const LagrangePolynomial& in, int r) {
+        auto N = res.N;
+        auto q = nttHexl().GetModulus();
+        auto roter = NttHexl::getNttRoterPoly(r).coeffs.data();
+        EltwiseMultMod(res.coeffs.data(), in.coeffs.data(), roter, N, q, 1);
     }
 
     void calModularInnerProductNtt(LagrangePolynomial& res, const vector<LagrangePolynomial>& in1, const vector<LagrangePolynomial>& in2) {

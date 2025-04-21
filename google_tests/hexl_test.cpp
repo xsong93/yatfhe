@@ -107,36 +107,32 @@ TEST(HEXL_TEST, NTT_ROT) {
     auto q = param.qNtt;
 
     TorusPolynomial in{N};
-    TorusPolynomial in1{N};
-    TorusPolynomial in2{N};
+    TorusPolynomial roter{N};
+    TorusPolynomial ref{N};
     LagrangePolynomial nttHexl{N};
-    LagrangePolynomial nttHexl1{N};
-    LagrangePolynomial nttHexl2{N};
+    LagrangePolynomial roterNtt{N};
     LagrangePolynomial tmp{N};
-    TorusPolynomial outHexl{N};
+    TorusPolynomial res{N};
     for (auto i = 0; i < N; i++) {
         in.coeffs[i] = genIntUniformDist(-4, 4);
     }
-    int r = 3;
-    in1.coeffs[r] = 1;
-    torusPolynomialRotate(in2, r, in);
+    int r = genIntUniformDist(0, param.N);
+    roter.coeffs[r] = 1;
+    COUNT_TIME("torusPolynomialRotate", torusPolynomialRotate(ref, r, in));
 
     COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl, in);)
-    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl1, in1);)
-    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl2, in2);)
+    COUNT_TIME("HEXL", NttHexl::applyNtt(roterNtt, roter);)
 
-    printArray(nttHexl.coeffs, "ntt");
-    printArray(nttHexl1.coeffs, "ntt1");
-    printArray(nttHexl2.coeffs, "ntt2");
+    printArray(nttHexl.coeffs, "inNtt");
+    printArray(roterNtt.coeffs, "roterNtt");
+    printArray(NttHexl::getNttRoterPoly(r).coeffs, "mapNtt");
+    ASSERT_EQ(NttHexl::getNttRoterPoly(r).coeffs, roterNtt.coeffs);
 
-    COUNT_TIME("NTT_ROT",
-        for (size_t i = 0; i < N; i++) {
-            EltwiseMultMod(tmp.coeffs.data(), nttHexl.coeffs.data(), nttHexl1.coeffs.data(), N, q, 1);
-        })
+    COUNT_TIME("NTT_ROT", NttHexl::lagrangePolynomialRotate(tmp, nttHexl, r);)
 
-    COUNT_TIME("HEXL", NttHexl::applyIntt(outHexl, tmp);)
+    COUNT_TIME("HEXL", NttHexl::applyIntt(res, tmp);)
 
     printArray(in.coeffs, "in");
-    printArray(outHexl.coeffs, "outHexl");
-    ASSERT_EQ(in2.coeffs, outHexl.coeffs);
+    printArray(res.coeffs, "res");
+    ASSERT_EQ(ref.coeffs, res.coeffs);
 }
