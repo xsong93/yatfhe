@@ -13,25 +13,25 @@ using namespace intel::hexl;
 
 namespace NttHexl {
 
-    NTT &nttHexl();
+    NTT &getNttHexl();
 
     void initNttHexl(uint64_t degree, uint64_t q);
 
     void printHexlParams();
 
-    LagrangePolynomial& getNttRoterPoly(int32_t r);
+    NttPolynomial& getNttRoterPoly(int32_t r);
 
     void initNttRotMap(int32_t degree);
 
-    void applyNtt(LagrangePolynomial &out, const TorusPolynomial &in);
+    void applyNtt(NttPolynomial &out, const TorusPolynomial &in);
 
-    void applyIntt(TorusPolynomial &out, const LagrangePolynomial &in);
+    void applyIntt(TorusPolynomial &out, const NttPolynomial &in);
 
-    void lagrangePolynomialRotate(LagrangePolynomial& res, const LagrangePolynomial& in, int r);
+    void rotateNttPolynomial(NttPolynomial& res, const NttPolynomial& in, int r);
 
-    void calModularInnerProductNtt(LagrangePolynomial& res, const vector<LagrangePolynomial>& in1, const vector<LagrangePolynomial>& in2);
+    void calModularInnerProductNtt(NttPolynomial& res, const vector<NttPolynomial>& in1, const vector<NttPolynomial>& in2);
 
-    void calModularInnerProductNtt(LagrangePolynomial &acc, const LagrangePolynomial &in1, const LagrangePolynomial &in2);
+    void calModularInnerProductNtt(NttPolynomial &acc, const NttPolynomial &in1, const NttPolynomial &in2);
 
     template<typename T, typename R>
     void applyNttForAB(T &out, R &in) {

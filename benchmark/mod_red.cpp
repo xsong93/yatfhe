@@ -23,7 +23,7 @@ uint32_t mod_inverse(uint32_t R, uint32_t m) {
 
 int main() {
     YatfheParameters param {};
-    yatfheInit(param);
+    initYatfhe(param);
 
     Ntt64 a = 1234567890123456789ULL;
     Ntt64 b = 9876543210987654321ULL;

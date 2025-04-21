@@ -16,13 +16,13 @@
 
 TEST(TrlweTest, TRLWE_RED_TEST) {
     YatfheParameters param {};
-    yatfheInit(param);
+    initYatfhe(param);
 
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     Trlwe intt {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     double plain =  -1.0 / param.torusBase;
     Torus mu = doubleToTorus32(plain);
@@ -57,13 +57,13 @@ TEST(TrlweTest, TrlweEncDecSingleSampleTest) {
     YatfheParameters param {};
     param.k = 5;
     param.N = 1024;
-    yatfheInit(param);
+    initYatfhe(param);
 
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     Trlwe intt {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     double plain =  -1.0 / param.torusBase;
     Torus mu = doubleToTorus32(plain);
@@ -87,11 +87,11 @@ TEST(TrlweTest, TrlweEncDecSingleSampleTest) {
 
 TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
     YatfheParameters param{};
-    yatfheInit(param);
+    initYatfhe(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     std::vector<int> plain(param.N);
     std::vector<Torus> in(param.N);
@@ -116,11 +116,11 @@ TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
 
 TEST(TrlweTest, TRLWE_ENCS) {
     YatfheParameters param{};
-    yatfheInit(param);
+    initYatfhe(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     std::vector<IntPolynomial> plain(param.k, TorusPolynomial(param.N));
     std::vector<TorusPolynomial> in(param.k, TorusPolynomial(param.N));
@@ -139,7 +139,7 @@ TEST(TrlweTest, TRLWE_ENCS) {
 
     std::vector<TorusPolynomial> sXm(param.k, TorusPolynomial(param.N));
     for (size_t i = 0; i < param.k; i++) {
-        polynomialMulNaiveT32(sXm[i], in[i], negativeS[i]);
+        multTorusPolynomial(sXm[i], in[i], negativeS[i]);
     }
     printArray(sXm[0].coeffs, "-sXm 0");
     printArray(sXm[1].coeffs, "-sXm 1");
@@ -150,7 +150,7 @@ TEST(TrlweTest, TRLWE_ENCS) {
         symEncTrlweSingleSample(encSxM[k], trlweKey, 0);
         for (size_t i = 0; i < param.k; i++) {
             if (i == k) {
-                polynomialAddT32(encSxM[k].a[i], encSxM[k].a[i], in[i]);
+                addTorusPolynomial(encSxM[k].a[i], encSxM[k].a[i], in[i]);
             }
         }
     }
@@ -169,11 +169,11 @@ TEST(TrlweTest, TRLWE_ENCS) {
 
 TEST(TrlweTest, TRLWE_ROT) {
     YatfheParameters param{};
-    yatfheInit(param);
+    initYatfhe(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     std::vector<int> plain(param.N);
     std::vector<Torus> in(param.N);
@@ -192,12 +192,12 @@ TEST(TrlweTest, TRLWE_ROT) {
     int rotN = 1;
     symEncTrlweMultiSample(trlwe, trlweKey, in);
     Trlwe rot{param.k, param.N};
-    trlweRotate(rot, trlwe, rotN);
+    rotateTrlwe(rot, trlwe, rotN);
     symDecTrlweToInt(output, rot, trlweKey, param.torusBase);
 
     printArray(output.coeffs, "output");
     TorusPolynomial res{param.N};
-    torusPolynomialRotate(res, -rotN, output);
+    rotateTorusPolynomial(res, -rotN, output);
     printArray(res.coeffs, "res");
     for (auto i = 0; i < plain.size(); i++) {
         ASSERT_EQ(plain[i], res.coeffs[i]);
@@ -208,11 +208,11 @@ TEST(TrlweTest, TRLWE_ROT) {
 TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
     YatfheParameters param{};
     param.q = Q_CRT;
-    yatfheInit(param);
+    initYatfhe(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // data gen
     std::vector<int> plain(param.N);
@@ -227,8 +227,8 @@ TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
     // RD
     std::vector<Trlwe8> trlweDecomp(param.d, Trlwe8{param.k, param.N});
     Trlwe trlweRecomp {param.k, param.N};
-    COUNT_TIME("trlweCRTDecomp", trlweCRTDecomp(trlweDecomp, trlwe, param);)
-    COUNT_TIME("trlweCRTRecomp", trlweCRTRecomp(trlweRecomp, trlweDecomp, param);)
+    COUNT_TIME("trlweCRTDecomp", decompTrlweCrt(trlweDecomp, trlwe, param);)
+    COUNT_TIME("trlweCRTRecomp", recompTrlweCrt(trlweRecomp, trlweDecomp, param);)
     printTrlweAB(trlweRecomp, "trlweRecomp");
     for (auto i = 0; i < param.k; i++) {
         ASSERT_EQ(trlweRecomp.a[i].coeffs, trlwe.a[i].coeffs);
@@ -238,8 +238,8 @@ TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
     // RD 8d ver.
     Trlwe8D trlwe8D {param.k, param.N, param.d};
     Trlwe trlwe8DRecomp {param.k, param.N};
-    COUNT_TIME("trlweCRTDecompNO", trlweCRTDecompNO(trlwe8D, trlwe, param);)
-    COUNT_TIME("trlweCRTRecompNO", trlweCRTRecompNO(trlwe8DRecomp, trlwe8D, param);)
+    COUNT_TIME("trlweCRTDecompNO", decompTrlweCrtNO(trlwe8D, trlwe, param);)
+    COUNT_TIME("trlweCRTRecompNO", recompTrlweCrtNO(trlwe8DRecomp, trlwe8D, param);)
     printTrlweAB(trlwe8DRecomp, "trlwe8DRecomp");
     for (auto i = 0; i < param.k; i++) {
         ASSERT_EQ(trlwe8DRecomp.a[i].coeffs, trlwe.a[i].coeffs);
@@ -252,11 +252,11 @@ TEST(TrlweTest, TRLWE_CRT_COMPOSITION) {
 TEST(TrlweTest, TRLWE_MCRT_COMPOSITION) {
     YatfheParameters param{};
     param.q = Q_CRT;
-    yatfheInit(param);
+    initYatfhe(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // data gen
     std::vector<int> plain(param.N);
@@ -271,9 +271,9 @@ TEST(TrlweTest, TRLWE_MCRT_COMPOSITION) {
     // RD
     std::vector<Trlwe8> trlweDecomp(param.d, Trlwe8{param.k, param.N});
     Trlwe trlweRecomp {param.k, param.N};
-    COUNT_TIME("trlweMCRTDecomp", trlweMCRTDecomp(trlweDecomp, trlwe, param);)
-    COUNT_TIME("trlweMCRTToCRT", trlweMCRTToCRT(trlweDecomp, param);)
-    COUNT_TIME("trlweCRTRecomp", trlweCRTRecomp(trlweRecomp, trlweDecomp, param);)
+    COUNT_TIME("trlweMCRTDecomp", decompTrlweMcrt(trlweDecomp, trlwe, param);)
+    COUNT_TIME("trlweMCRTToCRT", trlweMcrtToCrt(trlweDecomp, param);)
+    COUNT_TIME("trlweCRTRecomp", recompTrlweCrt(trlweRecomp, trlweDecomp, param);)
     printTrlweAB(trlweRecomp, "trlweRecomp");
     for (auto i = 0; i < param.k; i++) {
         ASSERT_EQ(trlweRecomp.a[i].coeffs, trlwe.a[i].coeffs);
@@ -286,11 +286,11 @@ TEST(TrlweTest, TRLWE_MCRT_COMPOSITION) {
 TEST(TrlweTest, TRLWE_APPROX_CRT_COMPOSITION) {
     YatfheParameters param{};
     param.q = Q_CRT;
-    yatfheInit(param);
+    initYatfhe(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // data gen
     std::vector<int> plain(param.N);
@@ -306,9 +306,9 @@ TEST(TrlweTest, TRLWE_APPROX_CRT_COMPOSITION) {
     std::vector<Trlwe8> trlweDecomp(param.d, Trlwe8{param.k, param.N});
     std::vector<Trlwe8> trlweGadDecomp(param.d, Trlwe8{param.k, param.N});
     Trlwe trlweRecomp {param.k, param.N};
-    COUNT_TIME("trlweMCRTDecomp", trlweMCRTDecomp(trlweDecomp, trlwe, param);)
-    COUNT_TIME("trlweApproxCRTDecomp", trlweApproxCRTDecomp(trlweGadDecomp, trlweDecomp, param);)
-    COUNT_TIME("trlweApproxCRTRecomp", trlweApproxCRTRecomp(trlweRecomp, trlweGadDecomp, param);)
+    COUNT_TIME("trlweMCRTDecomp", decompTrlweMcrt(trlweDecomp, trlwe, param);)
+    COUNT_TIME("trlweApproxCRTDecomp", decompTrlweApproxCrt(trlweGadDecomp, trlweDecomp, param);)
+    COUNT_TIME("trlweApproxCRTRecomp", recompTrlweApproxCrt(trlweRecomp, trlweGadDecomp, param);)
     printTrlweAB(trlweRecomp, "trlweRecomp");
     int errA = 0;
     int errB = 0;
@@ -340,7 +340,7 @@ TEST(TrlweTest, TRLWE_APPROX_CRT_COMPOSITION) {
 TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
     YatfheParameters param {};
 //    param.torusBase = 1 << 28;
-    yatfheInit(param);
+    initYatfhe(param);
 
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe1 {param.k, param.N};
@@ -350,7 +350,7 @@ TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
     TrlweDft trlweDft2 {param.k, param.N};
     TrlweDft trlweDft3 {param.k, param.N};
 
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     std::vector<Integer> plain1(param.N);
     std::vector<Integer> plain2(param.N);
@@ -380,7 +380,7 @@ TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
     torusPolyToIntPoly(plainOutput, torusOutput, param.torusBase);
     printArray(plainOutput.coeffs, "plainOutput Add");
 
-    trlweAddNtt(trlweDft3, trlweDft1, trlweDft2);
+    addTrlweNtt(trlweDft3, trlweDft1, trlweDft2);
     symDecTrlweToIntNtt(output, trlweDft3, trlweKey, param.torusBase);
 //    trlweAdd(trlwe3, trlwe1, trlwe2);
 //    symDecTrlweToDouble(output, trlwe3, trlweKey, param.torusBase);
@@ -394,7 +394,7 @@ TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
     torusPolyToIntPoly(plainOutput, torusOutput, param.torusBase);
     printArray(plainOutput.coeffs, "plainOutput Sub");
 
-    trlweSubNtt(trlweDft3, trlweDft1, trlweDft2);
+    subTrlweNtt(trlweDft3, trlweDft1, trlweDft2);
     symDecTrlweToIntNtt(output, trlweDft3, trlweKey, param.torusBase);
 //    trlweSub(trlwe3, trlwe1, trlwe2);
 //    symDecTrlweToDouble(output, trlwe3, trlweKey, param.torusBase);
@@ -411,13 +411,13 @@ TEST(TrlweTest, TrlweMultLargeConstant) {
     YatfheParameters param {};
 //    param.torusBase = 1 << 3;
     param.l = 4;
-    yatfheInit(param);
+    initYatfhe(param);
 
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
 
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // data gen
     IntPolynomial plain {param.N}; // Z/pZ
@@ -429,13 +429,13 @@ TEST(TrlweTest, TrlweMultLargeConstant) {
 
     // enc
     Trglev trglev {param};
-    trglevEncMultiSample(trglev, trlweKey, plainT, param);
+    encTrglevMultiSample(trglev, trlweKey, plainT, param);
 
     Integer y = 3;
 
     // recomp
     Trlwe recomp {param.k, param.N};
-    trglevMultConst(recomp, trglev, y, param);
+    multTrglevWithConst(recomp, trglev, y, param);
 
     // dec
     TorusPolynomial res {param.N};
@@ -471,10 +471,10 @@ TEST(TrlweTest, TRLWE_MULT_DECOMP) {
     YatfheParameters param{};
 //    param.torusBase = 1 << 3;
     param.l = 4;
-    yatfheInit(param);
+    initYatfhe(param);
 
     TrlweKey trlweKey{param.k, param.N, param.rlweStdDev};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // data gen
     IntPolynomial plain{param.N}; // Z/pZ
@@ -498,11 +498,11 @@ TEST(TrlweTest, TRLWE_MULT_DECOMP) {
     for (size_t l = 0; l < param.l; l++) {
         for (size_t i = 0; i < param.k; i++) {
             for (size_t j = 0; j < param.N; j++) {
-                trlwes.rlwes[l].a[i].coeffs[j] = modMulT32(trlwe.a[i].coeffs[j], da.value[l]);
+                trlwes.trlwes[l].a[i].coeffs[j] = multTorus(trlwe.a[i].coeffs[j], da.value[l]);
             }
         }
         for (size_t j = 0; j < param.N; j++) {
-            trlwes.rlwes[l].b.coeffs[j] = modMulT32(trlwe.b.coeffs[j], da.value[l]);
+            trlwes.trlwes[l].b.coeffs[j] = multTorus(trlwe.b.coeffs[j], da.value[l]);
         }
     }
     printDecomposedTrlweAB(trlwes, "trlwes");
@@ -544,13 +544,13 @@ TEST(TrlweTest, TrlweMultLargeConstantMultiLvl) {
     param.torusBase = 1 << 3;
     param.l = 4;
     param.l2 = 4;
-    yatfheInit(param);
+    initYatfhe(param);
 
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
     TrlweDft trlweDft {param.k, param.N};
 
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // data gen
     IntPolynomial plain {param.N}; // Z/pZ
@@ -562,12 +562,12 @@ TEST(TrlweTest, TrlweMultLargeConstantMultiLvl) {
 
     // enc
     Trglev trglev {param};
-    trglevEncMultiSample(trglev, trlweKey, plainT, param);
+    encTrglevMultiSample(trglev, trlweKey, plainT, param);
 
     Integer y = genIntUniformDist(INT32_MIN, INT32_MAX);
 
     Trlwe recomp2 {param.k, param.N};
-    decomposedTglevMultConst(recomp2, trglev, y, param);
+    multDecomposedTglevWithConst(recomp2, trglev, y, param);
 
     // dec
     TorusPolynomial res {param.N};
@@ -594,89 +594,4 @@ TEST(TrlweTest, TrlweMultLargeConstantMultiLvl) {
     }
 
     printBanner("TrlweMultLargeConstantMultiLvl");
-}
-
-TEST(TrlweTest, TrlweDotMultLargeConstants) {
-    YatfheParameters param {};
-//    param.torusBase = 1 << 3;
-    param.l = 4;
-    param.n = 1024;
-    param.N = param.n;
-    yatfheInit(param);
-
-
-    // prepare data
-    // tlwe key gen
-    TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
-
-    //tlwe enc
-    int pt = 1;
-    Tlwe ct {param.n};
-    symEncTlweSample(ct, pt, tlweKey);
-
-    // rescale
-    ScaledTlwe scaledCt {param.N * 2, param.n};
-    rescaleTlweFromTorus32(scaledCt, ct);
-
-    // todo: debug
-    for (auto i = 0; i < scaledCt.n; i++) {
-        scaledCt.a[i] = 2 + i;
-    }
-
-
-    // trlwe mult
-    // trlwe key gen
-    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
-    Trlwe trlwe {param.k, param.N};
-    TrlweDft trlweDft {param.k, param.N};
-    trlweKeyGen(trlweKey);
-
-    // data gen
-    IntPolynomial plain {param.N}; // Z/pZ
-    TorusPolynomial plainT {param.N};
-    for (auto i = 0; i < plain.N; i++) {
-        plain.coeffs[i] = tlweKey.s[i];
-        plainT.coeffs[i] = modSwitchToTorus32(plain.coeffs[i], param.torusBase);
-    }
-
-    // enc
-    Trglev trglev {param};
-    trglevEncMultiSample(trglev, trlweKey, plainT, param);
-
-//    Integer y = genIntUniformDist(IntMin, IntMax);
-
-    // recomp
-    Trlwe recomp {param.k, param.N};
-    trglevDotMultConst(recomp, trglev, scaledCt.a, param);
-
-
-    // dec
-    TorusPolynomial res {param.N};
-    TorusPolynomial rounded {param.N};
-    IntPolynomial resP {param.N};
-//    applyNttForAB(trlweDft, recomp);
-//    symDecTrlweWoRoundingNtt(res, trlweDft, trlweKey);
-    symDecTrlweWoRounding(res, recomp, trlweKey);
-
-
-    for (auto i = 0 ; i < res.N; i++) {
-        rounded.coeffs[i] = roundTorusError(res.coeffs[i], param.torusBase);
-        resP.coeffs[i] = modSwitchFromTorus32(rounded.coeffs[i], param.torusBase);
-    }
-
-    printArray(plainT.coeffs, "plainT");
-    vectorDotMultConst(plainT.coeffs, plainT.coeffs, scaledCt.a);
-    printArray(plainT.coeffs, "p0");
-    printArray(res.coeffs, "re");
-    printArray(rounded.coeffs, "rd"); // rd = p0
-
-    printArray(plain.coeffs, "plain");
-    printArray(resP.coeffs, "p1");
-
-    for (auto i = 0 ; i < param.n; i++) {
-        ASSERT_EQ(intModP(plain.coeffs[i] * scaledCt.a[i], param.torusBase), resP.coeffs[i]);
-    }
-
-    printBanner("TrlweMultLargeConstant");
 }

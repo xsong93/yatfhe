@@ -9,7 +9,7 @@
 
 int main() {
     YatfheParameters p {};
-    yatfheInit(p);
+    initYatfhe(p);
     std::vector<int> coeffs = {656381177, -1322693974, 749894848, 1618033988};
     int Qlow = 55687;
     int l = 2;
@@ -20,9 +20,9 @@ int main() {
     std::vector<int> f_tilde(coeffs.size(), 0);
     std::vector<long> w(l, 0l);
 
-    approxCRTDecomp(f, coeffs, Qlow, lowModuli, highModuli);
+    decompCrtApprox(f, coeffs, Qlow, lowModuli, highModuli);
     calGadgetVector(w, Qlow, highModuli);
-    approxCRTReconstructPoly(f_tilde, f, w, q);
+    reconstructCrtApproxVec(f_tilde, f, w, q);
     for (auto i = 0; i < f.size(); i++) {
         printArray(f[i], "f" + to_string(i) + "(mod " + to_string(highModuli[i]) + ")");
     }
@@ -41,7 +41,7 @@ int main() {
             t1[i].b.coeffs[j] = (int8_t)intModP(j, 256);
         }
     }
-    trlweApproxCRTDecomp(t2, t1, p);
+    decompTrlweApproxCrt(t2, t1, p);
 //    for (size_t i = 0; i < p.dh; i++) {
 //        for (size_t j = 0; j < p.N; j++) {
 //            for (size_t k = 0; k < p.k; k++) {

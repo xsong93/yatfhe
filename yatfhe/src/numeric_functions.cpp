@@ -40,7 +40,7 @@ Torus addGaussianNoise(Torus message, const double sigma) {
     normal_distribution<double> normalDistribution(0.0, sigma);
     double e = normalDistribution(rng);
     Torus err = doubleToTorus32(e);
-    Torus tmp = modAddT32(message, err);
+    Torus tmp = addTorus(message, err);
     if ((message > 0 && tmp < 0) || (message < 0 && tmp > 0)) { // handle overflow
         return message - err;
     }
@@ -145,17 +145,26 @@ int64_t montgomoryReduceT32(int64_t in) {
     return in < 0 ? -static_cast<int64_t>(r) : static_cast<int64_t>(r);
 }
 
-Torus modAddT32(Torus in1, Torus in2) {
+Torus addTorus(Torus in1, Torus in2) {
+    if (TORUS_Q == Q_32) {
+        return in1 + in2;
+    }
     auto tmp = static_cast<int64_t>(in1) + static_cast<int64_t>(in2);
     return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
 }
 
-Torus modSubT32(Torus in1, Torus in2) {
+Torus subTorus(Torus in1, Torus in2) {
+    if (TORUS_Q == Q_32) {
+        return in1 - in2;
+    }
     auto tmp = static_cast<int64_t>(in1) - static_cast<int64_t>(in2);
     return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
 }
 
-Torus modMulT32(Torus in1, Torus in2) {
+Torus multTorus(Torus in1, Torus in2) {
+    if (TORUS_Q == Q_32) {
+        return in1 * in2;
+    }
     return static_cast<Torus>(longModP(static_cast<int64_t>(in1) * static_cast<int64_t>(in2), TORUS_Q));
 }
 

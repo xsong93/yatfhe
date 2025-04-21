@@ -26,7 +26,7 @@ void calGadgetVector(std::vector<long>& w, const int Qlow, const std::vector<int
 //    printf("w1:%ld, w2:%ld\n", w[0], w[1]);
 }
 
-void exactCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param) {
+void decompCrtExact(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
         auto& qd = param.qd[d];
         for (size_t j = 0; j < coeffs.size(); j++) {
@@ -35,7 +35,7 @@ void exactCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>&
     }
 }
 
-void exactCRTDecompIO(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param) {
+void decompCrtExactIO(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param) {
     for (size_t j = 0; j < coeffs.size(); j++) {
         for (size_t d = 0; d < param.d; d++) {
             auto qd = param.qd[d];
@@ -44,7 +44,7 @@ void exactCRTDecompIO(std::vector<std::vector<int8_t>>& f, const std::vector<int
     }
 }
 
-void exactCRTReconstruct(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param) {
+void reconstructCrtExact(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param) {
     for (int i = 0; i < f_tilde.size(); i++) {
         long acc = 0;
         for (size_t j = 0; j < param.d; j++) {
@@ -54,7 +54,7 @@ void exactCRTReconstruct(std::vector<int32_t>& f_tilde, const std::vector<std::v
     }
 }
 
-void exactCRTReconstructIO(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param) {
+void reconstructCrtExactIO(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param) {
     for (int i = 0; i < f_tilde.size(); i++) {
         long acc = 0;
         for (size_t j = 0; j < param.d; j++) {
@@ -64,7 +64,7 @@ void exactCRTReconstructIO(std::vector<int32_t>& f_tilde, const std::vector<std:
     }
 }
 
-void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli) {
+void decompCrtApprox(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli) {
     for (int i = 0; i < coeffs.size(); ++i) {
         int fi = coeffs[i];
 
@@ -81,7 +81,7 @@ void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>
     }
 }
 
-void approxCRTReconstructPoly(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q) {
+void reconstructCrtApproxVec(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q) {
     for (int i = 0; i < f_tilde.size(); i++) {
         long acc = 0;
         for (size_t j = 0; j < w.size(); j++) {
@@ -91,7 +91,7 @@ void approxCRTReconstructPoly(std::vector<int>& f_tilde, const std::vector<std::
     }
 }
 
-int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfheParameters& param) {
+int32_t reconstructCrtApproxSingleEle(const std::vector<int8_t>& f, const YatfheParameters& param) {
     long acc = 0;
     for (size_t j = 0; j < param.dh; j++) {
         acc += f[j] * param.w[j];
@@ -99,7 +99,7 @@ int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfhePar
     return static_cast<int32_t>(longModP(acc, param.qCRT));
 }
 
-void trlweApproxCRTDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
+void decompTrlweApproxCrt(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
     int32_t lowSumsA[param.k][param.N];
     int32_t lowSumsB[param.N];
     auto dh = param.dh;
@@ -139,7 +139,7 @@ void trlweApproxCRTDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& i
 }
 
 // l -> l*d
-void trlweApproxCRTBroadcast(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
+void broadcastTrlweApproxCrt(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
         auto qd = param.qd[d];
         auto qdHalf = param.qdHalf[d];

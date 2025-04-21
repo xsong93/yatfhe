@@ -6,7 +6,6 @@
 #define HLS_YATFHE_TORUS_H
 
 #include <cstdlib>
-#include <vector>
 #include <cstdint>
 
 #define TORUS32
@@ -21,7 +20,7 @@ using Ntt32 = uint32_t;
 using Ntt64 = uint64_t;
 using UnsignedInteger = uint32_t;
 using NttType = uint64_t;
-using Integer = int32_t;
+using Integer = Torus;
 using Binary = Integer;
 const int32_t NUM_PRIMES{4};
 const int32_t NUM_HIGH_PRIMES{2};

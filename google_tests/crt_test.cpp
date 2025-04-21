@@ -11,7 +11,7 @@
 TEST(CRT, APPROX_CRT) {
     YatfheParameters p {};
     p.q = Q_CRT;
-    yatfheInit(p);
+    initYatfhe(p);
     std::vector<int> coeffs = {656381177, -1322693974, 749894848, 1618033988};
     int Qlow = 55687;
     int l = 2;
@@ -22,9 +22,9 @@ TEST(CRT, APPROX_CRT) {
     std::vector<int> f_tilde(coeffs.size(), 0);
     std::vector<long> w(l, 0l);
 
-    approxCRTDecomp(f, coeffs, Qlow, lowModuli, highModuli);
+    decompCrtApprox(f, coeffs, Qlow, lowModuli, highModuli);
     calGadgetVector(w, Qlow, highModuli);
-    approxCRTReconstructPoly(f_tilde, f, w, q);
+    reconstructCrtApproxVec(f_tilde, f, w, q);
     for (auto i = 0; i < f.size(); i++) {
         printArray(f[i], "f" + to_string(i) + "(mod " + to_string(highModuli[i]) + ")");
     }
@@ -40,7 +40,7 @@ TEST(CRT, APPROX_CRT) {
 TEST(CRT, EXACT_CRT) {
     YatfheParameters p {};
     p.q = Q_CRT;
-    yatfheInit(p);
+    initYatfhe(p);
 //    std::vector<int32_t> coeffs = {656381177, -1322693974, 749894848, 1618033988};
     std::vector<int32_t> coeffs(p.N);
     for (size_t i = 0; i < p.N; i++) {
@@ -49,16 +49,16 @@ TEST(CRT, EXACT_CRT) {
     std::vector<std::vector<int8_t>> f(p.d, std::vector<int8_t>(coeffs.size(), 0));
     std::vector<std::vector<int8_t>> f2(coeffs.size(), std::vector<int8_t>(p.d, 0));
     std::vector<int32_t> f_tilde(coeffs.size(), 0);
-    exactCRTDecomp(f, coeffs, p);
+    decompCrtExact(f, coeffs, p);
     for (auto i = 0; i < f.size(); i++) {
         printArray(f[i], "f" + to_string(i) + "(mod " + to_string(p.qd[i]) + ")");
     }
-    exactCRTReconstruct(f_tilde, f, p);
+    reconstructCrtExact(f_tilde, f, p);
 
-    COUNT_TIME("exactCRTDecomp", for(size_t i = 0; i < 10000; i++){exactCRTDecomp(f, coeffs, p);})
-    COUNT_TIME("exactCRTReconstruct", for(size_t i = 0; i < 10000; i++){exactCRTReconstruct(f_tilde, f, p);})
-    COUNT_TIME("exactCRTDecompIO", for(size_t i = 0; i < 10000; i++){ exactCRTDecompIO(f2, coeffs, p);})
-    COUNT_TIME("exactCRTReconstructIO", for(size_t i = 0; i < 10000; i++){ exactCRTReconstructIO(f_tilde, f2, p);})
+    COUNT_TIME("exactCRTDecomp", for(size_t i = 0; i < 10000; i++){decompCrtExact(f, coeffs, p);})
+    COUNT_TIME("exactCRTReconstruct", for(size_t i = 0; i < 10000; i++){reconstructCrtExact(f_tilde, f, p);})
+    COUNT_TIME("exactCRTDecompIO", for(size_t i = 0; i < 10000; i++){ decompCrtExactIO(f2, coeffs, p);})
+    COUNT_TIME("exactCRTReconstructIO", for(size_t i = 0; i < 10000; i++){ reconstructCrtExactIO(f_tilde, f2, p);})
 
     printArray(coeffs, "f_origi");
     printArray(f_tilde, "f_tilde");
@@ -71,7 +71,7 @@ TEST(CRT, EXACT_CRT) {
 TEST(CRT, TRLWE_CRT) {
     YatfheParameters param{};
     param.q = Q_CRT;
-    yatfheInit(param);
+    initYatfhe(param);
     //todo
     printBanner("TRLWE_CRT");
 }

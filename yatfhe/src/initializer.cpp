@@ -35,7 +35,7 @@ void calGadgetVectorZ(YatfheParameters& param) {
 //    printf("z1:%ld, z2:%ld, z3:%ld, z4:%ld\n", param.z[0], param.z[1], param.z[2], param.z[3]);
 }
 
-void yatfheInit(YatfheParameters& param) {
+void initYatfhe(YatfheParameters& param) {
     TORUS_Q = param.q;
     INT_MAX_VALUE = static_cast<Integer>((TORUS_Q - 1) >> 1);
     INT_MIN_VALUE = static_cast<Integer>(-(TORUS_Q >> 1));

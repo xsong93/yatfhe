@@ -37,7 +37,7 @@ TEST(DecompositionTest, SignedDecompTest) {
         signedGadgetDecomposition(decomp, d, param);
         printf("in: %d, ", d);
         printArray(decomp.value, "decomp");
-        auto recons = selfRecompose(decomp, param);
+        auto recons = recomposeSelf(decomp, param);
         ASSERT_EQ(d, recons);
     }
     printBanner("SignedDecomp");
@@ -54,7 +54,7 @@ TEST(DecompositionTest, DecomposeTest) {
         gadgetDecompose(out, d, param);
         printf("in: %d, ", d);
         printArray(out.value, "decomp");
-        auto z = selfRecompose(out, param);
+        auto z = recomposeSelf(out, param);
         ASSERT_EQ(z, d);
     }
     printBanner("Decompose");
@@ -105,7 +105,7 @@ TEST(DecompositionTest, DecomposeOverBMultiStages) {
     // recomp second decomposed data test
     vector<Integer> recompRhs(rhs.size());
     for (auto i = 0; i < decompRhs.size(); i++) {
-        recompRhs[i] = selfRecompose(decompRhs[i], param);
+        recompRhs[i] = recomposeSelf(decompRhs[i], param);
         ASSERT_EQ(recompRhs[i], rhs[i]);
     }
     printArray(recompRhs, "recompRhs");
@@ -125,7 +125,7 @@ TEST(DecompositionTest, DecomposeOverBMultiStages) {
     printArray(recompL1.value, "recompL1");
 
     // recomp second level
-    auto out = selfRecompose(recompL1, param); // equivalent to recomposeTwoParts(recompL1, decompOneOverR)
+    auto out = recomposeSelf(recompL1, param); // equivalent to recomposeTwoParts(recompL1, decompOneOverR)
     printf("out = %d, data * mult = %d\n", out, data * mult);
 
     for (auto i = 0; i < param.ksLevel; i++) {
@@ -139,7 +139,7 @@ TEST(DecompositionTest, DecomposeOverBMultiStages) {
 
 TEST(DecompositionTest, DecomposeTrlweTest) {
     YatfheParameters param {};
-    yatfheInit(param);
+    initYatfhe(param);
 
     Trlwe in {param.k, param.N};
     TrlweDft inDft {param.k, param.N};
@@ -149,7 +149,7 @@ TEST(DecompositionTest, DecomposeTrlweTest) {
     Integer plain = 1;
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 //    Trlwe in2 {param.k, param.N};
 //    symEncTrlweSingleSample(in2, trlweKey, mu);
     symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
@@ -209,12 +209,12 @@ TEST(DecompositionTest, DecomposedAddSub) {
         for (auto i = 0; i < param.ksLevel; i++) {
             dr.value[i] = da.value[i] * da.sign + db.value[i] * db.sign;
         }
-        auto z = selfRecompose(dr, param);
+        auto z = recomposeSelf(dr, param);
         printf("a + b: a: %d, b: %d. decomp: %d, ori: %d\n", a, b, z, a + b);
         for (auto i = 0; i < param.ksLevel; i++) {
             dr.value[i] = da.value[i] * da.sign - db.value[i] * db.sign;
         }
-        z = selfRecompose(dr, param);
+        z = recomposeSelf(dr, param);
         printf("a - b: a: %d, b: %d. decomp: %d, ori: %d\n", a, b, z, a - b);
     }
     printBanner("DecomposedAddSub");
@@ -225,7 +225,7 @@ TEST(DecompositionTest, DecomposedAddSub) {
 TEST(DecompositionTest, DecomposedMult) {
     YatfheParameters param {};
     param.q = Q_32;
-    yatfheInit(param);
+    initYatfhe(param);
 //    param.radixBits = 4;
 //    param.ksLevel = 8;
     DecomposedData da {param.ksLevel};
@@ -268,7 +268,7 @@ TEST(DecompositionTest, DecompNttOrderTest) {
 //    param.radixBits = 4;
 //    param.l = 8;
 //    param.k = 2;
-    yatfheInit(param);
+    initYatfhe(param);
 
     Trlwe in {param.k, param.N};
     TrlweDft inDft {param.k, param.N};
@@ -276,7 +276,7 @@ TEST(DecompositionTest, DecompNttOrderTest) {
 
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
     Torus mu = doubleToTorus32(1.0 / param.torusBase);
     symEncTrlweSingleSampleNtt(in, inDft, trlweKey, mu);
 
@@ -367,7 +367,7 @@ TEST(DecompositionTest, NttDecompArithTest) {
 //    param.radixBits = 4;
 //    param.lDft = 2;
 //    param.k = 2;
-    yatfheInit(param);
+    initYatfhe(param);
 
     Trlwe in {param.k, param.N};
     Trlwe in1 {param.k, param.N};
@@ -376,7 +376,7 @@ TEST(DecompositionTest, NttDecompArithTest) {
     Trlwe recomp {param.k, param.N};
 
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     Torus mu = doubleToTorus32(1.0 / param.torusBase);
     Torus mu1 = doubleToTorus32(1.0 / param.torusBase);
@@ -400,7 +400,7 @@ TEST(DecompositionTest, NttDecompArithTest) {
 
     TrlweDft tmp{param.k, param.N};
     DecomposedTrlweDft tmpD {param, param.lDft};
-    trlweAddNtt(tmp, dft, dft1);
+    addTrlweNtt(tmp, dft, dft1);
     gadgetDecomposeTrlweNtt(tmpD, tmp, param);
 
     // decomp mod add

@@ -13,15 +13,15 @@
 constexpr NttType MODULUS = 0xffffffff00000001UL;
 using namespace std;
 
-void applyNttOld(LagrangePolynomial& out, const IntPolynomial& in);
+void applyNttOld(NttPolynomial& out, const IntPolynomial& in);
 
 void applyNtt32Old(IntPolynomial& output, const IntPolynomial& input, int root, int mod);
 
 void applyIntt32Old(IntPolynomial& output, IntPolynomial& input, int root, int mod);
 
-void applyNttTorusOld(LagrangePolynomial& out, const TorusPolynomial & in, int mSize);
+void applyNttTorusOld(NttPolynomial& out, const TorusPolynomial & in, int mSize);
 
-void applyInttOld(IntPolynomial& out, const LagrangePolynomial& in);
+void applyInttOld(IntPolynomial& out, const NttPolynomial& in);
 
 void bitRevShuffleOld(std::vector<NttType>& x, int N);
 
@@ -35,6 +35,6 @@ void modularMultOld(std::vector<NttType>& output, const std::vector<NttType>& co
 
 void modularAccumulateOld(vector<NttType>& coeffsB, const vector<NttType>& coeffsA, const vector<NttType>& coeffsS);
 
-void calModularInnerProductNttOld(LagrangePolynomial& b, const vector<LagrangePolynomial>& a, const vector<LagrangePolynomial>& s);
+void calModularInnerProductNttOld(NttPolynomial& b, const vector<NttPolynomial>& a, const vector<NttPolynomial>& s);
 
 #endif //HLS_YATFHE_NTT_OLD_H

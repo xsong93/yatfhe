@@ -15,7 +15,7 @@ namespace NttNative64 {
     TwParam NWC_ITW;
     TwRom TW_ROM;
 
-    void DITNRLaPoly(LagrangePolynomial &out, const LagrangePolynomial &in) {
+    void DITNRLaPoly(NttPolynomial &out, const NttPolynomial &in) {
         auto &output = out.coeffs;
         const auto &input = in.coeffs;
         const auto &N = in.N;
@@ -46,7 +46,7 @@ namespace NttNative64 {
         }
     }
 
-    void DIFRNLaPoly(LagrangePolynomial &out, const LagrangePolynomial &in) {
+    void DIFRNLaPoly(NttPolynomial &out, const NttPolynomial &in) {
         auto &output = out.coeffs;
         const auto &input = in.coeffs;
         const auto &tw = NWC_ITW.tw_factor;
@@ -343,9 +343,9 @@ namespace NttNative64 {
     }
 
 // Function to perform Number Theoretic Transform (NTT)
-    void applyNtt(LagrangePolynomial &out, const IntPolynomial &in) {
+    void applyNtt(NttPolynomial &out, const IntPolynomial &in) {
         auto N = in.N;
-        LagrangePolynomial format_input(N);
+        NttPolynomial format_input(N);
         for (int i = 0; i < N; i++) {
             if (in.coeffs[i] >= 0) {
                 format_input.coeffs[i] = Ntt64(in.coeffs[i]);
@@ -356,9 +356,9 @@ namespace NttNative64 {
         DITNRLaPoly(out, format_input);
     }
 
-    void applyIntt(IntPolynomial &out, const LagrangePolynomial &in) {
+    void applyIntt(IntPolynomial &out, const NttPolynomial &in) {
         auto N = in.N;
-        LagrangePolynomial res(N);
+        NttPolynomial res(N);
         DIFRNLaPoly(res, in);
         int64_t temp_ntt;
         int64_t temp_poly;
@@ -403,15 +403,15 @@ namespace NttNative64 {
     }
 
 // res = aN * sN
-    void calModularInnerProductNtt(LagrangePolynomial &res, const vector<LagrangePolynomial> &in1,
-                                   const vector<LagrangePolynomial> &in2) {
+    void calModularInnerProductNtt(NttPolynomial &res, const vector<NttPolynomial> &in1,
+                                   const vector<NttPolynomial> &in2) {
         for (auto i = 0; i < in1.size(); i++) {
             modularAccumulate(res.coeffs, in1[i].coeffs, in2[i].coeffs);
         }
     }
 
     void
-    calModularInnerProductNtt(LagrangePolynomial &res, const LagrangePolynomial &in1, const LagrangePolynomial &in2) {
+    calModularInnerProductNtt(NttPolynomial &res, const NttPolynomial &in1, const NttPolynomial &in2) {
         modularAccumulate(res.coeffs, in1.coeffs, in2.coeffs);
     }
 

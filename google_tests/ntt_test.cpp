@@ -37,10 +37,10 @@ TEST(NttTest, NttIntt64Test) {
 //    printArray(aPrime, "a");
     YatfheParameters p {};
     p.N = 512;
-    yatfheInit(p);
+    initYatfhe(p);
 
     auto N = p.N;
-    LagrangePolynomial resNtt{N};
+    NttPolynomial resNtt{N};
     TorusPolynomial a1{N};
 //    TorusPolynomial resIntt{N};
     int t = 10;
@@ -70,12 +70,12 @@ TEST(NttTest, NttIntt64Test) {
 TEST(NttTest, NttAddConstantTest) {
     YatfheParameters p {};
     p.N = 1024;
-    yatfheInit(p);
+    initYatfhe(p);
 
     auto N = p.N;
-    LagrangePolynomial a{N};
-    LagrangePolynomial b{N};
-    LagrangePolynomial resNtt{N};
+    NttPolynomial a{N};
+    NttPolynomial b{N};
+    NttPolynomial resNtt{N};
     IntPolynomial poly{N};
     IntPolynomial c{N};
     IntPolynomial res{N};
@@ -97,16 +97,16 @@ TEST(NttTest, NttAddConstantTest) {
 TEST(NttTest, NttBasicArithTest) {
     YatfheParameters p {};
     p.N = 1024;
-    yatfheInit(p);
+    initYatfhe(p);
 
     auto N = p.N;
-    LagrangePolynomial a{N};
-    LagrangePolynomial b{N};
-    LagrangePolynomial c{N};
-    LagrangePolynomial tmpMul{N};
-    LagrangePolynomial tmpMul1{N};
-    LagrangePolynomial tmpAdd{N};
-    LagrangePolynomial tmpSub{N};
+    NttPolynomial a{N};
+    NttPolynomial b{N};
+    NttPolynomial c{N};
+    NttPolynomial tmpMul{N};
+    NttPolynomial tmpMul1{N};
+    NttPolynomial tmpAdd{N};
+    NttPolynomial tmpSub{N};
 
     IntPolynomial poly0{N};
     IntPolynomial poly1{N};
@@ -156,8 +156,8 @@ TEST(NttTest, NttBasicArithTest) {
         })
         COUNT_TIME("NAIVE_MULT",
             IntPolynomial tmp{N};
-            polynomialMulNaiveModQ(tmp, poly0, poly1, TORUS_Q);
-            polynomialMulNaiveModQ(navMul, tmp, poly2, TORUS_Q);
+            multIntPolynomialModQ(tmp, poly0, poly1, TORUS_Q);
+            multIntPolynomialModQ(navMul, tmp, poly2, TORUS_Q);
         )
 
         for (int i = 0; i < a.N; i++) {
@@ -166,8 +166,8 @@ TEST(NttTest, NttBasicArithTest) {
         }
         applyIntt(resAdd, tmpAdd);
         applyIntt(resSub, tmpSub);
-        polynomialAddI32(navAdd, poly0, poly1);
-        polynomialSubI32(navSub, poly0, poly1);
+        addIntPolynomial(navAdd, poly0, poly1);
+        subIntPolynomial(navSub, poly0, poly1);
 
         printArray(resMul.coeffs, "resMul");
         printArray(resMul2.coeffs, "resMul2");
@@ -185,14 +185,14 @@ TEST(NttTest, NttBasicArithTest) {
 TEST(NttTest, ConvolutionTest) {
     YatfheParameters p {};
     p.N = 1024;
-    yatfheInit(p);
+    initYatfhe(p);
 
     auto N = p.N;
     auto k = p.k;
 
-    vector<LagrangePolynomial> a(k, LagrangePolynomial(N));
-    vector<LagrangePolynomial> b(k, LagrangePolynomial(N));
-    LagrangePolynomial tmpMul{N};
+    vector<NttPolynomial> a(k, NttPolynomial(N));
+    vector<NttPolynomial> b(k, NttPolynomial(N));
+    NttPolynomial tmpMul{N};
 
     vector<IntPolynomial> poly0(k, TorusPolynomial(N));
     vector<IntPolynomial> poly2(k, TorusPolynomial(N));
@@ -219,7 +219,7 @@ TEST(NttTest, ConvolutionTest) {
             applyIntt(resMul, tmpMul);})
         COUNT_TIME("NAIVE_MULT",
                    for (auto i = 0 ; i < k; i++) {
-                       polynomialMulAccNaiveI32(navMul, poly0[i], poly2[i]);
+                       multIntPolynomialAcc(navMul, poly0[i], poly2[i]);
                    })
         printArray(resMul.coeffs, "resMul");
         printArray(navMul.coeffs, "navMul");
@@ -239,10 +239,10 @@ TEST(NttTest, debug) {
     for (int i = 0; i < 1000000; ++i) {
         YatfheParameters p {};
         p.N = 64;
-        yatfheInit(p);
+        initYatfhe(p);
 
         auto N = p.N;
-        LagrangePolynomial res_ntt{N};
+        NttPolynomial res_ntt{N};
         IntPolynomial a{N}, res_intt{N};
         for (int i = 0; i < N; i++) {
             a.coeffs[i] = genIntUniformDist(INT32_MIN ,1);
@@ -284,11 +284,11 @@ TEST(NttTest, bit_rev_test) {
 TEST(NttTest, DiffBaseTest) {
     YatfheParameters p {};
     p.N = 8;
-    yatfheInit(p);
+    initYatfhe(p);
 
     auto N = p.N;
     Ntt14Polynomial resNtt14{N};
-    LagrangePolynomial resNtt64{N};
+    NttPolynomial resNtt64{N};
     IntPolynomial a1{N};
     IntPolynomial resIntt14{N};
     IntPolynomial resIntt64{N};

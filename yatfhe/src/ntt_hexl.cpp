@@ -10,7 +10,7 @@ using namespace intel::hexl;
 
 namespace NttHexl {
 
-    NTT &nttHexl() {
+    NTT &getNttHexl() {
         static NTT nttHexl;
         return nttHexl;
     }
@@ -18,23 +18,23 @@ namespace NttHexl {
     void initNttHexl(uint64_t degree, uint64_t q) {
         static bool initialized = false;
         if (!initialized) {
-            nttHexl() = NTT(degree, q);
+            getNttHexl() = NTT(degree, q);
             initialized = true;
         }
     }
 
     void printHexlParams() {
-        cout << "q: " << nttHexl().GetModulus() <<
-             ", N: " << nttHexl().GetDegree() <<
-             ", ROU: " << nttHexl().GetMinimalRootOfUnity() << endl;
+        cout << "q: " << getNttHexl().GetModulus() <<
+             ", N: " << getNttHexl().GetDegree() <<
+             ", ROU: " << getNttHexl().GetMinimalRootOfUnity() << endl;
     }
 
-    std::unordered_map<int32_t, LagrangePolynomial>& getNttRotMap() {
-        static std::unordered_map<int32_t, LagrangePolynomial> nttRotMap;
+    std::unordered_map<int32_t, NttPolynomial>& getNttRotMap() {
+        static std::unordered_map<int32_t, NttPolynomial> nttRotMap;
         return nttRotMap;
     }
 
-    LagrangePolynomial& getNttRoterPoly(int32_t r) {
+    NttPolynomial& getNttRoterPoly(int32_t r) {
         return getNttRotMap().find(r)->second;
     }
 
@@ -42,7 +42,7 @@ namespace NttHexl {
         static bool initialized = false;
         if (!initialized) {
             for (int32_t i = 0; i < degree; i++) {
-                LagrangePolynomial tmp{degree};
+                NttPolynomial tmp{degree};
                 TorusPolynomial tmpT{degree};
                 tmpT.coeffs[i] = 1;
                 applyNtt(tmp, tmpT);
@@ -52,9 +52,9 @@ namespace NttHexl {
         }
     }
 
-    void applyNtt(LagrangePolynomial &out, const TorusPolynomial &in) {
+    void applyNtt(NttPolynomial &out, const TorusPolynomial &in) {
         auto N = in.N;
-        auto q = nttHexl().GetModulus();
+        auto q = getNttHexl().GetModulus();
         for (size_t i = 0; i < N; i++) {
             if (in.coeffs[i] >= 0) {
                 out.coeffs[i] = Ntt64(in.coeffs[i]);
@@ -62,15 +62,15 @@ namespace NttHexl {
                 out.coeffs[i] = Ntt64(in.coeffs[i] + q);
             }
         }
-        nttHexl().ComputeForward(out.coeffs.data(), out.coeffs.data(), 1, 1);
+        getNttHexl().ComputeForward(out.coeffs.data(), out.coeffs.data(), 1, 1);
     }
 
-    void applyIntt(TorusPolynomial &out, const LagrangePolynomial &in) {
+    void applyIntt(TorusPolynomial &out, const NttPolynomial &in) {
         auto N = in.N;
-        auto q = nttHexl().GetModulus();
+        auto q = getNttHexl().GetModulus();
         auto halfQ = (q + 1) >> 1;
         std::vector<uint64_t> tmp(N);
-        nttHexl().ComputeInverse(tmp.data(), in.coeffs.data(), 1, 1);
+        getNttHexl().ComputeInverse(tmp.data(), in.coeffs.data(), 1, 1);
         for (int i = 0; i < N; i++) {
             if (tmp[i] >= halfQ) {
                 tmp[i] -= q;
@@ -83,24 +83,24 @@ namespace NttHexl {
         }
     }
 
-    void lagrangePolynomialRotate(LagrangePolynomial& res, const LagrangePolynomial& in, int r) {
+    void rotateNttPolynomial(NttPolynomial& res, const NttPolynomial& in, int r) {
         auto N = res.N;
-        auto q = nttHexl().GetModulus();
+        auto q = getNttHexl().GetModulus();
         auto roter = NttHexl::getNttRoterPoly(r).coeffs.data();
         EltwiseMultMod(res.coeffs.data(), in.coeffs.data(), roter, N, q, 1);
     }
 
-    void calModularInnerProductNtt(LagrangePolynomial& res, const vector<LagrangePolynomial>& in1, const vector<LagrangePolynomial>& in2) {
+    void calModularInnerProductNtt(NttPolynomial& res, const vector<NttPolynomial>& in1, const vector<NttPolynomial>& in2) {
         for (auto i = 0; i < in1.size(); i++) {
             calModularInnerProductNtt(res, in1[i], in2[i]);
         }
     }
 
-    void calModularInnerProductNtt(LagrangePolynomial &acc, const LagrangePolynomial &in1, const LagrangePolynomial &in2) {
+    void calModularInnerProductNtt(NttPolynomial &acc, const NttPolynomial &in1, const NttPolynomial &in2) {
         auto N = in2.N;
-        auto q = nttHexl().GetModulus();
-        LagrangePolynomial tmp{N};
-        LagrangePolynomial tmp1 = acc;
+        auto q = getNttHexl().GetModulus();
+        NttPolynomial tmp{N};
+        NttPolynomial tmp1 = acc;
         EltwiseMultMod(tmp.coeffs.data(), in1.coeffs.data(), in2.coeffs.data(), N, q, 1);
         EltwiseAddMod(acc.coeffs.data(), tmp.coeffs.data(), tmp1.coeffs.data(), N, q);
     }

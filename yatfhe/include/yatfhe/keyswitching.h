@@ -29,8 +29,8 @@ struct TlweKeySwitchingKey {
             decomposedKsk(nCurr, vector<Tlwe>(l, Tlwe(nTarget))) {};
 };
 
-void tlweKeySwitchingKeyGen(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param);
+void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param);
 
-void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param);
+void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_KEYSWITCHING_H

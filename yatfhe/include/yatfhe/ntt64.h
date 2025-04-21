@@ -97,20 +97,20 @@ namespace NttNative64 {
 
     Ntt64 modmul64(Ntt64 x, Ntt64 y);
 
-    void applyNtt(LagrangePolynomial &out, const IntPolynomial &in);
+    void applyNtt(NttPolynomial &out, const IntPolynomial &in);
 
-    void applyIntt(IntPolynomial &out, const LagrangePolynomial &in);
+    void applyIntt(IntPolynomial &out, const NttPolynomial &in);
 
     void
     modularMult(std::vector<NttType> &output, const std::vector<NttType> &coeffsA, const std::vector<NttType> &coeffsB);
 
     void modularAccumulate(vector<NttType> &res, const vector<NttType> &in1, const vector<NttType> &in2);
 
-    void calModularInnerProductNtt(LagrangePolynomial &res, const vector<LagrangePolynomial> &in1,
-                                   const vector<LagrangePolynomial> &in2);
+    void calModularInnerProductNtt(NttPolynomial &res, const vector<NttPolynomial> &in1,
+                                   const vector<NttPolynomial> &in2);
 
     void
-    calModularInnerProductNtt(LagrangePolynomial &res, const LagrangePolynomial &in1, const LagrangePolynomial &in2);
+    calModularInnerProductNtt(NttPolynomial &res, const NttPolynomial &in1, const NttPolynomial &in2);
 
     void initGlobalParamsNtt(int N);
 }

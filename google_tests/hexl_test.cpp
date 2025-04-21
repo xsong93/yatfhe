@@ -14,12 +14,12 @@
 TEST(HEXL_TEST, NTT_INTT) {
     YatfheParameters param {};
     param.N = 1024;
-    yatfheInit(param);
+    initYatfhe(param);
 
     auto N = param.N;
     TorusPolynomial in{N};
-    LagrangePolynomial nttHexl{N};
-    LagrangePolynomial ntt{N};
+    NttPolynomial nttHexl{N};
+    NttPolynomial ntt{N};
     TorusPolynomial outHexl{N};
     TorusPolynomial out{N};
     for (auto i = 0; i < N; i++) {
@@ -40,16 +40,16 @@ TEST(HEXL_TEST, NTT_INTT) {
 TEST(HEXL_TEST, POLY_MULT) {
     YatfheParameters p{};
     p.N = 1024;
-    yatfheInit(p);
+    initYatfhe(p);
 
     auto N = p.N;
-    LagrangePolynomial a{N};
-    LagrangePolynomial b{N};
-    LagrangePolynomial c{N};
-    LagrangePolynomial d{N};
-    LagrangePolynomial e{N};
-    LagrangePolynomial tmpMul1{N};
-    LagrangePolynomial tmpMul2{N};
+    NttPolynomial a{N};
+    NttPolynomial b{N};
+    NttPolynomial c{N};
+    NttPolynomial d{N};
+    NttPolynomial e{N};
+    NttPolynomial tmpMul1{N};
+    NttPolynomial tmpMul2{N};
 
     TorusPolynomial poly0{N};
     TorusPolynomial poly1{N};
@@ -84,7 +84,7 @@ TEST(HEXL_TEST, POLY_MULT) {
         COUNT_TIME("NAIVE_MULT", {
             TorusPolynomial tmp{N};
             TorusPolynomial tmp1{N};
-            polynomialMulNaiveModQ(navMul, poly0, poly1, TORUS_Q);
+            multIntPolynomialModQ(navMul, poly0, poly1, TORUS_Q);
         })
 
         printArray(resMul1.coeffs, "resMul1");
@@ -100,7 +100,7 @@ TEST(HEXL_TEST, NTT_ROT) {
     YatfheParameters param {};
     param.N = 1024;
 //    param.qNtt = 7681;
-    yatfheInit(param);
+    initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
     auto N = param.N;
@@ -109,16 +109,16 @@ TEST(HEXL_TEST, NTT_ROT) {
     TorusPolynomial in{N};
     TorusPolynomial roter{N};
     TorusPolynomial ref{N};
-    LagrangePolynomial nttHexl{N};
-    LagrangePolynomial roterNtt{N};
-    LagrangePolynomial tmp{N};
+    NttPolynomial nttHexl{N};
+    NttPolynomial roterNtt{N};
+    NttPolynomial tmp{N};
     TorusPolynomial res{N};
     for (auto i = 0; i < N; i++) {
         in.coeffs[i] = genIntUniformDist(-4, 4);
     }
     int r = genIntUniformDist(0, param.N);
     roter.coeffs[r] = 1;
-    COUNT_TIME("torusPolynomialRotate", torusPolynomialRotate(ref, r, in));
+    COUNT_TIME("torusPolynomialRotate", rotateTorusPolynomial(ref, r, in));
 
     COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl, in);)
     COUNT_TIME("HEXL", NttHexl::applyNtt(roterNtt, roter);)
@@ -128,7 +128,7 @@ TEST(HEXL_TEST, NTT_ROT) {
     printArray(NttHexl::getNttRoterPoly(r).coeffs, "mapNtt");
     ASSERT_EQ(NttHexl::getNttRoterPoly(r).coeffs, roterNtt.coeffs);
 
-    COUNT_TIME("NTT_ROT", NttHexl::lagrangePolynomialRotate(tmp, nttHexl, r);)
+    COUNT_TIME("NTT_ROT", NttHexl::rotateNttPolynomial(tmp, nttHexl, r);)
 
     COUNT_TIME("HEXL", NttHexl::applyIntt(res, tmp);)
 

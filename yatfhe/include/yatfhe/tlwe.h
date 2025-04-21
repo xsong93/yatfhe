@@ -36,28 +36,28 @@ struct TlweKey {
     explicit TlweKey(int n) : n(n), sigma(0), s(n) {};
 };
 
-void lweKeyGen(TlweKey& key);
+void genTlweKey(TlweKey& key);
 
 void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input);
 
-void symEncTlweSample(Tlwe& tlweSample, Torus message, const TlweKey& key);
+void symEncTlwe(Tlwe& tlweSample, Torus message, const TlweKey& key);
 
-double symDecTlweSampleToDouble(Tlwe& in, const TlweKey& key, int torusBase);
+double symDecTlweToDouble(Tlwe& in, const TlweKey& key, int torusBase);
 
-Torus symDecTlweSampleToTorus(Tlwe& in, const TlweKey& key, int torusBase);
+Torus symDecTlweToTorus(Tlwe& in, const TlweKey& key, int torusBase);
 
-Integer symDecTlweSampleToInt(Tlwe& in, const TlweKey& key, int torusBase);
+Integer symDecTlweToInt(Tlwe& in, const TlweKey& key, int torusBase);
 
 Torus calTlweError(Tlwe& in, const TlweKey& key, Torus mu);
 
-void lweAdd(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
+void addTlwe(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
 
-void lweSub(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
+void subTlwe(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
 
-void lweSubTo(Tlwe& output, const Tlwe& input);
+void subTlweInPlace(Tlwe& output, const Tlwe& input);
 
-void tlweCopy(Tlwe& output, const Tlwe& input);
+void copyTlwe(Tlwe& output, const Tlwe& input);
 
-void tlweCLear(Tlwe& tlwe);
+void resetTlweToZero(Tlwe& tlwe);
 
 #endif //HLS_YATFHE_TLWE_H

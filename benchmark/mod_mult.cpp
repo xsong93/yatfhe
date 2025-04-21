@@ -13,7 +13,7 @@
 
 int main() {
     YatfheParameters param {};
-    yatfheInit(param);
+    initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n\n", param.n, param.k, param.N, param.radixBits, param.l);
 
     Ntt64 a = 1234567890123456789ULL;
@@ -63,7 +63,7 @@ int main() {
         poly2.coeffs[j] = genIntUniformDist(1 << 26, 1<< 27);
     }
     COUNT_TIME("NAIVE_MULT",
-               for (auto i = 0; i < 600; i++) { polynomialMulNaiveModQ(navMul, poly0, poly2, 1l<<32);})
+               for (auto i = 0; i < 600; i++) { multIntPolynomialModQ(navMul, poly0, poly2, 1l<<32);})
     COUNT_TIME("NAIVE_MULT32",
-               for (auto i = 0; i < 600; i++) { polynomialMulAccNaiveI32(navMul, poly0, poly2);})
+               for (auto i = 0; i < 600; i++) { multIntPolynomialAcc(navMul, poly0, poly2);})
 }

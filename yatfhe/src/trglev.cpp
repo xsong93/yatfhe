@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void trglevEncSingleSample(Trglev& output, const TrlweKey& trlweKey, const Torus input, const YatfheParameters& param) {
+void encTrglevSingleSample(Trglev& output, const TrlweKey& trlweKey, const Torus input, const YatfheParameters& param) {
     const auto l = output.l;
     for (auto i = 0; i < l; i++) {
         auto inOverR = input << (param.torusBits - (i + 1) * param.radixBits);
@@ -14,7 +14,7 @@ void trglevEncSingleSample(Trglev& output, const TrlweKey& trlweKey, const Torus
     }
 }
 
-void trglevEncMultiSample(Trglev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param) {
+void encTrglevMultiSample(Trglev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param) {
     const auto l = output.l;
     vector<Torus> inputsOverR(inputs.N);
     for (auto i = 0; i < l; i++) {
@@ -25,7 +25,7 @@ void trglevEncMultiSample(Trglev& output, const TrlweKey& trlweKey, const TorusP
     }
 }
 
-void trglevMultConst(Trlwe& output, const Trglev& input, const Integer num, const YatfheParameters& param) {
+void multTrglevWithConst(Trlwe& output, const Trglev& input, const Integer num, const YatfheParameters& param) {
     auto N = output.b.N;
     auto k = output.k;
     DecomposedData d {input.l};
@@ -36,30 +36,13 @@ void trglevMultConst(Trlwe& output, const Trglev& input, const Integer num, cons
             for (auto l1 = 0; l1 < d.l; l1++) {
                 auto& currTglev = (r < k) ? input.trlwes[l1].a[r] : input.trlwes[l1].b;
 //                curr.coeffs[j] += currTglev.coeffs[j] * d.value[l1] * d.sign;
-                curr.coeffs[j] = modAddT32(curr.coeffs[j], modMulT32(currTglev.coeffs[j], d.value[l1] * d.sign));
+                curr.coeffs[j] = addTorus(curr.coeffs[j], multTorus(currTglev.coeffs[j], d.value[l1] * d.sign));
             }
         }
     }
 }
 
-//todo: debug (change to poly conv)
-void trglevDotMultConst(Trlwe& output, const Trglev& input, const vector<Integer>& nums, const YatfheParameters& param) {
-    auto N = output.b.N;
-    auto k = output.k;
-    for (auto j = 0; j < N; j++) {
-        DecomposedData d {input.l};
-        gadgetDecompose(d, nums[j], param);
-        for (auto r = 0; r < k + 1; r++) {
-            auto& curr = (r < k) ? output.a[r] : output.b;
-            for (auto l1 = 0; l1 < d.l; l1++) {
-                auto& currTglev = (r < k) ? input.trlwes[l1].a[r] : input.trlwes[l1].b;
-                curr.coeffs[j] += currTglev.coeffs[j] * d.value[l1] * d.sign;
-            }
-        }
-    }
-}
-
-void decomposedTglevMultConst(Trlwe& output, const Trglev& input, const Integer num, const YatfheParameters& param) {
+void multDecomposedTglevWithConst(Trlwe& output, const Trglev& input, const Integer num, const YatfheParameters& param) {
     const auto N = output.b.N;
     const auto k = output.k;
     const auto lvl0 = input.l;
@@ -76,9 +59,9 @@ void decomposedTglevMultConst(Trlwe& output, const Trglev& input, const Integer 
     for (auto l0 = 0; l0 < lvl0; l0++) {
         for (auto x1 = 0; x1 < N; x1++) {
             for (auto x2 = 0; x2 < k + 1; x2++) {
-                auto& curr = (x2 < k) ? recomp1.rlwes[l0].a[x2] : recomp1.rlwes[l0].b;
+                auto& curr = (x2 < k) ? recomp1.trlwes[l0].a[x2] : recomp1.trlwes[l0].b;
                 for (auto l1 = 0; l1 < lvl1; l1++) {
-                    auto& currDecomp = (x2 < k) ? decompTglev[l1].rlwes[l0].a[x2] : decompTglev[l1].rlwes[l0].b;
+                    auto& currDecomp = (x2 < k) ? decompTglev[l1].trlwes[l0].a[x2] : decompTglev[l1].trlwes[l0].b;
                     curr.coeffs[x1] += (lhs.value[l1] * lhs.sign) * (currDecomp.coeffs[x1]);
                 }
             }

@@ -14,7 +14,7 @@ TEST(PolynomialTest, PolynomialRounding) {
 //    param.torusBase = 8;
 //    param.N = 1024;
 //    param.n = 4;
-    yatfheInit(param);
+    initYatfhe(param);
     TorusPolynomial v {param.N};
     std::vector<Integer> d(param.N);
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
@@ -27,10 +27,10 @@ TEST(PolynomialTest, PolynomialRounding) {
     Integer plain = 3;
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
     TlweKey tlweKey {param.n, 0};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
 
     Tlwe ct {param.n};
-    symEncTlweSample(ct, mu, tlweKey);
+    symEncTlwe(ct, mu, tlweKey);
 
     ScaledTlwe scaledCt {2 * param.N, param.n};
     rescaleTlweFromTorus32(scaledCt, ct);
@@ -43,7 +43,7 @@ TEST(PolynomialTest, PolynomialRounding) {
         rot = (rot - scaledCt.a[i] * tlweKey.s[i]) % (2 * param.N);
     }
     cout << "u*: " << rot << endl;
-    torusPolynomialRotate(rpT, -rot, v);
+    rotateTorusPolynomial(rpT, -rot, v);
     IntPolynomial res {param.N};
     torusPolyToIntPoly(res, rpT, param.torusBase);
     cout << "p: " << intModP(plain, param.torusBase) << endl;
@@ -54,7 +54,7 @@ TEST(PolynomialTest, PolynomialRounding) {
 TEST(PolynomialTest, POLY_MULT) {
     YatfheParameters param {};
     param.N = 64;
-    yatfheInit(param);
+    initYatfhe(param);
     IntPolynomial polyI32A{param.N};
     IntPolynomial polyI32B{param.N};
     IntPolynomial polyI32C{param.N};
@@ -80,9 +80,9 @@ TEST(PolynomialTest, POLY_MULT) {
     printArray(polyI8A.coeffs, "polyI8A");
     printArray(polyI8B.coeffs, "polyI8B");
 
-    polynomialMulAccNaiveI32(polyI32C, polyI32A, polyI32B);
-    polynomialMulAccNaiveT32(polyT32C, polyT32A, polyT32B);
-    polynomialMulAccNaiveI8(polyI8C, polyI8A, polyI8B, 256);
+    multIntPolynomialAcc(polyI32C, polyI32A, polyI32B);
+    multTorusPolynomialAcc(polyT32C, polyT32A, polyT32B);
+    multInt8PolynomialAcc(polyI8C, polyI8A, polyI8B, 256);
 
     printArray(polyI32C.coeffs, "polyI32C");
     printArray(polyT32C.coeffs, "polyT32C");
@@ -93,7 +93,7 @@ TEST(PolynomialTest, POLY_MULT) {
 TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP) {
     YatfheParameters param {};
     param.N = 64;
-    yatfheInit(param);
+    initYatfhe(param);
     TorusPolynomial polyT32A{param.N};
     TorusPolynomial polyT32B{param.N};
     TorusPolynomial polyT32B1{param.N};
@@ -111,13 +111,13 @@ TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP) {
 
     TorusPolynomial BplusB1{param.N};
     TorusPolynomial addBefore{param.N};
-    polynomialAddT32(BplusB1, polyT32B, polyT32B1);
-    polynomialMulNaiveT32(addBefore, polyT32A, BplusB1);
+    addTorusPolynomial(BplusB1, polyT32B, polyT32B1);
+    multTorusPolynomial(addBefore, polyT32A, BplusB1);
 
     TorusPolynomial addAfter{param.N};
-    polynomialMulNaiveT32(polyT32C, polyT32A, polyT32B);
-    polynomialMulNaiveT32(polyT32C1, polyT32A, polyT32B1);
-    polynomialAddT32(addAfter, polyT32C, polyT32C1);
+    multTorusPolynomial(polyT32C, polyT32A, polyT32B);
+    multTorusPolynomial(polyT32C1, polyT32A, polyT32B1);
+    addTorusPolynomial(addAfter, polyT32C, polyT32C1);
 
     printArray(addBefore.coeffs, "addBeforeConv");
     printArray(addAfter.coeffs, "addAfterConv");
@@ -130,7 +130,7 @@ TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP) {
 TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP2) {
     YatfheParameters param {};
     param.N = 64;
-    yatfheInit(param);
+    initYatfhe(param);
     TorusPolynomial polyT32A{param.N};
     TorusPolynomial polyT32B{param.N};
     TorusPolynomial polyT32B1{param.N};
@@ -151,11 +151,11 @@ TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP2) {
 
     // A * (B * C + B1 * C1 + B2 * C2)
     TorusPolynomial bXc{param.N};
-    polynomialMulAccNaiveT32(bXc, polyT32B, polyT32C);
-    polynomialMulAccNaiveT32(bXc, polyT32B1, polyT32C1);
-    polynomialMulAccNaiveT32(bXc, polyT32B2, polyT32C2);
+    multTorusPolynomialAcc(bXc, polyT32B, polyT32C);
+    multTorusPolynomialAcc(bXc, polyT32B1, polyT32C1);
+    multTorusPolynomialAcc(bXc, polyT32B2, polyT32C2);
     TorusPolynomial bXcXA{param.N};
-    polynomialMulNaiveT32(bXcXA, polyT32A, bXc);
+    multTorusPolynomial(bXcXA, polyT32A, bXc);
 
     // (A * B) * C + (A * B1) * C1 + (A * B2) * C2
     TorusPolynomial aXb{param.N};
@@ -165,14 +165,14 @@ TEST(PolynomialTest, POLY_EXTERNAL_SUMPROP2) {
     TorusPolynomial aXb1Xc1{param.N};
     TorusPolynomial aXb2Xc2{param.N};
     TorusPolynomial aDbDc{param.N};
-    polynomialMulNaiveT32(aXb, polyT32A, polyT32B);
-    polynomialMulNaiveT32(aXb1, polyT32A, polyT32B1);
-    polynomialMulNaiveT32(aXb2, polyT32A, polyT32B2);
-    polynomialMulNaiveT32(aXbXc, aXb, polyT32C);
-    polynomialMulNaiveT32(aXb1Xc1, aXb1, polyT32C1);
-    polynomialMulNaiveT32(aXb2Xc2, aXb2, polyT32C2);
-    polynomialAddT32(aDbDc, aXbXc, aXb1Xc1);
-    polynomialAddT32(aDbDc, aDbDc, aXb2Xc2);
+    multTorusPolynomial(aXb, polyT32A, polyT32B);
+    multTorusPolynomial(aXb1, polyT32A, polyT32B1);
+    multTorusPolynomial(aXb2, polyT32A, polyT32B2);
+    multTorusPolynomial(aXbXc, aXb, polyT32C);
+    multTorusPolynomial(aXb1Xc1, aXb1, polyT32C1);
+    multTorusPolynomial(aXb2Xc2, aXb2, polyT32C2);
+    addTorusPolynomial(aDbDc, aXbXc, aXb1Xc1);
+    addTorusPolynomial(aDbDc, aDbDc, aXb2Xc2);
 
     printArray(bXcXA.coeffs, "dotBefore");
     printArray(aDbDc.coeffs, "dotAfter");

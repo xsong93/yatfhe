@@ -7,6 +7,6 @@
 
 #include "yatfhe/yatfhe_parameters.h"
 
-void yatfheInit(YatfheParameters& param);
+void initYatfhe(YatfheParameters& param);
 
 #endif //HLS_YATFHE_INITIALIZER_H

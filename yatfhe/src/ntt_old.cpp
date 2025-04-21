@@ -8,7 +8,7 @@
 using namespace std;
 
 // Function to perform Number Theoretic Transform (NTT)
-void applyNttOld(LagrangePolynomial& out, const IntPolynomial& in) {
+void applyNttOld(NttPolynomial& out, const IntPolynomial& in) {
     auto& input = in.coeffs;
     auto& output = out.coeffs;
     const auto N = out.N;
@@ -39,18 +39,18 @@ void applyNttOld(LagrangePolynomial& out, const IntPolynomial& in) {
     }
 }
 
-void applyNttTorusOld(LagrangePolynomial& out, const TorusPolynomial & in, const int mSize) {
+void applyNttTorusOld(NttPolynomial& out, const TorusPolynomial & in, const int mSize) {
     IntPolynomial intPolynomial(in.N);
     torusPolyToIntPoly(intPolynomial, in, mSize);
     printArray(intPolynomial.coeffs, "intPolynomial@applyNttTorus");
     applyNttOld(out, intPolynomial);
 }
 
-void applyInttOld(IntPolynomial& out, const LagrangePolynomial& in) {
+void applyInttOld(IntPolynomial& out, const NttPolynomial& in) {
     vector<NttType> input(in.coeffs.size());
     copy(in.coeffs.begin(), in.coeffs.end(), input.begin());
     int32_t N = in.N;
-    LagrangePolynomial temp {N};
+    NttPolynomial temp {N};
     vector<NttType>& tmp = temp.coeffs;
     vector<Integer>& output = out.coeffs;
     int inv = 0;
@@ -161,7 +161,7 @@ void modularAccumulateOld(std::vector<uint64_t>& coeffsB, const std::vector<uint
 }
 
 // b = aN * sN
-void calModularInnerProductNttOld(LagrangePolynomial& b, const vector<LagrangePolynomial>& a, const vector<LagrangePolynomial>& s) {
+void calModularInnerProductNttOld(NttPolynomial& b, const vector<NttPolynomial>& a, const vector<NttPolynomial>& s) {
     for (auto i = 0; i < a.size(); i++) {
         modularAccumulateOld(b.coeffs, a[i].coeffs, s[i].coeffs);
     }

@@ -14,22 +14,22 @@ int calApproxCRTError(const std::vector<int>& f_tilde, const std::vector<int>& c
 
 void calGadgetVector(std::vector<long>& w, int Qlow, const std::vector<int>& highModuli);
 
-void exactCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param);
+void decompCrtExact(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param);
 
-void exactCRTDecompIO(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param);
+void decompCrtExactIO(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, const YatfheParameters& param);
 
-void exactCRTReconstruct(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param);
+void reconstructCrtExact(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param);
 
-void exactCRTReconstructIO(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param);
+void reconstructCrtExactIO(std::vector<int32_t>& f_tilde, const std::vector<std::vector<int8_t>>& f, const YatfheParameters& param);
 
-void approxCRTDecomp(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli);
+void decompCrtApprox(std::vector<std::vector<int8_t>>& f, const std::vector<int>& coeffs, int Qlow, const std::vector<int>& lowModuli, const std::vector<int>& highModuli);
 
-int32_t approxCRTReconstructSingle(const std::vector<int8_t>& f, const YatfheParameters& param);
+int32_t reconstructCrtApproxSingleEle(const std::vector<int8_t>& f, const YatfheParameters& param);
 
-void approxCRTReconstructPoly(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q);
+void reconstructCrtApproxVec(std::vector<int>& f_tilde, const std::vector<std::vector<int8_t>>& f, const std::vector<long>& w, long q);
 
-void trlweApproxCRTDecomp(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param);
+void decompTrlweApproxCrt(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param);
 
-void trlweApproxCRTBroadcast(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param);
+void broadcastTrlweApproxCrt(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_CRT_H

@@ -11,21 +11,22 @@
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 #include "yautil/time_counter.h"
+#include "yatfhe/blind_rotate.h"
 
 TEST(BLIND_ROT, BLIND_ROT) {
     YatfheParameters param {};
     param.n = 64;
     param.group = 2;
-    yatfheInit(param);
+    initYatfhe(param);
 
     // key gen
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
     BootstrappingKey bsk {param};
-    bootstrappingKeyGen(bsk, trgswKey, tlweKey, param);
+    genBootstrappingKey(bsk, trgswKey, tlweKey, param);
 
     // data gen
     Trlwe in2 {param.k, param.N};
@@ -60,7 +61,7 @@ TEST(BLIND_ROT, BLIND_ROT) {
         }
     }
     cout << "rot:" << rot << endl;
-    trlweRotate(rotIn, in2, rot);
+    rotateTrlwe(rotIn, in2, rot);
     symDecTrlweToInt(rotInP, rotIn, trlweKey, param.torusBase);
     printArray(rotInP.coeffs, "expect");
 
@@ -70,10 +71,10 @@ TEST(BLIND_ROT, BLIND_ROT) {
     Trgsw trgswXRot {param};
     Trlwe trlweInCopy {param.k, param.N};
     Trlwe trlwe {param.k, param.N};
-    trgswEncrypt(trgswXRot, 1, trgswKey, 0, param);
-    trgswRotate(trgswXRot, rot, param);
+    encryptTrgsw(trgswXRot, 1, trgswKey, 0, param);
+    rotateTrgsw(trgswXRot, rot, param);
     symEncTrlweMultiSample(trlweInCopy, trlweKey, plainT.coeffs);
-    trgswExternalProduct(trlwe, trgswXRot, trlweInCopy, param);
+    externalProductTrgsw(trlwe, trgswXRot, trlweInCopy, param);
     IntPolynomial trlweDec {param.N};
     symDecTrlweToInt(trlweDec, trlwe, trlweKey, param.torusBase);
     printArray(trlweDec.coeffs, "encXRot");
@@ -95,16 +96,16 @@ TEST(BLIND_ROT, BLIND_ROT_APPROX_CRT) {
     param.q = Q_CRT;
     param.n = 64;
     param.N = 32;
-    yatfheInit(param);
+    initYatfhe(param);
 
     // key gen
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
     BootstrappingKeyCRT bsKeyCRT{param};
-    bootstrappingKeyGenApproxCRT(bsKeyCRT, trgswKey, tlweKey, param);
+    genBootstrappingKeyApproxCrt(bsKeyCRT, trgswKey, tlweKey, param);
 
     // data gen
     Trlwe in2 {param.k, param.N};
@@ -141,14 +142,14 @@ TEST(BLIND_ROT, BLIND_ROT_APPROX_CRT) {
         }
     }
     cout << "rot:" << rot << endl;
-    trlweRotate(rotIn, in2, rot);
+    rotateTrlwe(rotIn, in2, rot);
     symDecTrlweToInt(rotInP, rotIn, trlweKey, param.torusBase);
     printArray(rotInP.coeffs, "expect");
 
-    trlweMCRTDecomp(rotCRT, in2, param);
+    decompTrlweMcrt(rotCRT, in2, param);
     blindRotateApproxCRT(rotCRT, bsKeyCRT.bsk8, sTlwe, param);
-    trlweMCRTToCRT(rotCRT, param);
-    trlweCRTRecomp(resMCRT, rotCRT, param);
+    trlweMcrtToCrt(rotCRT, param);
+    recompTrlweCrt(resMCRT, rotCRT, param);
 
     // dec
     IntPolynomial decMP {param.N};
@@ -167,16 +168,16 @@ TEST(BLIND_ROT, BLIND_ROT_APPROX_CRT_NTT) {
     param.q = Q_CRT;
 //    param.n = 64;
 //    param.N = 32;
-    yatfheInit(param);
+    initYatfhe(param);
 
     // key gen
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
     BootstrappingKeyCRT bsKeyCRT{param};
-    bootstrappingKeyGenApproxCRT(bsKeyCRT, trgswKey, tlweKey, param);
+    genBootstrappingKeyApproxCrt(bsKeyCRT, trgswKey, tlweKey, param);
 
     // data gen
     Trlwe in2 {param.k, param.N};
@@ -213,14 +214,14 @@ TEST(BLIND_ROT, BLIND_ROT_APPROX_CRT_NTT) {
         }
     }
     cout << "rot:" << rot << endl;
-    trlweRotate(rotIn, in2, rot);
+    rotateTrlwe(rotIn, in2, rot);
     symDecTrlweToInt(rotInP, rotIn, trlweKey, param.torusBase);
     printArray(rotInP.coeffs, "expect");
 
-    trlweMCRTDecomp(rotCRT, in2, param);
+    decompTrlweMcrt(rotCRT, in2, param);
     blindRotateApproxCRTNtt(rotCRT, bsKeyCRT.bskCRT, sTlwe, param);
-    trlweMCRTToCRT(rotCRT, param);
-    trlweCRTRecomp(resMCRT, rotCRT, param);
+    trlweMcrtToCrt(rotCRT, param);
+    recompTrlweCrt(resMCRT, rotCRT, param);
 
     // dec
     IntPolynomial decMP {param.N};
@@ -238,28 +239,28 @@ TEST(BLIND_ROT, BLIND_ROT_LUT) {
     YatfheParameters param {};
     param.n = 64;
     param.group = 2;
-    yatfheInit(param);
+    initYatfhe(param);
 
     // key gen
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
     BootstrappingKey bsk {param};
-    bootstrappingKeyGen(bsk, trgswKey, tlweKey, param);
+    genBootstrappingKey(bsk, trgswKey, tlweKey, param);
     TlweKeySwitchingKey ksk {param};
     TlweKey tlweKsKey = tlweKey;
     tlweKsKey.sigma = param.rlweStdDev;
-    tlweKeySwitchingKeyGen(ksk, trlweKey, tlweKsKey, param);
+    genTlweKeySwitchingKey(ksk, trlweKey, tlweKsKey, param);
 
     // data gen
     Integer in = 3;
     Torus mu = modSwitchToTorus32(in, param.torusBase);
     cout << "in: " << in << endl;
     Tlwe tlwe {param.n};
-    symEncTlweSample(tlwe, mu, tlweKey);
-    auto decPre = symDecTlweSampleToInt(tlwe, tlweKey, param.torusBase);
+    symEncTlwe(tlwe, mu, tlweKey);
+    auto decPre = symDecTlweToInt(tlwe, tlweKey, param.torusBase);
     cout << "decPre: " << decPre << endl;
     ScaledTlwe sTlwe {param.N * 2, param.n};
     printTlweAB(tlwe, "tlwe");
@@ -283,7 +284,7 @@ TEST(BLIND_ROT, BLIND_ROT_LUT) {
             rot += sTlwe.a[i];
         }
     }
-    torusPolynomialRotate(rotIn, rot, in2.b);
+    rotateTorusPolynomial(rotIn, rot, in2.b);
     torusPolyToIntPoly(rotInP, rotIn, param.torusBase);
     printArray(rotInP.coeffs, "expect");
 
@@ -299,10 +300,10 @@ TEST(BLIND_ROT, BLIND_ROT_LUT) {
     Tlwe tmp {ksk.nCurrKey};
     Tlwe tlweKs {ksk.nCurrKey};
     extractTlweFromTrlwe(tmp, in2, param.driftPhase);
-    tlweKeySwitch(tlweKs, ksk, tmp, param);
+    switchKeyForTlwe(tlweKs, ksk, tmp, param);
 
     // tlwe dec
-    auto out = symDecTlweSampleToInt(tlweKs, tlweKey, param.torusBase);
+    auto out = symDecTlweToInt(tlweKs, tlweKey, param.torusBase);
     cout << "out: " << out << endl;
 
     //verify

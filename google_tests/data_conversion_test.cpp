@@ -83,18 +83,18 @@ TEST(DataConvTest, intTorusTest) {
 
 TEST(DataConvTest, SCALE_TLWE) {
     YatfheParameters param {};
-    yatfheInit(param);
+    initYatfhe(param);
 
     for (size_t t = 0; t < 100; t++) {
         TlweKey tlweKey{param.n, param.lweStdDev};
 
-        lweKeyGen(tlweKey);
+        genTlweKey(tlweKey);
 
         Integer plain = 2;
         Torus mu = modSwitchToTorus32(plain, param.torusBase);
 
         Tlwe input{param.n};
-        symEncTlweSample(input, mu, tlweKey);
+        symEncTlwe(input, mu, tlweKey);
 
         ScaledTlwe inputModN2{param.N * 2, param.n};
         rescaleTlweFromTorus32(inputModN2, input);

@@ -12,15 +12,15 @@
 TEST(KSKTest, KSKTest) {
     YatfheParameters param {};
     param.torusBase = 128;
-    yatfheInit(param);
+    initYatfhe(param);
     TlweKey tlweKey {param.n, param.lweStdDev};
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     TlweKeySwitchingKey ksKey {param.N * param.k, param.n, param.ksLevel};
-    lweKeyGen(tlweKey);
-    trlweKeyGen(trlweKey);
+    genTlweKey(tlweKey);
+    genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
     tlweKsKey.sigma = param.rlweStdDev;
-    tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKsKey, param);
+    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TlweKey inKey(param.k * param.N, param.lweStdDev);
     convertTrlweKeyToTlweKey(inKey, trlweKey);
     for (int i = - param.torusBase / 2; i < param.torusBase / 2; i++) {
@@ -28,9 +28,9 @@ TEST(KSKTest, KSKTest) {
         Torus mu = modSwitchToTorus32(plainMsg, param.torusBase);
         Tlwe input {param.N * param.k};
         Tlwe output {param.n};
-        symEncTlweSample(input, mu, inKey);
-        tlweKeySwitch(output, ksKey, input, param);
-        auto res = symDecTlweSampleToInt(output, tlweKey, param.torusBase);
+        symEncTlwe(input, mu, inKey);
+        switchKeyForTlwe(output, ksKey, input, param);
+        auto res = symDecTlweToInt(output, tlweKey, param.torusBase);
         printf("Input plain: %d, Output res: %d.\n", plainMsg, res);
         ASSERT_EQ(plainMsg, res);
     }

@@ -47,11 +47,11 @@ int64_t barrettReduceT32(int64_t in);
 
 int64_t montgomoryReduceT32(int64_t in);
 
-Torus modAddT32(Torus in1, Torus in2);
+Torus addTorus(Torus in1, Torus in2);
 
-Torus modSubT32(Torus in1, Torus in2);
+Torus subTorus(Torus in1, Torus in2);
 
-Torus modMulT32(Torus in1, Torus in2);
+Torus multTorus(Torus in1, Torus in2);
 
 int64_t modInverse(int64_t a, int64_t p);
 
@@ -121,7 +121,7 @@ template <typename T>
 void vectorAdd(vector<T>& output, vector<T>& input1, vector<T>& input2) {
     for (auto i = 0; i < output.size(); i++) {
 //        output[i] = input1[i] + input2[i];
-        output[i] = modAddT32(input1[i], input2[i]);
+        output[i] = addTorus(input1[i], input2[i]);
     }
 }
 
@@ -129,7 +129,7 @@ template <typename T>
 void vectorSub(vector<T>& output, vector<T>& input1, vector<T>& input2) {
     for (auto i = 0; i < output.size(); i++) {
 //        output[i] = input1[i] - input2[i];
-        output[i] = modSubT32(input1[i], input2[i]);
+        output[i] = subTorus(input1[i], input2[i]);
     }
 }
 

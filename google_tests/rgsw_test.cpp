@@ -16,18 +16,18 @@
 
 TEST(RgswTest, RgswEncDecTest) {
     YatfheParameters param {};
-    yatfheInit(param);
+    initYatfhe(param);
 
     // key gen
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // trgsw enc
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};
     Integer plain = 7;
-    trgswEncryptNtt(trgsw, trgswDft, plain, trgswKey, 0, param);
+    encryptTrgswNtt(trgsw, trgswDft, plain, trgswKey, 0, param);
 //    trgswEncrypt(trgsw, param, trgswKey, plain);
 
 //
@@ -41,7 +41,7 @@ TEST(RgswTest, RgswEncDecTest) {
 //    }
 
     // trgsw dec
-    Integer dec = trgswDecryptNtt(trgswDft, param, trgswKey);
+    Integer dec = decryptTrgswNtt(trgswDft, param, trgswKey);
 //    Integer dec = trgswDecrypt(trgsw, param, trgswKey);
     cout << "plain: " << plain << endl;
     cout << "dec: " << dec << endl;
@@ -51,12 +51,12 @@ TEST(RgswTest, RgswEncDecTest) {
 
 TEST(RgswTest, RGSW_ADD) {
     YatfheParameters param{};
-    yatfheInit(param);
+    initYatfhe(param);
 
     // key gen
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // trgsw enc
     Trgsw trgsw1{param}, trgsw2{param}, res{param};
@@ -65,48 +65,48 @@ TEST(RgswTest, RGSW_ADD) {
     Integer plain1, plain2;
     plain1 = 1;
     plain2 = 0;
-    trgswEncryptNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
-    trgswEncryptNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
-    trgswAdd(res, trgsw1, trgsw2);
-    trgswAddNtt(resDft, trgswDft1, trgswDft2);
+    encryptTrgswNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
+    encryptTrgswNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
+    addTrgsw(res, trgsw1, trgsw2);
+    addTrgswNtt(resDft, trgswDft1, trgswDft2);
 
     // trgsw dec
-    dec = trgswDecrypt(res, param, trgswKey);
+    dec = decryptTrgsw(res, param, trgswKey);
     plainAdd = intModP(plain1 + plain2, param.torusBase);
     cout << "plain: " << plainAdd << endl;
     cout << "dec: " << dec << endl;
     ASSERT_EQ(plainAdd, dec);
 
-    dec = trgswDecryptNtt(resDft, param, trgswKey);
+    dec = decryptTrgswNtt(resDft, param, trgswKey);
     ASSERT_EQ(plainAdd, dec);
 
     plain1 = 3;
     plain2 = -1;
-    trgswEncryptNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
-    trgswEncryptNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
-    trgswAdd(res, trgsw1, trgsw2);
-    trgswAddNtt(resDft, trgswDft1, trgswDft2);
+    encryptTrgswNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
+    encryptTrgswNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
+    addTrgsw(res, trgsw1, trgsw2);
+    addTrgswNtt(resDft, trgswDft1, trgswDft2);
 
     // trgsw dec
-    dec = trgswDecrypt(res, param, trgswKey);
+    dec = decryptTrgsw(res, param, trgswKey);
     plainAdd = intModP(plain1 + plain2, param.torusBase);
     cout << "plain: " << plainAdd << endl;
     cout << "dec: " << dec << endl;
     ASSERT_EQ(plainAdd, dec);
 
-    dec = trgswDecryptNtt(resDft, param, trgswKey);
+    dec = decryptTrgswNtt(resDft, param, trgswKey);
     ASSERT_EQ(plainAdd, dec);
     printBanner("RGSW_ADD");
 }
 
 TEST(RgswTest, RGSW_SUB) {
     YatfheParameters param{};
-    yatfheInit(param);
+    initYatfhe(param);
 
     // key gen
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // trgsw enc
     Trgsw trgsw1{param}, trgsw2{param}, res{param};
@@ -115,36 +115,36 @@ TEST(RgswTest, RGSW_SUB) {
     Integer plain1, plain2;
     plain1 = 1;
     plain2 = 0;
-    trgswEncryptNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
-    trgswEncryptNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
-    trgswSub(res, trgsw1, trgsw2);
-    trgswSubNtt(resDft, trgswDft1, trgswDft2);
+    encryptTrgswNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
+    encryptTrgswNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
+    subTrgsw(res, trgsw1, trgsw2);
+    subTrgswNtt(resDft, trgswDft1, trgswDft2);
 
     // trgsw dec
-    dec = trgswDecrypt(res, param, trgswKey);
+    dec = decryptTrgsw(res, param, trgswKey);
     plainSub = intModP(plain1 - plain2, param.torusBase);
     cout << "plain: " << plainSub << endl;
     cout << "dec: " << dec << endl;
     ASSERT_EQ(plainSub, dec);
 
-    dec = trgswDecryptNtt(resDft, param, trgswKey);
+    dec = decryptTrgswNtt(resDft, param, trgswKey);
     ASSERT_EQ(plainSub, dec);
 
     plain1 = 1;
     plain2 = -1;
-    trgswEncryptNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
-    trgswEncryptNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
-    trgswSub(res, trgsw1, trgsw2);
-    trgswSubNtt(resDft, trgswDft1, trgswDft2);
+    encryptTrgswNtt(trgsw1, trgswDft1, plain1, trgswKey, 0, param);
+    encryptTrgswNtt(trgsw2, trgswDft2, plain2, trgswKey, 0, param);
+    subTrgsw(res, trgsw1, trgsw2);
+    subTrgswNtt(resDft, trgswDft1, trgswDft2);
 
     // trgsw dec
-    dec = trgswDecrypt(res, param, trgswKey);
+    dec = decryptTrgsw(res, param, trgswKey);
     plainSub = intModP(plain1 - plain2, param.torusBase);
     cout << "plain: " << plainSub << endl;
     cout << "dec: " << dec << endl;
     ASSERT_EQ(plainSub, dec);
 
-    dec = trgswDecryptNtt(resDft, param, trgswKey);
+    dec = decryptTrgswNtt(resDft, param, trgswKey);
     ASSERT_EQ(plainSub, dec);
     printBanner("RGSW_SUB");
 }
@@ -152,30 +152,30 @@ TEST(RgswTest, RGSW_SUB) {
 TEST(RgswTest, RGSW_MCRT_DECOMPOSITION) {
     YatfheParameters param {};
     param.q = Q_CRT;
-    yatfheInit(param);
+    initYatfhe(param);
 
     // key gen
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
 
     // trgsw enc
     Trgsw trgsw {param};
     TrgswDft trgswDft {param};
     Integer plain = 7;
-    trgswEncrypt(trgsw, plain, trgswKey, 0, param);
+    encryptTrgsw(trgsw, plain, trgswKey, 0, param);
 
     // GD
     std::vector<Trgsw8> trgswD(param.d, Trgsw8(param.dh, param.k, param.N));
     Trgsw trgswRe {param};
-    trgswMCRTDecomp(trgswD, trgsw, param);
-    trgswMCRTToCRT(trgswD, param);
-    trgswCRTRecomp(trgswRe, trgswD, param);
+    decompTrgswMcrt(trgswD, trgsw, param);
+    trgswMcrtToCrt(trgswD, param);
+    recompTrgswCrt(trgswRe, trgswD, param);
     printTrgsw(trgsw, "trgsw");
     printTrgsw(trgswRe, "trgswRe");
 
     // trgsw dec
-    Integer dec = trgswDecrypt(trgswRe, param, trgswKey);
+    Integer dec = decryptTrgsw(trgswRe, param, trgswKey);
     cout << "plain: " << plain << endl;
     cout << "dec: " << dec << endl;
     ASSERT_EQ(plain, dec);
@@ -188,20 +188,20 @@ TEST(RgswTest, RgswMultTestNaive) {
 //    param.radixBits = 4;
 //    param.l = 3;
 //    param.k = 1;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         Trgsw trgsw {param};
         Integer mu1 = genIntUniformDist(0, 3);
-        trgswEncrypt(trgsw, mu1, trgswKey, 0, param);
-        printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
+        encryptTrgsw(trgsw, mu1, trgswKey, 0, param);
+        printf( "trgsw dec: %d.\n", decryptTrgsw(trgsw, param, trgswKey));
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -223,7 +223,7 @@ TEST(RgswTest, RgswMultTestNaive) {
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult
-        COUNT_TIME("trgswExternalProduct", trgswExternalProduct(out, trgsw, in2, param);)
+        COUNT_TIME("trgswExternalProduct", externalProductTrgsw(out, trgsw, in2, param);)
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -243,21 +243,21 @@ TEST(RgswTest, RgswMultTestNTT) {
 //    param.k = 8;
 //    param.N = 128;
     printf("n:%d, k:%d, N:%d, b:%d, l:%d", param.n, param.k, param.N, param.radixBits, param.l);
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
         Integer mu1 = genIntUniformDist(0, 3);
-        trgswEncryptNtt(trgsw, trgswDft, mu1, trgswKey, 0, param);
-        printf( "trgsw dec: %d.\n", trgswDecryptNtt(trgswDft, param, trgswKey));
+        encryptTrgswNtt(trgsw, trgswDft, mu1, trgswKey, 0, param);
+        printf( "trgsw dec: %d.\n", decryptTrgswNtt(trgswDft, param, trgswKey));
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -282,7 +282,7 @@ TEST(RgswTest, RgswMultTestNTT) {
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult ntt
-        COUNT_TIME("trgswExternalProductNtt", trgswExternalProductNtt(out, trgswDft, in2, param);)
+        COUNT_TIME("trgswExternalProductNtt", externalProductTrgswNtt(out, trgswDft, in2, param);)
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -308,19 +308,19 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE) {
 //    param.radixBits = 10;
 //    param.l = 2;
 //    param.k = 3;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         TrgswMP trgswMP {param};
         Integer mu1 = 1;
-        trgswMPEncrypt(trgswMP, mu1, trgswKey, 0, param);
+        encryptTrgswMP(trgswMP, mu1, trgswKey, 0, param);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -342,7 +342,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE) {
         printArray(decPreP.coeffs, "mu in");
 
         // trgsw mult
-        COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProduct(out, trgswMP, in2, param);)
+        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, trgswMP, in2, param);)
 //        printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -362,20 +362,20 @@ TEST(RgswTest, RGSWMP_MULT_NTT) {
 //    param.k = 8;
 //    param.N = 128;
     printf("n:%d, k:%d, N:%d, b:%d, l:%d", param.n, param.k, param.N, param.radixBits, param.l);
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         TrgswMP trgsw {param};
         TrgswMPDft trgswDft {param};
         Integer mu1 = genIntUniformDist(0, 3);
-        trgswMPEncryptNtt(trgsw, trgswDft, mu1, trgswKey, 0, param);
+        encryptTrgswMPNtt(trgsw, trgswDft, mu1, trgswKey, 0, param);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -397,7 +397,7 @@ TEST(RgswTest, RGSWMP_MULT_NTT) {
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult ntt
-        COUNT_TIME("trgswMPExternalProductNtt", trgswMPExternalProductNtt(out, trgswDft, in2, param);)
+        COUNT_TIME("trgswMPExternalProductNtt", externalProductTrgswMPNtt(out, trgswDft, in2, param);)
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -420,23 +420,23 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
     YatfheParameters param {};
     param.lweStdDev = 0;
     param.rlweStdDev = 0;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         TrgswMP trgswMP1 {param};
         Integer mu1 = 1;
-        trgswMPEncrypt(trgswMP1, mu1, trgswKey, 0, param);
+        encryptTrgswMP(trgswMP1, mu1, trgswKey, 0, param);
 
         TrgswMP trgswMP2 {param};
         Integer mu2 = 1;
-        trgswMPEncrypt(trgswMP2, mu2, trgswKey, 0, param);
+        encryptTrgswMP(trgswMP2, mu2, trgswKey, 0, param);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -459,8 +459,8 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
         // trgsw mult
         TrgswMP tmp{param};
         Trlwe out{param.k, param.N};
-        COUNT_TIME("trgswMPInternalProduct", trgswMPInternalProduct(tmp, trgswMP1, trgswMP2, param);)
-        COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProduct(out, tmp, in2, param);)
+        COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMP(tmp, trgswMP1, trgswMP2, param);)
+        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, tmp, in2, param);)
 
 
         // trlwe dec aft-mult
@@ -479,24 +479,24 @@ TEST(RgswTest, RGSWMP_INTERMULT_NTT) {
     YatfheParameters param {};
     param.lweStdDev = 0;
     param.rlweStdDev = 0;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey{param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         TrgswMP trgswMP1{param};
         Integer mu1 = 1;
-        trgswMPEncrypt(trgswMP1, mu1, trgswKey, 0, param);
+        encryptTrgswMP(trgswMP1, mu1, trgswKey, 0, param);
 
         TrgswMP trgswMP2{param};
         TrgswMPDft trgswMP2Dft{param};
         Integer mu2 = 0;
-        trgswMPEncryptNtt(trgswMP2, trgswMP2Dft, mu2, trgswKey, 0, param);
+        encryptTrgswMPNtt(trgswMP2, trgswMP2Dft, mu2, trgswKey, 0, param);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -519,8 +519,8 @@ TEST(RgswTest, RGSWMP_INTERMULT_NTT) {
         // trgsw mult
         TrgswMP tmp{param};
         Trlwe out{param.k, param.N};
-        COUNT_TIME("trgswMPInternalProduct", trgswMPInternalProductNtt(tmp, trgswMP1, trgswMP2Dft, param);)
-        COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProduct(out, tmp, in2, param);)
+        COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMPNtt(tmp, trgswMP1, trgswMP2Dft, param);)
+        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, tmp, in2, param);)
 
 
         // trlwe dec aft-mult
@@ -544,14 +544,14 @@ TEST(RgswTest, RGSW_MULT_NAIVE_CHAIN_NTT) {
     // param.lweStdDev = 0;
     // param.rlweStdDev = 0;
 //    param.k = 3;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         int loop = 4;
@@ -561,7 +561,7 @@ TEST(RgswTest, RGSW_MULT_NAIVE_CHAIN_NTT) {
         for (size_t i = 0; i < loop; i++) {
             Integer mui = 3;
             mu *= mui;
-            trgswEncryptNtt(trgsws[i], trgswDfts[i], mui, trgswKey, 0, param);
+            encryptTrgswNtt(trgsws[i], trgswDfts[i], mui, trgswKey, 0, param);
         }
         cout << "mu: " << mu << endl;
         // trlwe enc
@@ -587,7 +587,7 @@ TEST(RgswTest, RGSW_MULT_NAIVE_CHAIN_NTT) {
         Trlwe tmp{param.k, param.N};
         for (size_t i = 0; i < loop; i++) {
             tmp = Trlwe{param.k, param.N};
-            trgswExternalProductNtt(tmp, trgswDfts[i], in2, param);
+            externalProductTrgswNtt(tmp, trgswDfts[i], in2, param);
             swap(in2, tmp);
         }
 //        printTrlweAB(out, "out");
@@ -611,14 +611,14 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_CHAIN_NTT) {
 //    param.radixBits = 10;
     // param.l = 4;
 //    param.k = 3;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         int loop = 4;
@@ -628,7 +628,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_CHAIN_NTT) {
         for (size_t i = 0; i < loop; i++) {
             Integer mui = 3;
             mu *= mui;
-            trgswMPEncryptNtt(trgsws[i], trgswDfts[i], mui, trgswKey, 0, param);
+            encryptTrgswMPNtt(trgsws[i], trgswDfts[i], mui, trgswKey, 0, param);
         }
         cout << "mu: " << mu << endl;
         // trlwe enc
@@ -653,7 +653,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_CHAIN_NTT) {
         Trlwe tmp{param.k, param.N};
         for (size_t i = 0; i < loop; i++) {
             tmp = Trlwe{param.k, param.N};
-            trgswMPExternalProductNtt(tmp, trgswDfts[i], in2, param);
+            externalProductTrgswMPNtt(tmp, trgswDfts[i], in2, param);
             swap(in2, tmp);
         }
 //        printTrlweAB(out, "out");
@@ -680,14 +680,14 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
     // param.lweStdDev = 0;
     // param.rlweStdDev = 0;
 //    param.k = 3;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         int loop = 1;
@@ -696,7 +696,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
         for (size_t i = 0; i < loop; i++) {
             Integer mui = 3;
             mu *= mui;
-            trgswMPEncryptLow(trgsws[i], mui, trgswKey, param);
+            encryptLowTrgswMP(trgsws[i], mui, trgswKey, param);
         }
         cout << "mu: " << mu << endl;
         // trlwe enc
@@ -725,7 +725,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
         DecomposedTrlwe tmp{param};
         for (size_t i = 0; i < loop; i++) {
             tmp = DecomposedTrlwe{param};
-            trgswMPExternalProductDecomp(tmp, trgsws[i], outD, param);
+            externalProductTrgswMPDecomp(tmp, trgsws[i], outD, param);
             swap(outD, tmp);
         }
 //        COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProductDecomp(tmp, trgswMP, in2D, param);)
@@ -750,23 +750,23 @@ TEST(RgswTest, RGSW_ROT) {
 //    param.radixBits = 4;
 //    param.l = 3;
 //    param.k = 1;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey{param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         Trgsw trgsw{param};
 //        Integer mu1 = genIntUniformDist(0, 3);
         Integer mu1 = 1;
         int rotN = 1;
-        trgswEncrypt(trgsw, mu1, trgswKey, 1, param);
+        encryptTrgsw(trgsw, mu1, trgswKey, 1, param);
 //        COUNT_TIME("trgswRotate", trgswRotate(trgsw, rotN, param);)
-        printf("trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
+        printf("trgsw dec: %d.\n", decryptTrgsw(trgsw, param, trgswKey));
 
         // trlwe enc
         Trlwe in2{param.k, param.N};
@@ -788,7 +788,7 @@ TEST(RgswTest, RGSW_ROT) {
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult
-        COUNT_TIME("trgswExternalProduct", trgswExternalProduct(out, trgsw, in2, param);)
+        COUNT_TIME("trgswExternalProduct", externalProductTrgsw(out, trgsw, in2, param);)
 //        printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -799,7 +799,7 @@ TEST(RgswTest, RGSW_ROT) {
 
         // rot back
         TorusPolynomial res{param.N};
-        intPolynomialRotate(res, -rotN, decAftP, param.torusBase);
+        rotateIntPolynomial(res, -rotN, decAftP, param.torusBase);
         printArray(res.coeffs, "res");
         for (auto i = 0 ; i < res.N; i++) {
             ASSERT_EQ(multPlain.coeffs[i], res.coeffs[i]);
@@ -812,19 +812,19 @@ TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
     YatfheParameters param {};
     param.q = Q_CRT;
 //    param.N = 32;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         Trgsw trgsw {param};
         Integer mu1 = genIntUniformDist(0, 3);
-        trgswEncryptApproxCRT(trgsw, param, trgswKey, mu1);
+        encryptTrgswApproxCRT(trgsw, param, trgswKey, mu1);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -840,18 +840,18 @@ TEST(RgswTest, RGSW_MULT_MCRT_NAIVE) {
 
         // GD
         std::vector<Trlwe8> trlweD(param.d, Trlwe8{param.k, param.N});
-        trlweMCRTDecomp(trlweD, in2, param);
+        decompTrlweMcrt(trlweD, in2, param);
         std::vector<Trgsw8> trgswD(param.d, Trgsw8(param.dh, param.k, param.N));
-        trgswMCRTDecomp(trgswD, trgsw, param);
+        decompTrgswMcrt(trgswD, trgsw, param);
 
         // trgsw mult
         std::vector<Trlwe8> outD(param.d, Trlwe8{param.k, param.N});
-        COUNT_TIME("trgswExternalProductApproxCRT", trgswExternalProductApproxCRT(outD, trgswD, trlweD, param);)
+        COUNT_TIME("trgswExternalProductApproxCRT", externalProductTrgswApproxCrt(outD, trgswD, trlweD, param);)
 
         // Recomp
         Trlwe out {param.k, param.N};
-        trlweMCRTToCRT(outD, param);
-        trlweCRTRecomp(out, outD, param);
+        trlweMcrtToCrt(outD, param);
+        recompTrlweCrt(out, outD, param);
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -871,19 +871,19 @@ TEST(RgswTest, RGSW_MULT_MCRT_NTT) {
     YatfheParameters param {};
     param.q = Q_CRT;
 //    param.N = 32;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         Trgsw trgsw {param};
         Integer mu1 = genIntUniformDist(0, 3);
-        trgswEncryptApproxCRT(trgsw, param, trgswKey, mu1);
+        encryptTrgswApproxCRT(trgsw, param, trgswKey, mu1);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -899,9 +899,9 @@ TEST(RgswTest, RGSW_MULT_MCRT_NTT) {
 
         // GD
         std::vector<Trlwe8> trlweD(param.d, Trlwe8{param.k, param.N});
-        trlweMCRTDecomp(trlweD, in2, param);
+        decompTrlweMcrt(trlweD, in2, param);
         std::vector<Trgsw8> trgswD(param.d, Trgsw8(param.dh, param.k, param.N));
-        trgswMCRTDecomp(trgswD, trgsw, param);
+        decompTrgswMcrt(trgswD, trgsw, param);
 
         // NTT
         std::vector<TrgswDft24> trgswDDft(param.d, TrgswDft24(param.dh, param.k, param.N));
@@ -912,12 +912,12 @@ TEST(RgswTest, RGSW_MULT_MCRT_NTT) {
 
         // trgsw mult
         std::vector<Trlwe8> outD(param.d, Trlwe8{param.k, param.N});
-        COUNT_TIME("trgswExternalProductApproxCRTNtt", trgswExternalProductApproxCRTNtt(outD, trgswDDft, trlweD, param);)
+        COUNT_TIME("trgswExternalProductApproxCRTNtt", externalProductTrgswApproxCrtNtt(outD, trgswDDft, trlweD, param);)
 
         // Recomp
         Trlwe out {param.k, param.N};
-        trlweMCRTToCRT(outD, param);
-        trlweCRTRecomp(out, outD, param);
+        trlweMcrtToCrt(outD, param);
+        recompTrlweCrt(out, outD, param);
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -940,27 +940,27 @@ TEST(RgswTest, RgswMultTestNTT14) {
 //    param.l = 4;
     param.l2 = 4;
     printf("n:%d, k:%d, N:%d, b:%d, l:%d", param.n, param.k, param.N, param.radixBits, param.l);
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
         cout << "iter: " << ti << endl;
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
 //        Integer mu1 = genIntUniformDist(1, 3);
         Integer mu1 = 3;
-        trgswEncryptNtt(trgsw, trgswDft, mu1, trgswKey, 0, param);
+        encryptTrgswNtt(trgsw, trgswDft, mu1, trgswKey, 0, param);
 
         Trlgsw trlgsw {param};
         TrlgswDft14 trlgswDft14 {param};
-        trlgswEncryptNtt14(trlgsw, trlgswDft14, param, trgswKey, mu1);
+        encryptTrlgswNtt(trlgsw, trlgswDft14, param, trgswKey, mu1);
 
-        printf( "trgsw dec: %d.\n", trgswDecryptNtt(trgswDft, param, trgswKey));
+        printf( "trgsw dec: %d.\n", decryptTrgswNtt(trgswDft, param, trgswKey));
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -982,9 +982,9 @@ TEST(RgswTest, RgswMultTestNTT14) {
         Trlwe out {param.k, param.N};
         Trlwe out14p {param.k, param.N};
         Trlwe out14 {param.k, param.N};
-        COUNT_TIME("trgswExternalProductNtt", trgswExternalProductNtt(out, trgswDft, in2, param);)
-        trlgswExternalProduct(out14p, trlgsw, in2, param);
-        COUNT_TIME("trlgswExternalProductNtt14", trlgswExternalProductNtt14(out14, trlgswDft14, in2, param);)
+        COUNT_TIME("trgswExternalProductNtt", externalProductTrgswNtt(out, trgswDft, in2, param);)
+        externalProductTrlgsw(out14p, trlgsw, in2, param);
+        COUNT_TIME("trlgswExternalProductNtt14", externalProductTrlgswNtt(out14, trlgswDft14, in2, param);)
 
         printTrlweAB(out, "out");
         printTrlweAB(out14p, "out14p");

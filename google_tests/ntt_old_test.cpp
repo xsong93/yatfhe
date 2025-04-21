@@ -28,7 +28,7 @@ TEST(NttOldTest, NaiveArithTest) {
         printArray(poly0.coeffs, "poly0");
         printArray(poly2.coeffs, "poly2");
 
-        polynomialMulNaiveModQ(navMul, poly0, poly2, 1l << 32);
+        multIntPolynomialModQ(navMul, poly0, poly2, 1l << 32);
         printArray(navMul.coeffs, "navMul");
 
 
@@ -47,11 +47,11 @@ TEST(NttOldTest, NaiveArithTest) {
 TEST(NttOldTest, NttOldBasicArithTest) {
     COUNT_TIME("init timer", cout << endl;)
     const int N = 1024;
-    LagrangePolynomial a{N};
-    LagrangePolynomial b{N};
-    LagrangePolynomial tmpMul{N};
-    LagrangePolynomial tmpAdd{N};
-    LagrangePolynomial tmpSub{N};
+    NttPolynomial a{N};
+    NttPolynomial b{N};
+    NttPolynomial tmpMul{N};
+    NttPolynomial tmpAdd{N};
+    NttPolynomial tmpSub{N};
 
     IntPolynomial poly0{N};
     IntPolynomial poly2{N};
@@ -79,7 +79,7 @@ TEST(NttOldTest, NttOldBasicArithTest) {
             applyInttOld(resMul, tmpMul);
         })
         COUNT_TIME("NAIVE_MULT",
-                   polynomialMulNaiveModQ(navMul, poly0, poly2, 1l<<32);)
+                   multIntPolynomialModQ(navMul, poly0, poly2, 1l<<32);)
             for (int i = 0; i < a.N; i++) {
                 tmpAdd.coeffs[i] = modAddOld(a.coeffs[i], b.coeffs[i]);
                 tmpSub.coeffs[i] = modSubOld(a.coeffs[i], b.coeffs[i]);
@@ -87,8 +87,8 @@ TEST(NttOldTest, NttOldBasicArithTest) {
         applyInttOld(resAdd, tmpAdd);
         applyInttOld(resSub, tmpSub);
 
-        polynomialAddI32(navAdd, poly0, poly2);
-        polynomialSubI32(navSub, poly0, poly2);
+        addIntPolynomial(navAdd, poly0, poly2);
+        subIntPolynomial(navSub, poly0, poly2);
 
         for (int i = 0; i < navMul.N; i++) {
             EXPECT_EQ(resMul.coeffs[i], navMul.coeffs[i]);
@@ -104,7 +104,7 @@ TEST(NttOldTest, NttOldInttTest) {
 //    std::vector<int> aPrime = extractValues(a);
 //    printArray(aPrime, "a");
     const int N = 1024;
-    LagrangePolynomial resNtt{N};
+    NttPolynomial resNtt{N};
     TorusPolynomial a1{N};
 //    TorusPolynomial resIntt{N};
     int t = 10;

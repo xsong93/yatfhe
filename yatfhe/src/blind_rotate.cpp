@@ -41,16 +41,16 @@ void blindRotateGroup2(Trlwe& accum, vector<Trgsw>& bsk, const ScaledTlwe& input
         auto& bsk3 = bsk[j + 2];
         auto& bsk4 = bsk[j + 3];
 
-        trgswRotate(bsk1, a1, param);
-        trgswRotate(bsk3, a1, param);
-        trgswAdd(tmp1, bsk1, bsk2);
-        trgswAdd(tmp2, bsk3, bsk4);
+        rotateTrgsw(bsk1, a1, param);
+        rotateTrgsw(bsk3, a1, param);
+        addTrgsw(tmp1, bsk1, bsk2);
+        addTrgsw(tmp2, bsk3, bsk4);
 
-        trgswRotate(tmp1, a2, param);
-        trgswAdd(tmp3, tmp1, tmp2);
+        rotateTrgsw(tmp1, a2, param);
+        addTrgsw(tmp3, tmp1, tmp2);
 
         temp = Trlwe{param.k, param.N};
-        trgswExternalProduct(temp, tmp3, accum, param);
+        externalProductTrgsw(temp, tmp3, accum, param);
         accum = std::move(temp);
         j += batchSize;
     }
@@ -70,16 +70,16 @@ void blindRotateGroup2Ntt(Trlwe& accum, vector<TrgswDft>& bskDft, const ScaledTl
         auto& bsk3 = bskDft[j + 2];
         auto& bsk4 = bskDft[j + 3];
 
-        trgswRotateNtt(bsk1, a1, param);
-        trgswRotateNtt(bsk3, a1, param);
-        trgswAddNtt(tmp1, bsk1, bsk2);
-        trgswAddNtt(tmp2, bsk3, bsk4);
+        rotateTrgswNtt(bsk1, a1, param);
+        rotateTrgswNtt(bsk3, a1, param);
+        addTrgswNtt(tmp1, bsk1, bsk2);
+        addTrgswNtt(tmp2, bsk3, bsk4);
 
-        trgswRotateNtt(tmp1, a2, param);
-        trgswAddNtt(tmp3, tmp1, tmp2);
+        rotateTrgswNtt(tmp1, a2, param);
+        addTrgswNtt(tmp3, tmp1, tmp2);
 
         temp = Trlwe{param.k, param.N};
-        trgswExternalProductNtt(temp, tmp3, accum, param);
+        externalProductTrgswNtt(temp, tmp3, accum, param);
         accum = std::move(temp);
         j += batchSize;
     }

@@ -6,7 +6,6 @@
 #define HLS_YATFHE_TRGSW_H
 
 #include <vector>
-#include <hexl/hexl.hpp>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/trlwe.h"
 
@@ -113,103 +112,103 @@ struct TrgswKey {
 };
 
 template<typename TrgswType>
-void trgswAdd(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+void addTrgsw(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
     auto L = out.l;
     auto K = out.k;
     for (size_t l = 0; l < L; l++) {
         for (size_t k = 0; k < K + 1; k++) {
-            trlweAdd(out.trlweSamples[l][k], in1.trlweSamples[l][k], in2.trlweSamples[l][k]);
+            addTrlwe(out.trlweSamples[l][k], in1.trlweSamples[l][k], in2.trlweSamples[l][k]);
         }
     }
 }
 
 template<typename TrgswDftType>
-void trgswAddNtt(TrgswDftType& out, const TrgswDftType& in1, const TrgswDftType& in2) {
+void addTrgswNtt(TrgswDftType& out, const TrgswDftType& in1, const TrgswDftType& in2) {
     auto L = out.l;
     auto K = out.k;
     for (size_t l = 0; l < L; l++) {
         for (size_t k = 0; k < K + 1; k++) {
-            trlweAddNtt(out.trlweDftSamples[l][k], in1.trlweDftSamples[l][k], in2.trlweDftSamples[l][k]);
+            addTrlweNtt(out.trlweDftSamples[l][k], in1.trlweDftSamples[l][k], in2.trlweDftSamples[l][k]);
         }
     }
 }
 
 template<typename TrgswType>
-void trgswSub(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+void subTrgsw(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
     auto L = out.l;
     auto K = out.k;
     for (size_t l = 0; l < L; l++) {
         for (size_t k = 0; k < K + 1; k++) {
-            trlweSub(out.trlweSamples[l][k], in1.trlweSamples[l][k], in2.trlweSamples[l][k]);
+            subTrlwe(out.trlweSamples[l][k], in1.trlweSamples[l][k], in2.trlweSamples[l][k]);
         }
     }
 }
 
 template<typename TrgswDftType>
-void trgswSubNtt(TrgswDftType& out, const TrgswDftType& in1, const TrgswDftType& in2) {
+void subTrgswNtt(TrgswDftType& out, const TrgswDftType& in1, const TrgswDftType& in2) {
     auto L = out.l;
     auto K = out.k;
     for (size_t l = 0; l < L; l++) {
         for (size_t k = 0; k < K + 1; k++) {
-            trlweSubNtt(out.trlweDftSamples[l][k], in1.trlweDftSamples[l][k], in2.trlweDftSamples[l][k]);
+            subTrlweNtt(out.trlweDftSamples[l][k], in1.trlweDftSamples[l][k], in2.trlweDftSamples[l][k]);
         }
     }
 }
 
-void trgswRotate(Trgsw& trgsw, int rot, const YatfheParameters& param);
+void rotateTrgsw(Trgsw& trgsw, int rot, const YatfheParameters& param);
 
-void trgswRotateNtt(TrgswDft& trgswDft, const int rot, const YatfheParameters& param);
+void rotateTrgswNtt(TrgswDft& trgswDft, const int rot, const YatfheParameters& param);
 
-void trgswMPEncrypt(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
-void trgswMPEncryptNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+void encryptTrgswMPNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
-void trgswMPEncryptLow(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
+void encryptLowTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
 
-void trgswMPEncryptLowNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
+void encryptLowTrgswMPNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
 
-void trgswEncZero(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
+void encZeroTrgsw(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-void trgswAddInteger(Trgsw& trgsw, Integer mu, const int pos, const YatfheParameters& param);
+void addIntegerToTrgsw(Trgsw& trgsw, Integer mu, const int pos, const YatfheParameters& param);
 
-void trgswEncZeroNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
+void encZeroTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-void trgswAddIntegerNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const int pos, const YatfheParameters& param);
+void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, const int pos, const YatfheParameters& param);
 
-void trgswEncrypt(Trgsw& trgsw, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+void encryptTrgsw(Trgsw& trgsw, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
-void trgswEncryptNtt(Trgsw& trgsw, TrgswDft& trgswDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+void encryptTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
-void trgswEncryptApproxCRT(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
+void encryptTrgswApproxCRT(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, Integer mu);
 
-Integer trgswDecrypt(const Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
+Integer decryptTrgsw(const Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-Integer trgswDecryptNtt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
+Integer decryptTrgswNtt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-void trgswMCRTDecomp(std::vector<Trgsw8>& out, const Trgsw& in, const YatfheParameters& param);
+void decompTrgswMcrt(std::vector<Trgsw8>& out, const Trgsw& in, const YatfheParameters& param);
 
-void trgswMCRTToCRT(std::vector<Trgsw8>& trgsw, const YatfheParameters& param);
+void trgswMcrtToCrt(std::vector<Trgsw8>& trgsw, const YatfheParameters& param);
 
-void trgswCRTRecomp(Trgsw& out, const std::vector<Trgsw8>& in, const YatfheParameters& param);
+void recompTrgswCrt(Trgsw& out, const std::vector<Trgsw8>& in, const YatfheParameters& param);
 
-void trgswExternalProduct(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
+void externalProductTrgsw(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
-void trgswExternalProductNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
+void externalProductTrgswNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
-void trgswExternalProductApproxCRT(std::vector<Trlwe8>& output, const std::vector<Trgsw8>& trgswInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
+void externalProductTrgswApproxCrt(std::vector<Trlwe8>& output, const std::vector<Trgsw8>& trgswInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
 
-void trgswExternalProductApproxCRTNtt(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
+void externalProductTrgswApproxCrtNtt(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
 
-void trgswMPExternalProduct(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param);
+void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
-void trgswMPExternalProductNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param);
+void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
-void trgswMPExternalProductDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param);
+void externalProductTrgswMPDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param);
 
-void trgswMPExternalProductDecompNtt(DecomposedTrlweDft& output, const TrgswMPDft& trgswMPInput, const DecomposedTrlweDft& trlweInput, const YatfheParameters& param);
+void externalProductTrgswMPDecompNtt(DecomposedTrlweDft& output, const TrgswMPDft& trgswMPInput, const DecomposedTrlweDft& trlweInput, const YatfheParameters& param);
 
-void trgswMPInternalProduct(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const YatfheParameters& param);
+void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const YatfheParameters& param);
 
-void trgswMPInternalProductNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param);
+void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

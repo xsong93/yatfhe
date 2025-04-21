@@ -30,7 +30,7 @@ TEST(Ntt32Test, PowInvTest) {
 TEST(Ntt32Test, NttIntt32Test) {
     YatfheParameters p{};
     p.q = Q_32P;
-    yatfheInit(p);
+    initYatfhe(p);
 
     auto N = p.N;
     Ntt32Polynomial resNtt{N};
@@ -58,7 +58,7 @@ TEST(Ntt32Test, Ntt32BasicArithTest) {
     YatfheParameters p{};
     p.q = Q_32P;
     p.N = 1024;
-    yatfheInit(p);
+    initYatfhe(p);
 
     auto N = p.N;
     Ntt32Polynomial a{N};
@@ -108,10 +108,10 @@ TEST(Ntt32Test, Ntt32BasicArithTest) {
         COUNT_TIME("NAIVE_MULT", {
             TorusPolynomial tmp{N};
             TorusPolynomial tmp1{N};
-            polynomialMulNaiveModQ(tmp, poly0, poly1, TORUS_Q);
-            polynomialMulNaiveModQ(tmp1, tmp, poly2, TORUS_Q);
-            polynomialMulNaiveModQ(tmp, tmp1, poly3, TORUS_Q);
-            polynomialMulNaiveModQ(navMul, tmp, poly4, TORUS_Q);
+            multIntPolynomialModQ(tmp, poly0, poly1, TORUS_Q);
+            multIntPolynomialModQ(tmp1, tmp, poly2, TORUS_Q);
+            multIntPolynomialModQ(tmp, tmp1, poly3, TORUS_Q);
+            multIntPolynomialModQ(navMul, tmp, poly4, TORUS_Q);
         })
 
         printArray(resMul.coeffs, "resMul");

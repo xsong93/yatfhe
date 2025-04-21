@@ -5,7 +5,6 @@
 #ifndef HLS_YATFHE_TRGLEV_H
 #define HLS_YATFHE_TRGLEV_H
 
-#include <iostream>
 #include "yatfhe/trlwe.h"
 
 struct Trglev {
@@ -21,14 +20,12 @@ struct Trglev {
             trlweDfts(param.l * (param.dftBits / param.torusBits), TrlweDft(param.k, param.N)) {};
 };
 
-void trglevEncSingleSample(Trglev& output, const TrlweKey& trlweKey, Torus input, const YatfheParameters& param);
+void encTrglevSingleSample(Trglev& output, const TrlweKey& trlweKey, Torus input, const YatfheParameters& param);
 
-void trglevEncMultiSample(Trglev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param);
+void encTrglevMultiSample(Trglev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param);
 
-void trglevMultConst(Trlwe& output, const Trglev& input, Integer num, const YatfheParameters& param);
+void multTrglevWithConst(Trlwe& output, const Trglev& input, Integer num, const YatfheParameters& param);
 
-void trglevDotMultConst(Trlwe& output, const Trglev& input, const std::vector<Integer>& nums, const YatfheParameters& param);
-
-void decomposedTglevMultConst(Trlwe& output, const Trglev& input, Integer num, const YatfheParameters& param);
+void multDecomposedTglevWithConst(Trlwe& output, const Trglev& input, Integer num, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGLEV_H

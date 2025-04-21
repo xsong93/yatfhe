@@ -28,7 +28,7 @@ void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
 
 void symEncTrlwe(Trlwe& trlwe, const TrlweKey& key) {
     for (auto i = 0; i < trlwe.k; i++) {
-        polynomialMulAccNaiveT32(trlwe.b, trlwe.a[i], key.s[i]);
+        multTorusPolynomialAcc(trlwe.b, trlwe.a[i], key.s[i]);
     }
 }
 
@@ -38,14 +38,13 @@ void symEncTrlweNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key) {
     applyIntt(trlwe.b, trlweDft.b);
 }
 
-void trlweKeyGen(TrlweKey& key) {
+void genTrlweKey(TrlweKey& key) {
     for (int i = 0; i < key.k; i++) {
         for (int j = 0; j < key.N; j++) {
             key.s[i].coeffs[j] = binaryDistrib(rng);
         }
         applyNtt(key.sDft[i], key.s[i]);
     }
-//    printPolyVec(key.s, "TrlweKey");
 }
 
 void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, const Torus mu) {
@@ -72,9 +71,9 @@ void symDecTrlweToDouble(DoublePolynomial& output, const Trlwe& trlwe, const Trl
     TorusPolynomial tmp {output.N};
     TorusPolynomial innerProduct {output.N};
     for (auto i = 0; i < trlwe.k; i++) {
-        polynomialMulAccNaiveT32(innerProduct, trlwe.a[i], key.s[i]);
+        multTorusPolynomialAcc(innerProduct, trlwe.a[i], key.s[i]);
     }
-    polynomialSubT32(tmp, trlwe.b, innerProduct);
+    subTorusPolynomial(tmp, trlwe.b, innerProduct);
     torusPolyToDoublePoly(output, tmp);
     roundErrorDoublePoly(output, torusBase);
 }
@@ -106,44 +105,34 @@ void symDecTrlweToIntNtt(IntPolynomial& output, const TrlweDft& trlweDft, const 
 
 void symDecTrlweWoRounding(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key) {
     for (auto i = 0; i < trlwe.k; i++) {
-        polynomialMulAccNaiveT32(output, trlwe.a[i], key.s[i]);
+        multTorusPolynomialAcc(output, trlwe.a[i], key.s[i]);
     }
-    polynomialSubT32(output, trlwe.b, output);
+    subTorusPolynomial(output, trlwe.b, output);
 }
 
 void symDecTrlweNtt(DoublePolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key, const int torusBase) {
     TorusPolynomial tmp {output.N};
-    LagrangePolynomial innerProduct {trlweDft.b.N};
-    LagrangePolynomial res {trlweDft.b.N};
+    NttPolynomial innerProduct {trlweDft.b.N};
+    NttPolynomial res {trlweDft.b.N};
     calModularInnerProductNtt(innerProduct, trlweDft.a, key.sDft);
-    lagrangePolynomialSub(res, trlweDft.b, innerProduct);
+    subNttPolynomial(res, trlweDft.b, innerProduct);
     applyIntt(tmp, res);
     torusPolyToDoublePoly(output, tmp);
     roundErrorDoublePoly(output, torusBase);
 }
 
 void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key) {
-    LagrangePolynomial tmp {trlweDft.b.N};
+    NttPolynomial tmp {trlweDft.b.N};
     calModularInnerProductNtt(tmp, trlweDft.a, key.sDft);
-    lagrangePolynomialSub(tmp, trlweDft.b, tmp);
+    subNttPolynomial(tmp, trlweDft.b, tmp);
     applyIntt(output, tmp);
 }
 
 // Trlwe: (X^-b) * (0,...,0,v)
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput) {
     const auto barb = scaledInput.b;
-    torusPolynomialRotate(accum.b, -barb, v);
+    rotateTorusPolynomial(accum.b, -barb, v);
 }
-
-///**
-// * accum.a += tlwe.a, accum.b += tlwe.b
-// * */
-//void trlweAccumulateI32(Trlwe& accum, const Trlwe& tlwe) {
-//    for (auto i = 0; i < accum.a.size(); i++) {
-//        polynomialAccumulateI32(accum.a[i], tlwe.a[i]);
-//    }
-//    polynomialAccumulateI32(accum.b, tlwe.b);
-//}
 
 // G^-1 * Trlwe = DecomposedTrlwe
 void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param) {
@@ -157,7 +146,7 @@ void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const Yat
 //            signedGadgetDecomposition(d, currIn.coeffs[j], param);
             gadgetDecompose(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < l; lvl++) {
-                auto& currOut = (row < k) ? output.rlwes[lvl].a[row] : output.rlwes[lvl].b;
+                auto& currOut = (row < k) ? output.trlwes[lvl].a[row] : output.trlwes[lvl].b;
                 currOut.coeffs[j] = d.value[lvl] * d.sign;
             }
         }
@@ -188,10 +177,10 @@ void recomposeTrlwe(Trlwe& output, const DecomposedTrlwe& input, const YatfhePar
     const auto k = output.k;
     const auto N = output.b.coeffs.size();
     const auto l = input.l;
-    trlweSetZero(output.a, output.b);
+    resetTrlweToZero(output.a, output.b);
     for (auto lvl = 0; lvl < l; lvl++) {
         for (auto row = 0; row < k + 1; row++) {
-            auto& currIn = (row < k) ? input.rlwes[lvl].a[row] : input.rlwes[lvl].b;
+            auto& currIn = (row < k) ? input.trlwes[lvl].a[row] : input.trlwes[lvl].b;
             auto& currOut = (row < k) ? output.a[row] : output.b;
             for (auto j = 0; j < N; j++) {
                 currOut.coeffs[j] += currIn.coeffs[j] << (param.torusBits - (lvl + 1) * param.radixBits);
@@ -205,7 +194,7 @@ void recomposeTrlweNtt(TrlweDft& output, const DecomposedTrlweDft& input, const 
     const auto k = output.k;
     const auto N = output.b.coeffs.size();
     const auto l = input.l;
-    trlweSetZero(output.a, output.b);
+    resetTrlweToZero(output.a, output.b);
     for (auto lvl = 0; lvl < l; lvl++) {
         for (auto row = 0; row < k + 1; row++) {
             auto& currIn = (row < k) ? input.rlweDfts[lvl].a[row] : input.rlweDfts[lvl].b;
@@ -239,33 +228,33 @@ void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey) {
     }
 }
 
-void trlweRotate(Trlwe& res, const Trlwe& input, const int a) {
+void rotateTrlwe(Trlwe& res, const Trlwe& input, const int a) {
     for (auto i = 0; i < input.a.size(); i++) {
-        torusPolynomialRotate(res.a[i], a, input.a[i]);
+        rotateTorusPolynomial(res.a[i], a, input.a[i]);
     }
-    torusPolynomialRotate(res.b, a, input.b);
+    rotateTorusPolynomial(res.b, a, input.b);
 }
 
-void trlweRotateNtt(TrlweDft& res, const TrlweDft& input, const int r) {
+void rotateTrlweNtt(TrlweDft& res, const TrlweDft& input, const int r) {
     for (auto i = 0; i < input.a.size(); i++) {
-        lagrangePolynomialRotate(res.a[i], input.a[i], r);
+        rotateNttPolynomial(res.a[i], input.a[i], r);
     }
-    lagrangePolynomialRotate(res.b, input.b, r);
+    rotateNttPolynomial(res.b, input.b, r);
 }
 
 // res = X^a * input - input
-void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, const int a) {
+void rotateTrlweMinusOne(Trlwe& res, const Trlwe& input, const int a) {
     for (auto i = 0; i < input.a.size(); i++) {
-        torusPolynomialRotateMinusOne(res.a[i], a, input.a[i]);
+        rotateTorusPolynomialMinusOne(res.a[i], a, input.a[i]);
     }
-    torusPolynomialRotateMinusOne(res.b, a, input.b);
+    rotateTorusPolynomialMinusOne(res.b, a, input.b);
 }
 
-void trlweRotateMinusOne8(Trlwe8& res, const Trlwe8& input, const int a, int modP) {
+void rotateTrlwe8MinusOne(Trlwe8& res, const Trlwe8& input, const int a, int modP) {
     for (auto i = 0; i < input.a.size(); i++) {
-        int8PolynomialRotateMinusOne(res.a[i], a, input.a[i], modP);
+        rotateInt8PolynomialMinusOne(res.a[i], a, input.a[i], modP);
     }
-    int8PolynomialRotateMinusOne(res.b, a, input.b, modP);
+    rotateInt8PolynomialMinusOne(res.b, a, input.b, modP);
 }
 
 void copyTrlwe(Trlwe& target, const Trlwe& source, const bool copyA, const bool copyB) {

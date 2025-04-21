@@ -11,20 +11,20 @@
 TEST(ModSwitchTest, ModDownTest) {
     YatfheParameters param {};
     const int modPQ = 256;
-    yatfheInit(param);
+    initYatfhe(param);
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
 
     // data gen
     int mu = 1;
     Torus mt = modSwitchToTorus32(mu, 8);
     Tlwe input {param.n};
-    symEncTlweSample(input, mt, tlweKey);
+    symEncTlwe(input, mt, tlweKey);
     int mu2 = 2;
     Torus mt2 = modSwitchToTorus32(mu2, 8);
     Tlwe input2 {param.n};
-    symEncTlweSample(input2, mt2, tlweKey);
+    symEncTlwe(input2, mt2, tlweKey);
 
     // mod down
     for (auto i = 0; i < param.n; i++) {
@@ -50,7 +50,7 @@ TEST(ModSwitchTest, ModDownTest) {
     add.b = modSwitchToTorus32(add.b, modPQ);
 
     cout <<"msg:"<<intModP(mu + mu2, 8)<<endl;
-    cout <<"dec:"<<symDecTlweSampleToInt(add, tlweKey, 8)<<endl;
-    ASSERT_EQ(intModP(mu + mu2, 8), symDecTlweSampleToInt(add, tlweKey, 8));
+    cout <<"dec:"<<symDecTlweToInt(add, tlweKey, 8)<<endl;
+    ASSERT_EQ(intModP(mu + mu2, 8), symDecTlweToInt(add, tlweKey, 8));
     printBanner("ModDownTest");
 }

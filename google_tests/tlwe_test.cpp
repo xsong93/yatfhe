@@ -11,15 +11,15 @@
 
 TEST(TlweTest, RED_TEST) {
     YatfheParameters param {};
-    yatfheInit(param);
+    initYatfhe(param);
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
 
     int plain = genIntUniformDist(-param.torusBase/2, param.torusBase/2 - 1);
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
     Tlwe input {param.n};
-    symEncTlweSample(input, mu, tlweKey);
+    symEncTlwe(input, mu, tlweKey);
 
     // saw off
     int thres = 16;
@@ -32,27 +32,27 @@ TEST(TlweTest, RED_TEST) {
 
     cout << "msg:" << intModP(plain, param.torusBase) << endl;
     cout << "mu:" << mu << endl;
-    cout << "decPre:" << symDecTlweSampleToInt(input, tlweKey, param.torusBase) << endl;
-    ASSERT_EQ(intModP(plain, param.torusBase), symDecTlweSampleToInt(input, tlweKey, param.torusBase));
+    cout << "decPre:" << symDecTlweToInt(input, tlweKey, param.torusBase) << endl;
+    ASSERT_EQ(intModP(plain, param.torusBase), symDecTlweToInt(input, tlweKey, param.torusBase));
     printBanner("RED_TEST");
 }
 
 TEST(TlweTest, EncDecTest) {
     YatfheParameters param {};
-    yatfheInit(param);
+    initYatfhe(param);
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
 
     int plain = genIntUniformDist(-param.torusBase/2, param.torusBase/2 - 1);
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
     Tlwe input {param.n};
-    symEncTlweSample(input, mu, tlweKey);
+    symEncTlwe(input, mu, tlweKey);
 
     cout << "msg:" << intModP(plain, param.torusBase) << endl;
     cout << "mu:" << mu << endl;
-    cout << "decPre:" << symDecTlweSampleToInt(input, tlweKey, param.torusBase) << endl;
-    ASSERT_EQ(intModP(plain, param.torusBase), symDecTlweSampleToInt(input, tlweKey, param.torusBase));
+    cout << "decPre:" << symDecTlweToInt(input, tlweKey, param.torusBase) << endl;
+    ASSERT_EQ(intModP(plain, param.torusBase), symDecTlweToInt(input, tlweKey, param.torusBase));
     printBanner("EncDecTest");
 }
 //
@@ -92,10 +92,10 @@ TEST(TlweTest, EncDecTest) {
 TEST(TlweTest, AddSubTest) {
     YatfheParameters param {};
     param.torusBase = 8;
-    yatfheInit(param);
+    initYatfhe(param);
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
 
     Torus mu1 = modSwitchToTorus32(3, param.torusBase);
     Torus mu2 = modSwitchToTorus32(2, param.torusBase);
@@ -104,18 +104,18 @@ TEST(TlweTest, AddSubTest) {
     Tlwe input2 {param.n};
     Tlwe output {param.n};
 
-    symEncTlweSample(input1, mu1, tlweKey);
-    symEncTlweSample(input2, mu2, tlweKey);
+    symEncTlwe(input1, mu1, tlweKey);
+    symEncTlwe(input2, mu2, tlweKey);
 
-    lweAdd(output, input1, input2);
+    addTlwe(output, input1, input2);
     cout << "plain arithmetic: " << modSwitchFromTorus32(mu1 + mu2, param.torusBase) <<endl;
-    cout << "dec res: " << symDecTlweSampleToInt(output, tlweKey, param.torusBase) << endl;
-    ASSERT_EQ(modSwitchFromTorus32(mu1 + mu2, param.torusBase), symDecTlweSampleToInt(output, tlweKey, param.torusBase));
+    cout << "dec res: " << symDecTlweToInt(output, tlweKey, param.torusBase) << endl;
+    ASSERT_EQ(modSwitchFromTorus32(mu1 + mu2, param.torusBase), symDecTlweToInt(output, tlweKey, param.torusBase));
 
-    lweSub(output, input1, input2);
+    subTlwe(output, input1, input2);
     cout << "plain arithmetic: " << modSwitchFromTorus32(mu1 - mu2, param.torusBase) <<endl;
-    cout << "dec res: " << symDecTlweSampleToInt(output, tlweKey, param.torusBase) << endl;
-    ASSERT_EQ(modSwitchFromTorus32(mu1 - mu2, param.torusBase), symDecTlweSampleToInt(output, tlweKey, param.torusBase));
+    cout << "dec res: " << symDecTlweToInt(output, tlweKey, param.torusBase) << endl;
+    ASSERT_EQ(modSwitchFromTorus32(mu1 - mu2, param.torusBase), symDecTlweToInt(output, tlweKey, param.torusBase));
 
     printBanner("AddSubTest");
 }
@@ -124,11 +124,11 @@ TEST(TlweTest, MultTest) {
     YatfheParameters param {};
     param.torusBase = 8;
     param.l = 4;
-    yatfheInit(param);
+    initYatfhe(param);
 
     TlweKey tlweKey {param.n, param.lweStdDev};
 
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
 
     int p1 = 1;
     int p2 = 2047;
@@ -138,17 +138,17 @@ TEST(TlweTest, MultTest) {
     Tglev tglev {param.l, param.n};
     Tlwe output {param.n};
 
-    tglevEnc(tglev, tlweKey, mu1, param);
+    encTglev(tglev, tlweKey, mu1, param);
 
 //    for (auto l = 0; l < tglev.l; l++) {
 //        printArray(tglev.tlwes[l].a, "a");
 //        cout << "b: " << tglev.tlwes[l].b << endl;
 //    }
 
-    tglevMultConst(output, tglev, p2, param);
+    multTglevWithConst(output, tglev, p2, param);
     cout << "p1 * p2: " << intModP(p1 * p2, param.torusBase) <<endl;
-    cout << "c1 * p2: " << symDecTlweSampleToInt(output, tlweKey, param.torusBase) << endl;
-    ASSERT_EQ(intModP(p1 * p2, param.torusBase), symDecTlweSampleToInt(output, tlweKey, param.torusBase));
+    cout << "c1 * p2: " << symDecTlweToInt(output, tlweKey, param.torusBase) << endl;
+    ASSERT_EQ(intModP(p1 * p2, param.torusBase), symDecTlweToInt(output, tlweKey, param.torusBase));
 
     printBanner("TlweMultTest");
 }
@@ -157,24 +157,24 @@ TEST(TlweTest, MultTest) {
 TEST(TlweTest, todotest) {
     YatfheParameters param {};
     param.torusBase = 8;
-    yatfheInit(param);
+    initYatfhe(param);
     int scale = Q_32 >> 1;
 
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
 
     vector<Tlwe> tlwes(param.n, Tlwe{param.n});
     for (size_t i = 0; i < param.n; i++) {
-        symEncTlweSample(tlwes[i], modSwitchToTorus32(tlweKey.s[i], scale), tlweKey);
-        cout << "s:" << symDecTlweSampleToInt(tlwes[i], tlweKey, scale) << ", ";
+        symEncTlwe(tlwes[i], modSwitchToTorus32(tlweKey.s[i], scale), tlweKey);
+        cout << "s:" << symDecTlweToInt(tlwes[i], tlweKey, scale) << ", ";
     }
     cout << endl;
     Tlwe sample{param.n};
     int pt = 2;
     auto mu = modSwitchToTorus32(pt, param.torusBase);
-    symEncTlweSample(sample, mu, tlweKey);
+    symEncTlwe(sample, mu, tlweKey);
 
-    auto dec = symDecTlweSampleToInt(sample, tlweKey, param.torusBase);
+    auto dec = symDecTlweToInt(sample, tlweKey, param.torusBase);
     cout << "dec:" << dec << endl;
 
     ScaledTlwe inputModN2 {scale, param.n};
@@ -189,24 +189,24 @@ TEST(TlweTest, todotest) {
     cout << "redB:" << redB << endl;
 
     Tlwe zero{param.n};
-    symEncTlweSample(zero, 0, tlweKey);
-    zero.b = modAddT32(zero.b, modSwitchToTorus32(redB, scale));
-    cout << "decB:" << symDecTlweSampleToInt(zero, tlweKey, scale) << endl;
+    symEncTlwe(zero, 0, tlweKey);
+    zero.b = addTorus(zero.b, modSwitchToTorus32(redB, scale));
+    cout << "decB:" << symDecTlweToInt(zero, tlweKey, scale) << endl;
 
     for (size_t i = 0; i < param.n; i++) {
         for (size_t j = 0; j < param.n; j++) {
-            tlwes[i].a[j] = modMulT32(tlwes[i].a[j], redA[i]);
+            tlwes[i].a[j] = multTorus(tlwes[i].a[j], redA[i]);
         }
-        tlwes[i].b = modMulT32(tlwes[i].b, redA[i]);
-        cout << "as:" << symDecTlweSampleToInt(tlwes[i], tlweKey, scale) << ", ";
+        tlwes[i].b = multTorus(tlwes[i].b, redA[i]);
+        cout << "as:" << symDecTlweToInt(tlwes[i], tlweKey, scale) << ", ";
         for (size_t j = 0; j < param.n; j++) {
-            zero.a[j] = modSubT32(zero.a[j], tlwes[i].a[j]);
+            zero.a[j] = subTorus(zero.a[j], tlwes[i].a[j]);
         }
-        zero.b = modSubT32(zero.b, tlwes[i].b);
+        zero.b = subTorus(zero.b, tlwes[i].b);
     }
     cout << endl;
 
-    auto dec1 = symDecTlweSampleToInt(zero, tlweKey, 8);
+    auto dec1 = symDecTlweToInt(zero, tlweKey, 8);
     cout << "dec1:" << dec1 << endl;
     cout <<"err0:" << calTlweError(sample, tlweKey, mu) << endl;
     cout <<"err1:" << calTlweError(zero, tlweKey, modSwitchToTorus32(pt, 8)) << endl;

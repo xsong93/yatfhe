@@ -31,7 +31,7 @@ void gadgetDecompose(DecomposedData& out, Integer in, const YatfheParameters& pa
 
 void gadgetDecomposeNtt(DecomposedDataDft& out, NttType in, const YatfheParameters& param);
 
-Integer selfRecompose(const DecomposedData& digits, const YatfheParameters& param);
+Integer recomposeSelf(const DecomposedData& digits, const YatfheParameters& param);
 
 void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const std::vector<DecomposedData>& mid);
 

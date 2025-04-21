@@ -49,12 +49,12 @@ TEST(PolyRotTest, PolyRotTest) {
     }
     printArray(a.coeffs, "a");
     for (auto i = - N * 2; i <= N * 2; i++) {
-        torusPolynomialRotate(b, i, a);
+        rotateTorusPolynomial(b, i, a);
         printArray(b.coeffs, "b " + to_string(i));
         ASSERT_EQ(b.coeffs, rotatedVec[i + N * 2]);
     }
     for (auto i = - N * 2; i <= N * 2; i++) {
-        torusPolynomialRotateMinusOne(b, i, a);
+        rotateTorusPolynomialMinusOne(b, i, a);
         printArray(b.coeffs, "b-1 " + to_string(i));
         ASSERT_EQ(b.coeffs, vecSub(rotatedVec[i + N * 2], a.coeffs));
     }
@@ -87,12 +87,12 @@ TEST(Poly8RotTest, Poly8RotTest) {
     }
     printArray(a.coeffs, "a");
     for (auto i = - N * 2; i <= N * 2; i++) {
-        int8PolynomialRotate(b, i, a, 256);
+        rotateInt8Polynomial(b, i, a, 256);
         printArray(b.coeffs, "b " + to_string(i));
         ASSERT_EQ(b.coeffs, rotatedVec[i + N * 2]);
     }
     for (auto i = - N * 2; i <= N * 2; i++) {
-        int8PolynomialRotateMinusOne(b, i, a, 256);
+        rotateInt8PolynomialMinusOne(b, i, a, 256);
         printArray(b.coeffs, "b-1 " + to_string(i));
         ASSERT_EQ(b.coeffs, vecSub8(rotatedVec[i + N * 2], a.coeffs));
     }
@@ -101,7 +101,7 @@ TEST(Poly8RotTest, Poly8RotTest) {
         a.coeffs[i] = -128 - i;
     }
     for (auto i = - N * 2; i <= N * 2; i++) {
-        int8PolynomialRotate(b, i, a, 256);
+        rotateInt8Polynomial(b, i, a, 256);
         printArray(b.coeffs, "-128-1 " + to_string(i));
 //        ASSERT_EQ(b.coeffs, vecSub8(rotatedVec[i + N * 2], a.coeffs));
     }

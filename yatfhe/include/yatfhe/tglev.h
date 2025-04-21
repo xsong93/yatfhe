@@ -5,7 +5,6 @@
 #ifndef HLS_YATFHE_TGLEV_H
 #define HLS_YATFHE_TGLEV_H
 
-#include <iostream>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
 
@@ -18,10 +17,10 @@ struct Tglev {
             tlwes(l,  Tlwe(n)) {};
 };
 
-void tglevEnc(Tglev& output, const TlweKey& tlweKey, Torus input, const YatfheParameters& param);
+void encTglev(Tglev& output, const TlweKey& tlweKey, Torus input, const YatfheParameters& param);
 
-void tglevMultConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
+void multTglevWithConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
 
-void decomposedTlevMultConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
+// void multDecomposedTglevWithConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TGLEV_H

@@ -43,7 +43,7 @@ void gadgetDecomposeNtt(DecomposedDataDft& out, const NttType in, const YatfhePa
     }
 }
 
-Integer selfRecompose(const DecomposedData& digits, const YatfheParameters& param) {
+Integer recomposeSelf(const DecomposedData& digits, const YatfheParameters& param) {
     Integer res {0};
     for (auto i = 0; i < digits.value.size(); ++i) {
         res += digits.value[i] << (param.torusBits - (i + 1) * param.radixBits);

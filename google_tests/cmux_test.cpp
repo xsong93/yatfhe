@@ -6,7 +6,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
-#include "yatfhe/bootstrapping.h"
+#include "yatfhe/cmux.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
@@ -15,7 +15,7 @@ TEST(Cmux, Cmux) {
     YatfheParameters param {};
     param.N = 1024;
     param.k = 2;
-    yatfheInit(param);
+    initYatfhe(param);
     int ti = 0;
     while (ti++ < 10) {
         cout << "iter: " << ti << endl;
@@ -23,14 +23,14 @@ TEST(Cmux, Cmux) {
         // key gen
         TrgswKey trgswKey {param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
-        trlweKeyGen(trlweKey);
+        genTrlweKey(trlweKey);
 
         // trgsw enc
         Trgsw trgsw {param};
         TrgswDft trgswDft {param};
         Integer mu1 = genIntUniformDist(0, 1);
-        trgswEncrypt(trgsw, mu1, trgswKey, 0, param);
-        printf( "trgsw dec: %d.\n", trgswDecrypt(trgsw, param, trgswKey));
+        encryptTrgsw(trgsw, mu1, trgswKey, 0, param);
+        printf( "trgsw dec: %d.\n", decryptTrgsw(trgsw, param, trgswKey));
 
         // data gen
         Trlwe in2 {param.k, param.N};
@@ -56,7 +56,7 @@ TEST(Cmux, Cmux) {
         IntPolynomial rotInP {param.N};
         Trlwe rotIn {param.k, param.N};
         if (mu1 == 1) {
-            trlweRotate(rotIn, in2, a);
+            rotateTrlwe(rotIn, in2, a);
         } else {
             copyTrlwe(rotIn, in2, true, true);
         }

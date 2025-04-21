@@ -6,15 +6,15 @@
 
 using namespace std;
 
-void tglevEnc(Tglev& output, const TlweKey& tlweKey, Torus input, const YatfheParameters& param) {
+void encTglev(Tglev& output, const TlweKey& tlweKey, Torus input, const YatfheParameters& param) {
     const auto l = output.l;
     for (auto i = 0; i < l; i++) {
         auto inOverR = input << (param.torusBits - (i + 1) * param.radixBits);
-        symEncTlweSample(output.tlwes[i], inOverR, tlweKey);
+        symEncTlwe(output.tlwes[i], inOverR, tlweKey);
     }
 }
 
-void tglevMultConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param) {
+void multTglevWithConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param) {
     DecomposedData d {input.l};
     gadgetDecompose(d, num, param);
     for (auto j = 0; j <= output.n; j++) {

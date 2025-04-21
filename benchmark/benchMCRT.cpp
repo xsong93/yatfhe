@@ -13,7 +13,7 @@
 int main(int argc, char **argv) {
     YatfheParameters param{};
     param.q = Q_CRT;
-    yatfheInit(param);
+    initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
     TlweKey tlweKey{param.n, param.lweStdDev};
@@ -21,12 +21,12 @@ int main(int argc, char **argv) {
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKeyCRT bsKeyCRT{param};
     TlweKeySwitchingKey ksKey{param};
-    COUNT_TIME("lweKeyGen", lweKeyGen(tlweKey);)
-    COUNT_TIME("trlweKeyGen", trlweKeyGen(trlweKey);)
-    COUNT_TIME("bootstrappingKeyGenApproxCRT", bootstrappingKeyGenApproxCRT(bsKeyCRT, trgswKey, tlweKey, param);)
+    COUNT_TIME("genTlweKey", genTlweKey(tlweKey);)
+    COUNT_TIME("genTrlweKey", genTrlweKey(trlweKey);)
+    COUNT_TIME("genBootstrappingKeyApproxCrt", genBootstrappingKeyApproxCrt(bsKeyCRT, trgswKey, tlweKey, param);)
     TlweKey tlweKsKey = tlweKey;
     tlweKsKey.sigma = param.rlweStdDev;
-    COUNT_TIME("tlweKeySwitchingKeyGen", tlweKeySwitchingKeyGen(ksKey, trlweKey, tlweKsKey, param);)
+    COUNT_TIME("genTlweKeySwitchingKey", genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);)
 
     Integer plain = 3;
     Torus mu = modSwitchToTorus32(plain, param.torusBase);
@@ -35,10 +35,10 @@ int main(int argc, char **argv) {
 
     Tlwe input{param.n};
     Tlwe output{param.n};
-    symEncTlweSample(input, mu, tlweKey);
+    symEncTlwe(input, mu, tlweKey);
 
     cout << "msg: " << modSwitchFromTorus32(mu, param.torusBase) << endl;
-    auto decPre = symDecTlweSampleToInt(input, tlweKey, param.torusBase);
+    auto decPre = symDecTlweToInt(input, tlweKey, param.torusBase);
     cout << "decPre: " << decPre << endl;
 
     ScaledTlwe inputModN2{param.N * 2, param.n};
@@ -55,9 +55,9 @@ int main(int argc, char **argv) {
 //    COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, acc, param.driftPhase);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
 //    COUNT_TIME("tlweKeySwitch", tlweKeySwitch(output, ksKey, tmp, param);)
 
-    COUNT_TIME("trgswFunctionalBootstrappingCRT", trgswFunctionalBootstrappingCRT(output, input, bsKeyCRT, ksKey, v, param);)
+    COUNT_TIME("functionalBootstrappingCrt", functionalBootstrappingCrt(output, input, bsKeyCRT, ksKey, v, param);)
 
-    auto decAft = symDecTlweSampleToInt(output, tlweKey, param.torusBase);
+    auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;
     cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
 

@@ -85,7 +85,7 @@ TEST(Ntt14Test, Ntt14BasicArithTest) {
             applyInttPoly8(resMul, tmpMul);
         })
         COUNT_TIME("NAIVE_MULT",
-                   polynomialMulNaiveI8(navMul, poly0, poly2, 1 << 8);)
+                   multInt8Polynomial(navMul, poly0, poly2, 1 << 8);)
 
         printArray(resMul.coeffs, "resMul");
         printArray(navMul.coeffs, "navMul");

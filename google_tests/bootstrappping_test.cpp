@@ -7,6 +7,7 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/bootstrapping.h"
+#include "yatfhe/key_patterns.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 
@@ -14,16 +15,16 @@ TEST(BOOTSTRAPPING, GROUP2_KEYGEN) {
     YatfheParameters param {};
     param.n = 8;
     param.group = 2;
-    yatfheInit(param);
+    initYatfhe(param);
 
     // key gen
     TlweKey tlweKey {param.n, param.lweStdDev};
-    lweKeyGen(tlweKey);
+    genTlweKey(tlweKey);
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    trlweKeyGen(trlweKey);
+    genTrlweKey(trlweKey);
     BootstrappingKey bsk {param};
-    bootstrappingKeyGen(bsk, trgswKey, tlweKey, param);
+    genBootstrappingKey(bsk, trgswKey, tlweKey, param);
 
     std::vector<int> idx;
     for (size_t i = 0; i < tlweKey.n; i = i + 2) {
@@ -34,7 +35,7 @@ TEST(BOOTSTRAPPING, GROUP2_KEYGEN) {
 
     std::vector<int> keys;
     for (size_t i = 0; i < bsk.n; i++) {
-        keys.push_back(trgswDecryptNtt(bsk.bskDft[i], param, trgswKey));
+        keys.push_back(decryptTrgswNtt(bsk.bskDft[i], param, trgswKey));
     }
 
     auto batch = 1 << param.group;

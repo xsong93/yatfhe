@@ -76,13 +76,13 @@ struct Trlwe8D {
 };
 
 struct TrlweDft{
-    std::vector<LagrangePolynomial> a; // k
-    LagrangePolynomial b; // 1
+    std::vector<NttPolynomial> a; // k
+    NttPolynomial b; // 1
     int k;
 
     TrlweDft(int k, int N) :
-            a(k, LagrangePolynomial(N)),
-            b(LagrangePolynomial(N)),
+            a(k, NttPolynomial(N)),
+            b(NttPolynomial(N)),
             k(k) {};
 };
 
@@ -120,15 +120,15 @@ struct TrlweDft24{
 };
 
 struct DecomposedTrlwe {
-    std::vector<Rlwe> rlwes; // l
+    std::vector<Trlwe> trlwes; // l
     int l;
 
     explicit DecomposedTrlwe(const YatfheParameters& param) :
             l(param.l),
-            rlwes(param.l,  Rlwe(param.k, param.N)) {};
+            trlwes(param.l,  Trlwe(param.k, param.N)) {};
     DecomposedTrlwe(const YatfheParameters& param, int l) :
             l(l),
-            rlwes(l,  Rlwe(param.k, param.N)) {};
+            trlwes(l,  Trlwe(param.k, param.N)) {};
 };
 
 struct DecomposedTrlweDft {
@@ -160,93 +160,82 @@ struct DecomposedTrlweDft16 {
 
 struct TrlweKey {
     std::vector<BinPolynomial> s; // k
-    std::vector<LagrangePolynomial> sDft; // k
+    std::vector<NttPolynomial> sDft; // k
     int k;
     int N;
     double sigma {};
 
     explicit TrlweKey(const YatfheParameters& param):
-            s(param.k, TorusPolynomial(param.N)),
-            sDft(param.k, LagrangePolynomial(param.N)),
+            s(param.k, BinPolynomial(param.N)),
+            sDft(param.k, NttPolynomial(param.N)),
             k(param.k),
             N(param.N),
             sigma(param.rlweStdDev) {};
 
     TrlweKey(int k, int N, double sigma):
-        s(k, TorusPolynomial(N)),
-        sDft(k, LagrangePolynomial(N)),
+        s(k, BinPolynomial(N)),
+        sDft(k, NttPolynomial(N)),
         k(k),
         N(N),
         sigma(sigma) {};
 };
 
 template<typename TrlweType>
-void trlweAdd(TrlweType& output, const TrlweType& input1, const TrlweType& input2) {
+void addTrlwe(TrlweType& output, const TrlweType& input1, const TrlweType& input2) {
     for (auto i = 0; i < output.a.size(); i++) {
-        polynomialAddT32(output.a[i], input1.a[i], input2.a[i]);
+        addTorusPolynomial(output.a[i], input1.a[i], input2.a[i]);
     }
-    polynomialAddT32(output.b, input1.b, input2.b);
+    addTorusPolynomial(output.b, input1.b, input2.b);
 }
 
 template<typename TrlweType>
-void trlweSub(TrlweType& output, const TrlweType& input1, const TrlweType& input2) {
+void subTrlwe(TrlweType& output, const TrlweType& input1, const TrlweType& input2) {
     for (auto i = 0; i < output.a.size(); i++) {
-        polynomialSubT32(output.a[i], input1.a[i], input2.a[i]);
+        subTorusPolynomial(output.a[i], input1.a[i], input2.a[i]);
     }
-    polynomialSubT32(output.b, input1.b, input2.b);
+    subTorusPolynomial(output.b, input1.b, input2.b);
 }
 
 template<typename TrlweDftType>
-void trlweAddNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
+void addTrlweNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
     for (auto i = 0; i < output.a.size(); i++) {
-        lagrangePolynomialAdd(output.a[i], input1.a[i], input2.a[i]);
+        addNttPolynomial(output.a[i], input1.a[i], input2.a[i]);
     }
-    lagrangePolynomialAdd(output.b, input1.b, input2.b);
+    addNttPolynomial(output.b, input1.b, input2.b);
 }
 
 template<typename TrlweDftType>
-void trlweSubNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
+void subTrlweNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
     for (auto i = 0; i < output.a.size(); i++) {
-        lagrangePolynomialSub(output.a[i], input1.a[i], input2.a[i]);
+        subNttPolynomial(output.a[i], input1.a[i], input2.a[i]);
     }
-    lagrangePolynomialSub(output.b, input1.b, input2.b);
+    subNttPolynomial(output.b, input1.b, input2.b);
 }
 
 template <typename T>
-void trlweSetZero(std::vector<T>& a, T& b) {
+void resetTrlweToZero(std::vector<T>& a, T& b) {
     std::fill(a.begin(), a.end(), T(b.N, 0));
     std::fill(b.coeffs.begin(), b.coeffs.end(), 0);
 }
 
-/**
- * accum.a += tlwe.a, accum.b += tlwe.b
- * */
 template<typename TrlweType>
-void trlweAccumulateI32(TrlweType& accum, const TrlweType& tlwe) {
+void accumulateTrlwe(TrlweType& accum, const TrlweType& tlwe) {
     for (auto i = 0; i < accum.a.size(); i++) {
-        polynomialAccumulateI32(accum.a[i], tlwe.a[i]);
+        accumulateTorusPolynomial(accum.a[i], tlwe.a[i]);
     }
-    polynomialAccumulateI32(accum.b, tlwe.b);
-}
-
-template<typename TrlweType>
-void trlweAccumulateT32(TrlweType& accum, const TrlweType& tlwe) {
-    for (auto i = 0; i < accum.a.size(); i++) {
-        polynomialAccumulateT32(accum.a[i], tlwe.a[i]);
-    }
-    polynomialAccumulateT32(accum.b, tlwe.b);
+    accumulateTorusPolynomial(accum.b, tlwe.b);
 }
 
 template<typename TrlweType, typename U>
-void trlweAccumulateModP(TrlweType& accum, const TrlweType& tlwe, const U p) {
+void accumulateTrlweModP(TrlweType& accum, const TrlweType& tlwe, const U p) {
     for (auto i = 0; i < accum.a.size(); i++) {
-        polynomialAccumulateModP(accum.a[i], tlwe.a[i], p);
+        accumulatePolynomialModP(accum.a[i], tlwe.a[i], p);
     }
-    polynomialAccumulateModP(accum.b, tlwe.b, p);
+    accumulatePolynomialModP(accum.b, tlwe.b, p);
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
-void trlweCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const YatfheParameters& param) {
+void decompTrlweCrt(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
         auto qd = param.qd[d];
         auto& outA = out[d].a;
@@ -269,7 +258,7 @@ void trlweCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const Ya
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
-void trlweCRTDecompNO(TrlweTypeA& out, const TrlweTypeB& in, const YatfheParameters& param) {
+void decompTrlweCrtNO(TrlweTypeA& out, const TrlweTypeB& in, const YatfheParameters& param) {
     auto& outA = out.a;
     auto& outB = out.b;
     auto& inA = in.a;
@@ -297,7 +286,7 @@ void trlweCRTDecompNO(TrlweTypeA& out, const TrlweTypeB& in, const YatfheParamet
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
-void trlweMCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const YatfheParameters& param) {
+void decompTrlweMcrt(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const YatfheParameters& param) {
     for (size_t d = 0; d < param.d; d++) {
         int64_t taoU = param.taoU[d];
         auto qd = param.qd[d];
@@ -321,7 +310,7 @@ void trlweMCRTDecomp(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const Y
 }
 
 template<typename TrlweType>
-void trlweMCRTToCRT(std::vector<TrlweType>& trlwe, const YatfheParameters& param) {
+void trlweMcrtToCrt(std::vector<TrlweType>& trlwe, const YatfheParameters& param) {
     auto dh = param.dh;
     for (size_t d = 0; d < param.dl; d++) {
         auto ql = param.ql[d];
@@ -343,7 +332,7 @@ void trlweMCRTToCRT(std::vector<TrlweType>& trlwe, const YatfheParameters& param
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
-void trlweApproxCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inMCRT, const YatfheParameters& param) {
+void recompTrlweApproxCrt(TrlweTypeA& out, std::vector<TrlweTypeB>& inMCRT, const YatfheParameters& param) {
     auto& outA = out.a;
     auto qCRT = param.qCRT;
     for (size_t k = 0; k < param.k; k++) {
@@ -367,7 +356,7 @@ void trlweApproxCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inMCRT, cons
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
-void trlweCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const YatfheParameters& param) {
+void recompTrlweCrt(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const YatfheParameters& param) {
     auto& outA = out.a;
     auto qCRT = param.qCRT;
     for (size_t k = 0; k < param.k; k++) {
@@ -391,7 +380,7 @@ void trlweCRTRecomp(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const Yatfh
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
-void trlweCRTRecompNO(TrlweTypeA& out, TrlweTypeB& inCRT, const YatfheParameters& param) {
+void recompTrlweCrtNO(TrlweTypeA& out, TrlweTypeB& inCRT, const YatfheParameters& param) {
     auto& outA = out.a;
     auto& inA = inCRT.a;
     auto qCRT = param.qCRT;
@@ -419,7 +408,7 @@ void trlweCRTRecompNO(TrlweTypeA& out, TrlweTypeB& inCRT, const YatfheParameters
     }
 }
 
-void trlweKeyGen(TrlweKey& key);
+void genTrlweKey(TrlweKey& key);
 
 void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu);
 
@@ -443,8 +432,6 @@ void symDecTrlweNtt(DoublePolynomial& output, const TrlweDft& trlweDft, const Tr
 
 void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft, const TrlweKey& key);
 
-//void trlweAccumulateI32(Trlwe& accum, const Trlwe& tlwe);
-
 void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param);
 
 void gadgetDecomposeTrlweNtt(DecomposedTrlweDft& output, const TrlweDft& input, const YatfheParameters& param);
@@ -457,13 +444,13 @@ void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);
 
 void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey);
 
-void trlweRotate(Trlwe& res, const Trlwe& input, int a);
+void rotateTrlwe(Trlwe& res, const Trlwe& input, int a);
 
-void trlweRotateNtt(TrlweDft& res, const TrlweDft& input, const int r);
+void rotateTrlweNtt(TrlweDft& res, const TrlweDft& input, const int r);
 
-void trlweRotateMinusOne(Trlwe& res, const Trlwe& input, int a);
+void rotateTrlweMinusOne(Trlwe& res, const Trlwe& input, int a);
 
-void trlweRotateMinusOne8(Trlwe8& res, const Trlwe8& input, int a, int modP);
+void rotateTrlwe8MinusOne(Trlwe8& res, const Trlwe8& input, int a, int modP);
 
 void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);
 

@@ -7,10 +7,10 @@
 
 using namespace NttNative14;
 
-void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
+void encryptTrlgswNtt(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfheParameters& param, const TrgswKey& trgswKey, const Integer mu) {
     Trgsw trgsw {param};
-    trgswEncZero(trgsw, param, trgswKey);
-    trgswAddInteger(trgsw, mu, 0, param);
+    encZeroTrgsw(trgsw, param, trgswKey);
+    addIntegerToTrgsw(trgsw, mu, 0, param);
     for (auto lvl = 0; lvl < param.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
             DecomposedTrlwe decomposedTrlwe {param, param.l2};
@@ -18,9 +18,9 @@ void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfhePa
             for (auto lvl2 = 0; lvl2 < param.l2; lvl2++) {
                 for (auto j = 0; j < param.N; j++) {
                     for (auto col = 0; col < param.k; col++) {
-                        trlgsw.trgsws[lvl2].trlweSamples[lvl][row].a[col].coeffs[j] = decomposedTrlwe.rlwes[lvl2].a[col].coeffs[j];
+                        trlgsw.trgsws[lvl2].trlweSamples[lvl][row].a[col].coeffs[j] = decomposedTrlwe.trlwes[lvl2].a[col].coeffs[j];
                     }
-                    trlgsw.trgsws[lvl2].trlweSamples[lvl][row].b.coeffs[j] = decomposedTrlwe.rlwes[lvl2].b.coeffs[j];
+                    trlgsw.trgsws[lvl2].trlweSamples[lvl][row].b.coeffs[j] = decomposedTrlwe.trlwes[lvl2].b.coeffs[j];
                 }
                 applyNttForAB(trlgswDft14.trgswDfts[lvl2].trlweDftSamples[lvl][row],
                               trlgsw.trgsws[lvl2].trlweSamples[lvl][row]);
@@ -32,7 +32,7 @@ void trlgswEncryptNtt14(Trlgsw& trlgsw, TrlgswDft14& trlgswDft14, const YatfhePa
 
 
 //todo: debug
-void trlgswExternalProduct(Trlwe& output, const Trlgsw& trlgsw, Trlwe& trlweInput, const YatfheParameters& param) {
+void externalProductTrlgsw(Trlwe& output, const Trlgsw& trlgsw, Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto level1 = param.l;
     const auto level2 = param.l2;
@@ -58,13 +58,13 @@ void trlgswExternalProduct(Trlwe& output, const Trlgsw& trlgsw, Trlwe& trlweInpu
 //    }
     for (auto lvl = 0; lvl < level1; lvl++) {
         for (auto col = 0; col < k + 1; col++) {
-            auto &curr = (col < k) ? decomposedTrlwe.rlwes[lvl].a[col] : decomposedTrlwe.rlwes[lvl].b;
+            auto &curr = (col < k) ? decomposedTrlwe.trlwes[lvl].a[col] : decomposedTrlwe.trlwes[lvl].b;
             for (auto col2 = 0; col2 < k + 1; col2++) {
                 for (auto lvl2 = 0; lvl2 < level2; lvl2++) {
-                    auto &out = (col2 < k) ? decomposedTrlweRes.rlwes[lvl2].a[col2] : decomposedTrlweRes.rlwes[lvl2].b;
+                    auto &out = (col2 < k) ? decomposedTrlweRes.trlwes[lvl2].a[col2] : decomposedTrlweRes.trlwes[lvl2].b;
                     auto &curr2 = (col2 < k) ? trlgsw.trgsws[lvl2].trlweSamples[lvl][col].a[col2]
                                              : trlgsw.trgsws[lvl2].trlweSamples[lvl][col].b;
-                    polynomialMulAccNaiveT32(out, curr, curr2);
+                    multTorusPolynomialAcc(out, curr, curr2);
                 }
             }
         }
@@ -73,7 +73,7 @@ void trlgswExternalProduct(Trlwe& output, const Trlgsw& trlgsw, Trlwe& trlweInpu
 }
 
 //todo: optimize?
-void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Input, Trlwe& trlweInput, const YatfheParameters& param) {
+void externalProductTrlgswNtt(Trlwe& output, const TrlgswDft14& trlgswDft14Input, Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto level1 = param.l;
     const auto level2 = param.l2;
@@ -86,7 +86,7 @@ void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Inp
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
     for (auto i = 0; i < decomposedTrlwe.l; i++) {
-        applyNttForAB(decomposedTrlweDft14.rlweDfts[i], decomposedTrlwe.rlwes[i]);
+        applyNttForAB(decomposedTrlweDft14.rlweDfts[i], decomposedTrlwe.trlwes[i]);
     }
 
 ////#pragma omp parallel for collapse(2) private(out)
@@ -118,7 +118,7 @@ void trlgswExternalProductNtt14(Trlwe& output, const TrlgswDft14& trlgswDft14Inp
         }
     }
     for (auto lvl2 = 0; lvl2 < level2; lvl2++) {
-        applyInttForAB(decomposedTrlweIntt.rlwes[lvl2], trlweDftRes14[lvl2]);
+        applyInttForAB(decomposedTrlweIntt.trlwes[lvl2], trlweDftRes14[lvl2]);
     }
     recomposeTrlwe(output, decomposedTrlweIntt, param);
 }

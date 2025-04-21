@@ -78,7 +78,7 @@ void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) 
 }
 
 // output = (X^{a}) * input
-void torusPolynomialRotate(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
+void rotateTorusPolynomial(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
@@ -90,18 +90,18 @@ void torusPolynomialRotate(TorusPolynomial& out, const int a, const TorusPolynom
 }
 
 // output = (X^{a} - 1) * input = x^a * input - input
-void torusPolynomialRotateMinusOne(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
+void rotateTorusPolynomialMinusOne(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
     Torus tmp = 0;
     for (auto i = 0; i < N; i++) {
         tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
-        out.coeffs[i] = modSubT32(tmp, input.coeffs[i]);
+        out.coeffs[i] = subTorus(tmp, input.coeffs[i]);
     }
 }
 
-void intPolynomialRotate(IntPolynomial& out, const int a, const IntPolynomial& input, const int64_t p) {
+void rotateIntPolynomial(IntPolynomial& out, const int a, const IntPolynomial& input, const int64_t p) {
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
@@ -112,7 +112,7 @@ void intPolynomialRotate(IntPolynomial& out, const int a, const IntPolynomial& i
     }
 }
 
-void int8PolynomialRotate(Int8Polynomial& out, const int a, const Int8Polynomial& input, int modP) {
+void rotateInt8Polynomial(Int8Polynomial& out, const int a, const Int8Polynomial& input, int modP) {
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
@@ -123,7 +123,7 @@ void int8PolynomialRotate(Int8Polynomial& out, const int a, const Int8Polynomial
     }
 }
 
-void int8PolynomialRotateMinusOne(Int8Polynomial& out, const int a, const Int8Polynomial& input, int modP) {
+void rotateInt8PolynomialMinusOne(Int8Polynomial& out, const int a, const Int8Polynomial& input, int modP) {
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
@@ -134,27 +134,25 @@ void int8PolynomialRotateMinusOne(Int8Polynomial& out, const int a, const Int8Po
     }
 }
 
-void polynomialMulNaiveT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
+void multTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
-    int64_t tmp;
     for (auto i = 0; i < N; i++) {
-        tmp = 0;
+        int64_t tmp = 0;
         for (auto j = 0; j < N; j++) {
             if (j <= i) {
-                tmp += modMulT32(poly1.coeffs[j], poly2.coeffs[i - j]);
+                tmp += multTorus(poly1.coeffs[j], poly2.coeffs[i - j]);
             } else {
-                tmp -= modMulT32(poly1.coeffs[j], poly2.coeffs[N + i - j]);
+                tmp -= multTorus(poly1.coeffs[j], poly2.coeffs[N + i - j]);
             }
         }
         res.coeffs[i] = static_cast<Torus>(longModP(tmp, TORUS_Q));
     }
 }
 
-void polynomialMulNaiveModQ(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2, const int64_t q) {
+void multIntPolynomialModQ(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2, const int64_t q) {
     const int N = res.N;
-    int64_t tmp;
     for (auto i = 0; i < N; i++) {
-        tmp = 0;
+        int64_t tmp = 0;
         for (auto j = 0; j < N; j++) {
             if (j <= i) {
                 tmp += modMulQ(poly1.coeffs[j], poly2.coeffs[i - j], q);
@@ -166,11 +164,10 @@ void polynomialMulNaiveModQ(IntPolynomial& res, const IntPolynomial& poly1, cons
     }
 }
 
-void polynomialMulNaiveI8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, const int q) {
+void multInt8Polynomial(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, const int q) {
     const int N = res.N;
-    int tmp;
     for (auto i = 0; i < N; i++) {
-        tmp = 0;
+        int tmp = 0;
         for (auto j = 0; j < N; j++) {
             if (j <= i) {
                 tmp += modMulQ(poly1.coeffs[j], poly2.coeffs[i - j], q);
@@ -182,11 +179,10 @@ void polynomialMulNaiveI8(Int8Polynomial& res, const Int8Polynomial& poly1, cons
     }
 }
 
-void polynomialMulAccNaiveI8(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, const int q) {
+void multInt8PolynomialAcc(Int8Polynomial& res, const Int8Polynomial& poly1, const Int8Polynomial& poly2, const int q) {
     const int N = res.N;
-    int tmp;
     for (auto i = 0; i < N; i++) {
-        tmp = 0;
+        int tmp = 0;
         for (auto j = 0; j < N; j++) {
             if (j <= i) {
                 tmp += modMulQ(poly1.coeffs[j], poly2.coeffs[i - j], q);
@@ -198,11 +194,10 @@ void polynomialMulAccNaiveI8(Int8Polynomial& res, const Int8Polynomial& poly1, c
     }
 }
 
-void polynomialMulAccNaiveI32(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2) {
+void multIntPolynomialAcc(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2) {
     const int N = res.N;
-    Torus tmp;
     for (auto i = 0; i < N; i++) {
-        tmp = 0;
+        Torus tmp = 0;
         for (auto j = 0; j < N; j++) {
             tmp = (j <= i) ? (tmp + poly1.coeffs[j] * poly2.coeffs[i - j]) : (tmp - poly1.coeffs[j] * poly2.coeffs[N + i - j]);
         }
@@ -210,64 +205,33 @@ void polynomialMulAccNaiveI32(IntPolynomial& res, const IntPolynomial& poly1, co
     }
 }
 
-void polynomialMulAccNaiveT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
+void multTorusPolynomialAcc(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
-    int64_t tmp;
     for (auto i = 0; i < N; i++) {
-        tmp = 0;
+        int64_t tmp = 0;
         for (auto j = 0; j < N; j++) {
             if (j <= i) {
-                tmp += modMulT32(poly1.coeffs[j], poly2.coeffs[i - j]);
+                tmp += multTorus(poly1.coeffs[j], poly2.coeffs[i - j]);
             } else {
-                tmp -= modMulT32(poly1.coeffs[j], poly2.coeffs[N + i - j]);
+                tmp -= multTorus(poly1.coeffs[j], poly2.coeffs[N + i - j]);
             }
         }
-        res.coeffs[i] = modAddT32(res.coeffs[i], static_cast<Torus>(longModP(tmp, TORUS_Q)));
+        res.coeffs[i] = addTorus(res.coeffs[i], static_cast<Torus>(longModP(tmp, TORUS_Q)));
     }
 }
-
-void polynomialMulAccNaiveT32b(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
-    const int N = res.N;
-    int64_t tmp;
-    for (auto i = 0; i < N; i++) {
-        tmp = 0;
-        for (auto j = 0; j < N; j++) {
-            if (j <= i) {
-                tmp += static_cast<int64_t>(poly1.coeffs[j]) * static_cast<int64_t>(poly2.coeffs[i - j]);
-            } else {
-                tmp -= static_cast<int64_t>(poly1.coeffs[j]) * static_cast<int64_t>(poly2.coeffs[N + i - j]);
-            }
-        }
-        res.coeffs[i] = static_cast<Torus>(longModP(res.coeffs[i] + tmp, TORUS_Q));
-    }
-}
-
-//// res += accum
-//void polynomialAccumulateI32(TorusPolynomial& res, const TorusPolynomial& accum) {
-//    const int N = res.N;
-//    for (int i = 0; i < N; i++) {
-//        res.coeffs[i] += accum.coeffs[i];
-//    }
-//}
 
 // res = poly1 + poly2
-void polynomialAddI32(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2) {
+void addIntPolynomial(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
         res.coeffs[i] = poly1.coeffs[i] + poly2.coeffs[i];
     }
 }
 
-void polynomialAddT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
+void addTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
-    if (TORUS_Q == Q_32) {
-        for (int i = 0; i < N; i++) {
-            res.coeffs[i] = poly1.coeffs[i] + poly2.coeffs[i];
-        }
-        return;
-    }
     for (int i = 0; i < N; i++) {
-        res.coeffs[i] = modAddT32(poly1.coeffs[i], poly2.coeffs[i]);
+        res.coeffs[i] = addTorus(poly1.coeffs[i], poly2.coeffs[i]);
     }
 }
 
@@ -277,57 +241,51 @@ void polynomialAddT32(TorusPolynomial& res, const TorusPolynomial& poly1, const 
  * @param offset Offset value.
  * @param isAdd True: add offset. Otherwise, subtract offset.
  */
-void polynomialAddSubOffset(IntPolynomial& poly, const int offset, const bool isAdd) {
+void addSubIntPolynomialWithOffset(IntPolynomial& poly, const int offset, const bool isAdd) {
     for (auto i = 0; i < poly.N; i++) {
         poly.coeffs[i] = isAdd ? (poly.coeffs[i] + offset) : (poly.coeffs[i] - offset);
     }
 }
 
 // res = poly1 - poly2
-void polynomialSubI32(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2) {
+void subIntPolynomial(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
         res.coeffs[i] = poly1.coeffs[i] - poly2.coeffs[i];
     }
 }
 
-void polynomialSubT32(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
+void subTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
-    if (TORUS_Q == Q_32) {
-        for (int i = 0; i < N; i++) {
-            res.coeffs[i] = poly1.coeffs[i] - poly2.coeffs[i];
-        }
-        return;
-    }
     for (int i = 0; i < N; i++) {
-        res.coeffs[i] = modSubT32(poly1.coeffs[i], poly2.coeffs[i]);
+        res.coeffs[i] = subTorus(poly1.coeffs[i], poly2.coeffs[i]);
     }
 }
 
-void generateLagrangePolynomialWithValueAt(LagrangePolynomial& lagrangePolynomial, const int value, const int position) {
-    TorusPolynomial tmp {lagrangePolynomial.N};
+void genNttPolynomialWithValueAt(NttPolynomial& lagrangePolynomial, const int value, const int position) {
+    TorusPolynomial tmp{lagrangePolynomial.N};
     tmp.coeffs[position] = value;
     applyNtt(lagrangePolynomial, tmp);
 }
 
 // accum += poly
-void lagrangePolynomialAccumulate(LagrangePolynomial& accum, LagrangePolynomial& poly) {
+void accumulateNttPolynomial(NttPolynomial& accum, NttPolynomial& poly) {
     const auto N = accum.N;
-    const auto q = NttHexl::nttHexl().GetModulus();
+    const auto q = NttHexl::getNttHexl().GetModulus();
     for (auto i = 0; i < N; i++) {
         accum.coeffs[i] += AddUIntMod(accum.coeffs[i], poly.coeffs[i], q);
     }
 }
 
-void lagrangePolynomialAdd(LagrangePolynomial& output, const LagrangePolynomial& input1, const LagrangePolynomial& input2) {
-    const auto q = NttHexl::nttHexl().GetModulus();
+void addNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2) {
+    const auto q = NttHexl::getNttHexl().GetModulus();
     for (auto i = 0; i < input1.N; i++) {
         output.coeffs[i] = AddUIntMod(input1.coeffs[i], input2.coeffs[i], q);
     }
 }
 
-void lagrangePolynomialSub(LagrangePolynomial& output, const LagrangePolynomial& input1, const LagrangePolynomial& input2) {
-    const auto q = NttHexl::nttHexl().GetModulus();
+void subNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2) {
+    const auto q = NttHexl::getNttHexl().GetModulus();
     for (auto i = 0; i < input1.N; i++) {
         output.coeffs[i] = SubUIntMod(input1.coeffs[i], input2.coeffs[i], q);
     }

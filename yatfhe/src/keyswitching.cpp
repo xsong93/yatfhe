@@ -14,14 +14,14 @@
  * @param targetKey TlweKey: Target key remaining afterwards.
  * @param param YatfheParameters
  */
-void tlweKeySwitchingKeyGen(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param) {
+void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, const TlweKey& targetKey, const YatfheParameters& param) {
     TlweKey inKey {param.k * param.N};
     convertTrlweKeyToTlweKey(inKey, currKey);
     for (auto i = 0; i < inKey.n; i++) {
         std::vector<Integer> sOverB(param.ksLevel);
         decomposeOverB(sOverB, inKey.s[i], param); // s_i * B^-j
         for (auto j = 0; j < param.ksLevel; j++) {
-            symEncTlweSample(ksk.decomposedKsk[i][j], sOverB[j], targetKey);
+            symEncTlwe(ksk.decomposedKsk[i][j], sOverB[j], targetKey);
         }
     }
 }
@@ -33,8 +33,8 @@ void tlweKeySwitchingKeyGen(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
  * @param input Tlwe: Tlwe ciphertext to be keyswitched.
  * @param param YatfheParameters
  */
-void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param) {
-    tlweCLear(output);
+void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param) {
+    resetTlweToZero(output);
     output.b = input.b; // init output as (0,..., 0, b)
     Torus mul = 0;
     for (auto i = 0; i < input.n; i++) {
@@ -44,12 +44,12 @@ void tlweKeySwitch(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& inp
         gadgetDecompose(aBar, input.a[i], param);
         for (auto j = 0; j < param.ksLevel; j++) {
             for (auto k = 0; k < output.n; k++) {
-                mul = modMulT32(aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].a[k]);
-                tmp.a[k] = modAddT32(tmp.a[k], mul);
+                mul = multTorus(aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].a[k]);
+                tmp.a[k] = addTorus(tmp.a[k], mul);
             }
-            mul = modMulT32(aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].b);
-            tmp.b = modAddT32(tmp.b, mul);
+            mul = multTorus(aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].b);
+            tmp.b = addTorus(tmp.b, mul);
         }
-        lweSubTo(output, tmp);
+        subTlweInPlace(output, tmp);
     }
 }
