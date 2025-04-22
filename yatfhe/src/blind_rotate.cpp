@@ -3,6 +3,7 @@
 //
 #include "yatfhe/blind_rotate.h"
 #include "yatfhe/cmux.h"
+#include <thread>
 
 void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
@@ -24,10 +25,11 @@ void blindRotateNormalNtt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
         }
         temp = Trlwe{param.k, param.N};
         controlMuxNtt(temp, accum, input.a[i], bskDft[i], param);
-        swap(accum, temp);
+        accum = std::move(temp);
     }
 }
 
+//todo
 void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     Trgsw tmp1{param}, tmp2{param}, tmp3{param};
@@ -37,18 +39,64 @@ void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe&
         auto a1 = input.a[i];
         auto a2 = input.a[i + 1];
         auto bsk1 = bsk[j];
-        auto& bsk2 = bsk[j + 1];
+        auto bsk2 = bsk[j + 1];
         auto bsk3 = bsk[j + 2];
         auto& bsk4 = bsk[j + 3];
+#ifdef BLINDROT_GROUP_NAIVE
+//        rotateTrgsw(bsk1, a1, param);
+//        rotateTrgsw(bsk3, a1, param);
+//        addTrgsw(tmp1, bsk1, bsk2);
+//        addTrgsw(tmp2, bsk3, bsk4);
 
-        rotateTrgsw(bsk1, a1, param);
-        rotateTrgsw(bsk3, a1, param);
-        addTrgsw(tmp1, bsk1, bsk2);
-        addTrgsw(tmp2, bsk3, bsk4);
+        std::thread t1([&](){
+            rotateTrgsw(bsk1, a1, param);
+            addTrgsw(tmp1, bsk1, bsk2);
+        });
+        std::thread t2([&](){
+            rotateTrgsw(bsk3, a1, param);
+            addTrgsw(tmp2, bsk3, bsk4);
+        });
+        t1.join();
+        t2.join();
 
         rotateTrgsw(tmp1, a2, param);
         addTrgsw(tmp3, tmp1, tmp2);
+#else
+        auto a12 = a1 + a2;
+        std::thread t1([&]() {
+            rotateTrgsw(bsk1, a12, param);
+        });
+        std::thread t2([&]() {
+            rotateTrgsw(bsk2, a2, param);
+        });
+        std::thread t3([&]() {
+            rotateTrgsw(bsk3, a1, param);
+        });
+        t1.join();
+        t2.join();
+        t3.join();
+//        rotateTrgsw(bsk1, a12, param);
+//        rotateTrgsw(bsk2, a2, param);
+//        rotateTrgsw(bsk3, a1, param);
 
+#pragma omp parallel for collapse(3)
+        for (size_t l = 0; l < param.l; l++) {
+            for (size_t k = 0; k < param.k + 1; k++) {
+                for (auto k2 = 0; k2 < param.k; k2++) {
+#pragma omp simd
+                    for (int n = 0; n < param.N; n++) {
+                        tmp3.trlweSamples[l][k].a[k2].coeffs[n] = bsk1.trlweSamples[l][k].a[k2].coeffs[n] + bsk2.trlweSamples[l][k].a[k2].coeffs[n] +
+                                bsk3.trlweSamples[l][k].a[k2].coeffs[n] + bsk4.trlweSamples[l][k].a[k2].coeffs[n];
+                    }
+                }
+#pragma omp simd
+                for (int n = 0; n < param.N; n++) {
+                    tmp3.trlweSamples[l][k].b.coeffs[n] = bsk1.trlweSamples[l][k].b.coeffs[n] + bsk2.trlweSamples[l][k].b.coeffs[n] +
+                                                              bsk3.trlweSamples[l][k].b.coeffs[n] + bsk4.trlweSamples[l][k].b.coeffs[n];
+                }
+            }
+        }
+#endif
         temp = Trlwe{param.k, param.N};
         externalProductTrgsw(temp, tmp3, accum, param);
         accum = std::move(temp);

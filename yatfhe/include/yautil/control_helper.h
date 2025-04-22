@@ -11,4 +11,6 @@
 #define PAR_SET1
 //#define PAR_SET2
 
+//#define BLINDROT_GROUP_NAIVE
+
 #endif //HLS_YATFHE_CONTROL_HELPER_H
