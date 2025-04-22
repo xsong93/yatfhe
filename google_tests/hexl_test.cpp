@@ -114,7 +114,7 @@ TEST(HEXL_TEST, NTT_ROT) {
         in.coeffs[i] = genIntUniformDist(-4, 4);
         in2.coeffs[i] = -in.coeffs[i];
     }
-    int r = genIntUniformDist(0, N);
+    int r = genIntUniformDist(TORUS_MIN, TORUS_MAX);
     cout << "r:" << r << endl;
     COUNT_TIME("torusPolynomialRotate", rotateTorusPolynomial(ref, r, in));
     COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl, in);)

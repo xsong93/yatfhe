@@ -29,13 +29,18 @@ namespace NttHexl {
              ", ROU: " << getNttHexl().GetMinimalRootOfUnity() << endl;
     }
 
-    std::unordered_map<int32_t, NttPolynomial>& getNttRotMap() {
+    std::unordered_map<int32_t, NttPolynomial> &getNttRotMap() {
         static std::unordered_map<int32_t, NttPolynomial> nttRotMap;
         return nttRotMap;
     }
 
-    NttPolynomial& getNttRoterPoly(int32_t r) {
-        return getNttRotMap().find(r)->second;
+    std::unordered_map<int32_t, NttPolynomial> &getNttRotInverseMap() {
+        static std::unordered_map<int32_t, NttPolynomial> nttRotInverseMap;
+        return nttRotInverseMap;
+    }
+
+    NttPolynomial &getNttRoterPoly(int32_t r) {
+        return r >= 0 ? getNttRotMap().find(r)->second : getNttRotInverseMap().find(-r)->second;
     }
 
     void initNttRotMap(int32_t degree) {
@@ -46,7 +51,10 @@ namespace NttHexl {
                 TorusPolynomial tmpT{degree};
                 tmpT.coeffs[i] = 1;
                 applyNtt(tmp, tmpT);
-                getNttRotMap().insert({i, std::move(tmp)});
+                getNttRotMap().insert({i, tmp});
+                tmpT.coeffs[i] = -1;
+                applyNtt(tmp, tmpT);
+                getNttRotInverseMap().insert({i, tmp});
             }
             initialized = true;
         }
@@ -83,7 +91,8 @@ namespace NttHexl {
         }
     }
 
-    void calModularInnerProductNtt(NttPolynomial& res, const vector<NttPolynomial>& in1, const vector<NttPolynomial>& in2) {
+    void
+    calModularInnerProductNtt(NttPolynomial &res, const vector<NttPolynomial> &in1, const vector<NttPolynomial> &in2) {
         for (auto i = 0; i < in1.size(); i++) {
             calModularInnerProductNtt(res, in1[i], in2[i]);
         }
@@ -96,38 +105,5 @@ namespace NttHexl {
         NttPolynomial tmp1 = acc;
         EltwiseMultMod(tmp.coeffs.data(), in1.coeffs.data(), in2.coeffs.data(), N, q, 1);
         EltwiseAddMod(acc.coeffs.data(), tmp.coeffs.data(), tmp1.coeffs.data(), N, q);
-    }
-
-    void EltwiseSignedMultMod(uint64_t* result, const uint64_t* operand1,
-                        const uint64_t* operand2, const int32_t sign, uint64_t n, uint64_t modulus,
-                        uint64_t input_mod_factor) {
-      HEXL_CHECK(result != nullptr, "Require result != nullptr");
-      HEXL_CHECK(operand1 != nullptr, "Require operand1 != nullptr");
-      HEXL_CHECK(operand2 != nullptr, "Require operand2 != nullptr");
-      HEXL_CHECK(n != 0, "Require n != 0");
-      HEXL_CHECK(modulus > 1, "Require modulus > 1");
-      HEXL_CHECK(input_mod_factor * modulus < (1ULL << 63),
-                 "Require input_mod_factor * modulus < (1ULL << 63)");
-      HEXL_CHECK(
-          input_mod_factor == 1 || input_mod_factor == 2 || input_mod_factor == 4,
-          "Require input_mod_factor = 1, 2, or 4")
-      HEXL_CHECK_BOUNDS(operand1, n, input_mod_factor * modulus,
-                        "operand1 exceeds bound " << (input_mod_factor * modulus))
-      HEXL_CHECK_BOUNDS(operand2, n, input_mod_factor * modulus,
-                        "operand2 exceeds bound " << (input_mod_factor * modulus))
-
-      HEXL_VLOG(3, "Calling EltwiseMultModNative");
-      switch (input_mod_factor) {
-        case 1:
-          EltwiseSignedMultModNative<1>(result, operand1, operand2, sign, n, modulus);
-          break;
-        case 2:
-          EltwiseSignedMultModNative<2>(result, operand1, operand2, sign, n, modulus);
-          break;
-        case 4:
-          EltwiseSignedMultModNative<4>(result, operand1, operand2, sign, n, modulus);
-          break;
-      }
-      return;
     }
 }

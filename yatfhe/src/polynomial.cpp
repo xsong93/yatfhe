@@ -261,12 +261,13 @@ void subTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, cons
 }
 
 void rotateNttPolynomial(NttPolynomial& res, const NttPolynomial& in, int r) {
+    using namespace NttHexl;
     auto N = res.N;
     int rTrue, isWrap;
     validateRotator(rTrue, isWrap, r, N);
-    auto q = NttHexl::getNttHexl().GetModulus();
-    auto roter = NttHexl::getNttRoterPoly(rTrue).coeffs.data();
-    NttHexl::EltwiseSignedMultMod(res.coeffs.data(), in.coeffs.data(), roter, isWrap, N, q, 1);
+    auto q = getNttHexl().GetModulus();
+    auto roter = getNttRoterPoly(rTrue * isWrap).coeffs.data();
+    EltwiseMultMod(res.coeffs.data(), in.coeffs.data(), roter, N, q, 1);
 }
 
 void genNttPolynomialWithValueAt(NttPolynomial& lagrangePolynomial, const int value, const int position) {
