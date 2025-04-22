@@ -9,6 +9,7 @@
 using namespace std;
 
 void printRlweAB(const Rlwe& in, const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET << ": a: ";
     for (int i = 0; i < in.k; i++) {
         cout << "[";
@@ -22,9 +23,11 @@ void printRlweAB(const Rlwe& in, const string& msg) {
         printf("%d:%s%d%s  ", j, ANSI_COLOR_YELLOW, in.b.coeffs[j], ANSI_COLOR_RESET);
     }
     cout <<"]" << endl << endl;
+#endif
 }
 
 void printTrlweDftAB(const TrlweDft& in, const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET << ": a: ";
     for (int i = 0; i < in.k; i++) {
         cout << "[";
@@ -38,9 +41,11 @@ void printTrlweDftAB(const TrlweDft& in, const string& msg) {
         printf("%d:%s%lu%s  ", j, ANSI_COLOR_YELLOW, in.b.coeffs[j], ANSI_COLOR_RESET);
     }
     cout <<"]" << endl << endl;
+#endif
 }
 
 void printDecomposedTrlweAB(const DecomposedTrlwe& in, const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ": " << ANSI_COLOR_RESET;
     for (auto l = 0; l < in.l; l++) {
         printf("level %d: a: ", l);
@@ -58,9 +63,11 @@ void printDecomposedTrlweAB(const DecomposedTrlwe& in, const string& msg) {
         }
         cout << "]" << endl << endl;
     }
+#endif
 }
 
 void printDecomposedTrlweNttAB(const DecomposedTrlweDft& in, const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ": " << ANSI_COLOR_RESET;
     for (auto l = 0; l < in.l; l++) {
         printf("level %d: a: ", l);
@@ -78,9 +85,11 @@ void printDecomposedTrlweNttAB(const DecomposedTrlweDft& in, const string& msg) 
         }
         cout << "]" << endl << endl;
     }
+#endif
 }
 
 void printPolyMat(const vector<vector<IntPolynomial>>& in, const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET <<": [";
     for (int i = 0; i < in.size(); i++) {
         for (int j = 0; j < in[i].size(); j++) {
@@ -90,9 +99,11 @@ void printPolyMat(const vector<vector<IntPolynomial>>& in, const string& msg) {
         }
     }
     cout <<"]" <<endl << endl;
+#endif
 }
 
 void printBanner(const string& msg) {
+#ifdef PRINTER_ON
     string l = ">>>>>>>>>>>>>>>>>>>>>>>> ";
     string r = " test passed! <<<<<<<<<<<<<<<<<<<<<<<<";
     auto length = l.size() + r.size() + msg.size();
@@ -104,4 +115,5 @@ void printBanner(const string& msg) {
         std::cout << ANSI_COLOR_GREEN << "-";
     }
     std::cout << std::endl;
+#endif
 }

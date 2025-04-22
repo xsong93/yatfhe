@@ -60,7 +60,7 @@ TEST(BLIND_ROT, BLIND_ROT) {
             rot += sTlwe.a[i];
         }
     }
-    cout << "rot:" << rot << endl;
+    printMsg(rot, "rot");
     rotateTrlwe(rotIn, in2, rot);
     symDecTrlweToInt(rotInP, rotIn, trlweKey, param.torusBase);
     printArray(rotInP.coeffs, "expect");
@@ -91,13 +91,19 @@ TEST(BLIND_ROT, BLIND_ROT) {
 
 TEST(BLIND_ROT, BLIND_ROT_NTT) {
     YatfheParameters param{};
-    // param.n = 64;
+//    param.n = 64;
     param.group = 2;
     initYatfhe(param);
 
     // key gen
     TlweKey tlweKey{param.n, param.lweStdDev};
     genTlweKey(tlweKey);
+#ifdef DEBUG_MODE
+    for (int i = 0; i < tlweKey.n; i = i + 2) {
+        tlweKey.s[i] = 0;
+        tlweKey.s[i + 1] = 1;
+    }
+#endif
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     genTrlweKey(trlweKey);
@@ -125,7 +131,7 @@ TEST(BLIND_ROT, BLIND_ROT_NTT) {
     // rots gen
     ScaledTlwe sTlwe {param.N * 2, param.n};
     for (auto i = 0 ; i < sTlwe.n; i++) {
-        sTlwe.a[i] = genIntUniformDist(TORUS_MIN, TORUS_MAX);
+        sTlwe.a[i] = genIntUniformDist(-2 * param.N, 2 * param.N);
     }
 
     // test data gen
@@ -137,12 +143,50 @@ TEST(BLIND_ROT, BLIND_ROT_NTT) {
             rot += sTlwe.a[i];
         }
     }
-    cout << "rot:" << rot << endl;
+    printMsg(rot, "rot");
     rotateTrlweNtt(rotInDft, in2Dft, rot);
     symDecTrlweToIntNtt(rotInP, rotInDft, trlweKey, param.torusBase);
     printArray(rotInP.coeffs, "expect");
 
+#ifdef DEBUG_MODE
+    IntPolynomial ip1{param.N}, ip2{param.N};
+    Trlwe temp{param.k, param.N}, temp2{param.k, param.N};
+    TrgswDft tmp1{param}, tmp2{param}, tmp3{param};
+    int j = 0;
+    auto batchSize = 1 << param.group;
+    for (auto i = 0; i < param.n; i = i + 2) {
+        auto a1 = sTlwe.a[i];
+        auto a2 = sTlwe.a[i + 1];
+        auto bsk1 = bsk.bskDft[j];
+        auto& bsk2 = bsk.bskDft[j + 1];
+        auto bsk3 = bsk.bskDft[j + 2];
+        auto& bsk4 = bsk.bskDft[j + 3];
+
+        rotateTrgswNtt(bsk1, a1, param);
+        rotateTrgswNtt(bsk3, a1, param);
+        addTrgswNtt(tmp1, bsk1, bsk2);
+        addTrgswNtt(tmp2, bsk3, bsk4);
+
+        rotateTrgswNtt(tmp1, a2, param);
+        addTrgswNtt(tmp3, tmp1, tmp2);
+
+        temp = Trlwe{param.k, param.N};
+        externalProductTrgswNtt(temp, tmp3, in2, param);
+        rotateTrlwe(temp2, in2, a2);
+        symDecTrlweToInt(ip1, temp, trlweKey, param.torusBase);
+        symDecTrlweToInt(ip2, temp2, trlweKey, param.torusBase);
+        try {
+            if (ip1.coeffs != ip2.coeffs) throw std::runtime_error("");
+        } catch (...) {
+            printMsg(a2, "a2");
+            ASSERT_EQ(ip1.coeffs, ip2.coeffs);
+        }
+        in2 = std::move(temp);
+        j += batchSize;
+    }
+#else
     COUNT_TIME("blindRotateNtt", blindRotateNtt(in2, bsk.bskDft, sTlwe, param);)
+#endif
 
     // trgsw enc X^rot
     Trgsw trgswXRot{param};

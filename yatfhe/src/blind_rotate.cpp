@@ -56,7 +56,6 @@ void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe&
     }
 }
 
-//todo
 void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     TrgswDft tmp1{param}, tmp2{param}, tmp3{param};

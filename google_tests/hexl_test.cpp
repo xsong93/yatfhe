@@ -114,17 +114,13 @@ TEST(HEXL_TEST, NTT_ROT) {
         in.coeffs[i] = genIntUniformDist(-4, 4);
         in2.coeffs[i] = -in.coeffs[i];
     }
-    int r = genIntUniformDist(TORUS_MIN, TORUS_MAX);
-    cout << "r:" << r << endl;
-    COUNT_TIME("torusPolynomialRotate", rotateTorusPolynomial(ref, r, in));
-    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl, in);)
-    COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl2, in2);)
-    printArray(nttHexl.coeffs, "in");
-    printArray(nttHexl2.coeffs, "in2");
-    COUNT_TIME("NTT_ROT", rotateNttPolynomial(tmp, nttHexl, r);)
-    COUNT_TIME("HEXL", NttHexl::applyIntt(res, tmp);)
-    printArray(in.coeffs, "in");
-    printArray(ref.coeffs, "ref");
-    printArray(res.coeffs, "res");
-    ASSERT_EQ(ref.coeffs, res.coeffs);
+    for (int r = -N * 2; r < N * 2; r++) {
+        COUNT_TIME("torusPolynomialRotate", rotateTorusPolynomial(ref, r, in));
+        COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl, in);)
+        COUNT_TIME("HEXL", NttHexl::applyNtt(nttHexl2, in2);)
+        COUNT_TIME("NTT_ROT", rotateNttPolynomial(tmp, nttHexl, r);)
+        COUNT_TIME("HEXL", NttHexl::applyIntt(res, tmp);)
+        ASSERT_EQ(ref.coeffs, res.coeffs);
+    }
+    printBanner("NTT_ROT");
 }

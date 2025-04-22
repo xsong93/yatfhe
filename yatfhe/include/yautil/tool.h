@@ -15,6 +15,7 @@ using namespace std;
 
 template <typename T>
 void printElement(int index, const T& value) {
+#ifdef PRINTER_ON
     if constexpr (std::is_integral<T>::value && std::is_signed<T>::value && !std::is_same<T, char>::value && !std::is_same<T, bool>::value) {
         // Handle signed integral types (int, int64_t, etc.)
         printf("%d:%s%lld%s ", index, ANSI_COLOR_YELLOW, static_cast<long long>(value), ANSI_COLOR_RESET);
@@ -43,10 +44,12 @@ void printElement(int index, const T& value) {
         // Fallback for any other types
         std::cout << index << ":" << ANSI_COLOR_YELLOW << value << ANSI_COLOR_RESET << " ";
     }
+#endif
 }
 
 template <typename T>
 void printElement2Idx(int index1, int index2, const T& value) {
+#ifdef PRINTER_ON
     if constexpr (std::is_integral<T>::value && std::is_signed<T>::value && !std::is_same<T, char>::value && !std::is_same<T, bool>::value) {
         // Handle signed integral types (int, int64_t, etc.)
         printf("%d,%d:%s%lld%s ", index1, index2, ANSI_COLOR_YELLOW, static_cast<long long>(value), ANSI_COLOR_RESET);
@@ -75,21 +78,25 @@ void printElement2Idx(int index1, int index2, const T& value) {
         // Fallback for any other types
         std::cout << index1 << "," << index2 << ":" << ANSI_COLOR_YELLOW << value << ANSI_COLOR_RESET << " ";
     }
+#endif
 }
 
 template <typename T>
 void printTlweAB(const T& in, const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET << ": a: [";
     for (int i = 0; i < in.n; i++) {
         cout << i << ":" << ANSI_COLOR_YELLOW << in.a[i] << ANSI_COLOR_RESET << " ";
     }
     cout <<"]" << endl << "b: [" << ANSI_COLOR_YELLOW << in.b << ANSI_COLOR_RESET << "]" << endl << endl;
+#endif
 }
 
 void printRlweAB(const Rlwe& in, const string& msg);
 
 template <typename RlweType>
 void printTrlweAB(const RlweType& in, const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET << ": a: ";
     for (int i = 0; i < in.k; i++) {
         cout << "[";
@@ -105,18 +112,21 @@ void printTrlweAB(const RlweType& in, const string& msg) {
         printElement(j, in.b.coeffs[j]);
     }
     cout <<"]" << endl << endl;
+#endif
 }
 
 void printTrlweDftAB(const TrlweDft& in, const string& msg);
 
 template <typename RgswType>
 void printTrgsw(const RgswType& in , const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ": " << ANSI_COLOR_RESET;
     for (auto i = 0; i < in.l; i++) {
         for (auto j = 0 ; j < in.trlweSamples[i].size(); j++) {
             printTrlweAB(in.trlweSamples[i][j], "l:" + to_string(i) + ", k:" + to_string(j));
         }
     }
+#endif
 }
 
 void printDecomposedTrlweAB(const DecomposedTrlwe& in, const string& msg);
@@ -125,6 +135,7 @@ void printDecomposedTrlweNttAB(const DecomposedTrlweDft& in, const string& msg);
 
 template <typename T>
 void printArray(const vector<T>& in, const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET <<": [";
     for (int i = 0; i < in.size(); i++) {
 //        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] << ANSI_COLOR_RESET <<" ";
@@ -132,10 +143,12 @@ void printArray(const vector<T>& in, const string& msg) {
         printElement(i, in[i]);
     }
     cout <<"]" <<endl << endl;
+#endif
 }
 
 template <typename T, size_t N>
 void printArray(const T (&in)[N], const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET <<": [";
     for (size_t i = 0; i < N; i++) {
 //        cout << i << ":" << ANSI_COLOR_YELLOW << in[i] << ANSI_COLOR_RESET <<" ";
@@ -143,12 +156,14 @@ void printArray(const T (&in)[N], const string& msg) {
         printElement(i, in[i]);
     }
     cout <<"]" <<endl << endl;
+#endif
 }
 
 void printPolyMat(const vector<vector<IntPolynomial>>& in, const string& msg);
 
 template <typename T>
 void printPolyVec(const vector<T>& in, const string& msg) {
+#ifdef PRINTER_ON
     cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET << ": [";
     for (int i = 0; i < in.size(); i++) {
         for (int j = 0; j < in[0].N; j++) {
@@ -156,6 +171,15 @@ void printPolyVec(const vector<T>& in, const string& msg) {
         }
     }
     cout <<"]" <<endl << endl;
+#endif
+}
+
+template<typename T>
+void printMsg(const T in, const string& msg) {
+#ifdef PRINTER_ON
+    cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET << ": "
+        << ANSI_COLOR_YELLOW << in << ANSI_COLOR_RESET << endl;
+#endif
 }
 
 void printBanner(const string& msg);

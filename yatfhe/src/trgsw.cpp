@@ -126,7 +126,7 @@ void addIntegerToTrgsw(Trgsw& trgsw, const Integer mu, const int pos, const Yatf
 }
 
 void rotateTrgsw(Trgsw& trgsw, const int rot, const YatfheParameters& param) {
-    if (rot % param.N * 2 == 0) {
+    if (rot % (param.N * 2) == 0) {
         return;
     }
     Trlwe rotT{param.k, param.N};
@@ -139,7 +139,7 @@ void rotateTrgsw(Trgsw& trgsw, const int rot, const YatfheParameters& param) {
 }
 
 void rotateTrgswNtt(TrgswDft& trgswDft, const int rot, const YatfheParameters& param) {
-    if (rot % param.N * 2 == 0) {
+    if (rot % (param.N * 2) == 0) {
         return;
     }
     TrlweDft rotT{param.k, param.N};

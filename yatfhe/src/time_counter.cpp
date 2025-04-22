@@ -5,6 +5,7 @@
 #include <iostream>
 #include "yautil/time_counter.h"
 #include "yautil/control_helper.h"
+#include "yautil/tool.h"
 
 time_point<high_resolution_clock> TimeCounter::timeGlobal = high_resolution_clock::now();
 
@@ -23,13 +24,17 @@ time_point<high_resolution_clock> TimeCounter::getTime() {
 
 void TimeCounter::printTime(const std::string& message) {
 #ifdef ENABLE_TIMER
-    std::cout << "elapsed time (" << message << ") in us: " << duration_cast<microseconds>(high_resolution_clock::now() - getTime()).count() << std::endl;
+    printMsg(duration_cast<microseconds>(high_resolution_clock::now() - getTime()).count(),
+             "elapsed time (" + message + ") in us");
+//    std::cout << "elapsed time (" << message << ") in us: " << duration_cast<microseconds>(high_resolution_clock::now() - getTime()).count() << std::endl;
 #endif
 }
 
 void TimeCounter::printTime(const std::string& message, time_point<high_resolution_clock>& start) {
 #ifdef ENABLE_TIMER
-    std::cout << "elapsed time (" << message << ") in us: " << duration_cast<microseconds>(high_resolution_clock::now() - start).count() << std::endl;
+    printMsg(duration_cast<microseconds>(high_resolution_clock::now() - start).count(),
+             "elapsed time (" + message + ") in us");
+//    std::cout << "elapsed time (" << message << ") in us: " << duration_cast<microseconds>(high_resolution_clock::now() - start).count() << std::endl;
 #endif
 }
 
@@ -38,7 +43,9 @@ void TimeCounter::printTime(const std::string& message, clock_t& start, long int
     if (interval <= 0) {
         interval = 1;
     }
-    std::cout << "elapsed time (" << message << ") in us: " << (clock() - start) / interval << std::endl;
+    printMsg((clock() - start) / interval,
+             "elapsed time (" + message + ") in us");
+//    std::cout << "elapsed time (" << message << ") in us: " << (clock() - start) / interval << std::endl;
 #endif
 }
 

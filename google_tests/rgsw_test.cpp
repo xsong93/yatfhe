@@ -753,7 +753,7 @@ TEST(RgswTest, RGSW_ROT) {
     initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
-        cout << "iter: " << ti << endl;
+        printMsg(ti, "iter");
         // key gen
         TrgswKey trgswKey{param};
         TrlweKey& trlweKey = trgswKey.trlweKey;
@@ -763,10 +763,10 @@ TEST(RgswTest, RGSW_ROT) {
         Trgsw trgsw{param};
 //        Integer mu1 = genIntUniformDist(0, 3);
         Integer mu1 = 1;
-        int rotN = 1;
-        encryptTrgsw(trgsw, mu1, trgswKey, 1, param);
-//        COUNT_TIME("trgswRotate", trgswRotate(trgsw, rotN, param);)
-        printf("trgsw dec: %d.\n", decryptTrgsw(trgsw, param, trgswKey));
+        int rotN = -512;
+        encryptTrgsw(trgsw, mu1, trgswKey, 0, param);
+        rotateTrgsw(trgsw, rotN, param);
+        printMsg(decryptTrgsw(trgsw, param, trgswKey), "trgsw dec");
 
         // trlwe enc
         Trlwe in2{param.k, param.N};

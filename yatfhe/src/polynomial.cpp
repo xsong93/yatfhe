@@ -1,6 +1,7 @@
 //
 // Created by Xintong Song on 2023/12/25.
 //
+#include <iostream>
 #include "yatfhe/polynomial.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt_hexl.h"
@@ -266,7 +267,7 @@ void rotateNttPolynomial(NttPolynomial& res, const NttPolynomial& in, int r) {
     int rTrue, isWrap;
     validateRotator(rTrue, isWrap, r, N);
     auto q = getNttHexl().GetModulus();
-    auto roter = getNttRoterPoly(rTrue * isWrap).coeffs.data();
+    auto roter = getNttRoterPoly(rTrue, isWrap).coeffs.data();
     EltwiseMultMod(res.coeffs.data(), in.coeffs.data(), roter, N, q, 1);
 }
 

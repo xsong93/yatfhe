@@ -39,8 +39,8 @@ namespace NttHexl {
         return nttRotInverseMap;
     }
 
-    NttPolynomial &getNttRoterPoly(int32_t r) {
-        return r >= 0 ? getNttRotMap().find(r)->second : getNttRotInverseMap().find(-r)->second;
+    NttPolynomial &getNttRoterPoly(const int32_t rTrue, const int32_t isWrap) {
+        return isWrap == 1 ? getNttRotMap().find(rTrue)->second : getNttRotInverseMap().find(rTrue)->second;
     }
 
     void initNttRotMap(int32_t degree) {

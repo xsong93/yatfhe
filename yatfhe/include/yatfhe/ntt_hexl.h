@@ -19,7 +19,7 @@ namespace NttHexl {
 
     void printHexlParams();
 
-    NttPolynomial& getNttRoterPoly(int32_t r);
+    NttPolynomial &getNttRoterPoly(int32_t rTrue, int32_t isWrap);
 
     void initNttRotMap(int32_t degree);
 
