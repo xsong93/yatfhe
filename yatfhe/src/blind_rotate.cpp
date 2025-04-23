@@ -3,6 +3,8 @@
 //
 #include "yatfhe/blind_rotate.h"
 #include "yatfhe/cmux.h"
+#include "yatfhe/ntt_hexl.h"
+#include "yautil/time_counter.h"
 #include <thread>
 
 void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
@@ -79,20 +81,33 @@ void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe&
 //        rotateTrgsw(bsk2, a2, param);
 //        rotateTrgsw(bsk3, a1, param);
 
-#pragma omp parallel for collapse(3)
         for (size_t l = 0; l < param.l; l++) {
             for (size_t k = 0; k < param.k + 1; k++) {
                 for (auto k2 = 0; k2 < param.k; k2++) {
-#pragma omp simd
+                    auto& coeffA1 = bsk1.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA2 = bsk2.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA3 = bsk3.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA4 = bsk4.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffAT = tmp3.trlweSamples[l][k].a[k2].coeffs;
                     for (int n = 0; n < param.N; n++) {
-                        tmp3.trlweSamples[l][k].a[k2].coeffs[n] = bsk1.trlweSamples[l][k].a[k2].coeffs[n] + bsk2.trlweSamples[l][k].a[k2].coeffs[n] +
-                                bsk3.trlweSamples[l][k].a[k2].coeffs[n] + bsk4.trlweSamples[l][k].a[k2].coeffs[n];
+//                        tmp3.trlweSamples[l][k].a[k2].coeffs[n] = bsk1.trlweSamples[l][k].a[k2].coeffs[n]
+//                                + bsk2.trlweSamples[l][k].a[k2].coeffs[n]
+//                                + bsk3.trlweSamples[l][k].a[k2].coeffs[n]
+//                                + bsk4.trlweSamples[l][k].a[k2].coeffs[n];
+                        coeffAT[n] = coeffA1[n] + coeffA2[n] + coeffA3[n] + coeffA4[n];
                     }
                 }
-#pragma omp simd
+                auto& coeffB1 = bsk1.trlweSamples[l][k].b.coeffs;
+                auto& coeffB2 = bsk2.trlweSamples[l][k].b.coeffs;
+                auto& coeffB3 = bsk3.trlweSamples[l][k].b.coeffs;
+                auto& coeffB4 = bsk4.trlweSamples[l][k].b.coeffs;
+                auto& coeffBT = tmp3.trlweSamples[l][k].b.coeffs;
                 for (int n = 0; n < param.N; n++) {
-                    tmp3.trlweSamples[l][k].b.coeffs[n] = bsk1.trlweSamples[l][k].b.coeffs[n] + bsk2.trlweSamples[l][k].b.coeffs[n] +
-                                                              bsk3.trlweSamples[l][k].b.coeffs[n] + bsk4.trlweSamples[l][k].b.coeffs[n];
+//                    tmp3.trlweSamples[l][k].b.coeffs[n] = bsk1.trlweSamples[l][k].b.coeffs[n]
+//                            + bsk2.trlweSamples[l][k].b.coeffs[n]
+//                            + bsk3.trlweSamples[l][k].b.coeffs[n]
+//                            + bsk4.trlweSamples[l][k].b.coeffs[n];
+                    coeffBT[n] = coeffB1[n] + coeffB2[n] + coeffB3[n] + coeffB4[n];
                 }
             }
         }
@@ -113,18 +128,73 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
         auto a1 = input.a[i];
         auto a2 = input.a[i + 1];
         auto bsk1 = bskDft[j];
-        auto& bsk2 = bskDft[j + 1];
+        auto bsk2 = bskDft[j + 1];
         auto bsk3 = bskDft[j + 2];
         auto& bsk4 = bskDft[j + 3];
-
-        rotateTrgswNtt(bsk1, a1, param);
-        rotateTrgswNtt(bsk3, a1, param);
-        addTrgswNtt(tmp1, bsk1, bsk2);
-        addTrgswNtt(tmp2, bsk3, bsk4);
+#ifdef BLINDROT_GROUP_NAIVE
+        std::thread t1([&](){
+            rotateTrgswNtt(bsk1, a1, param);
+            addTrgswNtt(tmp1, bsk1, bsk2);
+        });
+        std::thread t2([&](){
+            rotateTrgswNtt(bsk3, a1, param);
+            addTrgswNtt(tmp2, bsk3, bsk4);
+        });
+        t1.join();
+        t2.join();
 
         rotateTrgswNtt(tmp1, a2, param);
         addTrgswNtt(tmp3, tmp1, tmp2);
-
+#else
+        auto a12 = a1 + a2;
+        std::thread t1([&]{
+            rotateTrgswNtt(bsk1, a12, param);
+        });
+        std::thread t2([&]{
+            rotateTrgswNtt(bsk2, a2, param);
+        });
+        std::thread t3([&]{
+            rotateTrgswNtt(bsk3, a1, param);
+        });
+        t1.join();
+        t2.join();
+        t3.join();
+        auto q = NttHexl::getNttHexl().GetModulus();
+        auto twiceMod = 2 * q;
+        auto L = param.l;
+        auto K = param.k;
+        auto N = param.N;
+        for (int l = 0; l < L; l++) {
+            for (int k = 0; k < K + 1; k++) {
+                for (int k2 = 0; k2 < K; k2++) {
+                    auto& coeffA1 = bsk1.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA2 = bsk2.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA3 = bsk3.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA4 = bsk4.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffAT = tmp3.trlweDftSamples[l][k].a[k2].coeffs;
+                    for (int n = 0; n < N; n++) {
+//                        auto tmp = coeffA1[n] + coeffA2[n] + coeffA3[n] + coeffA4[n];
+//                        coeffAT[n] = ReduceMod<4>(tmp, q, &twiceMod);
+                        auto val1 = AddUIntMod(coeffA1[n], coeffA2[n], q);
+                        auto val2 = AddUIntMod(coeffA3[n], coeffA4[n], q);
+                        coeffAT[n] = AddUIntMod(val1, val2, q);
+                    }
+                }
+                auto& coeffB1 = bsk1.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB2 = bsk2.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB3 = bsk3.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB4 = bsk4.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffBT = tmp3.trlweDftSamples[l][k].b.coeffs;
+                for (int n = 0; n < param.N; n++) {
+//                    auto tmp = coeffB1[n] + coeffB2[n] + coeffB3[n] + coeffB4[n];
+//                    coeffBT[n] = ReduceMod<4>(tmp, q, &twiceMod);
+                    uint64_t val1 = AddUIntMod(coeffB1[n], coeffB2[n], q);
+                    uint64_t val2 = AddUIntMod(coeffB3[n], coeffB4[n], q);
+                    coeffBT[n] = AddUIntMod(val1, val2, q);
+                }
+            }
+        }
+#endif
         temp = Trlwe{param.k, param.N};
         externalProductTrgswNtt(temp, tmp3, accum, param);
         accum = std::move(temp);
