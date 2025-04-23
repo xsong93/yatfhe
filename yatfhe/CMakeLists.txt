@@ -5,7 +5,9 @@ file(GLOB SOURCES
         ./src/*.cpp
 )
 
-set(SOURCE_FILES ${SOURCES})
+set(SOURCE_FILES ${SOURCES}
+        include/yautil/multi_threading.h
+        src/multi_threading.cpp)
 add_library(yatfhe_lib STATIC ${SOURCE_FILES})
 
 #target_include_directories(yatfhe_lib PRIVATE

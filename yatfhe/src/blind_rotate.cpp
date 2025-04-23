@@ -5,6 +5,7 @@
 #include "yatfhe/cmux.h"
 #include "yatfhe/ntt_hexl.h"
 #include "yautil/time_counter.h"
+#include "yautil/multi_threading.h"
 #include <thread>
 
 void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
@@ -124,6 +125,7 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
     TrgswDft tmp1{param}, tmp2{param}, tmp3{param};
     int j = 0;
     auto batchSize = 1 << param.group;
+    auto& pool = ThreadPool::instance();
     for (auto i = 0; i < param.n; i = i + 2) {
         auto a1 = input.a[i];
         auto a2 = input.a[i + 1];
@@ -147,18 +149,13 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
         addTrgswNtt(tmp3, tmp1, tmp2);
 #else
         auto a12 = a1 + a2;
-        std::thread t1([&]{
-            rotateTrgswNtt(bsk1, a12, param);
-        });
-        std::thread t2([&]{
-            rotateTrgswNtt(bsk2, a2, param);
-        });
-        std::thread t3([&]{
-            rotateTrgswNtt(bsk3, a1, param);
-        });
-        t1.join();
-        t2.join();
-        t3.join();
+        auto future1 = pool.enqueue([&]{ rotateTrgswNtt(bsk1, a12, param); });
+        auto future2 = pool.enqueue([&]{ rotateTrgswNtt(bsk2, a2, param); });
+        auto future3 = pool.enqueue([&]{ rotateTrgswNtt(bsk3, a1, param); });
+        future1.get();
+        future2.get();
+        future3.get();
+
         auto q = NttHexl::getNttHexl().GetModulus();
         auto twiceMod = 2 * q;
         auto L = param.l;
@@ -173,8 +170,6 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
                     auto& coeffA4 = bsk4.trlweDftSamples[l][k].a[k2].coeffs;
                     auto& coeffAT = tmp3.trlweDftSamples[l][k].a[k2].coeffs;
                     for (int n = 0; n < N; n++) {
-//                        auto tmp = coeffA1[n] + coeffA2[n] + coeffA3[n] + coeffA4[n];
-//                        coeffAT[n] = ReduceMod<4>(tmp, q, &twiceMod);
                         auto val1 = AddUIntMod(coeffA1[n], coeffA2[n], q);
                         auto val2 = AddUIntMod(coeffA3[n], coeffA4[n], q);
                         coeffAT[n] = AddUIntMod(val1, val2, q);
@@ -186,8 +181,6 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
                 auto& coeffB4 = bsk4.trlweDftSamples[l][k].b.coeffs;
                 auto& coeffBT = tmp3.trlweDftSamples[l][k].b.coeffs;
                 for (int n = 0; n < param.N; n++) {
-//                    auto tmp = coeffB1[n] + coeffB2[n] + coeffB3[n] + coeffB4[n];
-//                    coeffBT[n] = ReduceMod<4>(tmp, q, &twiceMod);
                     uint64_t val1 = AddUIntMod(coeffB1[n], coeffB2[n], q);
                     uint64_t val2 = AddUIntMod(coeffB3[n], coeffB4[n], q);
                     coeffBT[n] = AddUIntMod(val1, val2, q);
