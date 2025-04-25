@@ -1,5 +1,6 @@
 //
-// Created by spark on 4/23/25.
+// Created by xintong on 4/23/25.
+// Copyright (c) 2012 Jakob Progsch, Václav Zeman.
 //
 
 #ifndef HLS_YATFHE_MULTI_THREADING_H
@@ -42,13 +43,12 @@ public:
         return res;
     }
 
+    ThreadPool(const ThreadPool&) = delete;
+    ThreadPool& operator=(const ThreadPool&) = delete;
     ~ThreadPool();
 
 private:
     explicit ThreadPool(size_t threads);
-    ThreadPool(const ThreadPool&) = delete;
-    ThreadPool& operator=(const ThreadPool&) = delete;
-
     std::vector<std::thread> workers;
     std::queue<std::function<void()>> tasks;
     std::mutex queue_mutex;

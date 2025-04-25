@@ -1,5 +1,6 @@
 //
 // Created by xintong on 4/23/25.
+// Copyright (c) 2012 Jakob Progsch, Václav Zeman.
 //
 
 #include <functional>
