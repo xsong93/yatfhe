@@ -22,10 +22,15 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GMPXX REQUIRED IMPORTED_TARGET gmpxx)
 target_link_libraries(yatfhe_lib PkgConfig::GMPXX)
 
-# link HEXL
+# Link HEXL
 message("Linking HEXL")
 find_package(HEXL REQUIRED)
 target_link_libraries(yatfhe_lib HEXL::hexl)
+
+# Link the threading library (pthread on Unix)
+message("Linking Threads")
+find_package(Threads REQUIRED)
+target_link_libraries(yatfhe_lib Threads::Threads)
 
 # Specify where to install the headers and library
 install(TARGETS yatfhe_lib
