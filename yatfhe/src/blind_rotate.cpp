@@ -41,29 +41,14 @@ void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe&
     for (auto i = 0; i < param.n; i = i + 2) {
         auto a1 = input.a[i];
         auto a2 = input.a[i + 1];
-        auto bsk1 = bsk[j];
+        auto& bsk1 = bsk[j];
         auto bsk2 = bsk[j + 1];
         auto bsk3 = bsk[j + 2];
-        auto& bsk4 = bsk[j + 3];
-#ifdef BLINDROT_GROUP_NAIVE
-        auto f1 = pool.enqueue([&]{
-            rotateTrgsw(bsk1, a1, param);
-            addTrgsw(tmp1, bsk1, bsk2);
-        });
-        auto f2 = pool.enqueue([&]{
-            rotateTrgsw(bsk3, a1, param);
-            addTrgsw(tmp2, bsk3, bsk4);
-        });
-        f1.get();
-        f2.get();
-
-        rotateTrgsw(tmp1, a2, param);
-        addTrgsw(tmp3, tmp1, tmp2);
-#else
+        auto bsk4 = bsk[j + 3];
         auto a12 = a1 + a2;
-        auto future1 = pool.enqueue([&]{ rotateTrgsw(bsk1, a12, param); });
-        auto future2 = pool.enqueue([&]{ rotateTrgsw(bsk2, a2, param); });
-        auto future3 = pool.enqueue([&]{ rotateTrgsw(bsk3, a1, param); });
+        auto future1 = pool.enqueue([&]{ rotateTrgsw(bsk2, a2, param); });
+        auto future2 = pool.enqueue([&]{ rotateTrgsw(bsk3, a1, param); });
+        auto future3 = pool.enqueue([&]{ rotateTrgsw(bsk4, a12, param); });
         future1.get();
         future2.get();
         future3.get();
@@ -90,7 +75,6 @@ void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe&
                 }
             }
         }
-#endif
         temp = Trlwe{param.k, param.N};
         externalProductTrgsw(temp, tmp3, accum, param);
         accum = std::move(temp);
@@ -107,29 +91,14 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
     for (auto i = 0; i < param.n; i = i + 2) {
         auto a1 = input.a[i];
         auto a2 = input.a[i + 1];
-        auto bsk1 = bskDft[j];
+        auto& bsk1 = bskDft[j];
         auto bsk2 = bskDft[j + 1];
         auto bsk3 = bskDft[j + 2];
-        auto& bsk4 = bskDft[j + 3];
-#ifdef BLINDROT_GROUP_NAIVE
-        auto f1 = pool.enqueue([&]{
-            rotateTrgswNtt(bsk1, a1, param);
-            addTrgswNtt(tmp1, bsk1, bsk2);
-        });
-        auto f2 = pool.enqueue([&]{
-            rotateTrgswNtt(bsk3, a1, param);
-            addTrgswNtt(tmp2, bsk3, bsk4);
-        });
-        f1.get();
-        f2.get();
-
-        rotateTrgswNtt(tmp1, a2, param);
-        addTrgswNtt(tmp3, tmp1, tmp2);
-#else
+        auto bsk4 = bskDft[j + 3];
         auto a12 = a1 + a2;
-        auto future1 = pool.enqueue([&]{ rotateTrgswNtt(bsk1, a12, param); });
-        auto future2 = pool.enqueue([&]{ rotateTrgswNtt(bsk2, a2, param); });
-        auto future3 = pool.enqueue([&]{ rotateTrgswNtt(bsk3, a1, param); });
+        auto future1 = pool.enqueue([&]{ rotateTrgswNtt(bsk2, a2, param); });
+        auto future2 = pool.enqueue([&]{ rotateTrgswNtt(bsk3, a1, param); });
+        auto future3 = pool.enqueue([&]{ rotateTrgswNtt(bsk4, a12, param); });
         future1.get();
         future2.get();
         future3.get();
@@ -164,9 +133,176 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
                 }
             }
         }
-#endif
         temp = Trlwe{param.k, param.N};
         externalProductTrgswNtt(temp, tmp3, accum, param);
+        accum = std::move(temp);
+        j += batchSize;
+    }
+}
+
+// todo: general n support
+void blindRotateGroup3(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+    Trlwe temp{param.k, param.N};
+    Trgsw tmp{param};
+    int j = 0;
+    auto batchSize = 1 << param.group;
+    auto& pool = ThreadPool::instance();
+    for (auto i = 0; i < param.n; i = i + 3) {
+        auto a1 = input.a[i];
+        auto a2 = input.a[i + 1];
+        auto a3 = input.a[i + 2];
+        auto& bsk1 = bsk[j];
+        auto bsk2 = bsk[j + 1];
+        auto bsk3 = bsk[j + 2];
+        auto bsk4 = bsk[j + 3];
+        auto bsk5 = bsk[j + 4];
+        auto bsk6 = bsk[j + 5];
+        auto bsk7 = bsk[j + 6];
+        auto bsk8 = bsk[j + 7];
+        auto a12 = a1 + a2;
+        auto a13 = a1 + a3;
+        auto a23 = a2 + a3;
+        auto a123 = a12 + a3;
+        auto future1 = pool.enqueue([&]{ rotateTrgsw(bsk2, a3, param); });
+        auto future2 = pool.enqueue([&]{ rotateTrgsw(bsk3, a2, param); });
+        auto future3 = pool.enqueue([&]{ rotateTrgsw(bsk4, a23, param); });
+        auto future4 = pool.enqueue([&]{ rotateTrgsw(bsk5, a1, param); });
+        auto future5 = pool.enqueue([&]{ rotateTrgsw(bsk6, a13, param); });
+        auto future6 = pool.enqueue([&]{ rotateTrgsw(bsk7, a12, param); });
+        auto future7 = pool.enqueue([&]{ rotateTrgsw(bsk8, a123, param); });
+
+        future1.get();
+        future2.get();
+        future3.get();
+        future4.get();
+        future5.get();
+        future6.get();
+        future7.get();
+
+        for (size_t l = 0; l < param.l; l++) {
+            for (size_t k = 0; k < param.k + 1; k++) {
+                for (auto k2 = 0; k2 < param.k; k2++) {
+                    auto& coeffA1 = bsk1.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA2 = bsk2.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA3 = bsk3.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA4 = bsk4.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA5 = bsk5.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA6 = bsk6.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA7 = bsk7.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffA8 = bsk8.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffAT = tmp.trlweSamples[l][k].a[k2].coeffs;
+                    for (int n = 0; n < param.N; n++) {
+                        coeffAT[n] = coeffA1[n] + coeffA2[n] + coeffA3[n] + coeffA4[n] + coeffA5[n] + coeffA6[n] + coeffA7[n] + coeffA8[n];
+                    }
+                }
+                auto& coeffB1 = bsk1.trlweSamples[l][k].b.coeffs;
+                auto& coeffB2 = bsk2.trlweSamples[l][k].b.coeffs;
+                auto& coeffB3 = bsk3.trlweSamples[l][k].b.coeffs;
+                auto& coeffB4 = bsk4.trlweSamples[l][k].b.coeffs;
+                auto& coeffB5 = bsk5.trlweSamples[l][k].b.coeffs;
+                auto& coeffB6 = bsk6.trlweSamples[l][k].b.coeffs;
+                auto& coeffB7 = bsk7.trlweSamples[l][k].b.coeffs;
+                auto& coeffB8 = bsk8.trlweSamples[l][k].b.coeffs;
+                auto& coeffBT = tmp.trlweSamples[l][k].b.coeffs;
+                for (int n = 0; n < param.N; n++) {
+                    coeffBT[n] = coeffB1[n] + coeffB2[n] + coeffB3[n] + coeffB4[n] + coeffB5[n] + coeffB6[n] + coeffB7[n] + coeffB8[n];
+                }
+            }
+        }
+        temp = Trlwe{param.k, param.N};
+        externalProductTrgsw(temp, tmp, accum, param);
+        accum = std::move(temp);
+        j += batchSize;
+    }
+}
+
+void blindRotateGroup3Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+    Trlwe temp{param.k, param.N};
+    TrgswDft tmp{param};
+    int j = 0;
+    auto batchSize = 1 << param.group;
+    auto& pool = ThreadPool::instance();
+    for (auto i = 0; i < param.n; i = i + 3) {
+        auto a1 = input.a[i];
+        auto a2 = input.a[i + 1];
+        auto a3 = input.a[i + 2];
+        auto& bsk1 = bskDft[j];
+        auto bsk2 = bskDft[j + 1];
+        auto bsk3 = bskDft[j + 2];
+        auto bsk4 = bskDft[j + 3];
+        auto bsk5 = bskDft[j + 4];
+        auto bsk6 = bskDft[j + 5];
+        auto bsk7 = bskDft[j + 6];
+        auto bsk8 = bskDft[j + 7];
+        auto a12 = a1 + a2;
+        auto a13 = a1 + a3;
+        auto a23 = a2 + a3;
+        auto a123 = a12 + a3;
+        auto future1 = pool.enqueue([&]{ rotateTrgswNtt(bsk2, a3, param); });
+        auto future2 = pool.enqueue([&]{ rotateTrgswNtt(bsk3, a2, param); });
+        auto future3 = pool.enqueue([&]{ rotateTrgswNtt(bsk4, a23, param); });
+        auto future4 = pool.enqueue([&]{ rotateTrgswNtt(bsk5, a1, param); });
+        auto future5 = pool.enqueue([&]{ rotateTrgswNtt(bsk6, a13, param); });
+        auto future6 = pool.enqueue([&]{ rotateTrgswNtt(bsk7, a12, param); });
+        auto future7 = pool.enqueue([&]{ rotateTrgswNtt(bsk8, a123, param); });
+
+        future1.get();
+        future2.get();
+        future3.get();
+        future4.get();
+        future5.get();
+        future6.get();
+        future7.get();
+
+        auto q = NttHexl::getNttHexl().GetModulus();
+        auto N = param.N;
+        std::vector vecs(6, std::vector<uint64_t>(N));
+        for (size_t l = 0; l < param.l; l++) {
+            for (size_t k = 0; k < param.k + 1; k++) {
+                for (auto k2 = 0; k2 < param.k; k2++) {
+                    auto& coeffA1 = bsk1.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA2 = bsk2.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA3 = bsk3.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA4 = bsk4.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA5 = bsk5.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA6 = bsk6.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA7 = bsk7.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffA8 = bsk8.trlweDftSamples[l][k].a[k2].coeffs;
+                    auto& coeffAT = tmp.trlweDftSamples[l][k].a[k2].coeffs;
+
+                    EltwiseAddMod(vecs[0].data(), coeffA1.data(), coeffA2.data(), N, q);
+                    EltwiseAddMod(vecs[1].data(), coeffA3.data(), coeffA4.data(), N, q);
+                    EltwiseAddMod(vecs[2].data(), coeffA5.data(), coeffA6.data(), N, q);
+                    EltwiseAddMod(vecs[3].data(), coeffA7.data(), coeffA8.data(), N, q);
+
+                    EltwiseAddMod(vecs[4].data(), vecs[0].data(), vecs[1].data(), N, q);
+                    EltwiseAddMod(vecs[5].data(), vecs[2].data(), vecs[3].data(), N, q);
+
+                    EltwiseAddMod(coeffAT.data(), vecs[4].data(), vecs[5].data(), N, q);
+                }
+                auto& coeffB1 = bsk1.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB2 = bsk2.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB3 = bsk3.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB4 = bsk4.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB5 = bsk5.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB6 = bsk6.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB7 = bsk7.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffB8 = bsk8.trlweDftSamples[l][k].b.coeffs;
+                auto& coeffBT = tmp.trlweDftSamples[l][k].b.coeffs;
+
+                EltwiseAddMod(vecs[0].data(), coeffB1.data(), coeffB2.data(), N, q);
+                EltwiseAddMod(vecs[1].data(), coeffB3.data(), coeffB4.data(), N, q);
+                EltwiseAddMod(vecs[2].data(), coeffB5.data(), coeffB6.data(), N, q);
+                EltwiseAddMod(vecs[3].data(), coeffB7.data(), coeffB8.data(), N, q);
+
+                EltwiseAddMod(vecs[4].data(), vecs[0].data(), vecs[1].data(), N, q);
+                EltwiseAddMod(vecs[5].data(), vecs[2].data(), vecs[3].data(), N, q);
+
+                EltwiseAddMod(coeffBT.data(), vecs[4].data(), vecs[5].data(), N, q);
+            }
+        }
+        temp = Trlwe{param.k, param.N};
+        externalProductTrgswNtt(temp, tmp, accum, param);
         accum = std::move(temp);
         j += batchSize;
     }
@@ -180,6 +316,9 @@ void blindRotate(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input
         case 2:
             blindRotateGroup2(accum, bsk, input, param);
             return;
+        case 3:
+            blindRotateGroup3(accum, bsk, input, param);
+            return;
         default:
             blindRotateNormal(accum, bsk, input, param);
     }
@@ -190,6 +329,9 @@ void blindRotateNtt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTl
         case 2:
             blindRotateGroup2Ntt(accum, bskDft, input, param);
             return;
+        case 3:
+            blindRotateGroup3Ntt(accum, bskDft, input, param);
+        return;
         default:
             blindRotateNormalNtt(accum, bskDft, input, param);
     }

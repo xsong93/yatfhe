@@ -46,19 +46,27 @@ void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const Bootstrappin
     switchKeyForTlwe(out, ksk, tmp, param);
 }
 
-void genBootstrappingKeyGroup2(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+void genBootstrappingKeyGroup(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
     int j = 0;
-    auto batchSize = 1 << param.group;
-    for (auto i = 0; i < tlweKey.n; i = i + 2) {
-        auto s1 = tlweKey.s[i];
-        auto s2 = tlweKey.s[i + 1];
-        int combined = (s1 << 1) | s2;
+    const auto group = param.group;
+    const auto batchSize = 1 << group;
+    const int max = param.n - param.n % param.group;
+    for (int i = 0; i < max; i = i + group) {
+        int combined = 0;
+        for (int i2 = 0; i2 < group; i2++) {
+            const auto s = tlweKey.s[i + i2] << (group - 1 - i2);
+            combined |= s;
+        }
 
-#pragma unroll(4)
         for (int k = 0; k < batchSize; ++k) {
-            encryptTrgswNtt(bsk.bsk[j + k], bsk.bskDft[j + k], KEY_PATTERNS2[combined][k], trgswKey, 0, param);
+            const int mu = combined == k ? 1 : 0;
+            encryptTrgswNtt(bsk.bsk[j + k], bsk.bskDft[j + k], mu, trgswKey, 0, param);
         }
         j += batchSize;
+    }
+    for (int i = max; i < tlweKey.n; ++i) {
+        encryptTrgswNtt(bsk.bsk[j], bsk.bskDft[j], tlweKey.s[i], trgswKey, 0, param);
+        j++;
     }
 }
 
@@ -69,13 +77,11 @@ void genBootstrappingKeyNormal(BootstrappingKey& bsk, TrgswKey& trgswKey, const 
 }
 
 void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
-    switch(bsk.group) {
-        case 2:
-            genBootstrappingKeyGroup2(bsk, trgswKey, tlweKey, param);
-            return;
-        default:
-            genBootstrappingKeyNormal(bsk, trgswKey, tlweKey, param);
+    if (bsk.group == 1) {
+        genBootstrappingKeyNormal(bsk, trgswKey, tlweKey, param);
+        return;
     }
+    genBootstrappingKeyGroup(bsk, trgswKey, tlweKey, param);
 }
 
 void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {

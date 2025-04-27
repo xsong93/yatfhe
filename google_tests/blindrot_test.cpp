@@ -15,8 +15,8 @@
 
 TEST(BLIND_ROT, BLIND_ROT) {
     YatfheParameters param {};
-    param.n = 64;
-    param.group = 2;
+    param.n = 3 * 20;
+    param.group = 3;
     initYatfhe(param);
 
     // key gen
@@ -92,7 +92,8 @@ TEST(BLIND_ROT, BLIND_ROT) {
 TEST(BLIND_ROT, BLIND_ROT_NTT) {
     YatfheParameters param{};
 //    param.n = 64;
-    param.group = 2;
+    param.group = 3;
+    param.n = 585;
     initYatfhe(param);
 
     // key gen
