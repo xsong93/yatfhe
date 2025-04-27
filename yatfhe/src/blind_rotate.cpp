@@ -32,12 +32,12 @@ void blindRotateNormalNtt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
     }
 }
 
-//todo
 void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     Trgsw tmp1{param}, tmp2{param}, tmp3{param};
     int j = 0;
     auto batchSize = 1 << param.group;
+    auto& pool = ThreadPool::instance();
     for (auto i = 0; i < param.n; i = i + 2) {
         auto a1 = input.a[i];
         auto a2 = input.a[i + 1];
@@ -46,41 +46,27 @@ void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe&
         auto bsk3 = bsk[j + 2];
         auto& bsk4 = bsk[j + 3];
 #ifdef BLINDROT_GROUP_NAIVE
-//        rotateTrgsw(bsk1, a1, param);
-//        rotateTrgsw(bsk3, a1, param);
-//        addTrgsw(tmp1, bsk1, bsk2);
-//        addTrgsw(tmp2, bsk3, bsk4);
-
-        std::thread t1([&](){
+        auto f1 = pool.enqueue([&]{
             rotateTrgsw(bsk1, a1, param);
             addTrgsw(tmp1, bsk1, bsk2);
         });
-        std::thread t2([&](){
+        auto f2 = pool.enqueue([&]{
             rotateTrgsw(bsk3, a1, param);
             addTrgsw(tmp2, bsk3, bsk4);
         });
-        t1.join();
-        t2.join();
+        f1.get();
+        f2.get();
 
         rotateTrgsw(tmp1, a2, param);
         addTrgsw(tmp3, tmp1, tmp2);
 #else
         auto a12 = a1 + a2;
-        std::thread t1([&]() {
-            rotateTrgsw(bsk1, a12, param);
-        });
-        std::thread t2([&]() {
-            rotateTrgsw(bsk2, a2, param);
-        });
-        std::thread t3([&]() {
-            rotateTrgsw(bsk3, a1, param);
-        });
-        t1.join();
-        t2.join();
-        t3.join();
-//        rotateTrgsw(bsk1, a12, param);
-//        rotateTrgsw(bsk2, a2, param);
-//        rotateTrgsw(bsk3, a1, param);
+        auto future1 = pool.enqueue([&]{ rotateTrgsw(bsk1, a12, param); });
+        auto future2 = pool.enqueue([&]{ rotateTrgsw(bsk2, a2, param); });
+        auto future3 = pool.enqueue([&]{ rotateTrgsw(bsk3, a1, param); });
+        future1.get();
+        future2.get();
+        future3.get();
 
         for (size_t l = 0; l < param.l; l++) {
             for (size_t k = 0; k < param.k + 1; k++) {
@@ -91,10 +77,6 @@ void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe&
                     auto& coeffA4 = bsk4.trlweSamples[l][k].a[k2].coeffs;
                     auto& coeffAT = tmp3.trlweSamples[l][k].a[k2].coeffs;
                     for (int n = 0; n < param.N; n++) {
-//                        tmp3.trlweSamples[l][k].a[k2].coeffs[n] = bsk1.trlweSamples[l][k].a[k2].coeffs[n]
-//                                + bsk2.trlweSamples[l][k].a[k2].coeffs[n]
-//                                + bsk3.trlweSamples[l][k].a[k2].coeffs[n]
-//                                + bsk4.trlweSamples[l][k].a[k2].coeffs[n];
                         coeffAT[n] = coeffA1[n] + coeffA2[n] + coeffA3[n] + coeffA4[n];
                     }
                 }
@@ -104,10 +86,6 @@ void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe&
                 auto& coeffB4 = bsk4.trlweSamples[l][k].b.coeffs;
                 auto& coeffBT = tmp3.trlweSamples[l][k].b.coeffs;
                 for (int n = 0; n < param.N; n++) {
-//                    tmp3.trlweSamples[l][k].b.coeffs[n] = bsk1.trlweSamples[l][k].b.coeffs[n]
-//                            + bsk2.trlweSamples[l][k].b.coeffs[n]
-//                            + bsk3.trlweSamples[l][k].b.coeffs[n]
-//                            + bsk4.trlweSamples[l][k].b.coeffs[n];
                     coeffBT[n] = coeffB1[n] + coeffB2[n] + coeffB3[n] + coeffB4[n];
                 }
             }
@@ -134,16 +112,16 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
         auto bsk3 = bskDft[j + 2];
         auto& bsk4 = bskDft[j + 3];
 #ifdef BLINDROT_GROUP_NAIVE
-        std::thread t1([&](){
+        auto f1 = pool.enqueue([&]{
             rotateTrgswNtt(bsk1, a1, param);
             addTrgswNtt(tmp1, bsk1, bsk2);
         });
-        std::thread t2([&](){
+        auto f2 = pool.enqueue([&]{
             rotateTrgswNtt(bsk3, a1, param);
             addTrgswNtt(tmp2, bsk3, bsk4);
         });
-        t1.join();
-        t2.join();
+        f1.get();
+        f2.get();
 
         rotateTrgswNtt(tmp1, a2, param);
         addTrgswNtt(tmp3, tmp1, tmp2);
@@ -157,7 +135,6 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
         future3.get();
 
         auto q = NttHexl::getNttHexl().GetModulus();
-        auto twiceMod = 2 * q;
         auto L = param.l;
         auto K = param.k;
         auto N = param.N;
