@@ -8,6 +8,46 @@
 #include "yautil/multi_threading.h"
 #include <thread>
 
+void preRotateInternal(vector<TrgswMP>& trgswsOut, vector<TrgswMPDft>& trgswDftsOut,  vector<vector<TrgswMP>>& trgswsIn,
+    vector<vector<TrgswMPDft>>& trgswDftsIn, const std::vector<int>& aV, const YatfheParameters& param) {
+    auto const n = param.n;
+    const int batchSize = 32;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+    for (int start = 0; start < n/2; start += batchSize) {
+        futures.clear();
+        for (int i = start; i < min(start + batchSize, n/2); i++) {
+            futures.emplace_back(pool.enqueue([i, &trgswsIn, &trgswDftsIn, &aV, &param, &trgswsOut, &trgswDftsOut] {
+                const int j = i * 2;
+                auto& rotated1 = trgswsIn[i][0];
+                auto& rotated2 = trgswDftsIn[i][0];
+
+                rotateTrgswMP(rotated1, aV[j], param);
+                rotateTrgswMPNtt(rotated2, aV[j+1], param);
+
+                addTrgswMP(trgswsOut[i], rotated1, trgswsIn[i][1]);
+                addTrgswMPNtt(trgswDftsOut[i], rotated2, trgswDftsIn[i][1]);
+            }));
+        }
+        for (auto& f : futures) {
+            f.wait();
+        }
+    }
+
+    // for (int i = 0; i < n / 2; i++) {
+    //     const int j = i * 2;
+    //     auto& rotated1 = trgswsIn[i][0];
+    //     auto& rotated2 = trgswDftsIn[i][0];
+    //
+    //     rotateTrgswMP(rotated1, aV[j], param);
+    //     rotateTrgswMPNtt(rotated2, aV[j+1], param);
+    //
+    //     addTrgswMP(trgswsOut[i], rotated1, trgswsIn[i][1]);
+    //     addTrgswMPNtt(trgswDftsOut[i], rotated2, trgswDftsIn[i][1]);
+    // }
+}
+
 void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     for (auto i = 0; i < param.n; i++) {
@@ -363,4 +403,66 @@ void blindRotateApproxCRTNtt(std::vector<Trlwe8>& accum, const vector<vector<Trg
         controlMuxApproxCRTNtt(temp, accum, input.a[i], bskCRT[i], param);
         swap(accum, temp);
     }
+}
+
+void blindRotateInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {
+    TrgswMP temp{param};
+    for (auto i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        temp = accum;
+        TrgswMP tmp {param};
+        rotateTrgswMP(accum, input.a[i], param);
+        subTrgswMP(tmp, accum, temp);
+        internalProductTrgswMPNtt(accum, tmp, trgsws[i], param); // res *= bskI
+        addTrgswMP(tmp, accum, temp); // res += input
+        accum = std::move(tmp);
+    }
+}
+
+void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsws, vector<vector<TrgswMPDft>>& trgswDfts,
+    const ScaledTlwe& input, const YatfheParameters& param) {
+    auto n = param.n;
+    vector trgswMP(n / 2, TrgswMP{param});
+    vector trgswMPDft(n / 2, TrgswMPDft{param});
+    const int batchSize = 4;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+    preRotateInternal(trgswMP, trgswMPDft, trgsws, trgswDfts, input.a, param);
+    while (n > 1) {
+        const auto newSize = n / 2;
+        vector newTrgswMP(newSize, TrgswMP{param});
+        vector newTrgswMPDft(newSize, TrgswMPDft{param});
+
+//         for (int i = 0; i < n / 2; i++) {
+//             if (i % 2 == 0) {
+//                 internalProductTrgswMPNtt(newTrgswMP[i/2], trgswMP[i], trgswMPDft[i], param);
+//             } else {
+//                 internalProductTrgswMPNtt(newTrgswMPDft[(i-1)/2], trgswMP[i], trgswMPDft[i], param);
+//             }
+//         }
+
+        for (int start = 0; start < n / 2; start += batchSize) {
+            futures.clear();
+            for (int i = start; i < min(start + batchSize, n / 2); i++) {
+                futures.emplace_back(pool.enqueue([i, &newTrgswMP, &newTrgswMPDft, &trgswMP, &trgswMPDft, &param] {
+                   if (i % 2 == 0) {
+                       internalProductTrgswMPNtt(newTrgswMPDft[i/2], trgswMP[i], trgswMPDft[i], param);
+                   } else {
+                       internalProductTrgswMPNtt(newTrgswMP[(i-1)/2], trgswMP[i], trgswMPDft[i], param);
+                   }
+                }));
+            }
+            for (auto& f : futures) {
+                f.wait();
+            }
+        }
+        trgswMP = std::move(newTrgswMP);
+        trgswMPDft = std::move(newTrgswMPDft);
+        n = newSize;
+    }
+    Trlwe cop = accum;
+    externalProductTrgswMPNtt(accum, trgswMPDft[0], cop, param);
 }

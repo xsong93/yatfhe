@@ -32,6 +32,16 @@ message("Linking Threads")
 find_package(Threads REQUIRED)
 target_link_libraries(yatfhe_lib Threads::Threads)
 
+# Link OpenMP
+message("Linking OpenMP")
+find_package(OpenMP REQUIRED)
+target_link_libraries(yatfhe_lib OpenMP::OpenMP_CXX)
+
+#Link TBB
+message("Linking TBB")
+find_package(TBB REQUIRED)
+target_link_libraries(yatfhe_lib TBB::tbb)
+
 # Specify where to install the headers and library
 install(TARGETS yatfhe_lib
         ARCHIVE DESTINATION /usr/local/lib  # Static library installation path

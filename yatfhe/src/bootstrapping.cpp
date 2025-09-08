@@ -7,6 +7,7 @@
 #include "yatfhe/keyswitching.h"
 #include "yatfhe/ntt24.h"
 #include "yatfhe/key_patterns.h"
+#include "yautil/multi_threading.h"
 
 void functionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
@@ -46,7 +47,7 @@ void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const Bootstrappin
     switchKeyForTlwe(out, ksk, tmp, param);
 }
 
-void genBootstrappingKeyGroup(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+void genBootstrappingKeyGroup(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
     int j = 0;
     const auto group = param.group;
     const auto batchSize = 1 << group;
@@ -70,7 +71,7 @@ void genBootstrappingKeyGroup(BootstrappingKey& bsk, TrgswKey& trgswKey, const T
     }
 }
 
-void genBootstrappingKeyNormal(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+void genBootstrappingKeyNormal(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
     for (auto i = 0; i < bsk.n; i++) {
         encryptTrgswNtt(bsk.bsk[i], bsk.bskDft[i], tlweKey.s[i], trgswKey, 0, param);
     }
@@ -82,6 +83,63 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
         return;
     }
     genBootstrappingKeyGroup(bsk, trgswKey, tlweKey, param);
+}
+
+void genBootstrappingKeyInternal(BootstrappingKeyInternal& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
+    const YatfheParameters& param) {
+    const auto n = param.n;
+    const int batchSize = 32;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+    for (int start = 0; start < n; start += batchSize) {
+        futures.clear();
+        for (int i = start; i < min(start + batchSize, n); i++) {
+            const auto j = i / 2;
+            futures.emplace_back(pool.enqueue([i, j, &tlweKey, &bsk, &trgswKey, &param] {
+                if (i % 2 == 0) {
+                    if (tlweKey.s[i] == 1) {
+                        encryptTrgswMP(bsk.bsk[j][0],1, trgswKey, 0, param);
+                        encryptTrgswMP(bsk.bsk[j][1],0, trgswKey, 0, param);
+                    } else {
+                        encryptTrgswMP(bsk.bsk[j][0],0, trgswKey, 0, param);
+                        encryptTrgswMP(bsk.bsk[j][1],1, trgswKey, 0, param);
+                    }
+                } else {
+                    if (tlweKey.s[i] == 1) {
+                        encryptTrgswMPNtt(bsk.bskDft[j][0],1, trgswKey, 0, param);
+                        encryptTrgswMPNtt(bsk.bskDft[j][1],0, trgswKey, 0, param);
+                    } else {
+                        encryptTrgswMPNtt(bsk.bskDft[j][0],0, trgswKey, 0, param);
+                        encryptTrgswMPNtt(bsk.bskDft[j][1],1, trgswKey, 0, param);
+                    }
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.wait();
+        }
+    }
+    // for (auto i = 0; i < param.n; i++) {
+    //     const auto j = i / 2;
+    //     if (i % 2 == 0) {
+    //         if (tlweKey.s[i] == 1) {
+    //             encryptTrgswMP(bsk.bsk[j][0],1, trgswKey, 0, param);
+    //             encryptTrgswMP(bsk.bsk[j][1],0, trgswKey, 0, param);
+    //         } else {
+    //             encryptTrgswMP(bsk.bsk[j][0],0, trgswKey, 0, param);
+    //             encryptTrgswMP(bsk.bsk[j][1],1, trgswKey, 0, param);
+    //         }
+    //     } else {
+    //         if (tlweKey.s[i] == 1) {
+    //             encryptTrgswMPNtt(bsk.bskDft[j][0],1, trgswKey, 0, param);
+    //             encryptTrgswMPNtt(bsk.bskDft[j][1],0, trgswKey, 0, param);
+    //         } else {
+    //             encryptTrgswMPNtt(bsk.bskDft[j][0],0, trgswKey, 0, param);
+    //             encryptTrgswMPNtt(bsk.bskDft[j][1],1, trgswKey, 0, param);
+    //         }
+    //     }
+    // }
 }
 
 void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {

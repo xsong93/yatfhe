@@ -2,6 +2,7 @@
 // Created by Xintong on 25-4-16.
 //
 
+#include <unordered_map>
 #include "yatfhe/ntt_hexl.h"
 #include "yatfhe/polynomial.h"
 #include "yautil/tool.h"

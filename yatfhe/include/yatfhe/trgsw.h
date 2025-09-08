@@ -155,13 +155,65 @@ void subTrgswNtt(TrgswDftType& out, const TrgswDftType& in1, const TrgswDftType&
     }
 }
 
+template<typename TrgswType>
+void addTrgswMP(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+    const auto L = out.l;
+    const auto K = out.k;
+    for (size_t l = 0; l < L; l++) {
+        addTrlwe(out.cPrime[l], in1.cPrime[l], in2.cPrime[l]);
+        for (size_t k = 0; k < K; k++) {
+            addTrlwe(out.c[l][k], in1.c[l][k], in2.c[l][k]);
+        }
+    }
+}
+
+template<typename TrgswType>
+void addTrgswMPNtt(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+    const auto L = out.l;
+    const auto K = out.k;
+    for (size_t l = 0; l < L; l++) {
+        addTrlweNtt(out.cPrime[l], in1.cPrime[l], in2.cPrime[l]);
+        for (size_t k = 0; k < K; k++) {
+            addTrlweNtt(out.c[l][k], in1.c[l][k], in2.c[l][k]);
+        }
+    }
+}
+
+template<typename TrgswType>
+void subTrgswMP(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+    const auto L = out.l;
+    const auto K = out.k;
+    for (size_t l = 0; l < L; l++) {
+        subTrlwe(out.cPrime[l], in1.cPrime[l], in2.cPrime[l]);
+        for (size_t k = 0; k < K; k++) {
+            subTrlwe(out.c[l][k], in1.c[l][k], in2.c[l][k]);
+        }
+    }
+}
+
+template<typename TrgswType>
+void subTrgswMPNtt(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+    const auto L = out.l;
+    const auto K = out.k;
+    for (size_t l = 0; l < L; l++) {
+        subTrlweNtt(out.cPrime[l], in1.cPrime[l], in2.cPrime[l]);
+        for (size_t k = 0; k < K; k++) {
+            subTrlweNtt(out.c[l][k], in1.c[l][k], in2.c[l][k]);
+        }
+    }
+}
+
 void rotateTrgsw(Trgsw& trgsw, int rot, const YatfheParameters& param);
 
 void rotateTrgswNtt(TrgswDft& trgswDft, int rot, const YatfheParameters& param);
 
+void rotateTrgswMP(TrgswMP& trgswMP, int rot, const YatfheParameters& param);
+
+void rotateTrgswMPNtt(TrgswMPDft& trgswMP, int rot, const YatfheParameters& param);
+
 void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
-void encryptTrgswMPNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
 
 void encryptLowTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
 
@@ -210,5 +262,7 @@ void externalProductTrgswMPDecompNtt(DecomposedTrlweDft& output, const TrgswMPDf
 void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const YatfheParameters& param);
 
 void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param);
+
+void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

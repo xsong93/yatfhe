@@ -372,10 +372,9 @@ TEST(RgswTest, RGSWMP_MULT_NTT) {
         genTrlweKey(trlweKey);
 
         // trgsw enc
-        TrgswMP trgsw {param};
         TrgswMPDft trgswDft {param};
         Integer mu1 = genIntUniformDist(0, 3);
-        encryptTrgswMPNtt(trgsw, trgswDft, mu1, trgswKey, 0, param);
+        encryptTrgswMPNtt(trgswDft, mu1, trgswKey, 0, param);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
@@ -420,6 +419,8 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
     YatfheParameters param {};
     param.lweStdDev = 0;
     param.rlweStdDev = 0;
+    // param.l = 1;
+    // param.k = 1;
     initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
@@ -431,7 +432,7 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
 
         // trgsw enc
         TrgswMP trgswMP1 {param};
-        Integer mu1 = 1;
+        Integer mu1 = 2;
         encryptTrgswMP(trgswMP1, mu1, trgswKey, 0, param);
 
         TrgswMP trgswMP2 {param};
@@ -443,7 +444,7 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
         IntPolynomial mu2p{param.N};
         IntPolynomial multPlain{param.N};
         std::vector<Torus> mu2t(param.N);
-        for (size_t i = 0; i < param.N; i++) {
+        for (auto i = 0; i < param.N; i++) {
             mu2p.coeffs[i] = i;
             mu2t[i] = modSwitchToTorus32(mu2p.coeffs[i], param.torusBase);
             multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu1, param.torusBase);
@@ -459,7 +460,19 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
         // trgsw mult
         TrgswMP tmp{param};
         Trlwe out{param.k, param.N};
+        TorusPolynomial t1{param.N};
+        symDecTrlweWoRounding(t1, trgswMP1.cPrime[0], trlweKey);
+        // printTrlweAB(trgswMP1.cPrime[1], "trgswMP1.cPrime[1]");
+        printArray(t1.coeffs, "trgswMP1");
+        t1 = TorusPolynomial{param.N};
+        symDecTrlweWoRounding(t1, trgswMP2.cPrime[0], trlweKey);
+        // printTrlweAB(trgswMP2.cPrime[1], "trgswMP2.cPrime[1]");
+        printArray(t1.coeffs, "trgswMP2");
+        t1 = TorusPolynomial{param.N};
         COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMP(tmp, trgswMP1, trgswMP2, param);)
+        // printTrlweAB(tmp.cPrime[1], "tmp.cPrime[1]");
+        symDecTrlweWoRounding(t1, tmp.cPrime[0], trlweKey);
+        printArray(t1.coeffs, "tmp");
         COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, tmp, in2, param);)
 
 
@@ -490,20 +503,19 @@ TEST(RgswTest, RGSWMP_INTERMULT_NTT) {
 
         // trgsw enc
         TrgswMP trgswMP1{param};
-        Integer mu1 = 1;
+        Integer mu1 = 0;
         encryptTrgswMP(trgswMP1, mu1, trgswKey, 0, param);
 
-        TrgswMP trgswMP2{param};
         TrgswMPDft trgswMP2Dft{param};
-        Integer mu2 = 0;
-        encryptTrgswMPNtt(trgswMP2, trgswMP2Dft, mu2, trgswKey, 0, param);
+        Integer mu2 = 1;
+        encryptTrgswMPNtt(trgswMP2Dft, mu2, trgswKey, 0, param);
 
         // trlwe enc
         Trlwe in2 {param.k, param.N};
         IntPolynomial mu2p{param.N};
         IntPolynomial multPlain{param.N};
         std::vector<Torus> mu2t(param.N);
-        for (size_t i = 0; i < param.N; i++) {
+        for (auto i = 0; i < param.N; i++) {
             mu2p.coeffs[i] = i;
             mu2t[i] = modSwitchToTorus32(mu2p.coeffs[i], param.torusBase);
             multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu1, param.torusBase);
@@ -517,10 +529,10 @@ TEST(RgswTest, RGSWMP_INTERMULT_NTT) {
         printArray(decPreP.coeffs, "mu in");
 
         // trgsw mult
-        TrgswMP tmp{param};
+        TrgswMPDft tmp{param};
         Trlwe out{param.k, param.N};
-        COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMPNtt(tmp, trgswMP1, trgswMP2Dft, param);)
-        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, tmp, in2, param);)
+        COUNT_TIME("internalProductTrgswMPNtt", internalProductTrgswMPNtt(tmp, trgswMP1, trgswMP2Dft, param);)
+        COUNT_TIME("externalProductTrgswMPNtt", externalProductTrgswMPNtt(out, tmp, in2, param);)
 
 
         // trlwe dec aft-mult
@@ -622,13 +634,12 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_CHAIN_NTT) {
 
         // trgsw enc
         int loop = 4;
-        std::vector<TrgswMP> trgsws(loop, TrgswMP{param});
         std::vector<TrgswMPDft> trgswDfts(loop, TrgswMPDft{param});
         Integer mu = 1;
         for (size_t i = 0; i < loop; i++) {
             Integer mui = 3;
             mu *= mui;
-            encryptTrgswMPNtt(trgsws[i], trgswDfts[i], mui, trgswKey, 0, param);
+            encryptTrgswMPNtt(trgswDfts[i], mui, trgswKey, 0, param);
         }
         cout << "mu: " << mu << endl;
         // trlwe enc

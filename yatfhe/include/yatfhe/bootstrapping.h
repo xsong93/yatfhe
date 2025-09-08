@@ -32,6 +32,17 @@ struct BootstrappingKey {
     };
 };
 
+struct BootstrappingKeyInternal {
+    vector<vector<TrgswMP>> bsk {};
+    vector<vector<TrgswMPDft>> bskDft {};
+    int n {};
+
+    explicit BootstrappingKeyInternal(const YatfheParameters& p) :
+            bsk(p.n/2, vector<TrgswMP>(2, TrgswMP(p))),
+            bskDft(p.n/2, vector<TrgswMPDft>(2, TrgswMPDft(p))),
+            n {p.n} {}
+};
+
 struct BootstrappingKeyCRT {
     std::vector<std::vector<TrgswDft24>> bskCRT {}; // n * d
     std::vector<std::vector<Trgsw8>> bsk8 {}; // n * d
@@ -53,6 +64,9 @@ void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const Bootstrappin
 void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
 void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
+
+void genBootstrappingKeyInternal(BootstrappingKeyInternal& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
+    const YatfheParameters& param);
 
 void decompBootstrappingKeyMcrt(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param);
 

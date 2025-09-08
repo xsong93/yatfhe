@@ -12,7 +12,7 @@
 
 int main(int argc, char **argv) {
     YatfheParameters param {};
-    param.group = 2;
+    param.group = 1;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 

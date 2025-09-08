@@ -12,6 +12,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <future>
+#include <functional>
 
 class ThreadPool {
 public:

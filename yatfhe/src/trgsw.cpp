@@ -1,6 +1,8 @@
 //
 // Created by Xintong Song on 2023/12/25.
 //
+
+#include <tbb/parallel_for.h>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
 //#include "yatfhe/ntt.h"
@@ -10,6 +12,7 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/crt.h"
+#include "yautil/multi_threading.h"
 
 using namespace NttHexl;
 
@@ -30,7 +33,8 @@ void encryptTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey
     }
 }
 
-void encryptTrgswMPNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
+void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
+    TrgswMP trgswMP{param};
     TorusPolynomial muPoly{param.N};
     for (size_t lvl = 0; lvl < param.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
@@ -147,6 +151,38 @@ void rotateTrgswNtt(TrgswDft& trgswDft, const int rot, const YatfheParameters& p
         for (auto row = 0; row < param.k + 1; row++) {
             rotT = trgswDft.trlweDftSamples[lvl][row];
             rotateTrlweNtt(trgswDft.trlweDftSamples[lvl][row], rotT, rot);
+        }
+    }
+}
+
+void rotateTrgswMP(TrgswMP& trgswMP, const int rot, const YatfheParameters& param) {
+    if (rot % (param.N * 2) == 0) {
+        return;
+    }
+    Trlwe rotT1{param.k, param.N};
+    Trlwe rotT2{param.k, param.N};
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        rotT1 = trgswMP.cPrime[lvl];
+        rotateTrlwe(trgswMP.cPrime[lvl], rotT1, rot);
+        for (auto row = 0; row < param.k; row++) {
+            rotT2 = trgswMP.c[lvl][row];
+            rotateTrlwe(trgswMP.c[lvl][row], rotT2, rot);
+        }
+    }
+}
+
+void rotateTrgswMPNtt(TrgswMPDft& trgswMP, const int rot, const YatfheParameters& param) {
+    if (rot % (param.N * 2) == 0) {
+        return;
+    }
+    TrlweDft rotT1{param.k, param.N};
+    TrlweDft rotT2{param.k, param.N};
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        rotT1 = trgswMP.cPrime[lvl];
+        rotateTrlweNtt(trgswMP.cPrime[lvl], rotT1, rot);
+        for (auto row = 0; row < param.k; row++) {
+            rotT2 = trgswMP.c[lvl][row];
+            rotateTrlweNtt(trgswMP.c[lvl][row], rotT2, rot);
         }
     }
 }
@@ -526,6 +562,39 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
     applyInttForAB(output, tmp);
 }
 
+void externalProductTrgswMPNtt(TrlweDft& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param) {
+    const auto k = param.k;
+    const auto N = param.N;
+    const auto level = param.l;
+    DecomposedTrlwe decomposedTrlwe{param};
+    DecomposedTrlweDft decomposedTrlweDft{param, param.l};
+    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+    for (auto i = 0; i < param.l; i++) {
+        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+    }
+
+    TrlweDft resA{k, N};
+    TrlweDft resB{k, N};
+    for (size_t lvl = 0; lvl < level; lvl++) {
+        auto& c = trgswMPInput.c[lvl];
+        auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
+        auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
+        auto& inA = decomposedTrlweDft.rlweDfts[lvl].a;
+        auto& inB = decomposedTrlweDft.rlweDfts[lvl].b;
+        for(size_t i = 0; i < k; i++) {
+            auto& ciA = c[i].a;
+            auto& ciB = c[i].b;
+            for (size_t i2 = 0; i2 < k; i2++) {
+                calModularInnerProductNtt(resA.a[i2], inA[i], ciA[i2]);
+            }
+            calModularInnerProductNtt(resA.b, inA[i], ciB);
+            calModularInnerProductNtt(resB.a[i], inB, cPrimeA[i]);
+        }
+        calModularInnerProductNtt(resB.b, inB, cPrimeB);
+    }
+    addTrlweNtt(output, resB, resA);
+}
+
 void externalProductTrgswMPDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param) {
     const auto k = param.k;
     const auto level = param.l;
@@ -607,10 +676,56 @@ void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswM
 void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(L + K * L);
     for (size_t l = 0; l < L; l++) {
-        externalProductTrgswMPNtt(output.cPrime[l], input2, input1.cPrime[l], param);
+        futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l] {
+            externalProductTrgswMPNtt(output.cPrime[l], input2, input1.cPrime[l], param);
+        }));
+    }
+    for (size_t l = 0; l < L; l++) {
         for (size_t k = 0; k < K; k++) {
-            externalProductTrgswMPNtt(output.c[l][k], input2, input1.c[l][k], param);
+            futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l, k] {
+                 externalProductTrgswMPNtt(output.c[l][k], input2, input1.c[l][k], param);
+            }));
         }
     }
+    for (auto& f : futures) {
+        f.wait();
+    }
+}
+
+#include <hwloc.h>
+void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(L + K * L);
+    for (size_t l = 0; l < L; l++) {
+        futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l] {
+            externalProductTrgswMPNtt(output.cPrime[l], input2, input1.cPrime[l], param);
+        }));
+    }
+    for (size_t l = 0; l < L; l++) {
+        for (size_t k = 0; k < K; k++) {
+            futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l, k] {
+                externalProductTrgswMPNtt(output.c[l][k], input2, input1.c[l][k], param);
+            }));
+        }
+    }
+    for (auto& f : futures) {
+        f.wait();
+    }
+
+// #pragma omp parallel for simd collapse(2) schedule(guided)
+//     for (size_t l = 0; l < L; l++) {
+//         for (size_t k = 0; k < K; k++) {
+//             if (k == 0) {
+//                 externalProductTrgswMPNtt(output.cPrime[l], input2, input1.cPrime[l], param);
+//             }
+//             externalProductTrgswMPNtt(output.c[l][k], input2, input1.c[l][k], param);
+//         }
+//     }
 }
