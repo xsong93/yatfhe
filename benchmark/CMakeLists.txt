@@ -1,3 +1,4 @@
+message(STATUS "Building benches...")
 
 add_executable(benchmark bench.cpp)
 add_executable(benchmarkCRT benchMCRT.cpp)
@@ -12,3 +13,5 @@ target_link_libraries(swap_copy PRIVATE yatfhe_lib)
 target_link_libraries(mod_mult PRIVATE yatfhe_lib)
 target_link_libraries(crt PRIVATE yatfhe_lib)
 target_link_libraries(mod_red PRIVATE yatfhe_lib)
+
+message(STATUS "Building benches...DONE!!")

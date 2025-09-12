@@ -1,6 +1,8 @@
 message(STATUS "Building yatfhe...")
 project(yatfhe)
 
+set(HEXL_REQUIRED TRUE)
+
 file(GLOB SOURCES
         ./*.cpp
         ./src/*.cpp
@@ -28,12 +30,12 @@ message(STATUS "Linking GMP...DONE!!")
 message(STATUS "Linking HEXL...")
 if(HEXL_REQUIRED)
     find_package(HEXL REQUIRED)
-    message(STATUS "HEXL found, setting NTT=HEXL")
+    message(STATUS "HEXL found, setting USING_NTT=HEXL")
     target_link_libraries(yatfhe_lib HEXL::hexl)
-    add_compile_definitions(NTT=HEXL)
+    add_compile_definitions(USING_NTT=HEXL)
 else()
-    message(STATUS "HEXL not required, setting NTT=NORMAL")
-    add_compile_definitions(NTT=NORMAL)
+    message(STATUS "HEXL not required, setting USING_NTT=NORMAL")
+    add_compile_definitions(USING_NTT=NORMAL)
 endif()
 message(STATUS "Linking HEXL...DONE!!")
 
@@ -43,16 +45,16 @@ find_package(Threads REQUIRED)
 target_link_libraries(yatfhe_lib Threads::Threads)
 message(STATUS "Linking Threads...DONE!!")
 
-# Specify where to install the headers and library
-install(TARGETS yatfhe_lib
-        ARCHIVE DESTINATION /usr/local/lib  # Static library installation path
-        LIBRARY DESTINATION /usr/local/lib  # Shared library installation path
-        RUNTIME DESTINATION /usr/local/bin  # Executable installation path (if needed)
-)
-
-# Add installation command for headers
-if(INSTALL_HEADERS)
+# Add installation command
+if(INSTALL)
     message(STATUS "Installing headers to /usr/local/include/yatfhe /usr/local/include/yautil")
+
+    # Specify where to install the headers and library
+    install(TARGETS yatfhe_lib
+            ARCHIVE DESTINATION /usr/local/lib  # Static library installation path
+            LIBRARY DESTINATION /usr/local/lib  # Shared library installation path
+            RUNTIME DESTINATION /usr/local/bin  # Executable installation path
+    )
     add_custom_command(
             TARGET yatfhe_lib PRE_BUILD
             COMMAND ${CMAKE_COMMAND} -E remove_directory /usr/local/include/yatfhe /usr/local/include/yautil

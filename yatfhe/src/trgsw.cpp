@@ -2,7 +2,6 @@
 // Created by Xintong Song on 2023/12/25.
 //
 
-#include <tbb/parallel_for.h>
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
 //#include "yatfhe/ntt.h"
@@ -696,7 +695,6 @@ void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const Trg
     }
 }
 
-#include <hwloc.h>
 void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l;
