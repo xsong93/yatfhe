@@ -11,6 +11,7 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/crt.h"
+#include "yatfhe/trglev.h"
 #include "yautil/multi_threading.h"
 
 using namespace NttHexl;
@@ -726,4 +727,22 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 //             externalProductTrgswMPNtt(output.c[l][k], input2, input1.c[l][k], param);
 //         }
 //     }
+}
+
+//todo
+void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const Trglev& input1, const TrgswMPDft& input2, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l;
+    Trglev tmp {param};
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(L + K * L);
+    for (size_t l = 0; l < L; l++) {
+        futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l] {
+            externalProductTrgswMPNtt(output.cPrime[l], input2, input1.trlwes[l], param);
+        }));
+    }
+    for (auto& f : futures) {
+        f.wait();
+    }
 }
