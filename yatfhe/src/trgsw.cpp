@@ -730,19 +730,70 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 }
 
 //todo
-void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const Trglev& input1, const TrgswMPDft& input2, const YatfheParameters& param) {
-    const auto K = param.k;
+void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trglev& input2, const vector<vector<TrlweDft>>& sSquare, const YatfheParameters& param) {
     const auto L = param.l;
-    Trglev tmp {param};
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(L + K * L);
-    for (size_t l = 0; l < L; l++) {
-        futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l] {
-            externalProductTrgswMPNtt(output.cPrime[l], input2, input1.trlwes[l], param);
+    futures.reserve(L);
+    for (auto l = 0; l < L; l++) {
+        futures.emplace_back(pool.enqueue([&output, &input1, &input2, &sSquare, &param, l] {
+            externalProductTrgswMPNtt(output.cPrime[l], input1, input2.trlwes[l], param);
+            trglevToTrgswSwitching(output.c[l], output.cPrime[l], sSquare, param);
         }));
     }
     for (auto& f : futures) {
         f.wait();
+    }
+}
+
+//todo
+void trglevToTrgswSwitching(vector<TrlweDft>& c, const TrlweDft& cPrime, const vector<vector<TrlweDft>>& sSquare, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l;
+    const auto N = param.N;
+    auto& cPrimeA = cPrime.a;
+    auto& cPrimeB = cPrime.b;
+    vector<TorusPolynomial> temp(K, TorusPolynomial{N});
+    for (auto k1 = 0; k1 < K; k1++) {
+        applyIntt(temp[k1], cPrimeA[k1]);
+    }
+    vector<Trlwe> decomp(L, Trlwe{K, N});
+    vector<TrlweDft> decompDft(L, TrlweDft{K, N});
+
+    for (auto row = 0; row < K; row++) {
+        auto& currIn = temp[row];
+        for (auto j = 0; j < N; j++) {
+            DecomposedData d {L};
+            gadgetDecompose(d, currIn.coeffs[j], param);
+            for (auto lvl = 0; lvl < L; lvl++) {
+                auto& currOut = decomp[lvl].a[row];
+                currOut.coeffs[j] = d.value[lvl] * d.sign;
+            }
+        }
+    }
+
+    for (auto l = 0; l < L; l++) {
+        auto& s = sSquare[l];
+        auto& decompL = decomp[l];
+        auto& decompDftL = decompDft[l];
+        for (auto k1 = 0; k1 < K; k1++) {
+            auto& cA = c[k1].a;
+            auto& cB = c[k1].b;
+            auto& sA = s[k1].a;
+            auto& sB = s[k1].b;
+            auto& aDft = decompDftL.a[k1];
+            auto& a = decompL.a[k1];
+            applyNtt(aDft, a);
+            for (auto k2 = 0; k2 < K; k2++) {
+                calModularInnerProductNtt(cA[k2], aDft, sA[k2]);
+            }
+            calModularInnerProductNtt(cB, aDft, sB);
+        }
+    }
+
+    for (auto k1 = 0; k1 < K; k1++) {
+        for (auto k2 = 0; k2 < K; k2++) {
+            subNttPolynomial(c[k1].a[k2], c[k1].a[k2], cPrimeB);
+        }
     }
 }

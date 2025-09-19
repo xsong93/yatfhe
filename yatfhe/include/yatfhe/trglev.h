@@ -9,15 +9,20 @@
 
 struct Trglev {
     std::vector<Trlwe> trlwes; // l
-    std::vector<TrlweDft> trlweDfts; // 2l
     int l;
-    int lDft;
 
     explicit Trglev(const YatfheParameters& param) :
-            l(param.l),
-            lDft(param.l * (param.dftBits / param.torusBits)),
             trlwes(param.l,  Trlwe(param.k, param.N)),
-            trlweDfts(param.l * (param.dftBits / param.torusBits), TrlweDft(param.k, param.N)) {};
+            l(param.l) {};
+};
+
+struct TrglevDft {
+    std::vector<TrlweDft> trlweDfts; // l
+    int l;
+
+    explicit TrglevDft(const YatfheParameters& param) :
+            trlweDfts(param.l, TrlweDft(param.k, param.N)),
+            l(param.l) {};
 };
 
 void encTrglevSingleSample(Trglev& output, const TrlweKey& trlweKey, Torus input, const YatfheParameters& param);
