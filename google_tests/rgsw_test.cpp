@@ -531,8 +531,8 @@ TEST(RgswTest, RGSWMP_INTERMULT_NTT) {
         // trgsw mult
         TrgswMPDft tmp{param};
         TrgswMPDft tmp2{param};
-        Trglev dm1{param};
-        vector<vector<TrlweDft>> dm2(param.l, vector<TrlweDft>(param.k, TrlweDft{param.k, param.N}));
+        Trlev dm1{param};
+        TrlevDft dm2 {param};
         Trlwe out{param.k, param.N};
         COUNT_TIME("internalProductTrgswMPNtt", internalProductTrgswMPNtt(tmp, trgswMP1, trgswMP2Dft, param);)
         COUNT_TIME("externalProductTrgswMPNtt", externalProductTrgswMPNtt(out, tmp, in2, param);)

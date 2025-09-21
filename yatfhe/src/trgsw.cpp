@@ -11,7 +11,7 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/crt.h"
-#include "yatfhe/trglev.h"
+#include "yatfhe/trlev.h"
 #include "yautil/multi_threading.h"
 
 using namespace NttHexl;
@@ -660,6 +660,21 @@ void externalProductTrgswMPDecompNtt(DecomposedTrlweDft& output, const TrgswMPDf
     }
 }
 
+void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, const YatfheParameters& param) {
+    const auto L = param.l;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(L);
+    for (auto l = 0; l < L; l++) {
+        futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l] {
+            externalProductTrgswMPNtt(output.trlwes[l], input1, input2.trlwes[l], param);
+        }));
+    }
+    for (auto& f : futures) {
+        f.wait();
+    }
+}
+
 //todo
 void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const YatfheParameters& param) {
     const auto K = param.k;
@@ -730,7 +745,7 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 }
 
 //todo
-void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trglev& input2, const vector<vector<TrlweDft>>& sSquare, const YatfheParameters& param) {
+void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto L = param.l;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
@@ -747,18 +762,18 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
 }
 
 //todo
-void trglevToTrgswSwitching(vector<TrlweDft>& c, const TrlweDft& cPrime, const vector<vector<TrlweDft>>& sSquare, const YatfheParameters& param) {
+void trglevToTrgswSwitching(vector<TrlweDft>& c, const TrlweDft& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l;
     const auto N = param.N;
     auto& cPrimeA = cPrime.a;
     auto& cPrimeB = cPrime.b;
-    vector<TorusPolynomial> temp(K, TorusPolynomial{N});
+    vector temp(K, TorusPolynomial{N});
     for (auto k1 = 0; k1 < K; k1++) {
         applyIntt(temp[k1], cPrimeA[k1]);
     }
-    vector<Trlwe> decomp(L, Trlwe{K, N});
-    vector<TrlweDft> decompDft(L, TrlweDft{K, N});
+    vector decomp(L, Trlwe{K, N});
+    vector decompDft(L, TrlweDft{K, N});
 
     for (auto row = 0; row < K; row++) {
         auto& currIn = temp[row];
@@ -773,14 +788,14 @@ void trglevToTrgswSwitching(vector<TrlweDft>& c, const TrlweDft& cPrime, const v
     }
 
     for (auto l = 0; l < L; l++) {
-        auto& s = sSquare[l];
+        auto& s2 = sSquare.trlweDfts[l];
         auto& decompL = decomp[l];
         auto& decompDftL = decompDft[l];
         for (auto k1 = 0; k1 < K; k1++) {
             auto& cA = c[k1].a;
             auto& cB = c[k1].b;
-            auto& sA = s[k1].a;
-            auto& sB = s[k1].b;
+            auto& sA = s2.a;
+            auto& sB = s2.b;
             auto& aDft = decompDftL.a[k1];
             auto& a = decompL.a[k1];
             applyNtt(aDft, a);

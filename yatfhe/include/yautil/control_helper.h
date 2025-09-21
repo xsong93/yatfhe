@@ -9,7 +9,6 @@
 #define PRINTER_ON
 //#define DEBUG_MODE
 #define PAR_SET1
-//#define PAR_SET2
 
 // #define BLINDROT_GROUP_NAIVE
 

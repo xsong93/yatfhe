@@ -8,7 +8,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/gadget_decomposition.h"
-#include "yatfhe/trglev.h"
+#include "yatfhe/trlev.h"
 #include "yatfhe/crt.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
@@ -432,14 +432,14 @@ TEST(TrlweTest, TrlweMultLargeConstant) {
     }
 
     // enc
-    Trglev trglev {param};
-    encTrglevMultiSample(trglev, trlweKey, plainT, param);
+    Trlev trglev {param};
+    encTrlevMultiSample(trglev, trlweKey, plainT, param);
 
     Integer y = 3;
 
     // recomp
     Trlwe recomp {param.k, param.N};
-    multTrglevWithConst(recomp, trglev, y, param);
+    multTrlevWithConst(recomp, trglev, y, param);
 
     // dec
     TorusPolynomial res {param.N};
@@ -565,13 +565,13 @@ TEST(TrlweTest, TrlweMultLargeConstantMultiLvl) {
     }
 
     // enc
-    Trglev trglev {param};
-    encTrglevMultiSample(trglev, trlweKey, plainT, param);
+    Trlev trglev {param};
+    encTrlevMultiSample(trglev, trlweKey, plainT, param);
 
     Integer y = genIntUniformDist(INT32_MIN, INT32_MAX);
 
     Trlwe recomp2 {param.k, param.N};
-    multDecomposedTglevWithConst(recomp2, trglev, y, param);
+    multDecomposedTrlevWithConst(recomp2, trglev, y, param);
 
     // dec
     TorusPolynomial res {param.N};

@@ -20,4 +20,7 @@ void blindRotateInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, co
 void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsws, vector<vector<TrgswMPDft>>& trgswDfts,
     const ScaledTlwe& input, const YatfheParameters& param);
 
+void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trlevs, vector<vector<TrgswMPDft>>& trgswDfts,
+    const ScaledTlwe& input, const TrlevDft& sSquare, const YatfheParameters& param);
+
 #endif //HLS_YATFHE_BLIND_ROTATE_H

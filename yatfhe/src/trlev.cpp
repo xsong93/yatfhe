@@ -2,11 +2,11 @@
 // Created by Xintong Song on 2024/4/22.
 //
 #include <vector>
-#include "yatfhe/trglev.h"
+#include "yatfhe/trlev.h"
 
 using namespace std;
 
-void encTrglevSingleSample(Trglev& output, const TrlweKey& trlweKey, const Torus input, const YatfheParameters& param) {
+void encTrlevSingleSample(Trlev& output, const TrlweKey& trlweKey, const Torus input, const YatfheParameters& param) {
     const auto l = output.l;
     for (auto i = 0; i < l; i++) {
         auto inOverR = input << (param.torusBits - (i + 1) * param.radixBits);
@@ -14,7 +14,7 @@ void encTrglevSingleSample(Trglev& output, const TrlweKey& trlweKey, const Torus
     }
 }
 
-void encTrglevMultiSample(Trglev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param) {
+void encTrlevMultiSample(Trlev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param) {
     const auto l = output.l;
     vector<Torus> inputsOverR(inputs.N);
     for (auto i = 0; i < l; i++) {
@@ -25,7 +25,7 @@ void encTrglevMultiSample(Trglev& output, const TrlweKey& trlweKey, const TorusP
     }
 }
 
-void multTrglevWithConst(Trlwe& output, const Trglev& input, const Integer num, const YatfheParameters& param) {
+void multTrlevWithConst(Trlwe& output, const Trlev& input, const Integer num, const YatfheParameters& param) {
     auto N = output.b.N;
     auto k = output.k;
     DecomposedData d {input.l};
@@ -42,7 +42,7 @@ void multTrglevWithConst(Trlwe& output, const Trglev& input, const Integer num, 
     }
 }
 
-void multDecomposedTglevWithConst(Trlwe& output, const Trglev& input, const Integer num, const YatfheParameters& param) {
+void multDecomposedTrlevWithConst(Trlwe& output, const Trlev& input, const Integer num, const YatfheParameters& param) {
     const auto N = output.b.N;
     const auto k = output.k;
     const auto lvl0 = input.l;
@@ -69,4 +69,15 @@ void multDecomposedTglevWithConst(Trlwe& output, const Trglev& input, const Inte
     }
 
     recomposeTrlwe(output, recomp1, param);
+}
+
+void rotateTrlev(Trlev& trglev, const int rot, const YatfheParameters& param) {
+    if (rot % (param.N * 2) == 0) {
+        return;
+    }
+    Trlwe tmp{param.k, param.N};
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        tmp = trglev.trlwes[lvl];
+        rotateTrlwe(trglev.trlwes[lvl], tmp, rot);
+    }
 }

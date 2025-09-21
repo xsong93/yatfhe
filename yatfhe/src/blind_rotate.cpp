@@ -8,7 +8,7 @@
 #include "yautil/multi_threading.h"
 #include <thread>
 
-void preRotateInternal(vector<TrgswMP>& trgswsOut, vector<TrgswMPDft>& trgswDftsOut,  vector<vector<TrgswMP>>& trgswsIn,
+void preRotateInternal(vector<TrgswMP>& trgswsOut, vector<TrgswMPDft>& trgswDftsOut, vector<vector<TrgswMP>>& trgswsIn,
     vector<vector<TrgswMPDft>>& trgswDftsIn, const std::vector<int>& aV, const YatfheParameters& param) {
     auto const n = param.n;
     const int batchSize = 32;
@@ -46,6 +46,34 @@ void preRotateInternal(vector<TrgswMP>& trgswsOut, vector<TrgswMPDft>& trgswDfts
     //     addTrgswMP(trgswsOut[i], rotated1, trgswsIn[i][1]);
     //     addTrgswMPNtt(trgswDftsOut[i], rotated2, trgswDftsIn[i][1]);
     // }
+}
+
+void preRotateInternalAsym(vector<Trlev>& trglevsOut, vector<TrgswMPDft>& trgswDftsOut, vector<vector<Trlev>>& trlevsIn,
+    vector<vector<TrgswMPDft>>& trgswDftsIn, const std::vector<int>& aV, const YatfheParameters& param) {
+    auto const n = param.n;
+    const int batchSize = 32;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+    for (int start = 0; start < n/2; start += batchSize) {
+        futures.clear();
+        for (int i = start; i < min(start + batchSize, n/2); i++) {
+            futures.emplace_back(pool.enqueue([i, &trlevsIn, &trgswDftsIn, &aV, &param, &trglevsOut, &trgswDftsOut] {
+                const int j = i * 2;
+                auto& rotated1 = trlevsIn[i][0];
+                auto& rotated2 = trgswDftsIn[i][0];
+
+                rotateTrlev(rotated1, aV[j], param);
+                rotateTrgswMPNtt(rotated2, aV[j+1], param);
+
+                addTrlev(trglevsOut[i], rotated1, trlevsIn[i][1]);
+                addTrgswMPNtt(trgswDftsOut[i], rotated2, trgswDftsIn[i][1]);
+            }));
+        }
+        for (auto& f : futures) {
+            f.wait();
+        }
+    }
 }
 
 void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
@@ -465,4 +493,44 @@ void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsw
     }
     Trlwe cop = accum;
     externalProductTrgswMPNtt(accum, trgswMPDft[0], cop, param);
+}
+
+//todo
+void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trlevs, vector<vector<TrgswMPDft>>& trgswDfts,
+    const ScaledTlwe& input, const TrlevDft& sSquare, const YatfheParameters& param) {
+    auto n = param.n;
+    const auto l = param.l;
+    vector trlev(n / 2, Trlev{param});
+    vector trgswMPDft(n / 2, TrgswMPDft{param});
+    const int batchSize = 4;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+    preRotateInternalAsym(trlev, trgswMPDft, trlevs, trgswDfts, input.a, param);
+    while (n > 2) {
+        cout<< n << endl;
+        const auto newSize = n / 2;
+        vector newTrlev(newSize, Trlev{param});
+        vector newTrgswMPDft(newSize, TrgswMPDft{param});
+        for (int start = 0; start < newSize; start += batchSize) {
+            futures.clear();
+            for (int i = start; i < min(start + batchSize, newSize); i++) {
+                futures.emplace_back(pool.enqueue([i, &newTrlev, &newTrgswMPDft, &trlev, &trgswMPDft, &sSquare, &param] {
+                   if (i % 2 == 0) {
+                       internalProductAsymTrgswMPNtt(newTrgswMPDft[i/2], trgswMPDft[i], trlev[i], sSquare, param);
+                   } else {
+                       generalExternalProductTrgswMPNtt(newTrlev[(i-1)/2], trgswMPDft[i], trlev[i], param);
+                   }
+                }));
+            }
+            for (auto& f : futures) {
+                f.wait();
+            }
+        }
+        trlev = std::move(newTrlev);
+        trgswMPDft = std::move(newTrgswMPDft);
+        n = newSize;
+    }
+    Trlwe last = trlev[0].trlwes[l - 1];
+    externalProductTrgswMPNtt(accum, trgswMPDft[0], last, param);
 }

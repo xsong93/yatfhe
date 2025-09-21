@@ -6,7 +6,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
-#include "yatfhe/tglev.h"
+#include "yatfhe/Tlev.h"
 #include "yautil/initializer.h"
 
 TEST(TlweTest, RED_TEST) {
@@ -135,7 +135,7 @@ TEST(TlweTest, MultTest) {
 
     Torus mu1 = modSwitchToTorus32(p1, param.torusBase);
 
-    Tglev tglev {param.l, param.n};
+    Tlev tglev {param.l, param.n};
     Tlwe output {param.n};
 
     encTglev(tglev, tlweKey, mu1, param);

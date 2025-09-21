@@ -8,18 +8,18 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
 
-struct Tglev {
+struct Tlev {
     std::vector<Tlwe> tlwes; // l
     int l;
 
-    explicit Tglev(const int l, const int n) :
+    explicit Tlev(const int l, const int n) :
             l(l),
             tlwes(l,  Tlwe(n)) {};
 };
 
-void encTglev(Tglev& output, const TlweKey& tlweKey, Torus input, const YatfheParameters& param);
+void encTglev(Tlev& output, const TlweKey& tlweKey, Torus input, const YatfheParameters& param);
 
-void multTglevWithConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
+void multTglevWithConst(Tlwe& output, const Tlev& input, Integer num, const YatfheParameters& param);
 
 // void multDecomposedTglevWithConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
 

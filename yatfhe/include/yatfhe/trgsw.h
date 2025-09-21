@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "trglev.h"
+#include "trlev.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/trlwe.h"
 
@@ -261,14 +261,16 @@ void externalProductTrgswMPDecomp(DecomposedTrlwe& output, const TrgswMP& trgswM
 
 void externalProductTrgswMPDecompNtt(DecomposedTrlweDft& output, const TrgswMPDft& trgswMPInput, const DecomposedTrlweDft& trlweInput, const YatfheParameters& param);
 
+void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, const YatfheParameters& param);
+
 void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const YatfheParameters& param);
 
 void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param);
 
 void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param);
 
-void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trglev& input2, const vector<vector<TrlweDft>>& sSquare, const YatfheParameters& param);
+void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, const YatfheParameters& param);
 
-void trglevToTrgswSwitching(std::vector<TrlweDft>& c, const TrlweDft& cPrime, const vector<vector<TrlweDft>>& sSquare, const YatfheParameters& param);
+void trglevToTrgswSwitching(std::vector<TrlweDft>& c, const TrlweDft& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

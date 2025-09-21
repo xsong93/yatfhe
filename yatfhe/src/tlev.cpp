@@ -1,12 +1,12 @@
 //
 // Created by Xintong Song on 2024/6/12.
 //
-#include "yatfhe/tglev.h"
+#include "yatfhe/Tlev.h"
 #include "yatfhe/gadget_decomposition.h"
 
 using namespace std;
 
-void encTglev(Tglev& output, const TlweKey& tlweKey, Torus input, const YatfheParameters& param) {
+void encTglev(Tlev& output, const TlweKey& tlweKey, Torus input, const YatfheParameters& param) {
     const auto l = output.l;
     for (auto i = 0; i < l; i++) {
         auto inOverR = input << (param.torusBits - (i + 1) * param.radixBits);
@@ -14,7 +14,7 @@ void encTglev(Tglev& output, const TlweKey& tlweKey, Torus input, const YatfhePa
     }
 }
 
-void multTglevWithConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param) {
+void multTglevWithConst(Tlwe& output, const Tlev& input, Integer num, const YatfheParameters& param) {
     DecomposedData d {input.l};
     gadgetDecompose(d, num, param);
     for (auto j = 0; j <= output.n; j++) {

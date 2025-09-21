@@ -12,6 +12,7 @@
 #include "yautil/initializer.h"
 #include "yautil/time_counter.h"
 #include "yatfhe/blind_rotate.h"
+#include "yatfhe/ntt_hexl.h"
 
 TEST(BLIND_ROT, BLIND_ROT) {
     YatfheParameters param {};
@@ -215,7 +216,6 @@ TEST(BLIND_ROT, BLIND_ROT_NTT) {
 
 TEST(BLIND_ROT, BLIND_ROT_INTERNAL) {
     YatfheParameters param{};
-    param.n = 586;
     initYatfhe(param);
 
     // key gen
@@ -234,6 +234,8 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL) {
     genBootstrappingKeyInternal(bsk, trgswKey, tlweKey, param);
     BootstrappingKey bskNor {param};
     genBootstrappingKey(bskNor, trgswKey, tlweKey, param);
+    BootstrappingKeyInternalAsym bskAsym {param};
+    genBootstrappingKeyInternalAsym(bskAsym, trgswKey, tlweKey, param);
 
     // data gen
     Trlwe in2{param.k, param.N};
@@ -316,9 +318,20 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL) {
     for (auto i = 0; i < param.n; i++) {
         encryptTrgswMPNtt(bskDummy[i], 1, trgswKey, 0, param);
     }
+    Trlev s2(param); // (a-s, as+e)
+    TrlevDft s2Dft(param);
+    encTrlevSingleSample(s2, trlweKey, 0, param);
+    for (auto i = 0; i < param.l; i++) {
+        for (auto j = 0; j < param.k; j++) {
+            subTorusPolynomial(s2.trlwes[i].a[j], s2.trlwes[i].a[j], trlweKey.s[j]);
+            NttHexl::applyNtt(s2Dft.trlweDfts[i].a[j], s2.trlwes[i].a[j]);
+        }
+    }
+
     COUNT_TIME("blindRotateNtt", blindRotateNtt(in2, bskNor.bskDft, sTlwe, param);)
     COUNT_TIME("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskDummy, sTlwe, param);)
     COUNT_TIME("blindRotateInternalPireWiseNtt", blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(in2, bskAsym.bsk, bskAsym.bskDft,sTlwe, s2Dft, param));
 #endif
 
     // trgsw enc X^rot
