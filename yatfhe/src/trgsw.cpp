@@ -13,6 +13,7 @@
 #include "yatfhe/crt.h"
 #include "yatfhe/trlev.h"
 #include "yautil/multi_threading.h"
+#include "yautil/tool.h"
 
 using namespace NttHexl;
 

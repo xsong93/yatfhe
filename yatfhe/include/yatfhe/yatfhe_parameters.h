@@ -14,7 +14,7 @@ struct YatfheParameters {
     int k {1};
     int N {1024};
     double rlweStdDev {2.9802322387695312e-08}; // 2^-25
-    int radixBits {8}; // b
+    int radixBits {10}; // b
     int64_t q {Q_32};
     int l {2};
 #else // ternary secret, 128-bit

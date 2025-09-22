@@ -19,9 +19,18 @@ void encTrlevMultiSample(Trlev& output, const TrlweKey& trlweKey, const TorusPol
     vector<Torus> inputsOverR(inputs.N);
     for (auto i = 0; i < l; i++) {
         for (auto j = 0; j < inputs.N; j++) {
-            inputsOverR[j] = inputs.coeffs[j] << (param.torusBits - (i + 1) * param.radixBits);;
+            inputsOverR[j] = inputs.coeffs[j] << (param.torusBits - (i + 1) * param.radixBits);
         }
         symEncTrlweMultiSample(output.trlwes[i], trlweKey, inputsOverR);
+    }
+}
+
+void decTrlev(TorusPolynomial& output, const Trlev& input, const TrlweKey& trlweKey, const YatfheParameters& param) {
+    const auto firstLevel = 0;
+    TorusPolynomial tmp {param.N};
+    symDecTrlweWoRounding(tmp, input.trlwes[firstLevel], trlweKey);
+    for (auto i = 0; i < param.N; i++) {
+        output.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweStdDev, param.torusBits - param.radixBits);
     }
 }
 

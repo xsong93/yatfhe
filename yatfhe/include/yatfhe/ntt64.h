@@ -56,23 +56,6 @@ namespace NttNative64 {
 
 //----------------------------------------------------------------------------------
 
-
-    template<typename T, typename R>
-    void applyNttForAB(T &out, R &in) {
-        for (auto row = 0; row < in.a.size(); row++) {
-            applyNtt(out.a[row], in.a[row]);
-        }
-        applyNtt(out.b, in.b);
-    }
-
-    template<typename T, typename R>
-    void applyInttForAB(T &out, R &in) {
-        for (auto row = 0; row < in.a.size(); row++) {
-            applyIntt(out.a[row], in.a[row]);
-        }
-        applyIntt(out.b, in.b);
-    }
-
     void genTW_ROM(TwRom &tw_rom);
 
     void genNWCparam(TwParam &nwc_tw, const int n, const TwRom &tw_rom, const std::string &str);
@@ -113,6 +96,22 @@ namespace NttNative64 {
     calModularInnerProductNtt(NttPolynomial &res, const NttPolynomial &in1, const NttPolynomial &in2);
 
     void initGlobalParamsNtt(int N);
+
+    template<typename T, typename R>
+void applyNttForAB(T &out, R &in) {
+        for (auto row = 0; row < in.a.size(); row++) {
+            applyNtt(out.a[row], in.a[row]);
+        }
+        applyNtt(out.b, in.b);
+    }
+
+    template<typename T, typename R>
+    void applyInttForAB(T &out, R &in) {
+        for (auto row = 0; row < in.a.size(); row++) {
+            applyIntt(out.a[row], in.a[row]);
+        }
+        applyIntt(out.b, in.b);
+    }
 }
 
 #endif //HLS_YATFHE_NTT64_H

@@ -92,8 +92,7 @@ namespace NttHexl {
         }
     }
 
-    void
-    calModularInnerProductNtt(NttPolynomial &res, const vector<NttPolynomial> &in1, const vector<NttPolynomial> &in2) {
+    void calModularInnerProductNtt(NttPolynomial &res, const vector<NttPolynomial> &in1, const vector<NttPolynomial> &in2) {
         for (auto i = 0; i < in1.size(); i++) {
             calModularInnerProductNtt(res, in1[i], in2[i]);
         }
