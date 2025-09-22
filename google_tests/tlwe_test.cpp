@@ -6,7 +6,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/tool.h"
-#include "yatfhe/Tlev.h"
+#include "yatfhe/tlev.h"
 #include "yautil/initializer.h"
 
 TEST(TlweTest, RED_TEST) {
