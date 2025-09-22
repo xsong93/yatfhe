@@ -26,7 +26,6 @@ void TimeCounter::printTime(const std::string& message) {
 #ifdef ENABLE_TIMER
     printMsg(duration_cast<microseconds>(high_resolution_clock::now() - getTime()).count(),
              "elapsed time (" + message + ") in us");
-//    std::cout << "elapsed time (" << message << ") in us: " << duration_cast<microseconds>(high_resolution_clock::now() - getTime()).count() << std::endl;
 #endif
 }
 
@@ -34,18 +33,16 @@ void TimeCounter::printTime(const std::string& message, time_point<high_resoluti
 #ifdef ENABLE_TIMER
     printMsg(duration_cast<microseconds>(high_resolution_clock::now() - start).count(),
              "elapsed time (" + message + ") in us");
-//    std::cout << "elapsed time (" << message << ") in us: " << duration_cast<microseconds>(high_resolution_clock::now() - start).count() << std::endl;
 #endif
 }
 
-void TimeCounter::printTime(const std::string& message, clock_t& start, long interval) {
+void TimeCounter::printTime(const std::string& message, time_point<high_resolution_clock>& start, long interval) {
 #ifdef ENABLE_TIMER
     if (interval <= 0) {
         interval = 1;
     }
-    printMsg((clock() - start) / interval,
+    printMsg((duration_cast<microseconds>(high_resolution_clock::now() - start).count()) / interval,
              "elapsed time (" + message + ") in us");
-//    std::cout << "elapsed time (" << message << ") in us: " << (clock() - start) / interval << std::endl;
 #endif
 }
 

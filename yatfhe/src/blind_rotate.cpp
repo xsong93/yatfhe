@@ -76,6 +76,40 @@ void preRotateInternalAsym(vector<Trlev>& trglevsOut, vector<TrgswMPDft>& trgswD
     }
 }
 
+void preRotateInternalAsymOpt(vector<Trlev>& trglevsOut, Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut,
+                              vector<vector<Trlev>>& trlevsIn, vector<Trlwe>& trlwesIn, vector<vector<TrgswMPDft>>& trgswDftsIn,
+                              const std::vector<int>& aV, const YatfheParameters& param) {
+    auto const n = param.n;
+    const int batchSize = 32;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+    for (int start = 0; start < n/2; start += batchSize) {
+        futures.clear();
+        for (int i = start; i < min(start + batchSize, n/2); i++) {
+            if (i == n/2 - 1) {
+                const int j = i * 2;
+                Trlwe tmp {param.k, param.N};
+                rotateTrgswMPNtt(trgswDftsIn[i][0], aV[j], param);
+                rotateTrlwe(tmp, trlwesIn[0], aV[j + 1]);
+                addTrgswMPNtt(trgswDftsOut[i], trgswDftsIn[i][0], trgswDftsIn[i][1]);
+                addTrlwe(trlweOut, tmp, trlwesIn[1]);
+                continue;
+            }
+            futures.emplace_back(pool.enqueue([i, &trlevsIn, &trgswDftsIn, &aV, &param, &trglevsOut, &trgswDftsOut] {
+                const int j = i * 2;
+                rotateTrgswMPNtt(trgswDftsIn[i][0], aV[j], param);
+                rotateTrlev(trlevsIn[i][0], aV[j + 1], param);
+                addTrgswMPNtt(trgswDftsOut[i], trgswDftsIn[i][0], trgswDftsIn[i][1]);
+                addTrlev(trglevsOut[i], trlevsIn[i][0], trlevsIn[i][1]);
+            }));
+        }
+        for (auto& f : futures) {
+            f.wait();
+        }
+    }
+}
+
 void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     for (auto i = 0; i < param.n; i++) {
@@ -495,11 +529,9 @@ void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsw
     externalProductTrgswMPNtt(accum, trgswMPDft[0], cop, param);
 }
 
-//todo
 void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trlevs, vector<vector<TrgswMPDft>>& trgswDfts,
     const ScaledTlwe& input, const TrlevDft& sSquare, const YatfheParameters& param) {
     auto n = param.n;
-    const auto l = param.l;
     vector trlev(n / 2, Trlev{param});
     vector trgswMPDft(n / 2, TrgswMPDft{param});
     const int batchSize = 4;
@@ -507,8 +539,7 @@ void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trl
     vector<future<void>> futures;
     futures.reserve(batchSize);
     preRotateInternalAsym(trlev, trgswMPDft, trlevs, trgswDfts, input.a, param);
-    while (n > 2) {
-        cout<< n << endl;
+    while (n > 1) {
         const auto newSize = n / 2;
         vector newTrlev(newSize, Trlev{param});
         vector newTrgswMPDft(newSize, TrgswMPDft{param});
@@ -531,6 +562,51 @@ void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trl
         trgswMPDft = std::move(newTrgswMPDft);
         n = newSize;
     }
-    Trlwe last = trlev[0].trlwes[l - 1];
-    externalProductTrgswMPNtt(accum, trgswMPDft[0], last, param);
+    Trlwe copy = accum;
+    externalProductTrgswMPNtt(accum, trgswMPDft[0], copy, param);
+}
+
+void blindRotateInternalPairWiseAsymOptNtt(Trlwe& out, vector<vector<Trlev>>& trlevs, vector<Trlwe>& trlwes,
+                                           vector<vector<TrgswMPDft>>& trgswDfts, const ScaledTlwe& input,
+                                           const TrlevDft& sSquare, const YatfheParameters& param) {
+    auto n = param.n;
+    const auto l = param.l;
+    vector trlev(n / 2, Trlev{param});
+    vector trgswMPDft(n / 2, TrgswMPDft{param});
+    Trlwe trlwe {param.k, param.N};
+    const int batchSize = 4;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+    preRotateInternalAsymOpt(trlev, trlwe, trgswMPDft, trlevs, trlwes, trgswDfts, input.a, param);
+    while (n > 1) {
+        const auto newSize = n / 2;
+        vector newTrlev(newSize, Trlev{param});
+        vector newTrgswMPDft(newSize, TrgswMPDft{param});
+        Trlwe newTrlwe {param.k, param.N};
+        for (int start = 0; start < newSize; start += batchSize) {
+            futures.clear();
+            for (int i = start; i < min(start + batchSize, newSize); i++) {
+                futures.emplace_back(pool.enqueue([i, newSize, &newTrlev, &newTrlwe, &newTrgswMPDft, &trlev, &trlwe, &trgswMPDft, &sSquare, &param] {
+                    if (i == newSize - 1) {
+                        externalProductTrgswMPNtt(newTrlwe, trgswMPDft[i], trlwe, param);
+                        return;
+                    }
+                    if (i % 2 == 0) {
+                        internalProductAsymTrgswMPNtt(newTrgswMPDft[i/2], trgswMPDft[i], trlev[i], sSquare, param);
+                    } else {
+                        generalExternalProductTrgswMPNtt(newTrlev[(i-1)/2], trgswMPDft[i], trlev[i], param);
+                    }
+                }));
+            }
+            for (auto& f : futures) {
+                f.wait();
+            }
+        }
+        trlev = std::move(newTrlev);
+        trlwe = std::move(newTrlwe);
+        trgswMPDft = std::move(newTrgswMPDft);
+        n = newSize;
+    }
+    rotateTrlwe(out, trlwe, -input.b);
 }

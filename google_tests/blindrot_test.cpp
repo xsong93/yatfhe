@@ -249,6 +249,9 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL) {
     symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, plainT.coeffs);
     printTrlweAB(in2, "input");
 
+    BootstrappingKeyInternalAsymOpt bskAsymOpt {param};
+    genBootstrappingKeyInternalAsymOpt(bskAsymOpt, trgswKey, tlweKey, in2.b, param);
+
     // pre dec
     IntPolynomial decIn{param.N};
     symDecTrlweToIntNtt(decIn, in2Dft, trlweKey, param.torusBase);
@@ -331,7 +334,8 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL) {
     COUNT_TIME("blindRotateNtt", blindRotateNtt(in2, bskNor.bskDft, sTlwe, param);)
     COUNT_TIME("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskDummy, sTlwe, param);)
     COUNT_TIME("blindRotateInternalPireWiseNtt", blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(in2, bskAsym.bsk, bskAsym.bskDft,sTlwe, s2Dft, param));
+    COUNT_TIME("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(in2, bskAsym.bsk, bskAsym.bskDft,sTlwe, s2Dft, param);)
+    COUNT_TIME("blindRotateInternalPairWiseAsymOptNtt", blindRotateInternalPairWiseAsymOptNtt(in2, bskAsymOpt.bsk, bskAsymOpt.bskLast, bskAsymOpt.bskDft, sTlwe, s2Dft, param);)
 #endif
 
     // trgsw enc X^rot

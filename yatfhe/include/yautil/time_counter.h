@@ -27,7 +27,7 @@ public:
 
     static void printTime(const std::string& message, time_point<high_resolution_clock>& start);
 
-    static void printTime(const std::string& message, clock_t& start, long interval);
+    static void printTime(const std::string& message, time_point<high_resolution_clock>& start, long interval);
 
     static void printTimeRefresh(const std::string& message, clock_t *start);
 };
@@ -36,6 +36,13 @@ public:
     TimeCounter::timeGlobal = high_resolution_clock::now();               \
     CODE;                                                                 \
     TimeCounter::printTime(MSG, TimeCounter::timeGlobal);
+
+#define BENCH100(MSG, CODE)                                               \
+    TimeCounter::timeGlobal = high_resolution_clock::now();               \
+    for (int i = 0; i < 100; i++) {                                       \
+        CODE;                                                             \
+    }                                                                     \
+    TimeCounter::printTime(MSG, TimeCounter::timeGlobal, 100);
 
 
 #endif //HLS_YATFHE_TIME_COUNTER_H

@@ -43,11 +43,7 @@ void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey&
         applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
         for (size_t k = 0; k < param.k; k++) {
             symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
-            for (size_t i = 0; i < param.k; i++) {
-                if (i == k) {
-                    addTorusPolynomial(trgswMP.c[lvl][k].a[i], trgswMP.c[lvl][k].a[i], muPoly);
-                }
-            }
+            addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
             applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
         }
     }
@@ -276,6 +272,26 @@ Integer decryptTrgswNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRoundingNtt(tmp, trgswDft.trlweDftSamples[firstLevel][lastRow], trgswKey.trlweKey);
     return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
+}
+
+Integer decryptTrgswMP(const TrgswMP& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
+    const auto firstLevel = 0;
+    TorusPolynomial tmp {param.N};
+    symDecTrlweWoRounding(tmp, trgsw.cPrime[firstLevel], trgswKey.trlweKey);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
+}
+
+void decryptTrgswMPNtt(IntPolynomial& res, const TrgswMPDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey, const bool isDecC) {
+    const auto firstLevel = 0;
+    TorusPolynomial tmp {param.N};
+    if (!isDecC) {
+        symDecTrlweWoRoundingNtt(tmp, trgswDft.cPrime[firstLevel], trgswKey.trlweKey);
+    } else {
+        symDecTrlweWoRoundingNtt(tmp, trgswDft.c[firstLevel][0], trgswKey.trlweKey);
+    }
+    for (auto i = 0; i < param.N; i++) {
+        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweStdDev, param.torusBits - param.radixBits);
+    }
 }
 
 void decompTrgswMcrt(std::vector<Trgsw8>& out, const Trgsw& in, const YatfheParameters& param) {
@@ -808,7 +824,7 @@ void trglevToTrgswSwitching(vector<TrlweDft>& c, const TrlweDft& cPrime, const T
 
     for (auto k1 = 0; k1 < K; k1++) {
         for (auto k2 = 0; k2 < K; k2++) {
-            subNttPolynomial(c[k1].a[k2], c[k1].a[k2], cPrimeB);
+            addNttPolynomial(c[k1].a[k2], c[k1].a[k2], cPrimeB);
         }
     }
 }

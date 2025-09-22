@@ -116,6 +116,7 @@ TEST(TrlweTest, TrlweEncDecMultiSampleTest) {
 
 TEST(TrlweTest, TRLWE_ENCS) {
     YatfheParameters param{};
+    param.k = 2;
     initYatfhe(param);
     TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
     Trlwe trlwe {param.k, param.N};
@@ -148,11 +149,7 @@ TEST(TrlweTest, TRLWE_ENCS) {
     std::vector<Trlwe> encSxM(param.k, Trlwe{param.k, param.N});
     for (size_t k = 0; k < param.k; k++) {
         symEncTrlweSingleSample(encSxM[k], trlweKey, 0);
-        for (size_t i = 0; i < param.k; i++) {
-            if (i == k) {
-                addTorusPolynomial(encSxM[k].a[i], encSxM[k].a[i], in[i]);
-            }
-        }
+        addTorusPolynomial(encSxM[k].a[k], encSxM[k].a[k], in[k]);
     }
 
     std::vector<TorusPolynomial> res(param.k, TorusPolynomial(param.N));

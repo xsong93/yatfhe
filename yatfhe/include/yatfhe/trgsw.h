@@ -239,6 +239,10 @@ Integer decryptTrgsw(const Trgsw& trgsw, const YatfheParameters& param, const Tr
 
 Integer decryptTrgswNtt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 
+Integer decryptTrgswMP(const TrgswMP& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
+
+void decryptTrgswMPNtt(IntPolynomial& res, const TrgswMPDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey, const bool isDecC);
+
 void decompTrgswMcrt(std::vector<Trgsw8>& out, const Trgsw& in, const YatfheParameters& param);
 
 void trgswMcrtToCrt(std::vector<Trgsw8>& trgsw, const YatfheParameters& param);
