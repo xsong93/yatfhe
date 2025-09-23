@@ -491,14 +491,20 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
 
 TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     YatfheParameters param {};
-    param.lweStdDev = 0;
-    param.rlweStdDev = 0;
+    param.n = 2;
+    param.N = 2;
+//    param.lweStdDev = 0;
+//    param.rlweStdDev = 0;
     initYatfhe(param);
 
     // key gen
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     genTrlweKey(trlweKey);
+
+//    trlweKey = TrlweKey{param};
+    trlweKey.s[0].coeffs[0] = 1;
+    trlweKey.s[0].coeffs[1] = 0;
 
     Trlev s2(param);
     TrlevDft s2Dft(param);
@@ -526,26 +532,49 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
         }
     }
     TorusPolynomial t{param.N};
+    decTrlev(t, s2, trlweKey, param);
+    printArray(t.coeffs, "s2dec");
     decTrlev(t, s2p, trlweKey, param);
     printArray(t.coeffs, "s2dec");
 
     // trgsw enc
     TrgswMPDft in1Dft{param};
-    Integer mu1 = 0;
+    TrgswMP in1{param};
+    Integer mu1 = 1;
+    encryptTrgswMP(in1, mu1, trgswKey, 0, param);
     encryptTrgswMPNtt(in1Dft, mu1, trgswKey, 0, param);
 
     IntPolynomial dec{param.N};
-    decryptTrgswMPNtt(dec, in1Dft, param, trgswKey, false);
+//    decryptTrgswMPNtt(dec, in1Dft, param, trgswKey, false);
+    decryptTrgswMP(dec, in1, param, trgswKey, false);
     printArray(dec.coeffs, "mu1");
-    decryptTrgswMPNtt(dec, in1Dft, param, trgswKey, true);
+//    decryptTrgswMPNtt(dec, in1Dft, param, trgswKey, true);
+    decryptTrgswMP(dec, in1, param, trgswKey, true);
     printArray(dec.coeffs, "mu1*s");
 
     TrgswMPDft tmpDft{param};
+    TrgswMP t1{param};
     for (auto l = 0; l < param.l; l++) {
-        trglevToTrgswSwitching(tmpDft.c[l], in1Dft.cPrime[l], s2Dft, param);
+//        trglevToTrgswSwitchingNtt(tmpDft.c[l], in1Dft.cPrime[l], s2Dft, param);
+        trglevToTrgswSwitching(t1.c[l], in1.cPrime[l], s2p, param);
     }
-    decryptTrgswMPNtt(dec, tmpDft, param, trgswKey, true);
+
+//    decryptTrgswMPNtt(dec, tmpDft, param, trgswKey, true);
+    decryptTrgswMP(dec, t1, param, trgswKey, true);
     printArray(dec.coeffs, "mu1*s_ss");
+
+    Trlev res{param};
+    Trlev in2{param};
+    TorusPolynomial mu{param.N};
+    for (auto j = 0; j < param.N; j++) {
+        mu.coeffs[j] = 1;
+    }
+    encTrlevMultiSample(in2, trlweKey, mu, param);
+    decTrlev(t, in2, trlweKey, param);
+    printArray(t.coeffs, "t");
+    generalExternalProductTrgswMPNtt(res, in1Dft, in2, param);
+    decTrlev(t, res, trlweKey, param);
+    printArray(t.coeffs, "t");
 
     printBanner("RGSWMP_SCHEME_SWITCHING");
 }

@@ -275,16 +275,22 @@ Integer decryptTrgswNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
     return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
 }
 
-Integer decryptTrgswMP(const TrgswMP& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
+void decryptTrgswMP(IntPolynomial& res, const TrgswMP& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const bool isDecC) {
     const auto firstLevel = 0;
-    TorusPolynomial tmp {param.N};
-    symDecTrlweWoRounding(tmp, trgsw.cPrime[firstLevel], trgswKey.trlweKey);
-    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
+    TorusPolynomial tmp{param.N};
+    if (!isDecC) {
+        symDecTrlweWoRounding(tmp, trgsw.cPrime[firstLevel], trgswKey.trlweKey);
+    } else {
+        symDecTrlweWoRounding(tmp, trgsw.c[firstLevel][0], trgswKey.trlweKey);
+    }
+    for (auto i = 0; i < param.N; i++) {
+        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweStdDev, param.torusBits - param.radixBits);
+    }
 }
 
 void decryptTrgswMPNtt(IntPolynomial& res, const TrgswMPDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey, const bool isDecC) {
     const auto firstLevel = 0;
-    TorusPolynomial tmp {param.N};
+    TorusPolynomial tmp{param.N};
     if (!isDecC) {
         symDecTrlweWoRoundingNtt(tmp, trgswDft.cPrime[firstLevel], trgswKey.trlweKey);
     } else {
@@ -770,7 +776,7 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
     for (auto l = 0; l < L; l++) {
         futures.emplace_back(pool.enqueue([&output, &input1, &input2, &sSquare, &param, l] {
             externalProductTrgswMPNtt(output.cPrime[l], input1, input2.trlwes[l], param);
-            trglevToTrgswSwitching(output.c[l], output.cPrime[l], sSquare, param);
+            trglevToTrgswSwitchingNtt(output.c[l], output.cPrime[l], sSquare, param);
         }));
     }
     for (auto& f : futures) {
@@ -779,7 +785,7 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
 }
 
 //todo
-void trglevToTrgswSwitching(vector<TrlweDft>& c, const TrlweDft& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
+void trglevToTrgswSwitchingNtt(std::vector<TrlweDft> &c, const TrlweDft& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l;
     const auto N = param.N;
@@ -804,6 +810,13 @@ void trglevToTrgswSwitching(vector<TrlweDft>& c, const TrlweDft& cPrime, const T
         }
     }
 
+    for (auto row = 0; row < K; row++) {
+        printArray(temp[row].coeffs, "Atemp");
+        for (auto lvl = 0; lvl < L; lvl++) {
+            printArray(decomp[lvl].a[row].coeffs, "aD");
+        }
+    }
+
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
         auto& decompL = decomp[l];
@@ -812,20 +825,81 @@ void trglevToTrgswSwitching(vector<TrlweDft>& c, const TrlweDft& cPrime, const T
             auto& cA = c[k1].a;
             auto& cB = c[k1].b;
             auto& sA = s2.a;
-            auto& sB = s2.b;
             auto& aDft = decompDftL.a[k1];
-            auto& a = decompL.a[k1];
-            applyNtt(aDft, a);
+            applyNtt(aDft, decompL.a[k1]);
             for (auto k2 = 0; k2 < K; k2++) {
                 calModularInnerProductNtt(cA[k2], aDft, sA[k2]);
             }
-            calModularInnerProductNtt(cB, aDft, sB);
+            calModularInnerProductNtt(cB, aDft, s2.b);
         }
     }
 
+
     for (auto k1 = 0; k1 < K; k1++) {
         for (auto k2 = 0; k2 < K; k2++) {
-            addNttPolynomial(c[k1].a[k2], c[k1].a[k2], cPrimeB);
+            auto t = c[k1].a[k2];
+            addNttPolynomial(c[k1].a[k2], t, cPrimeB);
         }
     }
+}
+
+void trglevToTrgswSwitching(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l;
+    const auto N = param.N;
+    auto& cPrimeA = cPrime.a;
+    auto& cPrimeB = cPrime.b;
+
+    vector decomp(L, Trlwe{K, N});
+
+    for (auto row = 0; row < K; row++) {
+        auto& currIn = cPrimeA[row];
+        for (auto j = 0; j < N; j++) {
+            DecomposedData d {L};
+            gadgetDecompose(d, currIn.coeffs[j], param);
+            for (auto lvl = 0; lvl < L; lvl++) {
+                auto& currOut = decomp[lvl].a[row];
+                currOut.coeffs[j] = d.value[lvl] * d.sign;
+            }
+        }
+    }
+
+//    for (auto row = 0; row < K; row++) {
+//        printArray(cPrimeA[row].coeffs, "A");
+//        for (auto lvl = 0; lvl < L; lvl++) {
+//            printArray(decomp[lvl].a[row].coeffs, "aD");
+//        }
+//    }
+
+//    for (auto l = 0; l < L; l++) {
+//        auto& s2 = sSquare.trlwes[l];
+//        auto& decompL = decomp[l];
+//        for (auto k1 = 0; k1 < K; k1++) {
+//            auto& cA = c[k1].a;
+//            auto& cB = c[k1].b;
+//            auto& sA = s2.a;
+//            for (auto k2 = 0; k2 < K; k2++) {
+//                multTorusPolynomialAcc(cA[k2], decompL.a[k1], sA[k2]);
+//            }
+//            multTorusPolynomialAcc(cB, decompL.a[k1], s2.b);
+//        }
+//    }
+    for (auto l = 0; l < L; l++) {
+//        printArray(sSquare.trlwes[l].a[0].coeffs, "s2a");
+//        printArray(sSquare.trlwes[l].b.coeffs, "s2b");
+//        printArray(decomp[l].a[0].coeffs, "aD");
+        multTorusPolynomialAcc(c[0].a[0], decomp[l].a[0], sSquare.trlwes[l].a[0]);
+        multTorusPolynomialAcc(c[0].b, decomp[l].a[0], sSquare.trlwes[l].b);
+    }
+    TorusPolynomial t{param.N};
+    for (auto j = 0; j < N; j++) {
+        t.coeffs[j] = c[0].a[0].coeffs[j];
+    }
+    addTorusPolynomial(c[0].a[0], t, cPrimeB);
+//    for (auto k1 = 0; k1 < K; k1++) {
+//        for (auto k2 = 0; k2 < K; k2++) {
+//            auto t = c[k1].a[k2];
+//            addTorusPolynomial(c[k1].a[k2], t, cPrimeB);
+//        }
+//    }
 }

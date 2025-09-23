@@ -239,9 +239,9 @@ Integer decryptTrgsw(const Trgsw& trgsw, const YatfheParameters& param, const Tr
 
 Integer decryptTrgswNtt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-Integer decryptTrgswMP(const TrgswMP& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
+void decryptTrgswMP(IntPolynomial& res, const TrgswMP& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, bool isDecC);
 
-void decryptTrgswMPNtt(IntPolynomial& res, const TrgswMPDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey, const bool isDecC);
+void decryptTrgswMPNtt(IntPolynomial& res, const TrgswMPDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey, bool isDecC);
 
 void decompTrgswMcrt(std::vector<Trgsw8>& out, const Trgsw& in, const YatfheParameters& param);
 
@@ -275,6 +275,8 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 
 void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, const YatfheParameters& param);
 
-void trglevToTrgswSwitching(std::vector<TrlweDft>& c, const TrlweDft& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
+void trglevToTrgswSwitchingNtt(std::vector<TrlweDft>& c, const TrlweDft& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
+
+void trglevToTrgswSwitching(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H
