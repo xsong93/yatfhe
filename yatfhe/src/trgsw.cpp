@@ -810,13 +810,6 @@ void trglevToTrgswSwitchingNtt(std::vector<TrlweDft> &c, const TrlweDft& cPrime,
         }
     }
 
-    for (auto row = 0; row < K; row++) {
-        printArray(temp[row].coeffs, "Atemp");
-        for (auto lvl = 0; lvl < L; lvl++) {
-            printArray(decomp[lvl].a[row].coeffs, "aD");
-        }
-    }
-
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
         auto& decompL = decomp[l];
@@ -891,6 +884,7 @@ void trglevToTrgswSwitching(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& 
         multTorusPolynomialAcc(c[0].a[0], decomp[l].a[0], sSquare.trlwes[l].a[0]);
         multTorusPolynomialAcc(c[0].b, decomp[l].a[0], sSquare.trlwes[l].b);
     }
+
     TorusPolynomial t{param.N};
     for (auto j = 0; j < N; j++) {
         t.coeffs[j] = c[0].a[0].coeffs[j];
