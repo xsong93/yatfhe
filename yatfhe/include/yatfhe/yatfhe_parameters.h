@@ -17,7 +17,8 @@ struct YatfheParameters {
     int radixBits {8}; // b
     int64_t q {Q_32};
     int torusBase {8}; // p|q
-    int l {2};
+    int l {4};
+    int lApprox {2};
 #else // ternary secret, 128-bit
     int n {512};
     double lweStdDev {0.00000095367431640625}; // 2^-20
@@ -27,7 +28,8 @@ struct YatfheParameters {
     int radixBits {8}; // b
     int64_t q {Q_32};
     int torusBase {8}; // p|q
-    int l {2};
+    int l {4};
+    int lApprox {2};
 #endif
     // LWE params
     int torusBits {32};

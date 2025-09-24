@@ -60,14 +60,10 @@ void preRotateInternalAsym(vector<Trlev>& trglevsOut, vector<TrgswMPDft>& trgswD
         for (int i = start; i < min(start + batchSize, n/2); i++) {
             futures.emplace_back(pool.enqueue([i, &trlevsIn, &trgswDftsIn, &aV, &param, &trglevsOut, &trgswDftsOut] {
                 const int j = i * 2;
-                auto& rotated1 = trlevsIn[i][0];
-                auto& rotated2 = trgswDftsIn[i][0];
-
-                rotateTrlev(rotated1, aV[j], param);
-                rotateTrgswMPNtt(rotated2, aV[j+1], param);
-
-                addTrlev(trglevsOut[i], rotated1, trlevsIn[i][1]);
-                addTrgswMPNtt(trgswDftsOut[i], rotated2, trgswDftsIn[i][1]);
+                rotateTrgswMPNtt(trgswDftsIn[i][0], aV[j], param);
+                rotateTrlev(trlevsIn[i][0], aV[j + 1], param);
+                addTrgswMPNtt(trgswDftsOut[i], trgswDftsIn[i][0], trgswDftsIn[i][1]);
+                addTrlev(trglevsOut[i], trlevsIn[i][0], trlevsIn[i][1]);
             }));
         }
         for (auto& f : futures) {
@@ -477,7 +473,7 @@ void blindRotateInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, co
         TrgswMP tmp {param};
         rotateTrgswMP(accum, input.a[i], param);
         subTrgswMP(tmp, accum, temp);
-        internalProductTrgswMPNtt(accum, tmp, trgsws[i], param); // res *= bskI
+        internalProductTrgswMPNtt(accum, tmp, trgsws[i], param.l, param); // res *= bskI
         addTrgswMP(tmp, accum, temp); // res += input
         accum = std::move(tmp);
     }
@@ -511,9 +507,9 @@ void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsw
             for (int i = start; i < min(start + batchSize, n / 2); i++) {
                 futures.emplace_back(pool.enqueue([i, &newTrgswMP, &newTrgswMPDft, &trgswMP, &trgswMPDft, &param] {
                    if (i % 2 == 0) {
-                       internalProductTrgswMPNtt(newTrgswMPDft[i/2], trgswMP[i], trgswMPDft[i], param);
+                       internalProductTrgswMPNtt(newTrgswMPDft[i/2], trgswMP[i], trgswMPDft[i], param.l, param);
                    } else {
-                       internalProductTrgswMPNtt(newTrgswMP[(i-1)/2], trgswMP[i], trgswMPDft[i], param);
+                       internalProductTrgswMPNtt(newTrgswMP[(i-1)/2], trgswMP[i], trgswMPDft[i], param.l, param);
                    }
                 }));
             }
@@ -526,7 +522,7 @@ void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsw
         n = newSize;
     }
     Trlwe cop = accum;
-    externalProductTrgswMPNtt(accum, trgswMPDft[0], cop, param);
+    externalProductTrgswMPNtt(accum, trgswMPDft[0], cop, param.lApprox, param);
 }
 
 void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trlevs, vector<vector<TrgswMPDft>>& trgswDfts,
@@ -548,9 +544,9 @@ void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trl
             for (int i = start; i < min(start + batchSize, newSize); i++) {
                 futures.emplace_back(pool.enqueue([i, &newTrlev, &newTrgswMPDft, &trlev, &trgswMPDft, &sSquare, &param] {
                    if (i % 2 == 0) {
-                       internalProductAsymTrgswMPNtt(newTrgswMPDft[i/2], trgswMPDft[i], trlev[i], sSquare, param);
+                       internalProductAsymTrgswMPNtt(newTrgswMPDft[i/2], trgswMPDft[i], trlev[i], sSquare, param.l, param);
                    } else {
-                       generalExternalProductTrgswMPNtt(newTrlev[(i-1)/2], trgswMPDft[i], trlev[i], param);
+                       generalExternalProductTrgswMPNtt(newTrlev[(i-1)/2], trgswMPDft[i], trlev[i], param.l, param);
                    }
                 }));
             }
@@ -563,7 +559,7 @@ void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trl
         n = newSize;
     }
     Trlwe copy = accum;
-    externalProductTrgswMPNtt(accum, trgswMPDft[0], copy, param);
+    externalProductTrgswMPNtt(accum, trgswMPDft[0], copy, param.lApprox, param);
 }
 
 void blindRotateInternalPairWiseAsymOptNtt(Trlwe& out, vector<vector<Trlev>>& trlevs, vector<Trlwe>& trlwes,
@@ -588,13 +584,13 @@ void blindRotateInternalPairWiseAsymOptNtt(Trlwe& out, vector<vector<Trlev>>& tr
             for (int i = start; i < min(start + batchSize, newSize); i++) {
                 futures.emplace_back(pool.enqueue([i, newSize, &newTrlev, &newTrlwe, &newTrgswMPDft, &trlev, &trlwe, &trgswMPDft, &sSquare, &param] {
                     if (i == newSize - 1) {
-                        externalProductTrgswMPNtt(newTrlwe, trgswMPDft[i], trlwe, param);
+                        externalProductTrgswMPNtt(newTrlwe, trgswMPDft[i], trlwe, param.lApprox, param);
                         return;
                     }
                     if (i % 2 == 0) {
-                        internalProductAsymTrgswMPNtt(newTrgswMPDft[i/2], trgswMPDft[i], trlev[i], sSquare, param);
+                        internalProductAsymTrgswMPNtt(newTrgswMPDft[i/2], trgswMPDft[i], trlev[i], sSquare, param.l, param);
                     } else {
-                        generalExternalProductTrgswMPNtt(newTrlev[(i-1)/2], trgswMPDft[i], trlev[i], param);
+                        generalExternalProductTrgswMPNtt(newTrlev[(i-1)/2], trgswMPDft[i], trlev[i], param.l, param);
                     }
                 }));
             }

@@ -343,7 +343,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE) {
         printArray(decPreP.coeffs, "mu in");
 
         // trgsw mult
-        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, trgswMP, in2, param);)
+        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, trgswMP, in2, param.lApprox, param);)
 //        printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -397,7 +397,7 @@ TEST(RgswTest, RGSWMP_MULT_NTT) {
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult ntt
-        COUNT_TIME("trgswMPExternalProductNtt", externalProductTrgswMPNtt(out, trgswDft, in2, param);)
+        COUNT_TIME("trgswMPExternalProductNtt", externalProductTrgswMPNtt(out, trgswDft, in2, param.lApprox, param);)
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -462,10 +462,10 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
         printArray(t1.coeffs, "trgswMP1");
         decryptTrgswMP(t1, trgswMP2, param, trgswKey, false);
         printArray(t1.coeffs, "trgswMP2");
-        COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMP(tmp, trgswMP1, trgswMP2, param);)
+        COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMP(tmp, trgswMP1, trgswMP2, param.lApprox, param);)
         decryptTrgswMP(t1, tmp, param, trgswKey, false);
         printArray(t1.coeffs, "tmp");
-        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, tmp, in2, param);)
+        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, tmp, in2, param.lApprox, param);)
 
 
         // trlwe dec aft-mult
@@ -538,7 +538,7 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     tmpMp.cPrime = in1.cPrime;
     TrgswMP t1{param};
     t1.cPrime = in1.cPrime;
-    for (auto l = 0; l < param.l; l++) {
+    for (auto l = 0; l < param.lApprox; l++) {
         trglevToTrgswSwitchingNtt(tmpMp.c[l], in1.cPrime[l], s2pDft, param);
         trglevToTrgswSwitching(t1.c[l], in1.cPrime[l], s2p, param);
     }
@@ -547,18 +547,22 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     Trlwe res{param.k, param.N};
     Trlwe res2{param.k, param.N};
     TorusPolynomial mu{param.N};
+    IntPolynomial plainMult{param.N};
     for (auto j = 0; j < param.N; j++) {
+        plainMult.coeffs[j] = intModP(j * mu1, param.torusBase);
         mu.coeffs[j] = modSwitchToTorus32(j, param.torusBase);
     }
     symEncTrlweMultiSample(trlwe, trlweKey, mu.coeffs);
-    externalProductTrgswMP(res, t1, trlwe, param);
-    externalProductTrgswMP(res2, tmpMp, trlwe, param);
+    externalProductTrgswMP(res, t1, trlwe, param.lApprox, param);
+    externalProductTrgswMP(res2, tmpMp, trlwe, param.lApprox, param);
 
     symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
     printArray(dec.coeffs, "dec");
 
     symDecTrlweToInt(dec, res2, trlweKey, param.torusBase);
     printArray(dec.coeffs, "dec");
+
+    ASSERT_EQ(dec.coeffs, plainMult.coeffs);
 
     printBanner("RGSWMP_SCHEME_SWITCHING");
 }
@@ -578,7 +582,7 @@ TEST(RgswTest, RGSWMP_INTERMULT_NTT) {
 
         // trgsw enc
         TrgswMPDft in1Dft{param};
-        Integer mu1 = 1;
+        Integer mu1 = 3;
         encryptTrgswMPNtt(in1Dft, mu1, trgswKey, 0, param);
         IntPolynomial dec{param.N};
         decryptTrgswMPNtt(dec, in1Dft, param, trgswKey, false);
@@ -591,21 +595,20 @@ TEST(RgswTest, RGSWMP_INTERMULT_NTT) {
         IntPolynomial multPlain{param.N};
         TorusPolynomial mu2T{param.N};
         for (auto i = 0; i < param.N; i++) {
-            mu2p.coeffs[i] = i;
-            multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu1, param.torusBase);
+            mu2p.coeffs[i] = i == 0 ? 1 : 0;
+            multPlain.coeffs[i] = modMulQ(i, mu1, param.torusBase);
             mu2T.coeffs[i] = modSwitchToTorus32(i, param.torusBase);
         }
         encTrlevMultiSample(in2, trlweKey, mu2p, param);
         decTrlev(dec, in2, trlweKey, param);
         printArray(dec.coeffs, "in2");
         symEncTrlweMultiSample(in3, trlweKey, mu2T.coeffs);
-        multIntPolynomialModQ(multPlain, mu2p, mu2p, param.torusBase);
 
         // trgsw mult
         TrgswMPDft tmp{param};
-        COUNT_TIME("internalProductAsymTrgswMPNtt", internalProductAsymTrgswMPNtt(tmp, in1Dft, in2, s2Dft, param))
+        COUNT_TIME("internalProductAsymTrgswMPNtt", internalProductAsymTrgswMPNtt(tmp, in1Dft, in2, s2Dft, param.lApprox, param))
         Trlwe res{param.k, param.N};
-        externalProductTrgswMPNtt(res, tmp, in3, param);
+        externalProductTrgswMPNtt(res, tmp, in3, param.lApprox, param);
 
         // trlwe dec aft-mult
         IntPolynomial decAftP {param.N};
@@ -736,7 +739,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_CHAIN_NTT) {
         Trlwe tmp{param.k, param.N};
         for (size_t i = 0; i < loop; i++) {
             tmp = Trlwe{param.k, param.N};
-            externalProductTrgswMPNtt(tmp, trgswDfts[i], in2, param);
+            externalProductTrgswMPNtt(tmp, trgswDfts[i], in2, param.lApprox, param);
             swap(in2, tmp);
         }
 //        printTrlweAB(out, "out");

@@ -257,23 +257,23 @@ void externalProductTrgswApproxCrt(std::vector<Trlwe8>& output, const std::vecto
 
 void externalProductTrgswApproxCrtNtt(std::vector<Trlwe8>& output, const std::vector<TrgswDft24>& trgswDftInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
 
-void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param);
+void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, int level, const YatfheParameters& param);
 
-void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param);
+void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, int level, const YatfheParameters& param);
 
 void externalProductTrgswMPDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param);
 
 void externalProductTrgswMPDecompNtt(DecomposedTrlweDft& output, const TrgswMPDft& trgswMPInput, const DecomposedTrlweDft& trlweInput, const YatfheParameters& param);
 
-void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, const YatfheParameters& param);
+void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, int level, const YatfheParameters& param);
 
-void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const YatfheParameters& param);
+void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, int level, const YatfheParameters& param);
 
-void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param);
+void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, int level, const YatfheParameters& param);
 
-void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param);
+void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, int level, const YatfheParameters& param);
 
-void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, const YatfheParameters& param);
+void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, int level, const YatfheParameters& param);
 
 void trglevToTrgswSwitchingNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
 

@@ -521,10 +521,9 @@ void externalProductTrgswApproxCrtNtt(std::vector<Trlwe8>& output, const std::ve
     }
 }
 
-void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param) {
+void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, const int level, const YatfheParameters& param) {
     const auto k = param.k;
     const auto N = param.N;
-    const auto level = param.l;
     DecomposedTrlwe decomposedTrlwe{param};
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
@@ -550,14 +549,13 @@ void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Tr
     addTrlwe(output, resB, resA);
 }
 
-void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param) {
+void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const int level, const YatfheParameters& param) {
     const auto k = param.k;
     const auto N = param.N;
-    const auto level = param.l;
     DecomposedTrlwe decomposedTrlwe{param};
-    DecomposedTrlweDft decomposedTrlweDft{param, param.l};
+    DecomposedTrlweDft decomposedTrlweDft{param, level};
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
-    for (auto i = 0; i < param.l; i++) {
+    for (auto i = 0; i < level; i++) {
         applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
     }
 
@@ -583,39 +581,6 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
     TrlweDft tmp{k, N};
     addTrlweNtt(tmp, resB, resA);
     applyInttForAB(output, tmp);
-}
-
-void externalProductTrgswMPNtt(TrlweDft& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto N = param.N;
-    const auto level = param.l;
-    DecomposedTrlwe decomposedTrlwe{param};
-    DecomposedTrlweDft decomposedTrlweDft{param, param.l};
-    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
-    for (auto i = 0; i < param.l; i++) {
-        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
-    }
-
-    TrlweDft resA{k, N};
-    TrlweDft resB{k, N};
-    for (size_t lvl = 0; lvl < level; lvl++) {
-        auto& c = trgswMPInput.c[lvl];
-        auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
-        auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
-        auto& inA = decomposedTrlweDft.rlweDfts[lvl].a;
-        auto& inB = decomposedTrlweDft.rlweDfts[lvl].b;
-        for(size_t i = 0; i < k; i++) {
-            auto& ciA = c[i].a;
-            auto& ciB = c[i].b;
-            for (size_t i2 = 0; i2 < k; i2++) {
-                calModularInnerProductNtt(resA.a[i2], inA[i], ciA[i2]);
-            }
-            calModularInnerProductNtt(resA.b, inA[i], ciB);
-            calModularInnerProductNtt(resB.a[i], inB, cPrimeA[i]);
-        }
-        calModularInnerProductNtt(resB.b, inB, cPrimeB);
-    }
-    addTrlweNtt(output, resB, resA);
 }
 
 void externalProductTrgswMPDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param) {
@@ -683,14 +648,14 @@ void externalProductTrgswMPDecompNtt(DecomposedTrlweDft& output, const TrgswMPDf
     }
 }
 
-void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, const YatfheParameters& param) {
-    const auto L = param.l;
+void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, const int level, const YatfheParameters& param) {
+    const auto L = level;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(L);
     for (auto l = 0; l < L; l++) {
         futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l] {
-            externalProductTrgswMPNtt(output.trlwes[l], input1, input2.trlwes[l], param);
+            externalProductTrgswMPNtt(output.trlwes[l], input1, input2.trlwes[l], param.l, param);
         }));
     }
     for (auto& f : futures) {
@@ -698,32 +663,32 @@ void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, c
     }
 }
 
-void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const YatfheParameters& param) {
+void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, const int level, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l;
+    const auto L = level;
     for (size_t l = 0; l < L; l++) {
-        externalProductTrgswMP(output.cPrime[l], input1, input2.cPrime[l], param);
+        externalProductTrgswMP(output.cPrime[l], input1, input2.cPrime[l], param.l, param);
         for (size_t k = 0; k < K; k++) {
-            externalProductTrgswMP(output.c[l][k], input1, input2.c[l][k], param);
+            externalProductTrgswMP(output.c[l][k], input1, input2.c[l][k], param.l, param);
         }
     }
 }
 
-void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param) {
+void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const TrgswMPDft& input2, const int level, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l;
+    const auto L = level;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(L + K * L);
     for (size_t l = 0; l < L; l++) {
         futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l] {
-            externalProductTrgswMPNtt(output.cPrime[l], input2, input1.cPrime[l], param);
+            externalProductTrgswMPNtt(output.cPrime[l], input2, input1.cPrime[l], param.l, param);
         }));
     }
     for (size_t l = 0; l < L; l++) {
         for (size_t k = 0; k < K; k++) {
             futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l, k] {
-                 externalProductTrgswMPNtt(output.c[l][k], input2, input1.c[l][k], param);
+                 externalProductTrgswMPNtt(output.c[l][k], input2, input1.c[l][k], param.l, param);
             }));
         }
     }
@@ -732,21 +697,27 @@ void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const Trg
     }
 }
 
-void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, const YatfheParameters& param) {
+void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, const int level, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l;
+    const auto L = level;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(L + K * L);
     for (size_t l = 0; l < L; l++) {
-        futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l] {
-            externalProductTrgswMPNtt(output.cPrime[l], input2, input1.cPrime[l], param);
+        auto& cPrimeL = output.cPrime[l];
+        futures.emplace_back(pool.enqueue([&cPrimeL, &input1, &input2, &param, l] {
+            Trlwe tmp{param.k, param.N};
+            externalProductTrgswMPNtt(tmp, input2, input1.cPrime[l], param.l, param);
+            applyNttForAB(cPrimeL, tmp);
         }));
     }
     for (size_t l = 0; l < L; l++) {
         for (size_t k = 0; k < K; k++) {
-            futures.emplace_back(pool.enqueue([&output, &input1, &input2, &param, l, k] {
-                externalProductTrgswMPNtt(output.c[l][k], input2, input1.c[l][k], param);
+            auto& c = output.c[l][k];
+            futures.emplace_back(pool.enqueue([&c, &input1, &input2, &param, l, k] {
+                Trlwe tmp{param.k, param.N};
+                externalProductTrgswMPNtt(tmp, input2, input1.c[l][k], param.l, param);
+                applyNttForAB(c, tmp);
             }));
         }
     }
@@ -765,8 +736,8 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 //     }
 }
 
-void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, const YatfheParameters& param) {
-    const auto L = param.l;
+void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, const int level, const YatfheParameters& param) {
+    const auto L = level;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(L);
@@ -777,7 +748,7 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
         futures.emplace_back(pool.enqueue([&cPrimeL, &cL, &input1, &in2L, &sSquare, &param] {
             Trlwe tmp{param.k, param.N};
             vector tmpC(param.k, Trlwe{param.k, param.N});
-            externalProductTrgswMPNtt(tmp, input1, in2L, param);
+            externalProductTrgswMPNtt(tmp, input1, in2L, param.l, param);
             trglevToTrgswSwitchingNtt(tmpC, tmp, sSquare, param);
             applyNttForAB(cPrimeL, tmp);
             for (auto i = 0; i < param.k; i++) {
