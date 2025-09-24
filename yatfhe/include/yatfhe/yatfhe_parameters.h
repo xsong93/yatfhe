@@ -10,12 +10,13 @@
 struct YatfheParameters {
 #ifdef PAR_SET1 // binary secret, 128-bit
     int n {512};
-    double lweStdDev {0.00048828125}; // 2^-11
+    double lweStdDev {0.001953125}; // 2^-9
     int k {1};
     int N {1024};
-    double rlweStdDev {2.9802322387695312e-08}; // 2^-25
-    int radixBits {10}; // b
+    double rlweStdDev {7.275957614183426e-12}; // 2^-37
+    int radixBits {8}; // b
     int64_t q {Q_32};
+    int torusBase {8}; // p|q
     int l {2};
 #else // ternary secret, 128-bit
     int n {512};
@@ -25,17 +26,17 @@ struct YatfheParameters {
     double rlweStdDev {0.00000000186264514923095703125}; // 2^-29
     int radixBits {8}; // b
     int64_t q {Q_32};
+    int torusBase {8}; // p|q
     int l {2};
 #endif
     // LWE params
     int torusBits {32};
     uint64_t qNtt {Q_50P};
-    int torusBase {8}; // p|q
     int dftBits {64};
-    // double lweStdDev {3.0517578125e-05}; // 2^-15
+
     // RLWE params
     int driftPhase {N / torusBase / 2};
-    // double rlweStdDev {2.9802322387695312e-08}; // 2^-25
+
     // RGSW params
     int l2 {4}; // todo
     int lDft {dftBits / radixBits};

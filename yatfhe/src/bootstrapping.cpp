@@ -202,12 +202,14 @@ void genBootstrappingKeyInternalAsymOpt(BootstrappingKeyInternalAsymOpt& bsk, co
             const auto j = i / 2;
             futures.emplace_back(pool.enqueue([i, j, &tlweKey, &bsk, &trgswKey, &param] {
                 if (i % 2 != 0) {
+                    TorusPolynomial s{param.N};
+                    s.coeffs[0] = 1;
                     if (tlweKey.s[i] == 1) {
-                        encTrlevSingleSample(bsk.bsk[j][0], trgswKey.trlweKey, 1, param);
+                        encTrlevMultiSample(bsk.bsk[j][0], trgswKey.trlweKey, s, param);
                         encTrlevSingleSample(bsk.bsk[j][1], trgswKey.trlweKey, 0, param);
                     } else {
                         encTrlevSingleSample(bsk.bsk[j][0], trgswKey.trlweKey, 0, param);
-                        encTrlevSingleSample(bsk.bsk[j][1], trgswKey.trlweKey, 1, param);
+                        encTrlevMultiSample(bsk.bsk[j][1], trgswKey.trlweKey, s, param);
                     }
                 } else {
                     if (tlweKey.s[i] == 1) {

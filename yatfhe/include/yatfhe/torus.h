@@ -28,6 +28,8 @@ const int32_t NUM_LOW_PRIMES{2};
 //const Integer QD_CRT[NUM_PRIMES] {251, 19, 17, 13};
 const Integer QD_CRT[NUM_PRIMES] {251, 241, 239, 233};
 const int64_t Q_32 = INT64_C(1) << 32;
+const int64_t Q_27 = INT64_C(1) << 27;
+const int64_t Q_25 = INT64_C(1) << 25;
 const uint32_t Q_32P = 16760833;
 const uint64_t Q_50P = 1125899906826241;
 const uint64_t Q_64P = 0xffffffff00000001;

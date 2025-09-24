@@ -85,10 +85,10 @@ namespace NttHexl {
                 tmp[i] -= q;
             }
             if (tmp[i] > TORUS_MAX) {
-                out.coeffs[i] = Torus(tmp[i] - TORUS_Q);
-            } else {
-                out.coeffs[i] = Torus(tmp[i]);
+                out.coeffs[i] = Torus(longModP(tmp[i], TORUS_Q));
+                continue;
             }
+            out.coeffs[i] = Torus(tmp[i]);
         }
     }
 

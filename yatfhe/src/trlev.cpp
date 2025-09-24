@@ -3,6 +3,7 @@
 //
 #include <vector>
 #include "yatfhe/trlev.h"
+#include "yatfhe/ntt_hexl.h"
 
 using namespace std;
 
@@ -22,6 +23,44 @@ void encTrlevMultiSample(Trlev& output, const TrlweKey& trlweKey, const TorusPol
             inputsOverR[j] = inputs.coeffs[j] << (param.torusBits - (i + 1) * param.radixBits);
         }
         symEncTrlweMultiSample(output.trlwes[i], trlweKey, inputsOverR);
+    }
+}
+
+// (a-x, as+e)
+void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const bool isPos, const YatfheParameters& param) {
+    encTrlevSingleSample(output, trlweKey, 0, param);
+    for (auto i = 0; i < param.l; i++) {
+        for (auto j = 0; j < param.k; j++) {
+            TorusPolynomial sXm{param.N};
+            for (auto z = 0; z < param.N; z++) {
+                sXm.coeffs[z] = inputs.coeffs[z] << (param.torusBits - (i + 1) * param.radixBits);
+            }
+            if (isPos) {
+                subTorusPolynomial(output.trlwes[i].a[j], output.trlwes[i].a[j], sXm);
+            } else {
+                addTorusPolynomial(output.trlwes[i].a[j], output.trlwes[i].a[j], sXm);
+            }
+        }
+    }
+}
+
+void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs, const bool isPos, const YatfheParameters& param) {
+    Trlev s2(param);
+    encTrlevSingleSample(s2, trlweKey, 0, param);
+    for (auto i = 0; i < param.l; i++) {
+        NttHexl::applyNtt(output.trlweDfts[i].b, s2.trlwes[i].b);
+        for (auto j = 0; j < param.k; j++) {
+            TorusPolynomial sXm{param.N};
+            for (auto z = 0; z < param.N; z++) {
+                sXm.coeffs[z] = inputs[j].coeffs[z] << (param.torusBits - (i + 1) * param.radixBits);
+            }
+            if (isPos) {
+                subTorusPolynomial(s2.trlwes[i].a[j], s2.trlwes[i].a[j], sXm);
+            } else {
+                addTorusPolynomial(s2.trlwes[i].a[j], s2.trlwes[i].a[j], sXm);
+            }
+            NttHexl::applyNtt(output.trlweDfts[i].a[j], s2.trlwes[i].a[j]);
+        }
     }
 }
 

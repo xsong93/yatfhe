@@ -275,7 +275,7 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 
 void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, const YatfheParameters& param);
 
-void trglevToTrgswSwitchingNtt(std::vector<TrlweDft>& c, const TrlweDft& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
+void trglevToTrgswSwitchingNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
 
 void trglevToTrgswSwitching(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
 
