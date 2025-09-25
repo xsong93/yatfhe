@@ -224,22 +224,10 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_ASYM_OPT_NTT) {
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     genTrlweKey(trlweKey);
-//    BootstrappingKeyInternal bsk{param};
-//    genBootstrappingKeyInternal(bsk, trgswKey, tlweKey, param);
-//    BootstrappingKey bskNor{param};
-//    genBootstrappingKey(bskNor, trgswKey, tlweKey, param);
-//    BootstrappingKeyInternalAsym bskAsym{param};
-//    genBootstrappingKeyInternalAsym(bskAsym, trgswKey, tlweKey, param);
 
     // data gen
     Trlwe in2{param.k, param.N};
     TrlweDft in2Dft{param.k, param.N};
-//    IntPolynomial plain{param.N}; // Z/pZ
-//    TorusPolynomial plainT {param.N};
-//    for (auto i = 0; i < plain.N; i++) {
-//        plain.coeffs[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
-//        plainT.coeffs[i] = modSwitchToTorus32(plain.coeffs[i], param.torusBase);
-//    }
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
     symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, v.coeffs);
@@ -282,10 +270,6 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_ASYM_OPT_NTT) {
     TrlevDft s2Dft(param);
     symEncTrlevWithKeyNtt(s2Dft, trlweKey, trlweKey.s, true, param);
 
-//    COUNT_TIME("blindRotateNtt", blindRotateNtt(in2, bskNor.bskDft, sTlwe, param);)
-//    COUNT_TIME("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskDummy, sTlwe, param);)
-//    COUNT_TIME("blindRotateInternalPireWiseNtt", blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param);)
-//    COUNT_TIME("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(in2, bskAsym.bsk, bskAsym.bskDft,sTlwe, s2Dft, param);)
     COUNT_TIME("blindRotateInternalPairWiseAsymOptNtt",
                blindRotateInternalPairWiseAsymOptNtt(in2, bskAsymOpt.bsk, bskAsymOpt.bskLast, bskAsymOpt.bskDft,
                                                      sTlwe, s2Dft, param);)
@@ -410,7 +394,7 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_ASYM_NTT) {
 
 TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_NTT) {
     YatfheParameters param{};
-    param.n = 2;
+//    param.n = 4;
     initYatfhe(param);
 
     // key gen
@@ -456,7 +440,8 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_NTT) {
     printArray(rotInP.coeffs, "expect");
 
 //    COUNT_TIME("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskDummy, sTlwe, param);)
-    COUNT_TIME("blindRotateInternalPireWiseNtt", blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateInternalPireWiseNtt",
+               blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param);)
 
     // trgsw enc X^rot
     Trgsw trgswXRot{param};

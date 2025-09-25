@@ -555,6 +555,7 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
     DecomposedTrlwe decomposedTrlwe{param};
     DecomposedTrlweDft decomposedTrlweDft{param, level};
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+
     for (auto i = 0; i < level; i++) {
         applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
     }
@@ -580,6 +581,54 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
     }
     TrlweDft tmp{k, N};
     addTrlweNtt(tmp, resB, resA);
+    applyInttForAB(output, tmp);
+}
+
+void externalProductTrgswMPNttMT(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const int level, const YatfheParameters& param) {
+    const auto k = param.k;
+    const auto N = param.N;
+    DecomposedTrlwe decomposedTrlwe{param};
+    DecomposedTrlweDft decomposedTrlweDft{param, level};
+    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(level);
+    vector resAV(level, TrlweDft{k, N});
+    vector resBV(level, TrlweDft{k, N});
+
+    for (auto lvl = 0; lvl < level; lvl++) {
+        auto& c = trgswMPInput.c[lvl];
+        auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
+        auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
+        auto& in = decomposedTrlwe.trlwes[lvl];
+        auto& resA = resAV[lvl];
+        auto& resB = resBV[lvl];
+        futures.emplace_back(pool.enqueue([k, N, &c, &cPrimeA, &cPrimeB, &in, &resA, &resB] {
+            TrlweDft inDft{k, N};
+            applyNttForAB(inDft, in);
+            auto& inA = inDft.a;
+            auto& inB = inDft.b;
+            for(size_t i = 0; i < k; i++) {
+                auto& ciA = c[i].a;
+                auto& ciB = c[i].b;
+                for (size_t i2 = 0; i2 < k; i2++) {
+                    calModularInnerProductNtt(resA.a[i2], inA[i], ciA[i2]);
+                }
+                calModularInnerProductNtt(resA.b, inA[i], ciB);
+                calModularInnerProductNtt(resB.a[i], inB, cPrimeA[i]);
+            }
+            calModularInnerProductNtt(resB.b, inB, cPrimeB);
+        }));
+    }
+    for (auto& f : futures) {
+        f.wait();
+    }
+    TrlweDft tmp{k, N};
+    for (size_t lvl = 0; lvl < level; lvl++) {
+        addTrlweNtt(tmp, tmp, resAV[lvl]);
+        addTrlweNtt(tmp, tmp, resBV[lvl]);
+    }
     applyInttForAB(output, tmp);
 }
 

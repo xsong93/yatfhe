@@ -55,10 +55,10 @@ int main(int argc, char **argv) {
     Tlwe output {param.n};
 
     // rot
-    COUNT_TIME("blindRotateNtt", blindRotateNtt(acc, bskNor.bskDft, sTlwe, param);)
-//    COUNT_TIME("blindRotateInternalPireWiseNtt", blindRotateInternalPairWiseNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(acc, bskAsym.bsk, bskAsym.bskDft, sTlwe, s2Dft, param);)
-    COUNT_TIME("blindRotateInternalPairWiseAsymOptNtt", blindRotateInternalPairWiseAsymOptNtt(out, bskAsymOpt.bsk, bskAsymOpt.bskLast, bskAsymOpt.bskDft, sTlwe, s2Dft, param);)
+    BENCH100("blindRotateNtt", blindRotateNtt(acc, bskNor.bskDft, sTlwe, param);)
+    BENCH100("blindRotateInternalPireWiseNtt", blindRotateInternalPairWiseNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, param);)
+    BENCH100("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(acc, bskAsym.bsk, bskAsym.bskDft, sTlwe, s2Dft, param);)
+    BENCH100("blindRotateInternalPairWiseAsymOptNtt", blindRotateInternalPairWiseAsymOptNtt(out, bskAsymOpt.bsk, bskAsymOpt.bskLast, bskAsymOpt.bskDft, sTlwe, s2Dft, param);)
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);

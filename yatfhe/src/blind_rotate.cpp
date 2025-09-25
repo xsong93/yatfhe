@@ -484,7 +484,7 @@ void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsw
     auto n = param.n;
     vector trgswMP(n / 2, TrgswMP{param});
     vector trgswMPDft(n / 2, TrgswMPDft{param});
-    const int batchSize = 4;
+    const int batchSize = 8;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(batchSize);
@@ -507,9 +507,9 @@ void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsw
             for (int i = start; i < min(start + batchSize, n / 2); i++) {
                 futures.emplace_back(pool.enqueue([i, &newTrgswMP, &newTrgswMPDft, &trgswMP, &trgswMPDft, &param] {
                    if (i % 2 == 0) {
-                       internalProductTrgswMPNtt(newTrgswMPDft[i/2], trgswMP[i], trgswMPDft[i], param.lApprox, param);
+                       internalProductTrgswMPNtt(newTrgswMPDft[i/2], trgswMP[i], trgswMPDft[i], param.l, param);
                    } else {
-                       internalProductTrgswMPNtt(newTrgswMP[(i-1)/2], trgswMP[i], trgswMPDft[i], param.lApprox, param);
+                       internalProductTrgswMPNtt(newTrgswMP[(i-1)/2], trgswMP[i], trgswMPDft[i], param.l, param);
                    }
                 }));
             }
@@ -530,7 +530,7 @@ void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trl
     auto n = param.n;
     vector trlev(n / 2, Trlev{param});
     vector trgswMPDft(n / 2, TrgswMPDft{param});
-    const int batchSize = 4;
+    const int batchSize = 8;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(batchSize);
@@ -569,7 +569,7 @@ void blindRotateInternalPairWiseAsymOptNtt(Trlwe& out, vector<vector<Trlev>>& tr
     vector trlev(n / 2, Trlev{param});
     vector trgswMPDft(n / 2, TrgswMPDft{param});
     Trlwe trlwe{param.k, param.N};
-    const int batchSize = 4;
+    const int batchSize = 8;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(batchSize);
