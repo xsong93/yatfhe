@@ -33,6 +33,14 @@ void addTrlev(TrlevType& out, const TrlevType& in1, const TrlevType& in2) {
     }
 }
 
+template<typename TrlevType>
+void subTrlev(TrlevType& out, const TrlevType& in1, const TrlevType& in2) {
+    const auto L = out.l;
+    for (size_t l = 0; l < L; l++) {
+        subTrlwe(out.trlwes[l], in1.trlwes[l], in2.trlwes[l]);
+    }
+}
+
 void encTrlevSingleSample(Trlev& output, const TrlweKey& trlweKey, Torus input, const YatfheParameters& param);
 
 void encTrlevMultiSample(Trlev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param);

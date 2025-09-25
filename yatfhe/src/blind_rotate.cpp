@@ -232,7 +232,7 @@ void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
             }
         }
         temp = Trlwe{param.k, param.N};
-        externalProductTrgswNtt(temp, tmp3, accum, param);
+        externalProductTrgswNtt(temp, tmp3, accum, param.lApprox, param);
         accum = std::move(temp);
         j += batchSize;
     }
@@ -400,7 +400,7 @@ void blindRotateGroup3Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const Sc
             }
         }
         temp = Trlwe{param.k, param.N};
-        externalProductTrgswNtt(temp, tmp, accum, param);
+        externalProductTrgswNtt(temp, tmp, accum, param.lApprox, param);
         accum = std::move(temp);
         j += batchSize;
     }
@@ -473,8 +473,24 @@ void blindRotateInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, co
         TrgswMP tmp {param};
         rotateTrgswMP(accum, input.a[i], param);
         subTrgswMP(tmp, accum, temp);
-        internalProductTrgswMPNtt(accum, tmp, trgsws[i], param.l, param); // res *= bskI
+        internalProductTrgswMPNtt(accum, tmp, trgsws[i], param.lApprox, param); // res *= bskI
         addTrgswMP(tmp, accum, temp); // res += input
+        accum = std::move(tmp);
+    }
+}
+
+void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {
+    Trlev temp{param};
+    for (auto i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        temp = accum;
+        Trlev tmp{param};
+        rotateTrlev(accum, input.a[i], param);
+        subTrlev(tmp, accum, temp);
+        generalExternalProductTrgswMPNtt(accum, trgsws[i], accum, param.lApprox, param);
+        addTrlev(tmp, accum, temp); // res += input
         accum = std::move(tmp);
     }
 }

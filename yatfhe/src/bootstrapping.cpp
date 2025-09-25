@@ -85,6 +85,12 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
     genBootstrappingKeyGroup(bsk, trgswKey, tlweKey, param);
 }
 
+void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+    for (auto i = 0; i < bsk.n; i++) {
+        encryptTrgswMPNtt(bsk.bskDft[i], tlweKey.s[i], trgswKey, 0, param);
+    }
+}
+
 void genBootstrappingKeyInternal(BootstrappingKeyInternal& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                  const YatfheParameters& param) {
     const auto n = param.n;

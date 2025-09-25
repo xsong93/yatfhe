@@ -199,7 +199,7 @@ TEST(BLIND_ROT, BLIND_ROT_NTT) {
     encryptTrgswNtt(trgswXRot, trgswXRotDft, 1, trgswKey, 0, param);
     rotateTrgswNtt(trgswXRotDft, rot, param);
     symEncTrlweMultiSampleNtt(trlweInCopy, trlweInCopyDft, trlweKey, plainT.coeffs);
-    externalProductTrgswNtt(trlwe, trgswXRotDft, trlweInCopy, param);
+    externalProductTrgswNtt(trlwe, trgswXRotDft, trlweInCopy, param.lApprox, param);
     IntPolynomial trlweDec {param.N};
     symDecTrlweToInt(trlweDec, trlwe, trlweKey, param.torusBase);
     printArray(trlweDec.coeffs, "encXRot");
@@ -283,7 +283,7 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_ASYM_OPT_NTT) {
     encryptTrgswNtt(trgswXRot, trgswXRotDft, 1, trgswKey, 0, param);
     rotateTrgswNtt(trgswXRotDft, rot, param);
     symEncTrlweMultiSampleNtt(trlweInCopy, trlweInCopyDft, trlweKey, v.coeffs);
-    externalProductTrgswNtt(trlwe, trgswXRotDft, trlweInCopy, param);
+    externalProductTrgswNtt(trlwe, trgswXRotDft, trlweInCopy, param.lApprox, param);
     IntPolynomial trlweDec {param.N};
     symDecTrlweToInt(trlweDec, trlwe, trlweKey, param.torusBase);
     printArray(trlweDec.coeffs, "encXRot");
@@ -377,7 +377,7 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_ASYM_NTT) {
     encryptTrgswNtt(trgswXRot, trgswXRotDft, 1, trgswKey, 0, param);
     rotateTrgswNtt(trgswXRotDft, rot, param);
     symEncTrlweMultiSampleNtt(trlweInCopy, trlweInCopyDft, trlweKey, v.coeffs);
-    externalProductTrgswNtt(trlwe, trgswXRotDft, trlweInCopy, param);
+    externalProductTrgswNtt(trlwe, trgswXRotDft, trlweInCopy, param.lApprox, param);
     IntPolynomial trlweDec {param.N};
     symDecTrlweToInt(trlweDec, trlwe, trlweKey, param.torusBase);
     printArray(trlweDec.coeffs, "encXRot");
@@ -452,7 +452,7 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_NTT) {
     encryptTrgswNtt(trgswXRot, trgswXRotDft, 1, trgswKey, 0, param);
     rotateTrgswNtt(trgswXRotDft, rot, param);
     symEncTrlweMultiSampleNtt(trlweInCopy, trlweInCopyDft, trlweKey, v.coeffs);
-    externalProductTrgswNtt(trlwe, trgswXRotDft, trlweInCopy, param);
+    externalProductTrgswNtt(trlwe, trgswXRotDft, trlweInCopy, param.lApprox, param);
     IntPolynomial trlweDec {param.N};
     symDecTrlweToInt(trlweDec, trlwe, trlweKey, param.torusBase);
     printArray(trlweDec.coeffs, "encXRot");

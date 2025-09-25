@@ -16,7 +16,7 @@ void controlMux(Trlwe& res, const Trlwe& input, const int aBarI, const Trgsw& bs
 void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswDft& bskI, const YatfheParameters& param) {
     Trlwe tmp {param.k, param.N};
     rotateTrlweMinusOne(tmp, input, aBarI); // res = c1 - c0 = X^aBarI * input - input
-    externalProductTrgswNtt(res, bskI, tmp, param); // res *= bskI
+    externalProductTrgswNtt(res, bskI, tmp, param.lApprox, param); // res *= bskI
     accumulateTrlwe(res, input); // res += input
 }
 

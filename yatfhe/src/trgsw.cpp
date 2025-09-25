@@ -34,6 +34,20 @@ void encryptTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey
     }
 }
 
+void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param) {
+    TorusPolynomial muPoly{param.N};
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        for (int j = 0; j < mus.size(); j++) {
+            muPoly.coeffs[j] = mus[j] << (param.torusBits - (lvl + 1) * param.radixBits);
+        }
+        symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+        for (auto k = 0; k < param.k; k++) {
+            symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+            addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
+        }
+    }
+}
+
 void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
     TrgswMP trgswMP{param};
     TorusPolynomial muPoly{param.N};
@@ -43,6 +57,23 @@ void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey&
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
         applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
         for (size_t k = 0; k < param.k; k++) {
+            symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+            addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
+            applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+        }
+    }
+}
+
+void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param) {
+    TrgswMP trgswMP{param};
+    TorusPolynomial muPoly{param.N};
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        for (int j = 0; j < mus.size(); j++) {
+            muPoly.coeffs[j] = mus[j] << (param.torusBits - (lvl + 1) * param.radixBits);
+        }
+        symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+        applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
+        for (auto k = 0; k < param.k; k++) {
             symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
             addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
             applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
@@ -406,18 +437,17 @@ void externalProductTrgsw(Trlwe& output, const Trgsw& trgswInput, const Trlwe& t
     }
 }
 
-void externalProductTrgswNtt(Trlwe& output, const TrgswDft& trgswDftInput, const Trlwe& trlweInput, const YatfheParameters& param) {
+void externalProductTrgswNtt(Trlwe& output, const TrgswDft& trgswDftInput, const Trlwe& trlweInput, const int level, const YatfheParameters& param) {
     const auto k = trlweInput.k;
-    const auto level = trgswDftInput.l;
     const auto N = trlweInput.b.N;
     TrlweDft trlweDftRes {k, N};
     DecomposedTrlwe decomposedTrlwe {param};
-    DecomposedTrlweDft decomposedTrlweDft {param, param.l};
+    DecomposedTrlweDft decomposedTrlweDft {param, level};
 
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);  // 8 * 2
 
 //#pragma omp parallel for
-    for (auto i = 0; i < decomposedTrlwe.l; i++) {
+    for (auto i = 0; i < level; i++) {
         applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
     }
 
@@ -798,7 +828,7 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
             Trlwe tmp{param.k, param.N};
             vector tmpC(param.k, Trlwe{param.k, param.N});
             externalProductTrgswMPNtt(tmp, input1, in2L, param.l, param);
-            trglevToTrgswSwitchingNtt(tmpC, tmp, sSquare, param);
+            switchTrlevToTrgswNtt(tmpC, tmp, sSquare, param);
             applyNttForAB(cPrimeL, tmp);
             for (auto i = 0; i < param.k; i++) {
                 applyNttForAB(cL[i], tmpC[i]);
@@ -810,7 +840,7 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
     }
 }
 
-void trglevToTrgswSwitchingNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
+void switchTrlevToTrgswNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l;
     const auto N = param.N;
@@ -855,7 +885,7 @@ void trglevToTrgswSwitchingNtt(vector<Trlwe>& c, const Trlwe& cPrime, const Trle
     }
 }
 
-void trglevToTrgswSwitching(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param) {
+void switchTrlevToTrgsw(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l;
     const auto N = param.N;

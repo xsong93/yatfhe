@@ -32,6 +32,25 @@ struct BootstrappingKey {
     };
 };
 
+struct BootstrappingKeyMP {
+    vector<TrgswMPDft> bskDft {};
+    vector<TrgswMP> bsk {};
+    int n {};
+    int group {};
+
+    explicit BootstrappingKeyMP(const YatfheParameters& p) : group(p.group) {
+        if (group == 1) {
+            n = p.n;
+            bsk = vector(n, TrgswMP(p));
+            bskDft = vector(n, TrgswMPDft(p));
+        } else {
+            n = p.n / group * (1 << group);
+            bsk = vector(n, TrgswMP(p));
+            bskDft = vector(n, TrgswMPDft(p));
+        }
+    };
+};
+
 struct BootstrappingKeyInternal {
     vector<vector<TrgswMP>> bsk {};
     vector<vector<TrgswMPDft>> bskDft {};
@@ -94,6 +113,8 @@ void genBootstrappingKeyInternalAsymOpt(BootstrappingKeyInternalAsymOpt& bsk, co
                                         const TorusPolynomial& v, const YatfheParameters& param);
 
 void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
+
+void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
 void genBootstrappingKeyInternal(BootstrappingKeyInternal& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
     const YatfheParameters& param);

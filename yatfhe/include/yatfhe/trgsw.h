@@ -213,9 +213,13 @@ void rotateTrgswMP(TrgswMP& trgswMP, int rot, const YatfheParameters& param);
 
 void rotateTrgswMPNtt(TrgswMPDft& trgswMP, int rot, const YatfheParameters& param);
 
-void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);
+
+void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param);
 
 void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+
+void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param);
 
 void encryptLowTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
 
@@ -251,7 +255,7 @@ void recompTrgswCrt(Trgsw& out, const std::vector<Trgsw8>& in, const YatfheParam
 
 void externalProductTrgsw(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
-void externalProductTrgswNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
+void externalProductTrgswNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, int level, const YatfheParameters& param);
 
 void externalProductTrgswApproxCrt(std::vector<Trlwe8>& output, const std::vector<Trgsw8>& trgswInput, const std::vector<Trlwe8>& trlweInput, const YatfheParameters& param);
 
@@ -277,8 +281,8 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 
 void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, int level, const YatfheParameters& param);
 
-void trglevToTrgswSwitchingNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
+void switchTrlevToTrgswNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
 
-void trglevToTrgswSwitching(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
+void switchTrlevToTrgsw(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

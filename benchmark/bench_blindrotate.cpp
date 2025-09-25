@@ -13,22 +13,24 @@ int main(int argc, char **argv) {
     initYatfhe(param);
 
     // key gen
-    TlweKey tlweKey {param.n, param.lweStdDev};
-    TrgswKey trgswKey {param};
+    TlweKey tlweKey{param.n, param.lweStdDev};
+    TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    BootstrappingKey bsKey {param};
-    TlweKeySwitchingKey ksKey {param};
+    BootstrappingKey bsKey{param};
+    TlweKeySwitchingKey ksKey{param};
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
     tlweKsKey.sigma = param.rlweStdDev;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
-    BootstrappingKeyInternal bsk {param};
+    BootstrappingKeyInternal bsk{param};
     genBootstrappingKeyInternal(bsk, trgswKey, tlweKey, param);
-    BootstrappingKey bskNor {param};
+    BootstrappingKey bskNor{param};
     genBootstrappingKey(bskNor, trgswKey, tlweKey, param);
-    BootstrappingKeyInternalAsym bskAsym {param};
+    BootstrappingKeyMP bskMP{param};
+    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
+    BootstrappingKeyInternalAsym bskAsym{param};
     genBootstrappingKeyInternalAsym(bskAsym, trgswKey, tlweKey, param);
 
     TorusPolynomial v {param.N};
@@ -50,12 +52,18 @@ int main(int argc, char **argv) {
     rescaleTlweFromTorus32(sTlwe, input);
     Trlwe acc{param.k, param.N};
     genNoiselessTrlweSample(acc, v, sTlwe);
+    TrgswMP accDummy{param};
+    encryptTrgswMPMulti(accDummy, v.coeffs, trgswKey, param);
+    Trlev accTrlev{param};
+    encTrlevMultiSample(accTrlev, trlweKey, v, param);
     Trlwe out{param.k, param.N};
     Tlwe tmp {ksKey.nCurrKey};
     Tlwe output {param.n};
 
     // rot
-    BENCH100("blindRotateNtt", blindRotateNtt(acc, bskNor.bskDft, sTlwe, param);)
+    BENCH100("blindRotateGINXNtt", blindRotateNtt(acc, bskNor.bskDft, sTlwe, param);)
+    BENCH100("blindRotateExternalGeneralNtt", blindRotateExternalGeneralNtt(accTrlev, bskMP.bskDft, sTlwe, param);)
+    BENCH100("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskMP.bskDft, sTlwe, param);)
     BENCH100("blindRotateInternalPireWiseNtt", blindRotateInternalPairWiseNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, param);)
     BENCH100("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(acc, bskAsym.bsk, bskAsym.bskDft, sTlwe, s2Dft, param);)
     BENCH100("blindRotateInternalPairWiseAsymOptNtt", blindRotateInternalPairWiseAsymOptNtt(out, bskAsymOpt.bsk, bskAsymOpt.bskLast, bskAsymOpt.bskDft, sTlwe, s2Dft, param);)

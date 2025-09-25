@@ -283,7 +283,7 @@ TEST(RgswTest, RgswMultTestNTT) {
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult ntt
-        COUNT_TIME("trgswExternalProductNtt", externalProductTrgswNtt(out, trgswDft, in2, param);)
+        COUNT_TIME("trgswExternalProductNtt", externalProductTrgswNtt(out, trgswDft, in2, param.lApprox, param);)
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
@@ -606,8 +606,8 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     TrgswMP t1{param};
     t1.cPrime = in1.cPrime;
     for (auto l = 0; l < param.lApprox; l++) {
-        trglevToTrgswSwitchingNtt(tmpMp.c[l], in1.cPrime[l], s2pDft, param);
-        trglevToTrgswSwitching(t1.c[l], in1.cPrime[l], s2p, param);
+        switchTrlevToTrgswNtt(tmpMp.c[l], in1.cPrime[l], s2pDft, param);
+        switchTrlevToTrgsw(t1.c[l], in1.cPrime[l], s2p, param);
     }
 
     Trlwe trlwe{param.k, param.N};
@@ -741,7 +741,7 @@ TEST(RgswTest, RGSW_MULT_NAIVE_CHAIN_NTT) {
         Trlwe tmp{param.k, param.N};
         for (size_t i = 0; i < loop; i++) {
             tmp = Trlwe{param.k, param.N};
-            externalProductTrgswNtt(tmp, trgswDfts[i], in2, param);
+            externalProductTrgswNtt(tmp, trgswDfts[i], in2, param.lApprox, param);
             swap(in2, tmp);
         }
 //        printTrlweAB(out, "out");
@@ -1135,7 +1135,7 @@ TEST(RgswTest, RgswMultTestNTT14) {
         Trlwe out {param.k, param.N};
         Trlwe out14p {param.k, param.N};
         Trlwe out14 {param.k, param.N};
-        COUNT_TIME("trgswExternalProductNtt", externalProductTrgswNtt(out, trgswDft, in2, param);)
+        COUNT_TIME("trgswExternalProductNtt", externalProductTrgswNtt(out, trgswDft, in2, param.lApprox, param);)
         externalProductTrlgsw(out14p, trlgsw, in2, param);
         COUNT_TIME("trlgswExternalProductNtt14", externalProductTrlgswNtt(out14, trlgswDft14, in2, param);)
 
