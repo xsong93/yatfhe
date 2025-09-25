@@ -86,7 +86,7 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
 }
 
 void genBootstrappingKeyInternal(BootstrappingKeyInternal& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-    const YatfheParameters& param) {
+                                 const YatfheParameters& param) {
     const auto n = param.n;
     const int batchSize = 32;
     auto& pool = ThreadPool::instance();
@@ -143,7 +143,7 @@ void genBootstrappingKeyInternal(BootstrappingKeyInternal& bsk, const TrgswKey& 
 }
 
 void genBootstrappingKeyInternalAsym(BootstrappingKeyInternalAsym& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-    const YatfheParameters& param) {
+                                     const YatfheParameters& param) {
     const auto n = param.n;
     const int batchSize = 32;
     auto& pool = ThreadPool::instance();

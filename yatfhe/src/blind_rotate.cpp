@@ -507,9 +507,9 @@ void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsw
             for (int i = start; i < min(start + batchSize, n / 2); i++) {
                 futures.emplace_back(pool.enqueue([i, &newTrgswMP, &newTrgswMPDft, &trgswMP, &trgswMPDft, &param] {
                    if (i % 2 == 0) {
-                       internalProductTrgswMPNtt(newTrgswMPDft[i/2], trgswMP[i], trgswMPDft[i], param.l, param);
+                       internalProductTrgswMPNtt(newTrgswMPDft[i/2], trgswMP[i], trgswMPDft[i], param.lApprox, param);
                    } else {
-                       internalProductTrgswMPNtt(newTrgswMP[(i-1)/2], trgswMP[i], trgswMPDft[i], param.l, param);
+                       internalProductTrgswMPNtt(newTrgswMP[(i-1)/2], trgswMP[i], trgswMPDft[i], param.lApprox, param);
                    }
                 }));
             }

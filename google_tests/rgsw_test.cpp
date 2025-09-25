@@ -462,10 +462,10 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
         printArray(t1.coeffs, "trgswMP1");
         decryptTrgswMP(t1, trgswMP2, param, trgswKey, false);
         printArray(t1.coeffs, "trgswMP2");
-        COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMP(tmp, trgswMP1, trgswMP2, param.lApprox, param);)
-        decryptTrgswMP(t1, tmp, param, trgswKey, false);
-        printArray(t1.coeffs, "tmp");
-        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, tmp, in2, param.lApprox, param);)
+        for (auto i = 0; i < 8; i++) {
+            COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMP(trgswMP1, trgswMP1, trgswMP2, param.lApprox, param);)
+        }
+        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, trgswMP1, in2, param.lApprox, param);)
 
 
         // trlwe dec aft-mult
@@ -478,6 +478,73 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
         }
     }
     printBanner("RGSWMP_INTERMULT_NAIVE");
+}
+
+TEST(RgswTest, RGSWMP_INTERMULT_NAIVE_NTT) {
+    YatfheParameters param {};
+    initYatfhe(param);
+    int ti = 0;
+    while (ti++ < 1) {
+        cout << "iter: " << ti << endl;
+        // key gen
+        TrgswKey trgswKey{param};
+        TrlweKey& trlweKey = trgswKey.trlweKey;
+        genTrlweKey(trlweKey);
+
+        // trgsw enc
+        TrgswMP trgswMP1{param};
+        Integer mu1 = 2;
+        encryptTrgswMP(trgswMP1, mu1, trgswKey, 0, param);
+
+        TrgswMPDft trgswMP2{param};
+        Integer mu2 = 1;
+        encryptTrgswMPNtt(trgswMP2, mu2, trgswKey, 0, param);
+
+        // trlwe enc
+        Trlwe in2{param.k, param.N};
+        IntPolynomial mu2p{param.N};
+        IntPolynomial multPlain{param.N};
+        std::vector<Torus> mu2t(param.N);
+        for (auto i = 0; i < param.N; i++) {
+            mu2p.coeffs[i] = 1;
+            mu2t[i] = modSwitchToTorus32(mu2p.coeffs[i], param.torusBase);
+            multPlain.coeffs[i] = modMulQ(mu2p.coeffs[i], mu1 * mu2, param.torusBase);
+        }
+        symEncTrlweMultiSample(in2, trlweKey, mu2t);
+        //        printTrlweAB(in2, "trlwe");
+
+        // trlwe dec pre-mult
+        IntPolynomial decPreP{param.N};
+        symDecTrlweToInt(decPreP, in2, trlweKey, param.torusBase);
+        printArray(decPreP.coeffs, "mu in");
+
+        // trgsw mult
+        TrgswMP tmp{param};
+        Trlwe out{param.k, param.N};
+        TorusPolynomial t1{param.N};
+        decryptTrgswMP(t1, trgswMP1, param, trgswKey, false);
+        printArray(t1.coeffs, "trgswMP1");
+        decryptTrgswMPNtt(t1, trgswMP2, param, trgswKey, false);
+        printArray(t1.coeffs, "trgswMP2");
+        int test = mu1;
+        for (auto i = 0; i < 8; i++) {
+            COUNT_TIME("internalProductTrgswMPNtt", internalProductTrgswMPNtt(trgswMP1, trgswMP1, trgswMP2, param.l, param);)
+            test *= mu2;
+        }
+        cout << test << endl;
+        COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, trgswMP1, in2, param.lApprox, param);)
+
+
+        // trlwe dec aft-mult
+        IntPolynomial decAftP {param.N};
+        symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
+        printArray(decAftP.coeffs, "decAftP");
+        printArray(multPlain.coeffs, "Plain mult");
+        for (auto i = 0 ; i < decAftP.N; i++) {
+            ASSERT_EQ(multPlain.coeffs[i], decAftP.coeffs[i]);
+        }
+    }
+    printBanner("RGSWMP_INTERMULT_NAIVE_NTT");
 }
 
 TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
