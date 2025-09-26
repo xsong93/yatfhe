@@ -37,12 +37,12 @@ public:
     CODE;                                                                 \
     TimeCounter::printTime(MSG, TimeCounter::timeGlobal);
 
-#define BENCH100(MSG, CODE)                                               \
+#define BENCH_CUSTOM(MSG, CODE, COUNT)                                    \
     TimeCounter::timeGlobal = high_resolution_clock::now();               \
-    for (int bench100 = 0; bench100 < 100; bench100++) {                  \
+    for (int benchCustom = 0; benchCustom < COUNT; benchCustom++) {       \
         CODE;                                                             \
     }                                                                     \
-    TimeCounter::printTime(MSG, TimeCounter::timeGlobal, 100);
+    TimeCounter::printTime(MSG, TimeCounter::timeGlobal, COUNT);
 
 #define BENCH500(MSG, CODE)                                               \
     TimeCounter::timeGlobal = high_resolution_clock::now();               \

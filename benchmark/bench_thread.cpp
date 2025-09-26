@@ -48,11 +48,11 @@ int main(int argc, char **argv) {
     Tlwe output {param.n};
 
     // rot
-    for (auto i = 1; i <= 16; i++) {
-        BENCH500("Batch size " + to_string(i), {
+    for (auto i = 20; i <= 25; i++) {
+        BENCH_CUSTOM("Batch size " + to_string(i), {
             auto bsk = bskAsymOpt;
             blindRotateInternalPairWiseAsymOptNtt(out, bsk.bsk, bsk.bskLast, bsk.bskDft, sTlwe, s2Dft, i, param);
-        })
+        }, 100)
     }
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);

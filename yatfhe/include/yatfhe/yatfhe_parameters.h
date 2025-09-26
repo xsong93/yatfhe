@@ -9,10 +9,10 @@
 
 struct YatfheParameters {
 #ifdef PAR_SET1 // binary secret, 128-bit
-    int n {512};
-    double lweStdDev {0.001953125}; // 2^-9
+    int n {1024};
+    double lweStdDev {9.5367431640625e-07}; // 2^-20
     int k {1};
-    int N {1024};
+    int N {2048};
     double rlweStdDev {7.275957614183426e-12}; // 2^-37
     int radixBits {8}; // b
     int64_t q {Q_32};
