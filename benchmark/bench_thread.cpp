@@ -7,6 +7,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/initializer.h"
+#include "yautil/multi_threading.h"
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
@@ -41,18 +42,13 @@ int main(int argc, char **argv) {
     symEncTlwe(input, mu, tlweKey);
     ScaledTlwe sTlwe {param.N * 2, param.n};
     rescaleTlweFromTorus32(sTlwe, input);
-    Trlwe acc{param.k, param.N};
-    genNoiselessTrlweSample(acc, v, sTlwe);
-    TrgswMP accDummy{param};
-    encryptTrgswMPMulti(accDummy, v.coeffs, trgswKey, param);
-    Trlev accTrlev{param};
-    encTrlevMultiSample(accTrlev, trlweKey, v, param);
+
     Trlwe out{param.k, param.N};
     Tlwe tmp {ksKey.nCurrKey};
     Tlwe output {param.n};
 
     // rot
-    for (auto i = 1; i <= 12; i++) {
+    for (auto i = 1; i <= 16; i++) {
         BENCH500("Batch size " + to_string(i), {
             auto bsk = bskAsymOpt;
             blindRotateInternalPairWiseAsymOptNtt(out, bsk.bsk, bsk.bskLast, bsk.bskDft, sTlwe, s2Dft, i, param);

@@ -59,14 +59,15 @@ int main(int argc, char **argv) {
     Trlwe out{param.k, param.N};
     Tlwe tmp {ksKey.nCurrKey};
     Tlwe output {param.n};
+    int batchSize = 13;
 
     // rot
     BENCH500("blindRotateGINXNtt", blindRotateNtt(acc, bskNor.bskDft, sTlwe, param);)
     BENCH500("blindRotateExternalGeneralNtt", blindRotateExternalGeneralNtt(accTrlev, bskMP.bskDft, sTlwe, param);)
     BENCH500("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskMP.bskDft, sTlwe, param);)
-    BENCH500("blindRotateInternalPireWiseNtt", auto bsk = bskInt; blindRotateInternalPairWiseNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, param);)
-    BENCH500("blindRotateInternalPairWiseAsymNtt", auto bsk = bskAsym; blindRotateInternalPairWiseAsymNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, s2Dft, param);)
-    BENCH500("blindRotateInternalPairWiseAsymOptNtt", auto bsk = bskAsymOpt; blindRotateInternalPairWiseAsymOptNtt(out, bsk.bsk, bsk.bskLast, bsk.bskDft, sTlwe, s2Dft, 8, param);)
+    BENCH500("blindRotateInternalPireWiseNtt", auto bsk = bskInt; blindRotateInternalPairWiseNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, batchSize, param);)
+    BENCH500("blindRotateInternalPairWiseAsymNtt", auto bsk = bskAsym; blindRotateInternalPairWiseAsymNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, s2Dft, batchSize, param);)
+    BENCH500("blindRotateInternalPairWiseAsymOptNtt", auto bsk = bskAsymOpt; blindRotateInternalPairWiseAsymOptNtt(out, bsk.bsk, bsk.bskLast, bsk.bskDft, sTlwe, s2Dft, batchSize, param);)
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);

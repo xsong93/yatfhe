@@ -496,11 +496,10 @@ void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsw
 }
 
 void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsws, vector<vector<TrgswMPDft>>& trgswDfts,
-    const ScaledTlwe& input, const YatfheParameters& param) {
+                                    const ScaledTlwe& input, const int batchSize, const YatfheParameters& param) {
     auto n = param.n;
     vector trgswMP(n / 2, TrgswMP{param});
     vector trgswMPDft(n / 2, TrgswMPDft{param});
-    const int batchSize = 8;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(batchSize);
@@ -542,11 +541,10 @@ void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsw
 }
 
 void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trlevs, vector<vector<TrgswMPDft>>& trgswDfts,
-    const ScaledTlwe& input, const TrlevDft& sSquare, const YatfheParameters& param) {
+    const ScaledTlwe& input, const TrlevDft& sSquare, const int batchSize, const YatfheParameters& param) {
     auto n = param.n;
     vector trlev(n / 2, Trlev{param});
     vector trgswMPDft(n / 2, TrgswMPDft{param});
-    const int batchSize = 8;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(batchSize);

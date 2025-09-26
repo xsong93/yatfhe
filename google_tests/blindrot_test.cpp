@@ -366,7 +366,7 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_ASYM_NTT) {
 //    COUNT_TIME("blindRotateNtt", blindRotateNtt(in2, bskNor.bskDft, sTlwe, param);)
 //    COUNT_TIME("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskDummy, sTlwe, param);)
 //    COUNT_TIME("blindRotateInternalPireWiseNtt", blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(in2, bskAsym.bsk, bskAsym.bskDft, sTlwe, s2Dft, param);)
+    COUNT_TIME("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(in2, bskAsym.bsk, bskAsym.bskDft, sTlwe, s2Dft, param.batchSize, param);)
 
     // trgsw enc X^rot
     Trgsw trgswXRot{param};
@@ -441,7 +441,7 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_NTT) {
 
 //    COUNT_TIME("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskDummy, sTlwe, param);)
     COUNT_TIME("blindRotateInternalPireWiseNtt",
-               blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param);)
+               blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param.batchSize, param);)
 
     // trgsw enc X^rot
     Trgsw trgswXRot{param};

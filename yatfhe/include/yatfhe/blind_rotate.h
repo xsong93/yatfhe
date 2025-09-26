@@ -20,10 +20,10 @@ void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsw
 void blindRotateInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsws, vector<vector<TrgswMPDft>>& trgswDfts,
-    const ScaledTlwe& input, const YatfheParameters& param);
+    const ScaledTlwe& input, int batchSize, const YatfheParameters& param);
 
 void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trlevs, vector<vector<TrgswMPDft>>& trgswDfts,
-    const ScaledTlwe& input, const TrlevDft& sSquare, const YatfheParameters& param);
+    const ScaledTlwe& input, const TrlevDft& sSquare, int batchSize, const YatfheParameters& param);
 
 void blindRotateInternalPairWiseAsymOptNtt(Trlwe& out, vector<vector<Trlev>>& trlevs, vector<Trlwe>& trlwes,
                                            vector<vector<TrgswMPDft>>& trgswDfts, const ScaledTlwe& input,
