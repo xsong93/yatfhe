@@ -272,7 +272,7 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_ASYM_OPT_NTT) {
 
     COUNT_TIME("blindRotateInternalPairWiseAsymOptNtt",
                blindRotateInternalPairWiseAsymOptNtt(in2, bskAsymOpt.bsk, bskAsymOpt.bskLast, bskAsymOpt.bskDft,
-                                                     sTlwe, s2Dft, param);)
+                                                     sTlwe, s2Dft, param.batchSize, param);)
 
     // trgsw enc X^rot
     Trgsw trgswXRot{param};

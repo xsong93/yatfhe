@@ -31,6 +31,7 @@ struct YatfheParameters {
     int l {4};
     int lApprox {2};
 #endif
+    int batchSize{8};
     // LWE params
     int torusBits {32};
     uint64_t qNtt {Q_50P};

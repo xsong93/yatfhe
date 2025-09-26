@@ -580,12 +580,11 @@ void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trl
 
 void blindRotateInternalPairWiseAsymOptNtt(Trlwe& out, vector<vector<Trlev>>& trlevs, vector<Trlwe>& trlwes,
                                            vector<vector<TrgswMPDft>>& trgswDfts, const ScaledTlwe& input,
-                                           const TrlevDft& sSquare, const YatfheParameters& param) {
+                                           const TrlevDft& sSquare, const int batchSize, const YatfheParameters& param) {
     auto n = param.n;
     vector trlev(n / 2, Trlev{param});
     vector trgswMPDft(n / 2, TrgswMPDft{param});
     Trlwe trlwe{param.k, param.N};
-    const int batchSize = 8;
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(batchSize);

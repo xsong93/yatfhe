@@ -39,10 +39,17 @@ public:
 
 #define BENCH100(MSG, CODE)                                               \
     TimeCounter::timeGlobal = high_resolution_clock::now();               \
-    for (int i = 0; i < 100; i++) {                                       \
+    for (int bench100 = 0; bench100 < 100; bench100++) {                  \
         CODE;                                                             \
     }                                                                     \
     TimeCounter::printTime(MSG, TimeCounter::timeGlobal, 100);
+
+#define BENCH500(MSG, CODE)                                               \
+    TimeCounter::timeGlobal = high_resolution_clock::now();               \
+    for (int bench500 = 0; bench500 < 500; bench500++) {                  \
+        CODE;                                                             \
+    }                                                                     \
+    TimeCounter::printTime(MSG, TimeCounter::timeGlobal, 500);
 
 
 #endif //HLS_YATFHE_TIME_COUNTER_H

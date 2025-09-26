@@ -24,15 +24,6 @@ int main(int argc, char **argv) {
     tlweKsKey.sigma = param.rlweStdDev;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
-    BootstrappingKeyInternal bskInt{param};
-    genBootstrappingKeyInternal(bskInt, trgswKey, tlweKey, param);
-    BootstrappingKey bskNor{param};
-    genBootstrappingKey(bskNor, trgswKey, tlweKey, param);
-    BootstrappingKeyMP bskMP{param};
-    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
-    BootstrappingKeyInternalAsym bskAsym{param};
-    genBootstrappingKeyInternalAsym(bskAsym, trgswKey, tlweKey, param);
-
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
@@ -61,13 +52,12 @@ int main(int argc, char **argv) {
     Tlwe output {param.n};
 
     // rot
-    BENCH500("blindRotateGINXNtt", blindRotateNtt(acc, bskNor.bskDft, sTlwe, param);)
-    BENCH500("blindRotateExternalGeneralNtt", blindRotateExternalGeneralNtt(accTrlev, bskMP.bskDft, sTlwe, param);)
-    BENCH500("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskMP.bskDft, sTlwe, param);)
-    BENCH500("blindRotateInternalPireWiseNtt", auto bsk = bskInt; blindRotateInternalPairWiseNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, param);)
-    BENCH500("blindRotateInternalPairWiseAsymNtt", auto bsk = bskAsym; blindRotateInternalPairWiseAsymNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, s2Dft, param);)
-    BENCH500("blindRotateInternalPairWiseAsymOptNtt", auto bsk = bskAsymOpt; blindRotateInternalPairWiseAsymOptNtt(out, bsk.bsk, bsk.bskLast, bsk.bskDft, sTlwe, s2Dft, 8, param);)
-
+    for (auto i = 1; i <= 12; i++) {
+        BENCH500("Batch size " + to_string(i), {
+            auto bsk = bskAsymOpt;
+            blindRotateInternalPairWiseAsymOptNtt(out, bsk.bsk, bsk.bskLast, bsk.bskDft, sTlwe, s2Dft, i, param);
+        })
+    }
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
