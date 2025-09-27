@@ -28,30 +28,30 @@ int main() {
     int n = param.N * param.l * param.n;
     cout << "test on " << n << " samples" << endl;
     COUNT_TIME("modMul", {
-        for (auto i = 0; i < n; i++) { modMULT64(a, b); }
+        for (auto i = 0; i < n; i++) { NttNative64::modMULT(a, b); }
     })
     COUNT_TIME("modmul", {
-        for (auto i = 0; i < n; i++) { modmul64(a, b); }
+        for (auto i = 0; i < n; i++) { NttNative64::modmul64(a, b); }
     })
     COUNT_TIME("fastmm", {
-        for (auto i = 0; i < n; i++) { fastmm(a, b); }
+        for (auto i = 0; i < n; i++) { NttNative64::fastmm(a, b); }
     })
     COUNT_TIME("fastmm_opt", {
-        for (auto i = 0; i < n; i++) { fastmm_opt(a, b); }
+        for (auto i = 0; i < n; i++) { NttNative64::fastmm_opt(a, b); }
     })
     COUNT_TIME("16", {
-        for (auto i = 0; i < n; i++) { modMULT16(a1, b1); }
+        for (auto i = 0; i < n; i++) { NttNative16::modMULT(a1, b1); }
     })
     COUNT_TIME("16R", {
-        for (auto i = 0; i < n; i++) { modMULT16R(a1, b1); }
+        for (auto i = 0; i < n; i++) { NttNative16::modMULTR(a1, b1); }
     })
 
     COUNT_TIME("14", {
-        for (auto i = 0; i < n; i++) { modMULT14(a14, b14); }
+        for (auto i = 0; i < n; i++) { NttNative14::modMULT(a14, b14); }
     })
 
     COUNT_TIME("24", {
-        for (auto i = 0; i < n; i++) { modMULT24(a24, b24); }
+        for (auto i = 0; i < n; i++) { NttNative24::modMULT(a24, b24); }
     })
 
     const int N = 1024;
