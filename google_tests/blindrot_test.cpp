@@ -92,7 +92,7 @@ TEST(BLIND_ROT, BLIND_ROT) {
 
 TEST(BLIND_ROT, BLIND_ROT_NTT) {
     YatfheParameters param{};
-    param.n = 64;
+    // param.n = 64;
     // param.group = 3;
     // param.n = 585;
     initYatfhe(param);

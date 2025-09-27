@@ -386,18 +386,20 @@ TEST(RgswTest, RGSWMP_MULT_NTT) {
             mu2ps[i] = genIntUniformDist(0, 3);
             mu2s[i] = modSwitchToTorus32(mu2ps[i], param.torusBase);
         }
-        Trlwe out {param.k, param.N};
         IntPolynomial decPreP {param.N};
         IntPolynomial decAftP {param.N};
         symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, mu2s);
         printTrlweAB(in2, "trlwe");
+        Trlwe out {in2};
 
         // trlwe dec pre-mult
         symDecTrlweToIntNtt(decPreP, in2Dft, trlweKey, param.torusBase);
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult ntt
-        COUNT_TIME("trgswMPExternalProductNtt", externalProductTrgswMPNtt(out, trgswDft, in2, param.lApprox, param);)
+        for (auto i = 0; i < 9; i++) {
+            COUNT_TIME("trgswMPExternalProductNtt", externalProductTrgswMPNtt(out, trgswDft, out, param.lApprox, param);)
+        }
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult
