@@ -7,10 +7,10 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/initializer.h"
-#include "yautil/multi_threading.h"
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
+    param.l = 2;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
@@ -26,14 +26,15 @@ int main(int argc, char **argv) {
     tlweKsKey.sigma = param.rlweStdDev;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
+    BootstrappingKeyMP bskMP{param};
+    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
+
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-    BootstrappingKeyInternalAsymOpt bskAsymOpt{param};
-    genBootstrappingKeyInternalAsymOpt(bskAsymOpt, trgswKey, tlweKey, v, param);
 
-    TrlevDft s2Dft(param);
-    symEncTrlevWithKeyNtt(s2Dft, trlweKey, trlweKey.s, true, param);
+    BootstrappingKeyMPPreRot bskPre{param};
+    genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
 
     // data gen
     Integer pt = 3;
@@ -43,18 +44,20 @@ int main(int argc, char **argv) {
     symEncTlwe(input, mu, tlweKey);
     ScaledTlwe sTlwe {param.N * 2, param.n};
     rescaleTlweFromTorus32(sTlwe, input);
+    Trlwe acc{param.k, param.N};
+    genNoiselessTrlweSample(acc, v, sTlwe);
 
     Trlwe out{param.k, param.N};
     Tlwe tmp {ksKey.nCurrKey};
     Tlwe output {param.n};
+    vector trgswMPDft(param.n-1, TrgswMPDft{param});
 
     // rot
-    for (auto i = 1; i <= 25; i++) {
-        BENCH_CUSTOM("Batch size " + to_string(i), {
-            auto bsk = bskAsymOpt;
-            blindRotateInternalPairWiseAsymOptNtt(out, bsk.bsk, bsk.bskLast, bsk.bskDft, sTlwe, s2Dft, i, param);
-        }, 100)
+    for (auto i = 10; i <= 200; i = i + 10) {
+        BENCH500("blindRotateWithPreRotNtt, bench size=" + to_string(i),
+             blindRotateWithPreRotNtt(out, trgswMPDft, bskPre.bskFirst, bskPre.bskDft, sTlwe, i, param);)
     }
+
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);

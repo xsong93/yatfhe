@@ -517,18 +517,14 @@ void blindRotateWithPreRotNtt(Trlwe& accum, vector<TrgswMPDft>& trgswMPDft, cons
 }
 
 void blindRotateMPNtt(Trlwe& accum, const vector<TrgswMPDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
-    Trlwe temp{param};
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
-        temp = accum;
         Trlwe tmp{param};
-        rotateTrlwe(tmp, accum, input.a[i]);
-        subTrlwe(tmp, accum, temp);
-        externalProductTrgswMPNtt(accum, bskDft[i], tmp, param.lApprox, param);
-        addTrlwe(tmp, accum, temp); // res += input
-        accum = std::move(tmp);
+        rotateTrlweMinusOne(tmp, accum, input.a[i]);
+        externalProductTrgswMPNttInPlace(tmp, bskDft[i], param.lApprox, param);
+        accumulateTrlwe(accum, tmp);
     }
 }
 
