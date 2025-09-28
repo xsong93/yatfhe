@@ -12,6 +12,7 @@
 int main(int argc, char **argv) {
     YatfheParameters param{};
     initYatfhe(param);
+    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
     // key gen
     TlweKey tlweKey{param.n, param.lweStdDev};
@@ -48,7 +49,7 @@ int main(int argc, char **argv) {
     Tlwe output {param.n};
 
     // rot
-    for (auto i = 20; i <= 25; i++) {
+    for (auto i = 1; i <= 25; i++) {
         BENCH_CUSTOM("Batch size " + to_string(i), {
             auto bsk = bskAsymOpt;
             blindRotateInternalPairWiseAsymOptNtt(out, bsk.bsk, bsk.bskLast, bsk.bskDft, sTlwe, s2Dft, i, param);

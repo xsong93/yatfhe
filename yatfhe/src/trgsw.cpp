@@ -614,6 +614,42 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
     applyInttForAB(output, tmp);
 }
 
+void externalProductTrgswMPNttInPlace(Trlwe& acc, const TrgswMPDft& trgswMPInput, const int level, const YatfheParameters& param) {
+    const auto k = param.k;
+    const auto N = param.N;
+    DecomposedTrlwe decomposedTrlwe{param};
+    DecomposedTrlweDft decomposedTrlweDft{param, level};
+    gadgetDecomposeTrlwe(decomposedTrlwe, acc, param);
+
+    for (auto i = 0; i < level; i++) {
+        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+    }
+
+    TrlweDft resA{k, N};
+    TrlweDft resB{k, N};
+    for (size_t lvl = 0; lvl < level; lvl++) {
+        auto& c = trgswMPInput.c[lvl];
+        auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
+        auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
+        auto& inA = decomposedTrlweDft.rlweDfts[lvl].a;
+        auto& inB = decomposedTrlweDft.rlweDfts[lvl].b;
+        for(size_t i = 0; i < k; i++) {
+            auto& ciA = c[i].a;
+            auto& ciB = c[i].b;
+            for (size_t i2 = 0; i2 < k; i2++) {
+                calModularInnerProductNtt(resA.a[i2], inA[i], ciA[i2]);
+            }
+            calModularInnerProductNtt(resA.b, inA[i], ciB);
+            calModularInnerProductNtt(resB.a[i], inB, cPrimeA[i]);
+        }
+        calModularInnerProductNtt(resB.b, inB, cPrimeB);
+    }
+    TrlweDft tmp{k, N};
+    addTrlweNtt(tmp, resB, resA);
+    applyInttForAB(acc, tmp);
+}
+
+
 void externalProductTrgswMPNttMT(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const int level, const YatfheParameters& param) {
     const auto k = param.k;
     const auto N = param.N;

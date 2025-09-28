@@ -8,6 +8,46 @@
 #include "yautil/multi_threading.h"
 #include <thread>
 
+void preRotateBinary(Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut, const vector<Trlwe>& key1,
+                     const vector<vector<TrgswMPDft>>& trgswDftsIn, const ScaledTlwe& in, const int batchSize,
+                     const YatfheParameters& param) {
+    const auto n = param.n;
+    auto& pool = ThreadPool::instance();
+
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+
+    {
+        Trlwe tmp{param.k, param.N};
+        rotateTrlwe(tmp, key1[0], in.a[0]);
+        addTrlwe(tmp, tmp, key1[1]);
+        rotateTrlwe(trlweOut, tmp, -in.b);
+    }
+
+    for (int start = 1; start < n; start += batchSize) {
+        futures.clear();
+        const int end = min(start + batchSize, n);
+
+        for (int i = start; i < end; ++i) {
+            const auto ai = in.a[i];
+            const int j = i - 1;
+            const auto& keyIn = trgswDftsIn[j];
+            auto& keyOut = trgswDftsOut[j];
+            futures.emplace_back(pool.enqueue([ai, &param, &keyOut, &keyIn] {
+                keyOut = keyIn[0];
+                if (ai != 0) {
+                    rotateTrgswMPNtt(keyOut, ai, param);
+                }
+                addTrgswMPNtt(keyOut, keyOut, keyIn[1]);
+            }));
+        }
+
+        for (auto& f : futures) {
+            f.get();
+        }
+    }
+}
+
 void preRotateInternal(vector<TrgswMP>& trgswsOut, vector<TrgswMPDft>& trgswDftsOut, vector<vector<TrgswMP>>& trgswsIn,
     vector<vector<TrgswMPDft>>& trgswDftsIn, const std::vector<int>& aV, const YatfheParameters& param) {
     auto const n = param.n;
@@ -463,7 +503,36 @@ void blindRotateApproxCRTNtt(std::vector<Trlwe8>& accum, const vector<vector<Trg
     }
 }
 
-void blindRotateInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateWithPreRotNtt(Trlwe& accum, vector<TrgswMPDft>& trgswMPDft, const vector<Trlwe>& trlwe, const vector<vector<TrgswMPDft>>& trgsws,
+                              const ScaledTlwe& input, const int batchSize, const YatfheParameters& param) {
+    const auto n = param.n;
+    preRotateBinary(accum, trgswMPDft, trlwe, trgsws, input, batchSize, param);
+
+    for (auto i = 1; i < n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        externalProductTrgswMPNttInPlace(accum, trgswMPDft[i-1], param.lApprox, param);
+    }
+}
+
+void blindRotateMPNtt(Trlwe& accum, const vector<TrgswMPDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+    Trlwe temp{param};
+    for (auto i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        temp = accum;
+        Trlwe tmp{param};
+        rotateTrlwe(tmp, accum, input.a[i]);
+        subTrlwe(tmp, accum, temp);
+        externalProductTrgswMPNtt(accum, bskDft[i], tmp, param.lApprox, param);
+        addTrlwe(tmp, accum, temp); // res += input
+        accum = std::move(tmp);
+    }
+}
+
+void blindRotateMPInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {
     TrgswMP temp{param};
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
@@ -480,6 +549,22 @@ void blindRotateInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, co
 }
 
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {
+    Trlev temp{param};
+    for (auto i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        temp = accum;
+        Trlev tmp{param};
+        rotateTrlev(accum, input.a[i], param);
+        subTrlev(tmp, accum, temp);
+        generalExternalProductTrgswMPNtt(accum, trgsws[i], accum, param.lApprox, param);
+        addTrlev(tmp, accum, temp); // res += input
+        accum = std::move(tmp);
+    }
+}
+
+void blindRotateExternalGeneralPreRotNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlev temp{param};
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {

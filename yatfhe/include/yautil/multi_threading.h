@@ -24,6 +24,12 @@ public:
         return instance;
     }
 
+    static std::vector<std::future<void>>& getFutures(size_t batchSize) {
+        static std::vector<std::future<void>> futures;
+        futures.reserve(batchSize);
+        return futures;
+    }
+
     template<class F, class... Args>
     auto enqueue(F&& f, Args&&... args) -> std::future<std::result_of_t<F(Args...)>> {
         using return_type = std::result_of_t<F(Args...)>;

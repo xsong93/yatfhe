@@ -35,6 +35,12 @@ struct TrgswMPDft {
             cPrime(p.l, TrlweDft(p.k, p.N)),
             l(p.l),
             k(p.k) {};
+
+    TrgswMPDft(const YatfheParameters& p, const int l) :
+            c(l, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N))),
+            cPrime(l, TrlweDft(p.k, p.N)),
+            l(l),
+            k(p.k) {};
 };
 
 struct Trgsw {
@@ -264,6 +270,8 @@ void externalProductTrgswApproxCrtNtt(std::vector<Trlwe8>& output, const std::ve
 void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Trlwe& trlweInput, int level, const YatfheParameters& param);
 
 void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, int level, const YatfheParameters& param);
+
+void externalProductTrgswMPNttInPlace(Trlwe& acc, const TrgswMPDft& trgswMPInput, const int level, const YatfheParameters& param);
 
 void externalProductTrgswMPNttMT(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, int level, const YatfheParameters& param);
 

@@ -29,6 +29,12 @@ struct Trlwe {
     int N;
     int k;
 
+    explicit Trlwe(const YatfheParameters& p):
+        a(p.k, TorusPolynomial(p.N)),
+        b(TorusPolynomial(p.N)),
+        N(p.N),
+        k(p.k) {};
+
     Trlwe(int k, int N) :
         a(k, TorusPolynomial(N)),
         b(TorusPolynomial(N)),

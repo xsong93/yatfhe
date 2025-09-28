@@ -51,6 +51,25 @@ struct BootstrappingKeyMP {
     };
 };
 
+struct BootstrappingKeyMPPreRot {
+    vector<Trlwe> bskFirst{};
+    vector<vector<TrgswMPDft>> bskDft{};
+    int l{};
+    int n{};
+
+    explicit BootstrappingKeyMPPreRot(const YatfheParameters& p) :
+            bskFirst(2, Trlwe{p.k, p.N}),
+            bskDft(p.n - 1, vector(2, TrgswMPDft(p, p.l))),
+            l{p.l},
+            n {p.n} {}
+
+    BootstrappingKeyMPPreRot(const YatfheParameters& p, const int l) :
+            bskFirst(2, Trlwe{p.k, p.N}),
+            bskDft(p.n - 1, vector(2, TrgswMPDft(p, l))),
+            l{l},
+            n {p.n} {}
+};
+
 struct BootstrappingKeyInternal {
     vector<vector<TrgswMP>> bsk {};
     vector<vector<TrgswMPDft>> bskDft {};
@@ -115,6 +134,9 @@ void genBootstrappingKeyInternalAsymOpt(BootstrappingKeyInternalAsymOpt& bsk, co
 void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
+
+void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
+                                 const TorusPolynomial& v, const int batchSize, const YatfheParameters& param);
 
 void genBootstrappingKeyInternal(BootstrappingKeyInternal& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
     const YatfheParameters& param);

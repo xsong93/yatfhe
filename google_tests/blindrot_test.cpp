@@ -214,6 +214,67 @@ TEST(BLIND_ROT, BLIND_ROT_NTT) {
     printBanner("BLIND_ROT_NTT");
 }
 
+TEST(BLIND_ROT, BLIND_ROT_PRE_ROT_NTT) {
+    YatfheParameters param{};
+    initYatfhe(param);
+
+    // key gen
+    TlweKey tlweKey{param.n, param.lweStdDev};
+    genTlweKey(tlweKey);
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    genTrlweKey(trlweKey);
+
+    // data gen
+    Trlwe in2{param.k, param.N};
+    TrlweDft in2Dft{param.k, param.N};
+    TorusPolynomial v {param.N};
+    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+    symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, v.coeffs);
+
+    BootstrappingKeyMPPreRot bskPre{param};
+    genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
+
+    // pre dec
+    IntPolynomial decIn{param.N};
+    symDecTrlweToIntNtt(decIn, in2Dft, trlweKey, param.torusBase);
+    printArray(decIn.coeffs, "decIn");
+
+    // rots gen
+    ScaledTlwe sTlwe {param.N * 2, param.n};
+    sTlwe.b = genIntUniformDist(-2 * param.N, 2 * param.N);
+    for (auto i = 0 ; i < sTlwe.n; i++) {
+        sTlwe.a[i] = genIntUniformDist(-2 * param.N, 2 * param.N);
+    }
+
+    // test data gen
+    int rot = -sTlwe.b;
+    IntPolynomial rotInP{param.N};
+    TrlweDft rotInDft{param.k, param.N};
+    for (auto i = 0 ; i < param.n; i++) {
+        if (tlweKey.s[i] == 1) {
+            rot += sTlwe.a[i];
+        }
+    }
+    printMsg(rot, "rot");
+    rotateTrlweNtt(rotInDft, in2Dft, rot);
+    symDecTrlweToIntNtt(rotInP, rotInDft, trlweKey, param.torusBase);
+    printArray(rotInP.coeffs, "expect");
+
+    vector trgswMPDft(param.n, TrgswMPDft{param});
+    COUNT_TIME("blindRotateWithPreRotNtt",
+               blindRotateWithPreRotNtt(in2, trgswMPDft, bskPre.bskFirst, bskPre.bskDft, sTlwe, param.batchSize, param);)
+
+    // dec
+    IntPolynomial decP {param.N};
+    symDecTrlweToInt(decP, in2, trlweKey, param.torusBase);
+    printArray(decP.coeffs, "real");
+
+    //verify
+    ASSERT_EQ(rotInP.coeffs, decP.coeffs);
+    printBanner("BLIND_ROT_PRE_ROT_NTT");
+}
+
 TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_ASYM_OPT_NTT) {
     YatfheParameters param{};
     initYatfhe(param);
@@ -364,7 +425,7 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_ASYM_NTT) {
     symEncTrlevWithKeyNtt(s2Dft, trlweKey, trlweKey.s, true, param);
 
 //    COUNT_TIME("blindRotateNtt", blindRotateNtt(in2, bskNor.bskDft, sTlwe, param);)
-//    COUNT_TIME("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskDummy, sTlwe, param);)
+//    COUNT_TIME("blindRotateInternalNtt", blindRotateMPInternalNtt(accDummy, bskDummy, sTlwe, param);)
 //    COUNT_TIME("blindRotateInternalPireWiseNtt", blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param);)
     COUNT_TIME("blindRotateInternalPairWiseAsymNtt", blindRotateInternalPairWiseAsymNtt(in2, bskAsym.bsk, bskAsym.bskDft, sTlwe, s2Dft, param.batchSize, param);)
 
@@ -439,7 +500,7 @@ TEST(BLIND_ROT, BLIND_ROT_INTERNAL_PAIRWISE_NTT) {
     symDecTrlweToIntNtt(rotInP, rotInDft, trlweKey, param.torusBase);
     printArray(rotInP.coeffs, "expect");
 
-//    COUNT_TIME("blindRotateInternalNtt", blindRotateInternalNtt(accDummy, bskDummy, sTlwe, param);)
+//    COUNT_TIME("blindRotateInternalNtt", blindRotateMPInternalNtt(accDummy, bskDummy, sTlwe, param);)
     COUNT_TIME("blindRotateInternalPireWiseNtt",
                blindRotateInternalPairWiseNtt(in2, bsk.bsk, bsk.bskDft, sTlwe, param.batchSize, param);)
 
