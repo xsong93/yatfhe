@@ -8,7 +8,7 @@
 #include "yautil/control_helper.h"
 
 struct YatfheParameters {
-#ifdef PAR_SET1 // binary secret, 128-bit
+#ifdef BINARY // binary secret, 128-bit
     int n {1024};
     double lweStdDev {9.5367431640625e-07}; // 2^-20
     int k {1};

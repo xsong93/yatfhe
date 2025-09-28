@@ -2,6 +2,7 @@
 // Created by Xintong Song on 2023/12/8.
 //
 #include <iostream>
+#include "yautil/control_helper.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric_functions.h"
 
@@ -9,7 +10,11 @@ using namespace std;
 
 void genTlweKey(TlweKey& key) {
     for (auto i = 0; i < key.n; i++) {
+#ifdef BINARY
         key.s[i] = binaryDistrib(rng);
+#else
+        key.s[i] = ternaryDistrib(rng);
+#endif
     }
 }
 

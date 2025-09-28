@@ -11,6 +11,7 @@ using namespace std;
 random_device rd;
 mt19937 rng(rd());
 uniform_int_distribution<Binary> binaryDistrib(0, 1);
+uniform_int_distribution<Integer> ternaryDistrib(-1, 1);
 
 int calLogBase2(int N) {
     int res = 0;

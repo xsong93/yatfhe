@@ -8,6 +8,7 @@
 #include "yatfhe/numeric_functions.h"
 #include "yatfhe/ntt_hexl.h"
 #include "yatfhe/gadget_decomposition.h"
+#include "yautil/control_helper.h"
 
 using namespace std;
 using namespace NttHexl;
@@ -41,7 +42,11 @@ void symEncTrlweNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key) {
 void genTrlweKey(TrlweKey& key) {
     for (int i = 0; i < key.k; i++) {
         for (int j = 0; j < key.N; j++) {
+#ifdef BINARY
             key.s[i].coeffs[j] = binaryDistrib(rng);
+#else
+            key.s[i].coeffs[j] = ternaryDistrib(rng);
+#endif
         }
         applyNtt(key.sDft[i], key.s[i]);
     }

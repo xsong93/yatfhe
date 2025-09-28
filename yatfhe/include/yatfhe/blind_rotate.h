@@ -19,6 +19,9 @@ void blindRotateWithPreRotNtt(Trlwe& accum, vector<TrgswMPDft>& trgswMPDft, cons
                               const vector<vector<TrgswMPDft>>& trgsws, const ScaledTlwe& input, int batchSize,
                               const YatfheParameters& param);
 
+void blindRotateWithPreRotTernaryNtt(Trlwe& accum, vector<TrgswMPDft>& trgswMPDft, const vector<Trlwe>& trlwe, const vector<vector<TrgswMPDft>>& trgsws,
+                                     const ScaledTlwe& input, int batchSize, const YatfheParameters& param);
+
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateMPNtt(Trlwe& accum, const vector<TrgswMPDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
