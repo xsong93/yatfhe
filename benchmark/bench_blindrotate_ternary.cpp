@@ -52,9 +52,10 @@ int main(int argc, char **argv) {
     Tlwe output {param.n};
 
     // rot
-    BENCH500("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
-    BENCH500("blindRotateWithPreRotNtt",
-             blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param.batchSize, param);)
+    COUNT_TIME("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateWithPreRotNtt", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateGINXNttMT", blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateWithPreRotNttMT", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);

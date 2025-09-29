@@ -15,15 +15,16 @@ void blindRotateApproxCRT(std::vector<Trlwe8>& accum, const vector<vector<Trgsw8
 
 void blindRotateApproxCRTNtt(std::vector<Trlwe8>& accum, const vector<vector<TrgswDft24>>& bskCRT, const ScaledTlwe& input, const YatfheParameters& param);
 
-void blindRotateWithPreRotNtt(Trlwe& accum, const vector<Trlwe>& trlwe,
-                              const vector<vector<TrgswMPDft>>& trgsws, const ScaledTlwe& input, int batchSize,
-                              const YatfheParameters& param);
+void blindRotateWithPreRotNtt(Trlwe& accum, const vector<Trlwe>& trlwe, const vector<vector<TrgswMPDft>>& trgsws,
+                              const ScaledTlwe& input, const YatfheParameters& param);
+
+void blindRotateWithPreRotNttMT(Trlwe& accum, const vector<Trlwe>& trlwe, const vector<vector<TrgswMPDft>>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 
-void blindRotateMPNtt(Trlwe& accum, const vector<TrgswMPDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
-
 void blindRotateMPNtt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
+
+void blindRotateMPNttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsws, vector<vector<TrgswMPDft>>& trgswDfts,
     const ScaledTlwe& input, int batchSize, const YatfheParameters& param);

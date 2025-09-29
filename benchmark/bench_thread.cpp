@@ -51,8 +51,8 @@ int main(int argc, char **argv) {
 
     // rot
     for (auto i = 10; i <= 200; i = i + 10) {
-        BENCH500("blindRotateWithPreRotNtt, bench size=" + to_string(i),
-             blindRotateWithPreRotNtt(out, trgswMPDft, bskPre.bskFirst, bskPre.bskDft, sTlwe, i, param);)
+        BENCH500("blindRotateWithPreRotNttMT, bench size=" + to_string(i),
+                 blindRotateWithPreRotNttMT(out, trgswMPDft, bskPre.bskFirst, bskPre.bskDft, sTlwe, i, param);)
     }
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);

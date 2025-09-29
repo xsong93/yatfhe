@@ -68,8 +68,8 @@ int main(int argc, char **argv) {
 
     // rot
     COUNT_TIME("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateWithPreRotNtt",
-             blindRotateWithPreRotNtt(out, trgswMPDft, bskPre.bskFirst, bskPre.bskDft, sTlwe, batchSize, param);)
+    COUNT_TIME("blindRotateWithPreRotNttMT",
+               blindRotateWithPreRotNttMT(out, trgswMPDft, bskPre.bskFirst, bskPre.bskDft, sTlwe, batchSize, param);)
 //    BENCH500("blindRotateExternalGeneralNtt", blindRotateExternalGeneralNtt(accTrlev, bskMP.bskDft, sTlwe, param);)
 //    BENCH500("blindRotateInternalNtt", blindRotateMPInternalNtt(accDummy, bskMP.bskDft, sTlwe, param);)
 //    BENCH500("blindRotateInternalPireWiseNtt", auto bsk = bskInt; blindRotateInternalPairWiseNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, batchSize, param);)

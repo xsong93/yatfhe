@@ -262,8 +262,8 @@ TEST(BLIND_ROT, BLIND_ROT_PRE_ROT_NTT) {
     printArray(rotInP.coeffs, "expect");
 
     vector trgswMPDft(param.n, TrgswMPDft{param});
-    COUNT_TIME("blindRotateWithPreRotNtt",
-               blindRotateWithPreRotNtt(in2, bskPre.bskFirst, bskPre.bskDft, sTlwe, param.batchSize, param);)
+    COUNT_TIME("blindRotateWithPreRotNttMT",
+               blindRotateWithPreRotNttMT(in2, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
 
     // dec
     IntPolynomial decP {param.N};
