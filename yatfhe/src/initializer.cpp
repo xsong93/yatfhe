@@ -12,6 +12,7 @@
 #include "yautil/multi_threading.h"
 
 int64_t TORUS_Q;
+Integer MESSAGE_P;
 Integer INT_MAX_VALUE;
 Integer INT_MIN_VALUE;
 Integer TORUS_MAX;
@@ -38,6 +39,7 @@ void calGadgetVectorZ(YatfheParameters& param) {
 
 void initYatfhe(YatfheParameters& param) {
     TORUS_Q = param.q;
+    MESSAGE_P = param.torusBase;
     INT_MAX_VALUE = static_cast<Integer>((TORUS_Q - 1) >> 1);
     INT_MIN_VALUE = static_cast<Integer>(-(TORUS_Q >> 1));
     TORUS_MAX = INT_MAX_VALUE;

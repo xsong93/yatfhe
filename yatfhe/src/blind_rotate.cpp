@@ -620,7 +620,7 @@ void blindRotateWithPreRotNttMT(Trlwe& accum, const vector<Trlwe>& trlwe, const 
         externalProductTrgswMPNttInPlace(accum, trgswMPDft[i-1], param.lApprox, param);
     }
 #else
-    preRotateBinary(accum, trgswMPDft, trlwe, trgsws, input, batchSize, param);
+    preRotateBinary(accum, trgswMPDft, trlwe, trgsws, input, param.batchSize, param);
 
     for (auto i = 1; i < n; i++) {
         if (input.a[i] == 0) {

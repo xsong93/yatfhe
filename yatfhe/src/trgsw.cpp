@@ -64,6 +64,22 @@ void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey&
     }
 }
 
+void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const Torus noise, const YatfheParameters& param) {
+    TrgswMP trgswMP{param};
+    TorusPolynomial muPoly{param.N};
+    for (size_t lvl = 0; lvl < param.l; lvl++) {
+        auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
+        muPoly.coeffs[pos] = decomposedMu;
+        symEncTrlweMultiSampleFixedNoise(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs, noise);
+        applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
+        for (size_t k = 0; k < param.k; k++) {
+            symEncTrlweSingleSampleFixedNoise(trgswMP.c[lvl][k], trgswKey.trlweKey, 0, noise);
+            addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
+            applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+        }
+    }
+}
+
 void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param) {
     TrgswMP trgswMP{param};
     TorusPolynomial muPoly{param.N};

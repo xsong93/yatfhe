@@ -229,7 +229,9 @@ void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, int 
 
 void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param);
 
-void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param);
+void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);
+
+void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, int pos, Torus noise, const YatfheParameters& param);
 
 void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param);
 

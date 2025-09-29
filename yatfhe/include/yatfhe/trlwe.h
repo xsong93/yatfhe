@@ -418,7 +418,11 @@ void genTrlweKey(TrlweKey& key);
 
 void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu);
 
+void symEncTrlweSingleSampleFixedNoise(Trlwe& trlwe, const TrlweKey& key, Torus mu, Torus noise);
+
 void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const std::vector<Torus>& mu);
+
+void symEncTrlweMultiSampleFixedNoise(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu, Torus noise);
 
 void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, Torus mu);
 

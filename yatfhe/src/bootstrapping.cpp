@@ -105,6 +105,26 @@ void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const Tl
     }
 }
 
+void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const Torus noise, const YatfheParameters& param) {
+    for (auto i = 0; i < bsk.n; i++) {
+#ifdef TERNARY
+        const auto si = tlweKey.s[i];
+        if(si == 0) {
+            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][0], 0, trgswKey, 0, noise, param);
+            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][1], 0, trgswKey, 0, noise, param);
+        } else if (si == 1) {
+            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][0], 1, trgswKey, 0, noise, param);
+            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][1], 0, trgswKey, 0, noise, param);
+        } else {
+            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][0], 0, trgswKey, 0,noise, param);
+            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][1], 1, trgswKey, 0, noise, param);
+        }
+#else
+        encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][0], tlweKey.s[i], trgswKey, 0, noise, param);
+#endif
+    }
+}
+
 void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                  const TorusPolynomial& v, const int batchSize, const YatfheParameters& param) {
     const auto n = param.n;
@@ -183,6 +203,56 @@ void genBootstrappingKeyMPPreRotTernary(BootstrappingKeyMPPreRot& bsk, const Trg
                     encryptTrgswMPNtt(bsk.bskDft[j][0],0, trgswKey, 0, param);
                     encryptTrgswMPNtt(bsk.bskDft[j][1],1, trgswKey, 0, param);
                     encryptTrgswMPNtt(bsk.bskDft[j][2],0, trgswKey, 0, param);
+                }
+            }
+            ));
+        }
+        for (auto& f : futures) {
+            f.wait();
+        }
+    }
+}
+
+void genBootstrappingKeyMPPreRotTernaryFixedNoise(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
+                                                  const TorusPolynomial& v, const int batchSize, const Torus noise, const YatfheParameters& param) {
+    const auto n = param.n;
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+    for (int start = 0; start < n; start += batchSize) {
+        futures.clear();
+        const auto minVal = min(start + batchSize, n);
+        for (int i = start; i < minVal; i++) {
+            if (i == 0) {
+                if (tlweKey.s[i] == 1) {
+                    symEncTrlweMultiSampleFixedNoise(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs, noise);
+                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[1], trgswKey.trlweKey, 0, noise);
+                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[2], trgswKey.trlweKey, 0, noise);
+                } else if (tlweKey.s[i] == 0) {
+                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[0], trgswKey.trlweKey, 0, noise);
+                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[1], trgswKey.trlweKey, 0, noise);
+                    symEncTrlweMultiSampleFixedNoise(bsk.bskFirst[2], trgswKey.trlweKey, v.coeffs, noise);
+                } else {
+                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[0], trgswKey.trlweKey, 0, noise);
+                    symEncTrlweMultiSampleFixedNoise(bsk.bskFirst[1], trgswKey.trlweKey, v.coeffs, noise);
+                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[2], trgswKey.trlweKey, 0, noise);
+                }
+                continue;
+            }
+            futures.emplace_back(pool.enqueue([i, noise, &tlweKey, &bsk, &trgswKey, &param] {
+                auto j = i-1;
+                if (tlweKey.s[i] == 1) {
+                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][0],1, trgswKey, 0, noise, param);
+                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][1],0, trgswKey, 0, noise, param);
+                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][2],0, trgswKey, 0, noise, param);
+                } else if (tlweKey.s[i] == 0) {
+                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][0],0, trgswKey, 0, noise, param);
+                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][1],0, trgswKey, 0, noise, param);
+                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][2],1, trgswKey, 0, noise, param);
+                } else {
+                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][0],0, trgswKey, 0, noise, param);
+                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][1],1, trgswKey, 0, noise, param);
+                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][2],0, trgswKey, 0, noise, param);
                 }
             }
             ));

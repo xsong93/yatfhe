@@ -29,7 +29,6 @@ int main(int argc, char **argv) {
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-
     BootstrappingKeyMPPreRot bskPre{param};
     genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
 
@@ -45,8 +44,8 @@ int main(int argc, char **argv) {
     genNoiselessTrlweSample(acc, v, sTlwe);
 
     Trlwe out{param.k, param.N};
-    Tlwe tmp {ksKey.nCurrKey};
-    Tlwe output {param.n};
+    Tlwe tmp{ksKey.nCurrKey};
+    Tlwe output{param.n};
 
     // rot
     for (auto i = 10; i <= 200; i = i + 10) {

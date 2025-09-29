@@ -7,66 +7,73 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric_functions.h"
 #include "yautil/initializer.h"
+#include "yautil/tool.h"
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
-    param.l = 2;
+    param.n = 2;
+    // param.N = 512;
+    // param.N = 8;
+    param.lApprox = 4;
     param.batchSize = 40;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
-    // key gen
-    TlweKey tlweKey{param.n, param.lweStdDev};
-    TrgswKey trgswKey{param};
-    TrlweKey& trlweKey = trgswKey.trlweKey;
-    // BootstrappingKey bsKey{param};
-    TlweKeySwitchingKey ksKey{param};
-    genTlweKey(tlweKey);
-    genTrlweKey(trlweKey);
-    TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.sigma = param.rlweStdDev;
-    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
+    int64_t noise0 = 1;
+    int64_t noise1 = 1;
+    int loop = 0;
+    while (loop++ < 10000) {
+        cout << "loop: " << loop << ", diff: " << noise0-noise1<< endl;
+        // key gen
+        TlweKey tlweKey{param};
+        TrgswKey trgswKey{param};
+        TrlweKey& trlweKey = trgswKey.trlweKey;
+        TlweKeySwitchingKey ksKey{param};
+        genTlweKey(tlweKey);
+        genTrlweKey(trlweKey);
+        TlweKey tlweKsKey = tlweKey;
+        tlweKsKey.sigma = param.rlweStdDev;
+        genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
-    BootstrappingKeyMP bskMP{param};
-    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
+        BootstrappingKeyMP bskMP{param};
+        genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
 
-    TorusPolynomial v {param.N};
-    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+        TorusPolynomial v{param.N};
+        generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-    BootstrappingKeyMPPreRot bskPre{param};
-    genBootstrappingKeyMPPreRotTernary(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
+        BootstrappingKeyMPPreRot bskPre{param};
+        genBootstrappingKeyMPPreRotTernary(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
 
 
-    // data gen
-    Integer pt = 3;
-    cout << "decPre: " << pt << endl;
-    Torus mu = modSwitchToTorus32(pt, param.torusBase);
-    Tlwe input{param.n};
-    symEncTlwe(input, mu, tlweKey);
-    ScaledTlwe sTlwe {param.N * 2, param.n};
-    rescaleTlweFromTorus32(sTlwe, input);
-    Trlwe acc{param.k, param.N};
-    genNoiselessTrlweSample(acc, v, sTlwe);
-    Trlwe out{param.k, param.N};
-    Tlwe tmp {ksKey.nCurrKey};
-    Tlwe output {param.n};
+        // data gen
+        Integer pt = 0;
+        Torus mu = modSwitchToTorus32(pt, param.torusBase);
+        Tlwe input{param.n};
+        symEncTlwe(input, mu, tlweKey);
+        ScaledTlwe sTlwe {param.N * 2, param.n};
+        rescaleTlweFromTorus32(sTlwe, input);
+        Trlwe acc{param.k, param.N};
+        genNoiselessTrlweSample(acc, v, sTlwe);
+        Trlwe out{param.k, param.N};
+        Tlwe tmp {ksKey.nCurrKey};
+        Tlwe output {param.n};
+        TorusPolynomial outRlwe{param.N};
+        TorusPolynomial outRlwe2{param.N};
 
-    // rot
-    BENCH500("blindRotateGINXNtt single thread", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
-    BENCH500("blindRotateWithPreRotNtt single thread", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
-    BENCH500("blindRotateGINXNtt multiple threads", blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);)
-    BENCH500("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+        // rot
+        blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);
+        blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);
 
-    extractTlweFromTrlwe(tmp, out, param.driftPhase);
-    switchKeyForTlwe(output, ksKey, tmp, param);
-    auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-    cout << "decAft: "<< decAft << endl;
-    cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
+        symDecTrlweWoRounding(outRlwe, acc, trlweKey);
+        symDecTrlweWoRounding(outRlwe2, out, trlweKey);
 
-    extractTlweFromTrlwe(tmp, acc, param.driftPhase);
-    switchKeyForTlwe(output, ksKey, tmp, param);
-    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-    cout << "decAft: "<< decAft << endl;
-    cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
+        // extractTlweFromTrlwe(tmp, out, param.driftPhase);
+        // switchKeyForTlwe(output, ksKey, tmp, param);
+        noise0 += std::abs(outRlwe.coeffs[0]);
+        //
+        // extractTlweFromTrlwe(tmp, acc, param.driftPhase);
+        // switchKeyForTlwe(output, ksKey, tmp, param);
+        noise1 += std::abs(outRlwe2.coeffs[0]);
+    }
     return 0;
 }

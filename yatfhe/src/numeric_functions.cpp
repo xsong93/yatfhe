@@ -38,7 +38,7 @@ uint64_t genUInt64UniformDist(const uint64_t lowerBound, const uint64_t upperBou
 
 // Gaussian sample centered in message, with standard deviation sigma
 Torus addGaussianNoise(Torus message, const double sigma) {
-    normal_distribution normalDistribution(0.0, sigma * static_cast<double>(TORUS_Q) / 8);
+    normal_distribution normalDistribution(0.0, sigma * static_cast<double>(TORUS_Q) / MESSAGE_P);
     double e = normalDistribution(rng);
     auto err = static_cast<Torus>(e);
     // Torus err = doubleToTorus32(e);

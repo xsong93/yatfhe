@@ -143,6 +143,8 @@ TEST(BLIND_ROT, BLIND_ROT_NTT) {
     for (auto i = 0 ; i < param.n; i++) {
         if (tlweKey.s[i] == 1) {
             rot += sTlwe.a[i];
+        }else if (tlweKey.s[i] == -1) {
+            rot -= sTlwe.a[i];
         }
     }
     printMsg(rot, "rot");
@@ -254,6 +256,8 @@ TEST(BLIND_ROT, BLIND_ROT_PRE_ROT_NTT) {
     for (auto i = 0 ; i < param.n; i++) {
         if (tlweKey.s[i] == 1) {
             rot += sTlwe.a[i];
+        } else if (tlweKey.s[i] == -1) {
+            rot -= sTlwe.a[i];
         }
     }
     printMsg(rot, "rot");

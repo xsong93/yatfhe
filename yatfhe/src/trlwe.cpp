@@ -20,10 +20,32 @@ void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, double sigma) {
     }
 }
 
+void initTrlweSingleSampleFixedNoise(Trlwe& trlwe, const Torus mu, const Torus noise) {
+    for (auto i = 0 ; i < trlwe.N; i++) {
+        trlwe.b.coeffs[i] = longModP(mu + noise, TORUS_Q);
+    }
+    for (auto i = 0 ; i < trlwe.k; i++) {
+        for (auto j = 0 ; j < trlwe.N; j++) {
+            trlwe.a[i].coeffs[j] = 0;
+        }
+    }
+}
+
 void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
     initCoeffsWithGaussianNoiseMultiSample(trlwe.b.coeffs, mu, sigma);
     for (auto i = 0 ; i < trlwe.k; i++) {
         initCoeffsViaUniformDistribution(trlwe.a[i].coeffs);
+    }
+}
+
+void initTrlweMultiSampleFixedNoise(Trlwe& trlwe, const vector<Torus>& mu, const Torus noise) {
+    for (auto i = 0 ; i < trlwe.N; i++) {
+        trlwe.b.coeffs[i] = longModP(mu[i] + noise, TORUS_Q);
+    }
+    for (auto i = 0 ; i < trlwe.k; i++) {
+        for (auto j = 0 ; j < trlwe.N; j++) {
+            trlwe.a[i].coeffs[j] = 0;
+        }
     }
 }
 
@@ -57,8 +79,18 @@ void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, const Torus mu) 
     symEncTrlwe(trlwe, key);
 }
 
+void symEncTrlweSingleSampleFixedNoise(Trlwe& trlwe, const TrlweKey& key, const Torus mu, const Torus noise) {
+    initTrlweSingleSampleFixedNoise(trlwe, mu, noise);
+    symEncTrlwe(trlwe, key);
+}
+
 void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu) {
     initTrlweMultiSample(trlwe, mu, key.sigma);
+    symEncTrlwe(trlwe, key);
+}
+
+void symEncTrlweMultiSampleFixedNoise(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu, const Torus noise) {
+    initTrlweMultiSampleFixedNoise(trlwe, mu, noise);
     symEncTrlwe(trlwe, key);
 }
 

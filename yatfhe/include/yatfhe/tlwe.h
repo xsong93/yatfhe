@@ -6,6 +6,8 @@
 #define HLS_YATFHE_TLWE_H
 
 #include <vector>
+
+#include "yatfhe_parameters.h"
 #include "yatfhe/torus.h"
 
 struct Tlwe {
@@ -34,6 +36,8 @@ struct TlweKey {
     TlweKey(int n, double sigma) : n(n), sigma(sigma), s(n) {};
 
     explicit TlweKey(int n) : n(n), sigma(0), s(n) {};
+
+    explicit TlweKey(const YatfheParameters& p) : n(p.n), sigma(p.lweStdDev), s(p.n) {};
 };
 
 void genTlweKey(TlweKey& key);
