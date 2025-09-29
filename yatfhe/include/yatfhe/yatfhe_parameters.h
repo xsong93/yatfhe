@@ -8,36 +8,44 @@
 #include "yautil/control_helper.h"
 
 struct YatfheParameters {
-#ifdef BINARY // binary secret, 128-bit
-    int n {1024};
+#ifdef TERNARY // ternary secret, 128-bit
+    // LWE params
+    int n {430};
     double lweStdDev {9.5367431640625e-07}; // 2^-20
-    int k {1};
-    int N {2048};
-    double rlweStdDev {7.275957614183426e-12}; // 2^-37
-    int radixBits {8}; // b
-    int64_t q {Q_32};
-    int torusBase {8}; // p|q
-    int l {4};
-    int lApprox {2};
-#else // ternary secret, 128-bit
-    int n {512};
-    double lweStdDev {0.00000095367431640625}; // 2^-20
+    int64_t qLwe{Q_20};
+
+    // RLWE params
     int k {1};
     int N {1024};
-    double rlweStdDev {0.00000000186264514923095703125}; // 2^-29
-    int radixBits {8}; // b
-    int64_t q {Q_32};
+    double rlweStdDev {2.9802322387695312e-08}; // 2^-25
+    int64_t q {Q_27};
+    int torusBits {27};
     int torusBase {8}; // p|q
+
+    int radixBits {8}; // b
+    int l {4};
+    int lApprox {2};
+#else // binary secret, 128-bit
+    // LWE params
+    int n {512};
+    double lweStdDev {9.5367431640625e-07}; // 2^-20
+    int64_t qLwe{Q_20};
+
+    // RLWE params
+    int k {1};
+    int N {1024};
+    double rlweStdDev {2.9802322387695312e-08}; // 2^-25
+    int64_t q {Q_26};
+    int torusBits {26};
+    int torusBase {8}; // p|q
+
+    int radixBits {8}; // b
     int l {4};
     int lApprox {2};
 #endif
     int batchSize{8};
-    // LWE params
-    int torusBits {32};
     uint64_t qNtt {Q_50P};
     int dftBits {64};
-
-    // RLWE params
     int driftPhase {N / torusBase / 2};
 
     // RGSW params

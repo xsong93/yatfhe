@@ -10,10 +10,10 @@ using namespace std;
 
 void genTlweKey(TlweKey& key) {
     for (auto i = 0; i < key.n; i++) {
-#ifdef BINARY
-        key.s[i] = binaryDistrib(rng);
-#else
+#ifdef TERNRY
         key.s[i] = ternaryDistrib(rng);
+#else
+        key.s[i] = binaryDistrib(rng);
 #endif
     }
 }

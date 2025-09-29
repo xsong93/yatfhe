@@ -67,8 +67,8 @@ int main(int argc, char **argv) {
     int batchSize = 40;
 
     // rot
-    BENCH500("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
-    BENCH500("blindRotateWithPreRotNtt",
+    COUNT_TIME("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateWithPreRotNtt",
              blindRotateWithPreRotNtt(out, trgswMPDft, bskPre.bskFirst, bskPre.bskDft, sTlwe, batchSize, param);)
 //    BENCH500("blindRotateExternalGeneralNtt", blindRotateExternalGeneralNtt(accTrlev, bskMP.bskDft, sTlwe, param);)
 //    BENCH500("blindRotateInternalNtt", blindRotateMPInternalNtt(accDummy, bskMP.bskDft, sTlwe, param);)
