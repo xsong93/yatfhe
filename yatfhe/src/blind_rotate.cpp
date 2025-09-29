@@ -548,22 +548,11 @@ void blindRotateApproxCRTNtt(std::vector<Trlwe8>& accum, const vector<vector<Trg
     }
 }
 
-void blindRotateWithPreRotNtt(Trlwe& accum, vector<TrgswMPDft>& trgswMPDft, const vector<Trlwe>& trlwe, const vector<vector<TrgswMPDft>>& trgsws,
+void blindRotateWithPreRotNtt(Trlwe& accum, const vector<Trlwe>& trlwe, const vector<vector<TrgswMPDft>>& trgsws,
                               const ScaledTlwe& input, const int batchSize, const YatfheParameters& param) {
     const auto n = param.n;
-    preRotateBinary(accum, trgswMPDft, trlwe, trgsws, input, batchSize, param);
-
-    for (auto i = 1; i < n; i++) {
-        if (input.a[i] == 0) {
-            continue;
-        }
-        externalProductTrgswMPNttInPlace(accum, trgswMPDft[i-1], param.lApprox, param);
-    }
-}
-
-void blindRotateWithPreRotTernaryNtt(Trlwe& accum, vector<TrgswMPDft>& trgswMPDft, const vector<Trlwe>& trlwe, const vector<vector<TrgswMPDft>>& trgsws,
-                                     const ScaledTlwe& input, const int batchSize, const YatfheParameters& param) {
-    const auto n = param.n;
+    vector trgswMPDft(param.n-1, TrgswMPDft{param});
+#ifdef TERNARY
     preRotateTernary(accum, trgswMPDft, trlwe, trgsws, input, batchSize, param);
 
     for (auto i = 1; i < n; i++) {
@@ -572,18 +561,76 @@ void blindRotateWithPreRotTernaryNtt(Trlwe& accum, vector<TrgswMPDft>& trgswMPDf
         }
         externalProductTrgswMPNttInPlace(accum, trgswMPDft[i-1], param.lApprox, param);
     }
+#else
+    preRotateBinary(accum, trgswMPDft, trlwe, trgsws, input, batchSize, param);
+
+    for (auto i = 1; i < n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        externalProductTrgswMPNttInPlace(accum, trgswMPDft[i-1], param.lApprox, param);
+    }
+#endif
 }
 
-void blindRotateMPNtt(Trlwe& accum, const vector<TrgswMPDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateMPNtt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+#ifdef TERNARY
+    const auto n = param.n;
+    vector rotated(n, TrgswMPDft{param});
+
+    // pre-rotation in parallel
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(param.batchSize);
+    for (int start = 0; start < n; start += param.batchSize) {
+        futures.clear();
+        const int end = min(start + param.batchSize, n);
+        for (int i = start; i < end; ++i) {
+            const auto ai = input.a[i];
+            futures.emplace_back(pool.enqueue([i, ai, &param, &rotated, &bskDft] {
+                Trlwe tmp{param};
+                auto key0 = bskDft[i][0];
+                auto key1 = bskDft[i][1];
+                rotateTrgswMPNtt(key0, ai, param);
+                rotateTrgswMPNtt(key1, -ai, param);
+                subTrgswMPNtt(rotated[i], key0, bskDft[i][0]);
+                subTrgswMPNtt(rotated[i], rotated[i], bskDft[i][1]);
+                addTrgswMPNtt(rotated[i], rotated[i], key1);
+            }));
+        }
+        for (auto& f : futures) {
+            f.get();
+        }
+    }
+
+    for (auto i = 0; i < n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        Trlwe tmp{param};
+//        TrgswMPDft rotated{param};
+//        auto key0 = bskDft[i][0];
+//        auto key1 = bskDft[i][1];
+//        rotateTrgswMPNtt(key0, input.a[i], param);
+//        rotateTrgswMPNtt(key1, -input.a[i], param);
+//        subTrgswMPNtt(rotated, key0, bskDft[i][0]);
+//        subTrgswMPNtt(rotated, rotated, bskDft[i][1]);
+//        addTrgswMPNtt(rotated, rotated, key1);
+
+        externalProductTrgswMPNtt(tmp, rotated[i], accum, param.lApprox, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#else
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, accum, input.a[i]);
-        externalProductTrgswMPNttInPlace(tmp, bskDft[i], param.lApprox, param);
+        externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], param.lApprox, param);
         accumulateTrlwe(accum, tmp);
     }
+#endif
 }
 
 void blindRotateMPInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {

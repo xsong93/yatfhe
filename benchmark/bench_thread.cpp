@@ -26,9 +26,6 @@ int main(int argc, char **argv) {
     tlweKsKey.sigma = param.rlweStdDev;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
-    BootstrappingKeyMP bskMP{param};
-    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
-
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 

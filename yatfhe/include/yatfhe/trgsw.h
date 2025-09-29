@@ -22,6 +22,12 @@ struct TrgswMP {
             cPrime(p.l, Trlwe(p.k, p.N)),
             l(p.l),
             k(p.k) {};
+
+    TrgswMP(const YatfheParameters& p, const int l) :
+            c(l, std::vector<Trlwe>(p.k, Trlwe(p.k, p.N))),
+            cPrime(l, Trlwe(p.k, p.N)),
+            l(l),
+            k(p.k) {};
 };
 
 struct TrgswMPDft {

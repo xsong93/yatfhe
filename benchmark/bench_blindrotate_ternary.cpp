@@ -27,8 +27,8 @@ int main(int argc, char **argv) {
     tlweKsKey.sigma = param.rlweStdDev;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
-    // BootstrappingKeyMP bskMP{param};
-    // genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
+    BootstrappingKeyMP bskMP{param};
+    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
 
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
@@ -50,16 +50,21 @@ int main(int argc, char **argv) {
     Trlwe out{param.k, param.N};
     Tlwe tmp {ksKey.nCurrKey};
     Tlwe output {param.n};
-    vector trgswMPDft(param.n-1, TrgswMPDft{param});
 
     // rot
-    // BENCH500("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateWithPreRotTernaryNtt",
-             blindRotateWithPreRotTernaryNtt(out, trgswMPDft, bskPre.bskFirst, bskPre.bskDft, sTlwe, param.batchSize, param);)
+    BENCH500("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
+    BENCH500("blindRotateWithPreRotNtt",
+             blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param.batchSize, param);)
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft: "<< decAft << endl;
+    cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, acc, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;
     cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
     return 0;

@@ -33,21 +33,29 @@ struct BootstrappingKey {
 };
 
 struct BootstrappingKeyMP {
-    vector<TrgswMPDft> bskDft {};
-    vector<TrgswMP> bsk {};
+    vector<vector<TrgswMPDft>> bskDft {};
+    vector<vector<TrgswMP>> bsk {};
     int n {};
     int group {};
 
     explicit BootstrappingKeyMP(const YatfheParameters& p) : group(p.group) {
+#ifdef TERNARY
         if (group == 1) {
             n = p.n;
-            bsk = vector(n, TrgswMP(p));
-            bskDft = vector(n, TrgswMPDft(p));
         } else {
             n = p.n / group * (1 << group);
-            bsk = vector(n, TrgswMP(p));
-            bskDft = vector(n, TrgswMPDft(p));
         }
+        bsk = vector(n, vector(2, TrgswMP(p, p.l)));
+        bskDft = vector(n, vector(2, TrgswMPDft(p, p.l)));
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bsk = vector(n, vector(1, TrgswMP(p, p.l)));
+        bskDft = vector(n, vector(1, TrgswMPDft(p, p.l)));
+#endif
     };
 };
 

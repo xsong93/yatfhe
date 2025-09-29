@@ -87,7 +87,21 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
 
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
     for (auto i = 0; i < bsk.n; i++) {
-        encryptTrgswMPNtt(bsk.bskDft[i], tlweKey.s[i], trgswKey, 0, param);
+#ifdef TERNARY
+        const auto si = tlweKey.s[i];
+        if(si == 0) {
+            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+        } else if (si == 1) {
+            encryptTrgswMPNtt(bsk.bskDft[i][0], 1, trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+        } else {
+            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][1], 1, trgswKey, 0, param);
+        }
+#else
+        encryptTrgswMPNtt(bsk.bskDft[i][0], tlweKey.s[i], trgswKey, 0, param);
+#endif
     }
 }
 
