@@ -11,6 +11,7 @@
 int main(int argc, char **argv) {
     YatfheParameters param{};
     param.l = 2;
+    param.batchSize = 40;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
@@ -18,7 +19,7 @@ int main(int argc, char **argv) {
     TlweKey tlweKey{param.n, param.lweStdDev};
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    BootstrappingKey bsKey{param};
+    // BootstrappingKey bsKey{param};
     TlweKeySwitchingKey ksKey{param};
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
@@ -26,12 +27,15 @@ int main(int argc, char **argv) {
     tlweKsKey.sigma = param.rlweStdDev;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
+    BootstrappingKeyMP bskMP{param};
+    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
+
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-
     BootstrappingKeyMPPreRot bskPre{param};
-    genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
+    genBootstrappingKeyMPPreRotTernary(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
+
 
     // data gen
     Integer pt = 3;
@@ -43,21 +47,25 @@ int main(int argc, char **argv) {
     rescaleTlweFromTorus32(sTlwe, input);
     Trlwe acc{param.k, param.N};
     genNoiselessTrlweSample(acc, v, sTlwe);
-
     Trlwe out{param.k, param.N};
     Tlwe tmp {ksKey.nCurrKey};
     Tlwe output {param.n};
 
     // rot
-    for (auto i = 10; i <= 200; i = i + 10) {
-        param.batchSize = i;
-        BENCH500("blindRotateWithPreRotNttMT, bench size=" + to_string(i),
-                 blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
-    }
+    BENCH500("blindRotateGINXNtt single thread", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
+    BENCH500("blindRotateWithPreRotNtt single thread", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+    BENCH500("blindRotateGINXNtt multiple threads", blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);)
+    BENCH500("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft: "<< decAft << endl;
+    cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, acc, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;
     cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
     return 0;

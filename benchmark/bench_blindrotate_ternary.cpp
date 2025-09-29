@@ -42,31 +42,25 @@ int main(int argc, char **argv) {
     cout << "decPre: " << pt << endl;
     Torus mu = modSwitchToTorus32(pt, param.torusBase);
     Tlwe input{param.n};
-    symEncTlwe(input, mu, tlweKey);
+    symEncTlwe(input, mu, tlweKey); // encryption
     ScaledTlwe sTlwe {param.N * 2, param.n};
-    rescaleTlweFromTorus32(sTlwe, input);
+    rescaleTlweFromTorus32(sTlwe, input); // rescale input
     Trlwe acc{param.k, param.N};
-    genNoiselessTrlweSample(acc, v, sTlwe);
+    genNoiselessTrlweSample(acc, v, sTlwe); // test polynomial gen
     Trlwe out{param.k, param.N};
     Tlwe tmp {ksKey.nCurrKey};
     Tlwe output {param.n};
 
     // rot
-    COUNT_TIME("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateWithPreRotNtt", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateGINXNttMT", blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateWithPreRotNttMT", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+    BENCH500("blindRotateGINXNtt single thread", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
+    BENCH500("blindRotateWithPreRotNtt single thread", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+    BENCH500("blindRotateGINXNtt multiple threads", blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);)
+    BENCH500("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
 
-    extractTlweFromTrlwe(tmp, out, param.driftPhase);
-    switchKeyForTlwe(output, ksKey, tmp, param);
-    auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    extractTlweFromTrlwe(tmp, out, param.driftPhase); // sample extract
+    switchKeyForTlwe(output, ksKey, tmp, param); // key switch
+    auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase); // decryption
     cout << "decAft: "<< decAft << endl;
-    cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
-
-    extractTlweFromTrlwe(tmp, acc, param.driftPhase);
-    switchKeyForTlwe(output, ksKey, tmp, param);
-    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-    cout << "decAft: "<< decAft << endl;
-    cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "Correctness: " << ((decAft == pt) ? " Correct (dec = in)." : "Incorrect (dec =/= in).") << endl;
     return 0;
 }
