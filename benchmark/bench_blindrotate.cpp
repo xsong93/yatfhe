@@ -10,6 +10,7 @@
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
+    param.l = 100;
     param.l = 2;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
@@ -67,9 +68,14 @@ int main(int argc, char **argv) {
     int batchSize = 40;
 
     // rot
-    COUNT_TIME("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateWithPreRotNttMT",
-               blindRotateWithPreRotNttMT(out, trgswMPDft, bskPre.bskFirst, bskPre.bskDft, sTlwe, batchSize, param);)
+    BENCH500("blindRotateGINXNtt single thread", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
+    BENCH500("blindRotateWithPreRotNtt single thread", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+    BENCH500("blindRotateGINXNtt multiple threads", blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);)
+    BENCH500("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+    // COUNT_TIME("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
+    // COUNT_TIME("blindRotateWithPreRotNttMT",
+    //            blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+
 //    BENCH500("blindRotateExternalGeneralNtt", blindRotateExternalGeneralNtt(accTrlev, bskMP.bskDft, sTlwe, param);)
 //    BENCH500("blindRotateInternalNtt", blindRotateMPInternalNtt(accDummy, bskMP.bskDft, sTlwe, param);)
 //    BENCH500("blindRotateInternalPireWiseNtt", auto bsk = bskInt; blindRotateInternalPairWiseNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, batchSize, param);)

@@ -131,6 +131,50 @@ void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& 
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(batchSize);
+#ifdef TERNARY
+        for (int start = 0; start < n; start += batchSize) {
+        futures.clear();
+        const auto minVal = min(start + batchSize, n);
+        for (int i = start; i < minVal; i++) {
+            if (i == 0) {
+                if (tlweKey.s[i] == 1) {
+                    symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
+                    symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0);
+                    symEncTrlweSingleSample(bsk.bskFirst[2], trgswKey.trlweKey, 0);
+                } else if (tlweKey.s[i] == 0) {
+                    symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+                    symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0);
+                    symEncTrlweMultiSample(bsk.bskFirst[2], trgswKey.trlweKey, v.coeffs);
+                } else {
+                    symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+                    symEncTrlweMultiSample(bsk.bskFirst[1], trgswKey.trlweKey, v.coeffs);
+                    symEncTrlweSingleSample(bsk.bskFirst[2], trgswKey.trlweKey, 0);
+                }
+                continue;
+            }
+            futures.emplace_back(pool.enqueue([i, &tlweKey, &bsk, &trgswKey, &param] {
+                auto j = i-1;
+                if (tlweKey.s[i] == 1) {
+                    encryptTrgswMPNtt(bsk.bskDft[j][0],1, trgswKey, 0, param);
+                    encryptTrgswMPNtt(bsk.bskDft[j][1],0, trgswKey, 0, param);
+                    encryptTrgswMPNtt(bsk.bskDft[j][2],0, trgswKey, 0, param);
+                } else if (tlweKey.s[i] == 0) {
+                    encryptTrgswMPNtt(bsk.bskDft[j][0],0, trgswKey, 0, param);
+                    encryptTrgswMPNtt(bsk.bskDft[j][1],0, trgswKey, 0, param);
+                    encryptTrgswMPNtt(bsk.bskDft[j][2],1, trgswKey, 0, param);
+                } else {
+                    encryptTrgswMPNtt(bsk.bskDft[j][0],0, trgswKey, 0, param);
+                    encryptTrgswMPNtt(bsk.bskDft[j][1],1, trgswKey, 0, param);
+                    encryptTrgswMPNtt(bsk.bskDft[j][2],0, trgswKey, 0, param);
+                }
+            }
+            ));
+        }
+        for (auto& f : futures) {
+            f.wait();
+        }
+    }
+#else
     for (int start = 0; start < n; start += batchSize) {
         futures.clear();
         const auto minVal = min(start + batchSize, n);
@@ -161,6 +205,7 @@ void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& 
             f.wait();
         }
     }
+#endif
 }
 
 void genBootstrappingKeyMPPreRotTernary(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,

@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     Tlwe output{param.n};
 
     // rot
-    for (auto i = 10; i <= 200; i = i + 10) {
+    for (auto i = 10; i <= 400; i = i + 10) {
         param.batchSize = i;
         BENCH500("blindRotateWithPreRotNttMT, bench size=" + to_string(i),
                  blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
