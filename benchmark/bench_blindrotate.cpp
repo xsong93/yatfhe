@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
-    param.l = 100;
+    param.batchSize = 40;
     param.l = 2;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
@@ -27,25 +27,14 @@ int main(int argc, char **argv) {
     tlweKsKey.sigma = param.rlweStdDev;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
-//    BootstrappingKeyInternal bskInt{param};
-//    genBootstrappingKeyInternal(bskInt, trgswKey, tlweKey, param);
-//    BootstrappingKey bskNor{param};
-//    genBootstrappingKey(bskNor, trgswKey, tlweKey, param);
     BootstrappingKeyMP bskMP{param};
     genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
-//    BootstrappingKeyInternalAsym bskAsym{param};
-//    genBootstrappingKeyInternalAsym(bskAsym, trgswKey, tlweKey, param);
 
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-//    BootstrappingKeyInternalAsymOpt bskAsymOpt{param};
-//    genBootstrappingKeyInternalAsymOpt(bskAsymOpt, trgswKey, tlweKey, v, param);
     BootstrappingKeyMPPreRot bskPre{param};
     genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
-
-//    TrlevDft s2Dft(param);
-//    symEncTrlevWithKeyNtt(s2Dft, trlweKey, trlweKey.s, true, param);
 
     // data gen
     Integer pt = 3;
@@ -57,30 +46,16 @@ int main(int argc, char **argv) {
     rescaleTlweFromTorus32(sTlwe, input);
     Trlwe acc{param.k, param.N};
     genNoiselessTrlweSample(acc, v, sTlwe);
-//    TrgswMP accDummy{param};
-//    encryptTrgswMPMulti(accDummy, v.coeffs, trgswKey, param);
-//    Trlev accTrlev{param};
-//    encTrlevMultiSample(accTrlev, trlweKey, v, param);
+
     Trlwe out{param.k, param.N};
-    Tlwe tmp {ksKey.nCurrKey};
+    Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
-    vector trgswMPDft(param.n-1, TrgswMPDft{param});
-    int batchSize = 40;
 
     // rot
     BENCH500("blindRotateGINXNtt single thread", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
     BENCH500("blindRotateWithPreRotNtt single thread", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
     BENCH500("blindRotateGINXNtt multiple threads", blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);)
     BENCH500("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
-    // COUNT_TIME("blindRotateGINXNtt", blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);)
-    // COUNT_TIME("blindRotateWithPreRotNttMT",
-    //            blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
-
-//    BENCH500("blindRotateExternalGeneralNtt", blindRotateExternalGeneralNtt(accTrlev, bskMP.bskDft, sTlwe, param);)
-//    BENCH500("blindRotateInternalNtt", blindRotateMPInternalNtt(accDummy, bskMP.bskDft, sTlwe, param);)
-//    BENCH500("blindRotateInternalPireWiseNtt", auto bsk = bskInt; blindRotateInternalPairWiseNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, batchSize, param);)
-//    BENCH500("blindRotateInternalPairWiseAsymNtt", auto bsk = bskAsym; blindRotateInternalPairWiseAsymNtt(acc, bsk.bsk, bsk.bskDft, sTlwe, s2Dft, batchSize, param);)
-//    BENCH500("blindRotateInternalPairWiseAsymOptNtt", auto bsk = bskAsymOpt; blindRotateInternalPairWiseAsymOptNtt(out, bsk.bsk, bsk.bskLast, bsk.bskDft, sTlwe, s2Dft, batchSize, param);)
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
