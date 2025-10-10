@@ -6,6 +6,8 @@
 #define HLS_YATFHE_TRLWE_H
 
 #include <vector>
+
+#include "ntt_hexl.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/torus.h"
@@ -28,6 +30,8 @@ struct Trlwe {
     TorusPolynomial b; // 1
     int N;
     int k;
+
+    Trlwe() = default;
 
     explicit Trlwe(const YatfheParameters& p):
         a(p.k, TorusPolynomial(p.N)),
@@ -186,12 +190,20 @@ struct TrlweKey {
         sigma(sigma) {};
 };
 
-template<typename TrlweType>
-void addTrlwe(TrlweType& output, const TrlweType& input1, const TrlweType& input2) {
+// template<typename TrlweType>
+// void addTrlwe(TrlweType& output, const TrlweType& input1, const TrlweType& input2) {
+//     for (auto i = 0; i < output.a.size(); i++) {
+//         addTorusPolynomial(output.a[i], input1.a[i], input2.a[i]);
+//     }
+//     addTorusPolynomial(output.b, input1.b, input2.b);
+// }
+
+template<typename TrlweType, typename... TrlweArgs>
+void addTrlwe(TrlweType& output, const TrlweArgs&... inputs) {
     for (auto i = 0; i < output.a.size(); i++) {
-        addTorusPolynomial(output.a[i], input1.a[i], input2.a[i]);
+        addTorusPolynomial(output.a[i], inputs.a[i]...);
     }
-    addTorusPolynomial(output.b, input1.b, input2.b);
+    addTorusPolynomial(output.b, inputs.b...);
 }
 
 template<typename TrlweType>
@@ -202,12 +214,19 @@ void subTrlwe(TrlweType& output, const TrlweType& input1, const TrlweType& input
     subTorusPolynomial(output.b, input1.b, input2.b);
 }
 
-template<typename TrlweDftType>
-void addTrlweNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
+// template<typename TrlweDftType>
+// void addTrlweNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
+//     for (auto i = 0; i < output.a.size(); i++) {
+//         addNttPolynomial(output.a[i], input1.a[i], input2.a[i]);
+//     }
+//     addNttPolynomial(output.b, input1.b, input2.b);
+// }
+template<typename TrlweDftType, typename... TrlweDftArgs>
+void addTrlweNtt(TrlweDftType& output, const TrlweDftArgs&... inputs) {
     for (auto i = 0; i < output.a.size(); i++) {
-        addNttPolynomial(output.a[i], input1.a[i], input2.a[i]);
+        NttHexl::addNttPolynomial(output.a[i], inputs.a[i]...);
     }
-    addNttPolynomial(output.b, input1.b, input2.b);
+    NttHexl::addNttPolynomial(output.b, inputs.b...);
 }
 
 template<typename TrlweDftType>
@@ -459,6 +478,8 @@ void rotateTrlwe(Trlwe& res, const Trlwe& input, int a);
 void rotateTrlweNtt(TrlweDft& res, const TrlweDft& input, const int r);
 
 void rotateTrlweMinusOne(Trlwe& res, const Trlwe& input, int a);
+
+void rotateTrlweMinusOneNtt(TrlweDft& res, const TrlweDft& input, const int r);
 
 void rotateTrlwe8MinusOne(Trlwe8& res, const Trlwe8& input, int a, int modP);
 

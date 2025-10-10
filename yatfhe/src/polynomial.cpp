@@ -227,12 +227,12 @@ void addIntPolynomial(IntPolynomial& res, const IntPolynomial& poly1, const IntP
     }
 }
 
-void addTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
-    const int N = res.N;
-    for (int i = 0; i < N; i++) {
-        res.coeffs[i] = addTorus(poly1.coeffs[i], poly2.coeffs[i]);
-    }
-}
+// void addTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
+//     const int N = res.N;
+//     for (int i = 0; i < N; i++) {
+//         res.coeffs[i] = addTorus(poly1.coeffs[i], poly2.coeffs[i]);
+//     }
+// }
 
 /**
  * Add or sub a value to every coefficients of the target polynomial.
@@ -270,6 +270,15 @@ void rotateNttPolynomial(NttPolynomial& res, const NttPolynomial& in, int r) {
     EltwiseMultMod(res.coeffs.data(), in.coeffs.data(), roter, N, q, 1);
 }
 
+void rotateNttPolynomialMinusOne(NttPolynomial& res, const NttPolynomial& in, int r) {
+    auto N = res.N;
+    int rTrue, isWrap;
+    validateRotator(rTrue, isWrap, r, N);
+    auto q = NttHexl::getNttHexl().GetModulus();
+    auto roter = NttHexl::getNttRoterPolyMinusOne(rTrue, isWrap).coeffs.data();
+    EltwiseMultMod(res.coeffs.data(), in.coeffs.data(), roter, N, q, 1);
+}
+
 void genNttPolynomialWithValueAt(NttPolynomial& lagrangePolynomial, const int value, const int position) {
     TorusPolynomial tmp{lagrangePolynomial.N};
     tmp.coeffs[position] = value;
@@ -281,16 +290,16 @@ void accumulateNttPolynomial(NttPolynomial& accum, NttPolynomial& poly) {
     const auto N = accum.N;
     const auto q = NttHexl::getNttHexl().GetModulus();
     for (auto i = 0; i < N; i++) {
-        accum.coeffs[i] += AddUIntMod(accum.coeffs[i], poly.coeffs[i], q);
+        accum.coeffs[i] = AddUIntMod(accum.coeffs[i], poly.coeffs[i], q);
     }
 }
 
-void addNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2) {
-    const auto q = NttHexl::getNttHexl().GetModulus();
-    for (auto i = 0; i < input1.N; i++) {
-        output.coeffs[i] = AddUIntMod(input1.coeffs[i], input2.coeffs[i], q);
-    }
-}
+// void addNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2) {
+//     const auto q = NttHexl::getNttHexl().GetModulus();
+//     for (auto i = 0; i < input1.N; i++) {
+//         output.coeffs[i] = AddUIntMod(input1.coeffs[i], input2.coeffs[i], q);
+//     }
+// }
 
 void subNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2) {
     const auto q = NttHexl::getNttHexl().GetModulus();

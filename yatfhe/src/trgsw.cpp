@@ -231,6 +231,22 @@ void rotateTrgswMPNtt(TrgswMPDft& trgswMP, const int rot, const YatfheParameters
     }
 }
 
+void rotateTrgswMPMinusOneNtt(TrgswMPDft& trgswMP, const int rot, const YatfheParameters& param) {
+    if (rot % (param.N * 2) == 0) {
+        return;
+    }
+    TrlweDft rotT1{param.k, param.N};
+    TrlweDft rotT2{param.k, param.N};
+    for (auto lvl = 0; lvl < param.l; lvl++) {
+        rotT1 = trgswMP.cPrime[lvl];
+        rotateTrlweMinusOneNtt(trgswMP.cPrime[lvl], rotT1, rot);
+        for (auto row = 0; row < param.k; row++) {
+            rotT2 = trgswMP.c[lvl][row];
+            rotateTrlweMinusOneNtt(trgswMP.c[lvl][row], rotT2, rot);
+        }
+    }
+}
+
 // trgsw(0): [trlwe(0)]  (k+1)l rows
 void encZeroTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
     for (auto lvl = 0; lvl < param.l; lvl++) {

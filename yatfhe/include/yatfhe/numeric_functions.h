@@ -49,7 +49,7 @@ int64_t barrettReduceT32(int64_t in);
 
 int64_t montgomoryReduceT32(int64_t in);
 
-Torus addTorus(Torus in1, Torus in2);
+// Torus addTorus(Torus in1, Torus in2);
 
 Torus subTorus(Torus in1, Torus in2);
 
@@ -96,6 +96,21 @@ void setCoeffsValue(vector<T> coeffs, T val) {
     for (auto i = 0; i < coeffs.size(); i++) {
         coeffs[i] = val;
     }
+}
+
+template<typename... TorusArgs>
+std::common_type_t<TorusArgs...> addTorus(TorusArgs... inputs) {
+    if (TORUS_Q == Q_32) {
+        return (inputs + ...);
+    }
+    int64_t tmp = (static_cast<int64_t>(inputs) + ...);
+    if (tmp > TORUS_MAX) {
+        return static_cast<std::common_type_t<TorusArgs...>>(tmp - TORUS_Q);
+    }
+    if (tmp < TORUS_MIN) {
+        return static_cast<std::common_type_t<TorusArgs...>>(tmp + TORUS_Q);
+    }
+    return static_cast<std::common_type_t<TorusArgs...>>(tmp);
 }
 
 template <typename T, typename R>

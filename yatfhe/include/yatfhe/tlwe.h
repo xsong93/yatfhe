@@ -25,6 +25,8 @@ struct ScaledTlwe {
     int n {};
     int mod {};
 
+    ScaledTlwe() = default;
+
     ScaledTlwe(int mod, int n) : a(n), b(0), n(n), mod(mod) {};
 };
 

@@ -35,18 +35,32 @@ namespace NttHexl {
         return nttRotMap;
     }
 
+    std::unordered_map<int32_t, NttPolynomial> &getNttRotMinusOneMap() {
+        static std::unordered_map<int32_t, NttPolynomial> nttRotMapMinusOneMap;
+        return nttRotMapMinusOneMap;
+    }
+
     std::unordered_map<int32_t, NttPolynomial> &getNttRotInverseMap() {
         static std::unordered_map<int32_t, NttPolynomial> nttRotInverseMap;
         return nttRotInverseMap;
+    }
+
+    std::unordered_map<int32_t, NttPolynomial> &getNttRotMinusOneInverseMap() {
+        static std::unordered_map<int32_t, NttPolynomial> nttRotMinusOneInverseMap;
+        return nttRotMinusOneInverseMap;
     }
 
     NttPolynomial &getNttRoterPoly(const int32_t rTrue, const int32_t isWrap) {
         return isWrap == 1 ? getNttRotMap().find(rTrue)->second : getNttRotInverseMap().find(rTrue)->second;
     }
 
+    NttPolynomial &getNttRoterPolyMinusOne(const int32_t rTrue, const int32_t isWrap) {
+        return isWrap == 1 ? getNttRotMinusOneMap().find(rTrue)->second : getNttRotMinusOneInverseMap().find(rTrue)->second;
+    }
+
     void initNttRotMap(int32_t degree) {
-        static bool initialized = false;
-        if (!initialized) {
+        static bool NttRotInitialized = false;
+        if (!NttRotInitialized) {
             for (int32_t i = 0; i < degree; i++) {
                 NttPolynomial tmp{degree};
                 TorusPolynomial tmpT{degree};
@@ -57,7 +71,27 @@ namespace NttHexl {
                 applyNtt(tmp, tmpT);
                 getNttRotInverseMap().insert({i, tmp});
             }
-            initialized = true;
+            NttRotInitialized = true;
+        }
+    }
+
+    void initNttRotMinusOneMap(int32_t degree) {
+        static bool NttRotMinusOneInitialized = false;
+        if (!NttRotMinusOneInitialized) {
+            for (int32_t i = 0; i < degree; i++) {
+                NttPolynomial tmp{degree};
+                TorusPolynomial tmpT{degree};
+                tmpT.coeffs[i] = 1;
+                tmpT.coeffs[0] -= 1;
+                applyNtt(tmp, tmpT);
+                getNttRotMinusOneMap().insert({i, tmp});
+                tmpT = TorusPolynomial{degree};
+                tmpT.coeffs[i] = -1;
+                tmpT.coeffs[0] -= 1;
+                applyNtt(tmp, tmpT);
+                getNttRotMinusOneInverseMap().insert({i, tmp});
+            }
+            NttRotMinusOneInitialized = true;
         }
     }
 

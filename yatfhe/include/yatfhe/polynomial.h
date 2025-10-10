@@ -16,6 +16,8 @@ struct TorusPolynomial {
     std::vector<Torus> coeffs {}; // N
     int N {};
 
+    TorusPolynomial() = default;
+
     explicit TorusPolynomial(int N) :
             coeffs(N, 0),
             N(N) {};
@@ -138,6 +140,15 @@ struct Ntt64Polynomial {
             coeffs(n,0), N(n) {};
 };
 
+template<typename... PolyArgs>
+void addTorusPolynomial(TorusPolynomial& res, const PolyArgs&... polys) {
+    const int N = res.N;
+    for (int i = 0; i < N; i++) {
+        int64_t tmp = (polys.coeffs[i] + ...);
+        res.coeffs[i] = longModP(tmp, TORUS_Q);
+    }
+}
+
 template<typename PolyType>
 void accumulateTorusPolynomial(PolyType& res, const PolyType& accum) {
     const int N = res.N;
@@ -196,7 +207,7 @@ void multTorusPolynomialAcc(TorusPolynomial& res, const TorusPolynomial& poly1, 
 
 void addIntPolynomial(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
 
-void addTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
+// void addTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
 void addSubIntPolynomialWithOffset(IntPolynomial& poly, int offset, bool isAdd);
 
@@ -206,11 +217,13 @@ void subTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, cons
 
 void rotateNttPolynomial(NttPolynomial& res, const NttPolynomial& in, int r);
 
+void rotateNttPolynomialMinusOne(NttPolynomial& res, const NttPolynomial& in, int r);
+
 void genNttPolynomialWithValueAt(NttPolynomial& lagrangePolynomial, int value, int position);
 
 void accumulateNttPolynomial(NttPolynomial& accum, NttPolynomial& poly);
 
-void addNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2);
+// void addNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2);
 
 void subNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2);
 

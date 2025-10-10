@@ -21,7 +21,11 @@ namespace NttHexl {
 
     NttPolynomial &getNttRoterPoly(int32_t rTrue, int32_t isWrap);
 
+    NttPolynomial &getNttRoterPolyMinusOne(int32_t rTrue, int32_t isWrap);
+
     void initNttRotMap(int32_t degree);
+
+    void initNttRotMinusOneMap(int32_t degree);
 
     void applyNtt(NttPolynomial &out, const TorusPolynomial &in);
 
@@ -30,6 +34,16 @@ namespace NttHexl {
     void calModularInnerProductNtt(NttPolynomial& res, const vector<NttPolynomial>& in1, const vector<NttPolynomial>& in2);
 
     void calModularInnerProductNtt(NttPolynomial &acc, const NttPolynomial &in1, const NttPolynomial &in2);
+
+    template<typename... NttPolyArgs>
+    void addNttPolynomial(NttPolynomial& output, const NttPolyArgs&... inputs) {
+        const auto q = getNttHexl().GetModulus();
+        const int N = output.N;
+        for (int i = 0; i < N; i++) {
+            uint64_t tmp = (inputs.coeffs[i] + ...);
+            output.coeffs[i] = tmp % q;
+        }
+    }
 
     template<typename T, typename R>
     void applyNttForAB(T &out, R &in) {

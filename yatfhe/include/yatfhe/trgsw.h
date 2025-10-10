@@ -181,14 +181,26 @@ void addTrgswMP(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
     }
 }
 
-template<typename TrgswType>
-void addTrgswMPNtt(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+// template<typename TrgswType>
+// void addTrgswMPNtt(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
+//     const auto L = out.l;
+//     const auto K = out.k;
+//     for (size_t l = 0; l < L; l++) {
+//         addTrlweNtt(out.cPrime[l], in1.cPrime[l], in2.cPrime[l]);
+//         for (size_t k = 0; k < K; k++) {
+//             addTrlweNtt(out.c[l][k], in1.c[l][k], in2.c[l][k]);
+//         }
+//     }
+// }
+template<typename TrgswType, typename... TrgswArgs>
+void addTrgswMPNtt(TrgswType& out, const TrgswArgs&... inputs) {
     const auto L = out.l;
     const auto K = out.k;
+
     for (size_t l = 0; l < L; l++) {
-        addTrlweNtt(out.cPrime[l], in1.cPrime[l], in2.cPrime[l]);
+        addTrlweNtt(out.cPrime[l], inputs.cPrime[l]...);
         for (size_t k = 0; k < K; k++) {
-            addTrlweNtt(out.c[l][k], in1.c[l][k], in2.c[l][k]);
+            addTrlweNtt(out.c[l][k], inputs.c[l][k]...);
         }
     }
 }
@@ -224,6 +236,8 @@ void rotateTrgswNtt(TrgswDft& trgswDft, int rot, const YatfheParameters& param);
 void rotateTrgswMP(TrgswMP& trgswMP, int rot, const YatfheParameters& param);
 
 void rotateTrgswMPNtt(TrgswMPDft& trgswMP, int rot, const YatfheParameters& param);
+
+void rotateTrgswMPMinusOneNtt(TrgswMPDft& trgswMP, int rot, const YatfheParameters& param);
 
 void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);
 

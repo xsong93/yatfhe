@@ -287,6 +287,13 @@ void rotateTrlweMinusOne(Trlwe& res, const Trlwe& input, const int a) {
     rotateTorusPolynomialMinusOne(res.b, a, input.b);
 }
 
+void rotateTrlweMinusOneNtt(TrlweDft& res, const TrlweDft& input, const int r) {
+    for (auto i = 0; i < input.a.size(); i++) {
+        rotateNttPolynomialMinusOne(res.a[i], input.a[i], r);
+    }
+    rotateNttPolynomialMinusOne(res.b, input.b, r);
+}
+
 void rotateTrlwe8MinusOne(Trlwe8& res, const Trlwe8& input, const int a, int modP) {
     for (auto i = 0; i < input.a.size(); i++) {
         rotateInt8PolynomialMinusOne(res.a[i], a, input.a[i], modP);

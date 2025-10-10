@@ -147,13 +147,13 @@ int64_t montgomoryReduceT32(int64_t in) {
     return in < 0 ? -static_cast<int64_t>(r) : static_cast<int64_t>(r);
 }
 
-Torus addTorus(Torus in1, Torus in2) {
-    if (TORUS_Q == Q_32) {
-        return in1 + in2;
-    }
-    auto tmp = static_cast<int64_t>(in1) + static_cast<int64_t>(in2);
-    return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
-}
+// Torus addTorus(Torus in1, Torus in2) {
+//     if (TORUS_Q == Q_32) {
+//         return in1 + in2;
+//     }
+//     auto tmp = static_cast<int64_t>(in1) + static_cast<int64_t>(in2);
+//     return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
+// }
 
 Torus subTorus(Torus in1, Torus in2) {
     if (TORUS_Q == Q_32) {

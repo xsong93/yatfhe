@@ -390,16 +390,15 @@ TEST(RgswTest, RGSWMP_MULT_NTT) {
         IntPolynomial decAftP {param.N};
         symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, mu2s);
         printTrlweAB(in2, "trlwe");
-        Trlwe out {in2};
+        Trlwe out {param};
 
         // trlwe dec pre-mult
         symDecTrlweToIntNtt(decPreP, in2Dft, trlweKey, param.torusBase);
         printArray(decPreP.coeffs, "decPreP");
 
         // trgsw mult ntt
-        for (auto i = 0; i < 9; i++) {
-            COUNT_TIME("trgswMPExternalProductNtt", externalProductTrgswMPNtt(out, trgswDft, out, param.lApprox, param);)
-        }
+        COUNT_TIME("trgswMPExternalProductNtt", externalProductTrgswMPNtt(out, trgswDft, in2, param.lApprox, param);)
+
         printTrlweAB(out, "out");
 
         // trlwe dec aft-mult

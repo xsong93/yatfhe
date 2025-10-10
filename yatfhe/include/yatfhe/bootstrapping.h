@@ -38,6 +38,8 @@ struct BootstrappingKeyMP {
     int n {};
     int group {};
 
+    explicit BootstrappingKeyMP() = default;
+
     explicit BootstrappingKeyMP(const YatfheParameters& p) : group(p.group) {
 #ifdef TERNARY
         if (group == 1) {
@@ -64,6 +66,8 @@ struct BootstrappingKeyMPPreRot {
     vector<vector<TrgswMPDft>> bskDft{};
     int l{};
     int n{};
+
+    explicit BootstrappingKeyMPPreRot() = default;
 
     explicit BootstrappingKeyMPPreRot(const YatfheParameters& p) :
 #ifdef TERNARY
