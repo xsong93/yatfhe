@@ -700,6 +700,35 @@ void blindRotateJP22NttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft
 #endif
 }
 
+void blindRotateMP21Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+#ifdef TERNARY
+    const auto n = param.n;
+    for (auto i = 0; i < n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, accum, input.a[i]);
+        externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], param.lApprox, param);
+        accumulateTrlwe(accum, tmp);
+
+        rotateTrlweMinusOne(tmp, accum, -input.a[i]);
+        externalProductTrgswMPNttInPlace(tmp, bskDft[i][1], param.lApprox, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#else
+    for (auto i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, accum, input.a[i]);
+        externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], param.lApprox, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#endif
+}
+
 void blindRotateMPInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {
     TrgswMP temp{param};
     for (auto i = 0; i < param.n; i++) {

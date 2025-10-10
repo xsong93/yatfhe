@@ -216,6 +216,68 @@ TEST(BLIND_ROT, BLIND_ROT_NTT) {
     printBanner("BLIND_ROT_NTT");
 }
 
+TEST(BLIND_ROT, BLIND_ROT_MP21_NTT) {
+    YatfheParameters param{};
+    initYatfhe(param);
+
+    // key gen
+    TlweKey tlweKey{param.n, param.lweStdDev};
+    genTlweKey(tlweKey);
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    genTrlweKey(trlweKey);
+    BootstrappingKeyMP bskMP{param};
+    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
+
+    // data gen
+    Trlwe in2{param.k, param.N};
+    TrlweDft in2Dft{param.k, param.N};
+    TorusPolynomial v {param.N};
+    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+    symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, v.coeffs);
+
+    // pre dec
+    IntPolynomial decIn{param.N};
+    symDecTrlweToIntNtt(decIn, in2Dft, trlweKey, param.torusBase);
+    printArray(decIn.coeffs, "decIn");
+
+    // rots gen
+    ScaledTlwe sTlwe {param.N * 2, param.n};
+    sTlwe.b = genIntUniformDist(-2 * param.N, 2 * param.N);
+    for (auto i = 0 ; i < sTlwe.n; i++) {
+        sTlwe.a[i] = genIntUniformDist(-2 * param.N, 2 * param.N);
+    }
+
+    // test data gen
+    int rot = -sTlwe.b;
+    IntPolynomial rotInP{param.N};
+    TrlweDft rotInDft{param.k, param.N};
+    for (auto i = 0 ; i < param.n; i++) {
+        if (tlweKey.s[i] == 1) {
+            rot += sTlwe.a[i];
+        } else if (tlweKey.s[i] == -1) {
+            rot -= sTlwe.a[i];
+        }
+    }
+    printMsg(rot, "rot");
+    rotateTrlweNtt(rotInDft, in2Dft, rot);
+    symDecTrlweToIntNtt(rotInP, rotInDft, trlweKey, param.torusBase);
+    printArray(rotInP.coeffs, "expect");
+
+    vector trgswMPDft(param.n, TrgswMPDft{param});
+    COUNT_TIME("blindRotateWithPreRotNttMT",
+        blindRotateMP21Ntt(in2, bskMP.bskDft, sTlwe, param);)
+
+    // dec
+    IntPolynomial decP {param.N};
+    symDecTrlweToInt(decP, in2, trlweKey, param.torusBase);
+    printArray(decP.coeffs, "real");
+
+    //verify
+    ASSERT_EQ(rotInP.coeffs, decP.coeffs);
+    printBanner("BLIND_ROT_MP21_NTT");
+}
+
 TEST(BLIND_ROT, BLIND_ROT_PRE_ROT_NTT) {
     YatfheParameters param{};
     initYatfhe(param);

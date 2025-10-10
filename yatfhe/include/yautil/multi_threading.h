@@ -20,8 +20,7 @@ public:
     static void initThreadPool();
 
     static ThreadPool& instance() {
-        // static ThreadPool instance(std::thread::hardware_concurrency() * 2);
-        static ThreadPool instance(512);
+        static ThreadPool instance(std::thread::hardware_concurrency() * 2);
         return instance;
     }
 
