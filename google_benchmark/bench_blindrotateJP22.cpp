@@ -7,14 +7,11 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yautil/initializer.h"
-#include "yautil/time_counter.h"
 
-// 继承 benchmark::Fixture
 class BlindRotateBenchmark : public benchmark::Fixture {
 public:
     BlindRotateBenchmark() = default;
 
-    // 在每个测试用例运行前执行，用于初始化资源
     void SetUp(const benchmark::State& state) override {
         param = YatfheParameters{};
         param.batchSize = 40;
@@ -55,9 +52,9 @@ protected:
     ScaledTlwe sTlwe;
 };
 
-BENCHMARK_DEFINE_F(BlindRotateBenchmark, GINX_SINGLETHREAD)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(BlindRotateBenchmark, JP22_SINGLETHREAD)(benchmark::State& state) {
     for (auto _ : state) {
-        blindRotateMPNtt(acc, bskMP.bskDft, sTlwe, param);
+        blindRotateJP22Ntt(acc, bskMP.bskDft, sTlwe, param);
         benchmark::DoNotOptimize(acc);
     }
 }
@@ -69,9 +66,9 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, OURS_SINGLETHREAD)(benchmark::State& st
     }
 }
 
-BENCHMARK_DEFINE_F(BlindRotateBenchmark, GINX_MULTITHREAD)(benchmark::State& state) {
+BENCHMARK_DEFINE_F(BlindRotateBenchmark, JP22_MULTITHREAD)(benchmark::State& state) {
     for (auto _ : state) {
-        blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);
+        blindRotateJP22NttMT(acc, bskMP.bskDft, sTlwe, param);
         benchmark::DoNotOptimize(out);
     }
 }
@@ -83,11 +80,9 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, OURS_MULTITHREAD)(benchmark::State& sta
     }
 }
 
-// 注册测试
-BENCHMARK_REGISTER_F(BlindRotateBenchmark, GINX_SINGLETHREAD);
+BENCHMARK_REGISTER_F(BlindRotateBenchmark, JP22_SINGLETHREAD);
 BENCHMARK_REGISTER_F(BlindRotateBenchmark, OURS_SINGLETHREAD);
-BENCHMARK_REGISTER_F(BlindRotateBenchmark, GINX_MULTITHREAD);
+BENCHMARK_REGISTER_F(BlindRotateBenchmark, JP22_MULTITHREAD);
 BENCHMARK_REGISTER_F(BlindRotateBenchmark, OURS_MULTITHREAD);
 
-// 使用库提供的main函数
 BENCHMARK_MAIN();

@@ -5,8 +5,6 @@ find_package(benchmark REQUIRED)
 
 file(GLOB BENCHMARK_SOURCES *.cpp)
 
-get_filename_component(PROJECT_ROOT "../" ABSOLUTE)
-
 foreach(bench_source ${BENCHMARK_SOURCES})
     get_filename_component(target_name ${bench_source} NAME_WE)
 

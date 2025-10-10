@@ -3,4 +3,4 @@ cmake-build-debug/
 
 /ntl/
 /CMAKE_BUILD/
-/bench_blindrotate
+/bench*

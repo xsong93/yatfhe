@@ -621,7 +621,7 @@ void blindRotateWithPreRotNttMT(Trlwe& accum, const vector<Trlwe>& trlwe, const 
 #endif
 }
 
-void blindRotateMPNtt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateJP22Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
 #ifdef TERNARY
     const auto n = param.n;
     for (auto i = 0; i < n; i++) {
@@ -651,7 +651,7 @@ void blindRotateMPNtt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, co
 #endif
 }
 
-void blindRotateMPNttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateJP22NttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
 #ifdef TERNARY
     const auto n = param.n;
     vector rotated(n, TrgswMPDft{param});
