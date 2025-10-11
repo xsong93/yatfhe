@@ -5,6 +5,6 @@ project(base)
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(yatfhe)
-#add_subdirectory(ya_benchmark)
+add_subdirectory(ya_benchmark)
 add_subdirectory(google_tests)
 add_subdirectory(google_benchmark)

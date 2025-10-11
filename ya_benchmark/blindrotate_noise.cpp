@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
         TrlweKey& trlweKey = trgswKey.trlweKey;
         TlweKeySwitchingKey ksKey{param};
         genTlweKey(tlweKey);
+        tlweKey.s = vector(param.n, 1);
         genTrlweKey(trlweKey);
         TlweKey tlweKsKey = tlweKey;
         tlweKsKey.sigma = param.rlweStdDev;
@@ -42,7 +43,7 @@ int main(int argc, char **argv) {
         generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
         BootstrappingKeyMPPreRot bskPre{param};
-        genBootstrappingKeyMPPreRotTernary(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
+        genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
 
 
         // data gen
@@ -61,7 +62,7 @@ int main(int argc, char **argv) {
         TorusPolynomial outRlwe2{param.N};
 
         // rot
-        blindRotateMPNttMT(acc, bskMP.bskDft, sTlwe, param);
+        blindRotateJP22NttMT(acc, bskMP.bskDft, sTlwe, param);
         blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);
 
         symDecTrlweWoRounding(outRlwe, acc, trlweKey);
