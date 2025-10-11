@@ -1,6 +1,7 @@
 //
 // Created by xintong on 4/21/25.
 //
+#include <omp.h>
 #include "yatfhe/blind_rotate.h"
 #include "yatfhe/cmux.h"
 #include "yatfhe/ntt_hexl.h"
@@ -81,6 +82,55 @@ void preRotateTernary(Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut, const v
                     rotateTrgswMPNtt(keyOut2, -ai, param);
                 }
                 addTrgswMPNtt(keyOut, keyOut, keyOut2, keyIn[2]);
+            }));
+        }
+
+        for (auto& f : futures) {
+            f.get();
+        }
+    }
+}
+
+void preRotateTernary2(Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut, const vector<Trlwe>& key1,
+                      const vector<vector<TrgswMPDft>>& trgswDftsIn, const ScaledTlwe& in, const int batchSize,
+                       const int tasksPerThread, const YatfheParameters& param) {
+    const auto n = param.n;
+    auto& pool = ThreadPool::instance();
+
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+
+    {
+        Trlwe tmp{param}, tmp2{param};
+        rotateTrlwe(tmp, key1[0], in.a[0]);
+        rotateTrlwe(tmp2, key1[1], -in.a[0]);
+        addTrlwe(tmp, tmp, tmp2, key1[2]);
+        rotateTrlwe(trlweOut, tmp, -in.b);
+    }
+
+    for (int start = 1; start < n; start += batchSize * tasksPerThread) {
+        futures.clear();
+        const int end = min(start + batchSize * tasksPerThread, n);
+
+        // Process tasks in chunks of 'tasksPerThread'
+        for (int chunkStart = start; chunkStart < end; chunkStart += tasksPerThread) {
+            const int chunkEnd = min(chunkStart + tasksPerThread, end);
+
+            futures.emplace_back(pool.enqueue([chunkStart, chunkEnd, &in, &param, &trgswDftsOut, &trgswDftsIn] {
+                for (int i = chunkStart; i < chunkEnd; ++i) {
+                    const auto ai = in.a[i];
+                    const int j = i - 1;
+                    auto& keyOut = trgswDftsOut[j];
+                    const auto& keyIn = trgswDftsIn[j];
+
+                    keyOut = keyIn[0];
+                    auto keyOut2 = keyIn[1];
+                    if (ai != 0) {
+                        rotateTrgswMPNtt(keyOut, ai, param);
+                        rotateTrgswMPNtt(keyOut2, -ai, param);
+                    }
+                    addTrgswMPNtt(keyOut, keyOut, keyOut2, keyIn[2]);
+                }
             }));
         }
 
@@ -601,7 +651,7 @@ void blindRotateWithPreRotNttMT(Trlwe& accum, const vector<Trlwe>& trlwe, const 
     const auto n = param.n;
     vector trgswMPDft(param.n-1, TrgswMPDft{param});
 #ifdef TERNARY
-    preRotateTernary(accum, trgswMPDft, trlwe, trgsws, input, param.batchSize, param);
+    preRotateTernary2(accum, trgswMPDft, trlwe, trgsws, input, param.batchSize, param.tasksPerThread, param);
 
     for (auto i = 1; i < n; i++) {
         if (input.a[i] == 0) {

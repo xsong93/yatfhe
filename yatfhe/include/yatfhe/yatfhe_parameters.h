@@ -44,6 +44,7 @@ struct YatfheParameters {
     int lApprox {2};
 #endif
     int batchSize{8};
+    int tasksPerThread{8};
     uint64_t qNtt {Q_50P};
     int dftBits {64};
     int driftPhase {N / torusBase / 2};

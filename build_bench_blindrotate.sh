@@ -1,4 +1,4 @@
 #! /bin/bash
-./clean_install.sh
-./cmake_run.sh
-./cp_bench.sh
+sudo /bin/bash clean_install.sh
+sudo /bin/bash cmake_run.sh "ON"
+sudo /bin/bash cp_bench.sh

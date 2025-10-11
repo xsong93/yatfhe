@@ -55,8 +55,10 @@ protected:
 
 BENCHMARK_DEFINE_F(BlindRotateBenchmark, OURS_MULTITHREAD)(benchmark::State& state) {
     const int batchSize = state.range(0);
+    const int tasksPerThread = state.range(1);
     auto localParam = param;
     localParam.batchSize = batchSize;
+    localParam.tasksPerThread = tasksPerThread;
 
     for (auto _ : state) {
         blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, localParam);
@@ -64,18 +66,16 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, OURS_MULTITHREAD)(benchmark::State& sta
     }
 
     state.counters["batchSize"] = batchSize;
-    state.counters["Threads"] = state.threads();
-    state.counters["Thread%"] = benchmark::Counter(
-        state.threads() / static_cast<double>(std::thread::hardware_concurrency()),
-        benchmark::Counter::kAvgThreads
-    );
+    state.counters["tasksPerThread"] = tasksPerThread;
 }
 
 BENCHMARK_REGISTER_F(BlindRotateBenchmark, OURS_MULTITHREAD)
     ->Unit(benchmark::kMicrosecond)
-    ->ThreadRange(1, 6)
-    ->DenseRange(1, 40, 1)
-    ->ArgNames({"batchSize"})
+    ->ArgsProduct({
+                          benchmark::CreateDenseRange(1, 20, 1),  // batchSize
+                          benchmark::CreateDenseRange(1, 20, 1)   // tasksPerThread
+    })
+    ->ArgNames({"batchSize", "tasksPerThread"})
     ->MeasureProcessCPUTime()
     ->UseRealTime();
 
