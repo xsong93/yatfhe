@@ -29,7 +29,19 @@ struct BootstrappingKey {
             bsk = vector<Trgsw>(n, Trgsw(p));
             bskDft = vector<TrgswDft>(n, TrgswDft(p));
         }
-    };
+    }
+
+    BootstrappingKey(const YatfheParameters& p, const int level) : group(p.group) {
+        if (group == 1) {
+            n = p.n;
+            bsk = vector<Trgsw>(n, Trgsw(p, level));
+            bskDft = vector<TrgswDft>(n, TrgswDft(p, level));
+        } else {
+            n = p.n / group * (1 << group);
+            bsk = vector<Trgsw>(n, Trgsw(p, level));
+            bskDft = vector<TrgswDft>(n, TrgswDft(p, level));
+        }
+    }
 };
 
 struct BootstrappingKeyMP {
@@ -58,7 +70,27 @@ struct BootstrappingKeyMP {
         bsk = vector(n, vector(1, TrgswMP(p, p.l)));
         bskDft = vector(n, vector(1, TrgswMPDft(p, p.l)));
 #endif
-    };
+    }
+
+    BootstrappingKeyMP(const YatfheParameters& p, const int level) : group(p.group) {
+#ifdef TERNARY
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bsk = vector(n, vector(2, TrgswMP(p, level)));
+        bskDft = vector(n, vector(2, TrgswMPDft(p, level)));
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bsk = vector(n, vector(1, TrgswMP(p, level)));
+        bskDft = vector(n, vector(1, TrgswMPDft(p, level)));
+#endif
+    }
 };
 
 struct BootstrappingKeyMPPreRot {
@@ -147,12 +179,6 @@ void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const Bootstrappin
 
 void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
-void genBootstrappingKeyInternalAsym(BootstrappingKeyInternalAsym& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-    const YatfheParameters& param);
-
-void genBootstrappingKeyInternalAsymOpt(BootstrappingKeyInternalAsymOpt& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-                                        const TorusPolynomial& v, const YatfheParameters& param);
-
 void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
@@ -162,14 +188,8 @@ void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey
 void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                  const TorusPolynomial& v, int batchSize, const YatfheParameters& param);
 
-void genBootstrappingKeyMPPreRotTernary(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-                                        const TorusPolynomial& v, int batchSize, const YatfheParameters& param);
-
 void genBootstrappingKeyMPPreRotTernaryFixedNoise(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                                   const TorusPolynomial& v, int batchSize, Torus noise, const YatfheParameters& param);
-
-void genBootstrappingKeyInternal(BootstrappingKeyInternal& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-    const YatfheParameters& param);
 
 void decompBootstrappingKeyMcrt(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param);
 

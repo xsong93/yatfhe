@@ -10,8 +10,9 @@
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
-    param.batchSize = 40;
-    param.l = 2;
+    param.batchSize = 16;
+    param.tasksPerThread = 15;
+    param.l = param.lApprox;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
@@ -19,7 +20,6 @@ int main(int argc, char **argv) {
     TlweKey tlweKey{param.n, param.lweStdDev};
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
-    BootstrappingKey bsKey{param};
     TlweKeySwitchingKey ksKey{param};
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
@@ -52,10 +52,10 @@ int main(int argc, char **argv) {
     Tlwe output {param.n};
 
     // rot
-    BENCH500("blindRotateJP22Ntt single thread", blindRotateJP22Ntt(acc, bskMP.bskDft, sTlwe, param);)
-    BENCH500("blindRotateWithPreRotNtt single thread", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
-    BENCH500("blindRotateJP22NttMT multiple threads", blindRotateJP22NttMT(acc, bskMP.bskDft, sTlwe, param);)
-    BENCH500("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateJP22Ntt single thread", blindRotateJP22Ntt(acc, bskMP.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateWithPreRotNtt single thread", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateJP22NttMT multiple threads", blindRotateJP22NttMT(acc, bskMP.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);

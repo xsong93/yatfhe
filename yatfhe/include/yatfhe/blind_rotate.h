@@ -28,14 +28,4 @@ void blindRotateJP22NttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft
 
 void blindRotateMP21Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
 
-void blindRotateInternalPairWiseNtt(Trlwe& accum, vector<vector<TrgswMP>>& trgsws, vector<vector<TrgswMPDft>>& trgswDfts,
-    const ScaledTlwe& input, int batchSize, const YatfheParameters& param);
-
-void blindRotateInternalPairWiseAsymNtt(Trlwe& accum, vector<vector<Trlev>>& trlevs, vector<vector<TrgswMPDft>>& trgswDfts,
-    const ScaledTlwe& input, const TrlevDft& sSquare, int batchSize, const YatfheParameters& param);
-
-void blindRotateInternalPairWiseAsymOptNtt(Trlwe& out, vector<vector<Trlev>>& trlevs, vector<Trlwe>& trlwes,
-                                           vector<vector<TrgswMPDft>>& trgswDfts, const ScaledTlwe& input,
-                                           const TrlevDft& sSquare, int batchSize, const YatfheParameters& param);
-
 #endif //HLS_YATFHE_BLIND_ROTATE_H

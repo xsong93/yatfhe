@@ -40,26 +40,29 @@ struct TrgswMPDft {
             c(p.l, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N))),
             cPrime(p.l, TrlweDft(p.k, p.N)),
             l(p.l),
-            k(p.k) {};
+            k(p.k) {}
 
-    TrgswMPDft(const YatfheParameters& p, const int l) :
-            c(l, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N))),
-            cPrime(l, TrlweDft(p.k, p.N)),
-            l(l),
-            k(p.k) {};
+    TrgswMPDft(const YatfheParameters& p, const int level) :
+            c(level, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N))),
+            cPrime(level, TrlweDft(p.k, p.N)),
+            l(level),
+            k(p.k) {}
 };
 
 struct Trgsw {
     std::vector<std::vector<Trlwe>> trlweSamples {};
     int l;
     int k;
-//    int bgBit;
 
     explicit Trgsw(const YatfheParameters& p) :
-//            trlweSamples(p.k + 1, std::vector<Trlwe>(p.l, Trlwe(p.k, p.N))),
             trlweSamples(p.l, std::vector<Trlwe>(p.k + 1, Trlwe(p.k, p.N))),
             l(p.l),
-            k(p.k) {};
+            k(p.k) {}
+
+    Trgsw(const YatfheParameters& p, const int level) :
+            trlweSamples(level, std::vector<Trlwe>(p.k + 1, Trlwe(p.k, p.N))),
+            l(level),
+            k(p.k) {}
 };
 
 struct Trgsw8 {
@@ -82,13 +85,16 @@ struct TrgswDft {
     std::vector<std::vector<TrlweDft>> trlweDftSamples; // l *  (k + 1)
     int l;
     int k;
-//    int bgBit;
 
     explicit TrgswDft(const YatfheParameters& p) :
-//            trlweDftSamples(p.k + 1, std::vector<TrlweDft>(p.l, TrlweDft(p.k, p.N))),
             trlweDftSamples(p.l, std::vector<TrlweDft>(p.k + 1, TrlweDft(p.k, p.N))),
             l(p.l),
-            k(p.k) {};
+            k(p.k) {}
+
+    TrgswDft(const YatfheParameters& p, const int level) :
+            trlweDftSamples(level, std::vector<TrlweDft>(p.k + 1, TrlweDft(p.k, p.N))),
+            l(level),
+            k(p.k) {}
 };
 
 struct TrgswDft14 {
@@ -235,9 +241,9 @@ void rotateTrgswNtt(TrgswDft& trgswDft, int rot, const YatfheParameters& param);
 
 void rotateTrgswMP(TrgswMP& trgswMP, int rot, const YatfheParameters& param);
 
-void rotateTrgswMPNtt(TrgswMPDft& trgswMP, int rot, const YatfheParameters& param);
+void rotateTrgswMPNtt(TrgswMPDft& out, const TrgswMPDft& in, int rot, const YatfheParameters& param);
 
-void rotateTrgswMPMinusOneNtt(TrgswMPDft& trgswMP, int rot, const YatfheParameters& param);
+void rotateTrgswMPMinusOneNtt(TrgswMPDft& out, const TrgswMPDft& in, int rot, const YatfheParameters& param);
 
 void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);
 

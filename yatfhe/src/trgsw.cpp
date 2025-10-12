@@ -19,7 +19,7 @@ using namespace NttHexl;
 
 void encryptTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
     TorusPolynomial muPoly{param.N};
-    for (size_t lvl = 0; lvl < param.l; lvl++) {
+    for (size_t lvl = 0; lvl < trgswMP.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
         muPoly.coeffs[pos] = decomposedMu;
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
@@ -36,7 +36,7 @@ void encryptTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey
 
 void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param) {
     TorusPolynomial muPoly{param.N};
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgswMP.l; lvl++) {
         for (int j = 0; j < mus.size(); j++) {
             muPoly.coeffs[j] = mus[j] << (param.torusBits - (lvl + 1) * param.radixBits);
         }
@@ -51,7 +51,7 @@ void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const Trg
 void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
     TrgswMP trgswMP{param};
     TorusPolynomial muPoly{param.N};
-    for (size_t lvl = 0; lvl < param.l; lvl++) {
+    for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
         muPoly.coeffs[pos] = decomposedMu;
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
@@ -67,7 +67,7 @@ void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey&
 void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const Torus noise, const YatfheParameters& param) {
     TrgswMP trgswMP{param};
     TorusPolynomial muPoly{param.N};
-    for (size_t lvl = 0; lvl < param.l; lvl++) {
+    for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
         muPoly.coeffs[pos] = decomposedMu;
         symEncTrlweMultiSampleFixedNoise(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs, noise);
@@ -83,7 +83,7 @@ void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, const Integer mu, const
 void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param) {
     TrgswMP trgswMP{param};
     TorusPolynomial muPoly{param.N};
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgswMPDft.l; lvl++) {
         for (int j = 0; j < mus.size(); j++) {
             muPoly.coeffs[j] = mus[j] << (param.torusBits - (lvl + 1) * param.radixBits);
         }
@@ -131,7 +131,7 @@ void encryptLowTrgswMPNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, const Intege
 
 // trgsw(0): [trlwe(0)]  (k+1)l rows
 void encZeroTrgsw(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgsw.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
             symEncTrlweSingleSample(trgsw.trlweSamples[lvl][row], trgswKey.trlweKey, 0);
         }
@@ -154,9 +154,8 @@ void addIntegerToTrgsw(Trgsw& trgsw, const Integer mu, const int pos, const Yatf
     // (                         1/B )
     // ( a_0  a_1          a_k-1  b  )*/
 
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgsw.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
-        // todo: decompose on second level
         for (auto row = 0; row < param.k + 1; row++) {
 
             // add to a_lii
@@ -178,7 +177,7 @@ void rotateTrgsw(Trgsw& trgsw, const int rot, const YatfheParameters& param) {
         return;
     }
     Trlwe rotT{param.k, param.N};
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgsw.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
             rotT = trgsw.trlweSamples[lvl][row];
             rotateTrlwe(trgsw.trlweSamples[lvl][row], rotT, rot);
@@ -191,7 +190,7 @@ void rotateTrgswNtt(TrgswDft& trgswDft, const int rot, const YatfheParameters& p
         return;
     }
     TrlweDft rotT{param.k, param.N};
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgswDft.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
             rotT = trgswDft.trlweDftSamples[lvl][row];
             rotateTrlweNtt(trgswDft.trlweDftSamples[lvl][row], rotT, rot);
@@ -205,7 +204,7 @@ void rotateTrgswMP(TrgswMP& trgswMP, const int rot, const YatfheParameters& para
     }
     Trlwe rotT1{param.k, param.N};
     Trlwe rotT2{param.k, param.N};
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgswMP.l; lvl++) {
         rotT1 = trgswMP.cPrime[lvl];
         rotateTrlwe(trgswMP.cPrime[lvl], rotT1, rot);
         for (auto row = 0; row < param.k; row++) {
@@ -215,41 +214,35 @@ void rotateTrgswMP(TrgswMP& trgswMP, const int rot, const YatfheParameters& para
     }
 }
 
-void rotateTrgswMPNtt(TrgswMPDft& trgswMP, const int rot, const YatfheParameters& param) {
+void rotateTrgswMPNtt(TrgswMPDft& out, const TrgswMPDft& in, const int rot, const YatfheParameters& param) {
     if (rot % (param.N * 2) == 0) {
         return;
     }
-    TrlweDft rotT1{param.k, param.N};
-    TrlweDft rotT2{param.k, param.N};
-    for (auto lvl = 0; lvl < param.l; lvl++) {
-        rotT1 = trgswMP.cPrime[lvl];
-        rotateTrlweNtt(trgswMP.cPrime[lvl], rotT1, rot);
+    for (auto lvl = 0; lvl < out.l; lvl++) {
+        rotateTrlweNtt(out.cPrime[lvl], in.cPrime[lvl], rot);
         for (auto row = 0; row < param.k; row++) {
-            rotT2 = trgswMP.c[lvl][row];
-            rotateTrlweNtt(trgswMP.c[lvl][row], rotT2, rot);
+            rotateTrlweNtt(out.c[lvl][row], in.c[lvl][row], rot);
         }
     }
 }
 
-void rotateTrgswMPMinusOneNtt(TrgswMPDft& trgswMP, const int rot, const YatfheParameters& param) {
+void rotateTrgswMPMinusOneNtt(TrgswMPDft& out, const TrgswMPDft& in, const int rot, const YatfheParameters& param) {
     if (rot % (param.N * 2) == 0) {
         return;
     }
     TrlweDft rotT1{param.k, param.N};
     TrlweDft rotT2{param.k, param.N};
-    for (auto lvl = 0; lvl < param.l; lvl++) {
-        rotT1 = trgswMP.cPrime[lvl];
-        rotateTrlweMinusOneNtt(trgswMP.cPrime[lvl], rotT1, rot);
+    for (auto lvl = 0; lvl < out.l; lvl++) {
+        rotateTrlweMinusOneNtt(out.cPrime[lvl], in.cPrime[lvl], rot);
         for (auto row = 0; row < param.k; row++) {
-            rotT2 = trgswMP.c[lvl][row];
-            rotateTrlweMinusOneNtt(trgswMP.c[lvl][row], rotT2, rot);
+            rotateTrlweMinusOneNtt(out.c[lvl][row], in.c[lvl][row], rot);
         }
     }
 }
 
 // trgsw(0): [trlwe(0)]  (k+1)l rows
 void encZeroTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgsw.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
             symEncTrlweSingleSampleNtt(trgsw.trlweSamples[lvl][row], trgswDft.trlweDftSamples[lvl][row], trgswKey.trlweKey, 0);
         }
@@ -258,7 +251,7 @@ void encZeroTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& p
 
 // output += mu * G^T
 void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, const int pos, const YatfheParameters& param) {
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgswDft.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
         for (auto row = 0; row < param.k + 1; row++) {
 
@@ -279,7 +272,7 @@ void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, co
 }
 
 void trgswAddIntegerApproxCRT(Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
-    for (auto lvl = 0; lvl < param.l; lvl++) {
+    for (auto lvl = 0; lvl < trgsw.l; lvl++) {
         auto decomposedMu = multTorus(mu, param.w[lvl]);
         for (auto row = 0; row < param.k + 1; row++) {
 

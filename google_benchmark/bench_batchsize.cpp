@@ -15,8 +15,7 @@ public:
 
     void SetUp(const benchmark::State& state) override {
         param = YatfheParameters{};
-        param.batchSize = 40;
-        param.l = 2;
+        param.l = param.lApprox;
         initYatfhe(param);
 
         // key gen
