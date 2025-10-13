@@ -1,4 +1,6 @@
 import json
+import os
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -43,7 +45,7 @@ def load_and_process_data2(file_path):
     return pd.DataFrame(benchmarks)
 
 
-def create_heatmap(df):
+def create_heatmap(df, out_path: str):
     """Create heatmap"""
     plt.figure(figsize=(14, 10))
 
@@ -58,7 +60,7 @@ def create_heatmap(df):
     # Plot heatmap
     ax = sns.heatmap(pivot, annot=True, fmt=".1f", cmap=cmap,
                      cbar_kws={'label': 'Execution Time (ms)'},
-                     annot_kws={'fontsize':9})
+                     annot_kws={'fontsize': 9})
 
     # Calculate performance metrics
     min_time = pivot.min().min()
@@ -66,10 +68,10 @@ def create_heatmap(df):
     std_dev = pivot.values.std()
 
     # Highlight optimal regions
-    optimal_mask = pivot <= (min_time + 0.2*std_dev)
-    for (j,i), val in np.ndenumerate(pivot):
-        if optimal_mask.iloc[j,i]:
-            ax.add_patch(plt.Rectangle((i,j), 1, 1, fill=False,
+    optimal_mask = pivot <= (min_time + 0.2 * std_dev)
+    for (j, i), val in np.ndenumerate(pivot):
+        if optimal_mask.iloc[j, i]:
+            ax.add_patch(plt.Rectangle((i, j), 1, 1, fill=False,
                                        edgecolor='red', lw=3))
 
     # Add analysis textbox
@@ -78,7 +80,7 @@ def create_heatmap(df):
     - Fastest config: {pivot.stack().idxmin()} @ {min_time:.1f}ms
     - Slowest config: {pivot.stack().idxmax()} @ {max_time:.1f}ms
     - Optimal zone (red): Within 20% of best time
-    - Color range: {min_time:.1f}-{max_time:.1f}ms (Δ={max_time-min_time:.1f}ms)
+    - Color range: {min_time:.1f}-{max_time:.1f}ms (Δ={max_time - min_time:.1f}ms)
     """
     plt.text(0.5, -0.3, analysis_text, transform=ax.transAxes,
              fontsize=11, bbox=dict(facecolor='white', alpha=0.8))
@@ -90,11 +92,11 @@ def create_heatmap(df):
     plt.ylabel("Tasks Per Thread", labelpad=10)
 
     plt.tight_layout()
-    plt.savefig('results/heatmap.png', dpi=300, bbox_inches='tight')
+    plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
 
-def create_3d_surface(df):
+def create_3d_surface(df, out_path: str):
     """Create 3D performance surface with dense plateau marking"""
     fig = plt.figure(figsize=(18, 14))
     ax = fig.add_subplot(111, projection='3d')
@@ -110,10 +112,10 @@ def create_3d_surface(df):
     # Create grid for surface plot
     xi = np.linspace(X.min(), X.max(), 100)
     yi = np.linspace(Y.min(), Y.max(), 100)
-    zi = griddata((X, Y), Z, (xi[None,:], yi[:,None]), method='cubic')
+    zi = griddata((X, Y), Z, (xi[None, :], yi[:, None]), method='cubic')
 
     # Create surface
-    surf = ax.plot_surface(xi[None,:], yi[:,None], zi,
+    surf = ax.plot_surface(xi[None, :], yi[:, None], zi,
                            cmap='berlin', edgecolor='none', alpha=0.7)
 
     # Calculate performance metrics
@@ -135,7 +137,7 @@ def create_3d_surface(df):
         def calculate_local_density(points, radius=2.0):
             densities = []
             for i, point in enumerate(points):
-                distances = np.sqrt(np.sum((points - point)**2, axis=1))
+                distances = np.sqrt(np.sum((points - point) ** 2, axis=1))
                 density = np.sum(distances < radius)
                 densities.append(density)
             return np.array(densities)
@@ -183,7 +185,7 @@ def create_3d_surface(df):
             kernel = stats.gaussian_kde(plateau_points[:, :2].T)
             density_grid = np.reshape(kernel(positions).T, xx.shape)
 
-            ax.contourf(xx, yy, density_grid, zdir='z', offset=Z.min()-10,
+            ax.contourf(xx, yy, density_grid, zdir='z', offset=Z.min() - 10,
                         levels=10, alpha=0.3, cmap='hot')
 
     ax.scatter(X, Y, Z, color='black', s=30, alpha=0.4, label='Data Points')
@@ -196,8 +198,8 @@ def create_3d_surface(df):
     - Plateau Points: {plateau_mask.sum()}/{len(Z)} total
     - Dense Core Size: {len(dense_points)} points
     - Density Threshold: {density_threshold:.1f} (top 25%)
-    - Core Center: ({np.mean(dense_points[:,0]):.1f}, {np.mean(dense_points[:,1]):.1f})
-    - Performance Range in Core: {dense_points[:,2].min():.1f}-{dense_points[:,2].max():.1f}ms
+    - Core Center: ({np.mean(dense_points[:, 0]):.1f}, {np.mean(dense_points[:, 1]):.1f})
+    - Performance Range in Core: {dense_points[:, 2].min():.1f}-{dense_points[:, 2].max():.1f}ms
         """
 
     analysis_text = f"""
@@ -227,7 +229,7 @@ def create_3d_surface(df):
     ax.view_init(elev=25, azim=45)
 
     plt.tight_layout()
-    plt.savefig('results/3d_surface_dense_plateau.png', dpi=300, bbox_inches='tight')
+    plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
     if plateau_mask.sum() > 1:
@@ -236,13 +238,13 @@ def create_3d_surface(df):
             'plateau_points': plateau_mask.sum(),
             'dense_core_size': len(dense_points),
             'density_threshold': density_threshold,
-            'core_center': (np.mean(dense_points[:,0]), np.mean(dense_points[:,1])),
-            'core_performance_range': (dense_points[:,2].min(), dense_points[:,2].max())
+            'core_center': (np.mean(dense_points[:, 0]), np.mean(dense_points[:, 1])),
+            'core_performance_range': (dense_points[:, 2].min(), dense_points[:, 2].max())
         }
     return None
 
 
-def create_line_plot(df):
+def create_line_plot(df, out_path: str):
     """Create single line plot of time vs batch size"""
     plt.figure(figsize=(10, 6))
 
@@ -281,11 +283,11 @@ def create_line_plot(df):
     # Save and close
     plt.tight_layout()
     plt.subplots_adjust(right=0.85)
-    plt.savefig('results/execution_time.png', dpi=300, bbox_inches='tight')
+    plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
 
-def plot_benchmark_barchart(df):
+def plot_benchmark_barchart(df, out_path: str):
     # Calculate performance metrics
     fastest = df.loc[df['real_time_ms'].idxmin()]
     slowest = df.loc[df['real_time_ms'].idxmax()]
@@ -304,15 +306,15 @@ def plot_benchmark_barchart(df):
     # Add performance ratio annotations
     for i, (_, row) in enumerate(df.sort_values('real_time_ms').iterrows()):
         ratio = (slowest['real_time_ms'] / row['real_time_ms'])
-        ax.text(i, row['real_time_ms']/2, f'{ratio:.1f}x',
+        ax.text(i, row['real_time_ms'] / 2, f'{ratio:.1f}x',
                 ha='center', va='center', color='white', fontweight='bold')
 
     # Add value labels on top of bars
     for p in ax.patches:
-        ax.text(p.get_x() + p.get_width()/2.,       # x-position
-                p.get_height() + 0.02*max(df['real_time_ms']),  # y-position (slightly above bar)
-                f'{p.get_height():.1f} ms',        # text
-                ha='center', va='bottom',           # alignment
+        ax.text(p.get_x() + p.get_width() / 2.,  # x-position
+                p.get_height() + 0.02 * max(df['real_time_ms']),  # y-position (slightly above bar)
+                f'{p.get_height():.1f} ms',  # text
+                ha='center', va='bottom',  # alignment
                 fontsize=10)
 
     # Formatting
@@ -324,11 +326,11 @@ def plot_benchmark_barchart(df):
     plt.xticks(rotation=45, ha='right')
 
     plt.tight_layout()
-    plt.savefig('results/comparison_barchart.png', dpi=300, bbox_inches='tight')
+    plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
 
-def generate_report(df):
+def generate_report(df, out_path: str):
     """Generate comprehensive analysis report with UTF-8 encoding"""
     report = []
 
@@ -348,23 +350,29 @@ def generate_report(df):
         min_time = subset['real_time_ms'].min()
         report.append(f"Batch Size {bs}: Min time = {min_time:.1f} ms")
 
-    with open('results/performance_report.txt', 'w', encoding='utf-8') as f:
+    with open(out_path, 'w', encoding='utf-8') as f:
         f.write("\n".join(report))
 
 
 if __name__ == "__main__":
+    out_dir = 'results_i5'
+    data1 = 'result_batchsize_i5.json'
+    data2 = 'result_i5_bench_blindrotate_all.json'
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     # Load and process data
-    df = load_and_process_data('result_benchbatchsize.json')
-    df2 = load_and_process_data2('result_all.json')
+    df = load_and_process_data(data1)
+    df2 = load_and_process_data2(data2)
 
     # Generate visualizations
-    create_heatmap(df)
-    create_3d_surface(df)
-    create_line_plot(df)
-    plot_benchmark_barchart(df2)
+    create_heatmap(df, out_dir+'/heatmap.png')
+    create_3d_surface(df, out_dir+'/3d_surface_dense_plateau.png')
+    create_line_plot(df, out_dir+'/execution_time.png')
+    plot_benchmark_barchart(df2, out_dir+'/comparison_barchart.png')
 
     # Generate report
-    generate_report(df)
+    generate_report(df, out_dir+'/performance_report.txt')
 
     print("Analysis complete. Created:")
     print("- heatmap.png")

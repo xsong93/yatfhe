@@ -14,8 +14,6 @@ public:
 
     void SetUp(const benchmark::State& state) override {
         param = YatfheParameters{};
-        param.batchSize = 16;
-        param.tasksPerThread = 15;
         param.l = param.lApprox;
         initYatfhe(param);
 
@@ -72,12 +70,16 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, OURS_SINGLETHREAD)(benchmark::State& st
 }
 
 BENCHMARK_DEFINE_F(BlindRotateBenchmark, JP22_MULTITHREAD)(benchmark::State& state) {
+    param.batchSize = state.range(0);
+    param.tasksPerThread = state.range(1);
     for (auto _ : state) {
         blindRotateJP22NttMT(acc, bskMP.bskDft, sTlwe, param);
     }
 }
 
 BENCHMARK_DEFINE_F(BlindRotateBenchmark, OURS_MULTITHREAD)(benchmark::State& state) {
+    param.batchSize = state.range(0);
+    param.tasksPerThread = state.range(1);
     for (auto _ : state) {
         blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);
     }
@@ -101,11 +103,21 @@ BENCHMARK_REGISTER_F(BlindRotateBenchmark, OURS_SINGLETHREAD)
 BENCHMARK_REGISTER_F(BlindRotateBenchmark, JP22_MULTITHREAD)
     ->Unit(benchmark::kMicrosecond)
     ->Iterations(500)
+        ->ArgsProduct({
+                              benchmark::CreateDenseRange(1, 20, 1),  // batchSize
+                              benchmark::CreateDenseRange(1, 20, 1)   // tasksPerThread
+                      })
+        ->ArgNames({"batchSize", "tasksPerThread"})
     ->MeasureProcessCPUTime()
     ->UseRealTime();
 BENCHMARK_REGISTER_F(BlindRotateBenchmark, OURS_MULTITHREAD)
     ->Unit(benchmark::kMicrosecond)
     ->Iterations(500)
+        ->ArgsProduct({
+                              benchmark::CreateDenseRange(1, 20, 1),  // batchSize
+                              benchmark::CreateDenseRange(1, 20, 1)   // tasksPerThread
+                      })
+        ->ArgNames({"batchSize", "tasksPerThread"})
     ->MeasureProcessCPUTime()
     ->UseRealTime();
 
