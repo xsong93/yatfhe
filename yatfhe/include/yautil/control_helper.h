@@ -8,7 +8,7 @@
 // #define ENABLE_TIMER
 // #define PRINTER_ON
 //#define DEBUG_MODE
-#define TERNARY
+// #define TERNARY
 
 // #define BLINDROT_GROUP_NAIVE
 

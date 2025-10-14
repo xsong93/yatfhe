@@ -492,9 +492,9 @@ void blindRotateWithPreRotNtt(Trlwe& accum, const vector<Trlwe>& trlwe, const ve
         }
         const auto ai = input.a[i];
         const int j = i - 1;
-        auto keyOut = trgsws[j][0];
+        TrgswMPDft keyOut{param};
         if (ai != 0) {
-            rotateTrgswMPNtt(keyOut, ai, param);
+            rotateTrgswMPNtt(keyOut, trgsws[j][0], ai, param);
         }
         addTrgswMPNtt(keyOut, keyOut, trgsws[j][1]);
         externalProductTrgswMPNttInPlace(accum, keyOut, param.lApprox, param);
