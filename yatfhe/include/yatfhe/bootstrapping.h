@@ -135,30 +135,6 @@ struct BootstrappingKeyInternal {
             n {p.n} {}
 };
 
-struct BootstrappingKeyInternalAsym {
-    vector<vector<Trlev>> bsk {};
-    vector<vector<TrgswMPDft>> bskDft {};
-    int n {};
-
-    explicit BootstrappingKeyInternalAsym(const YatfheParameters& p) :
-            bsk(p.n/2, vector(2, Trlev(p))),
-            bskDft(p.n/2, vector(2, TrgswMPDft(p))),
-            n {p.n} {}
-};
-
-struct BootstrappingKeyInternalAsymOpt {
-    vector<vector<Trlev>> bsk {};
-    vector<Trlwe> bskLast {};
-    vector<vector<TrgswMPDft>> bskDft {};
-    int n {};
-
-    explicit BootstrappingKeyInternalAsymOpt(const YatfheParameters& p) :
-            bsk(p.n/2 - 1, vector(2, Trlev(p))),
-            bskLast(2, Trlwe{p.k, p.N}),
-            bskDft(p.n/2, vector(2, TrgswMPDft(p))),
-            n {p.n} {}
-};
-
 struct BootstrappingKeyCRT {
     std::vector<std::vector<TrgswDft24>> bskCRT {}; // n * d
     std::vector<std::vector<Trgsw8>> bsk8 {}; // n * d

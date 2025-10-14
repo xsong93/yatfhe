@@ -27,7 +27,7 @@ TEST(Ntt24Test, PowInvTest) {
 }
 
 TEST(Ntt24Test, NttIntt24Test) {
-    const int N = 512;
+    const int N = 1024;
     initGlobalParamsNtt(N);
     Ntt24Polynomial resNtt{N};
     Int8Polynomial a1{N};
@@ -38,8 +38,8 @@ TEST(Ntt24Test, NttIntt24Test) {
 //        a1.coeffs[i] = 65536;
     }
 
-    applyNtt(resNtt, a1);
-    applyIntt(resIntt, resNtt, q);
+    COUNT_TIME("applyNtt", applyNtt(resNtt, a1);)
+    COUNT_TIME("applyIntt", applyIntt(resIntt, resNtt, q);)
     printArray(resNtt.coeffs, "resNtt");
     printArray(a1.coeffs, "orig");
     printArray(resIntt.coeffs, "intt");

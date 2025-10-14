@@ -142,45 +142,43 @@ namespace NttNative24 {
     void DIT_NR24(Ntt24Polynomial &RES, const Ntt24Polynomial &IN) {
         auto &res = RES.coeffs;
         const auto &in = IN.coeffs;
-        const auto &N = IN.N;
+        const auto N = IN.N;
         res = in;
 
         const auto &tw = NWC_TW.tw_factor;
         const auto lvl = calLogBase2(N);
-        auto gap = 0;
-        auto block = 0;
-        auto block_size = 0;
-        auto tw_index = 0;
-        Ntt24 temp_add, temp_sub, temp_mult;
-        for (auto i = 0; i < lvl; i++) {
-            block = N >> (lvl - i);
-            block_size = N >> i;
-            gap = block_size >> 1;
-            for (auto j = 0; j < block; j++) { //debug:tw_index overflow
-                tw_index = j;
-                for (auto k = 0; k < gap; k++) {
-                    temp_mult = modMULT(res[j * block_size + k + gap], tw[i][tw_index]);
-                    temp_add = modADD(res[j * block_size + k], temp_mult);
-                    temp_sub = modSUB(res[j * block_size + k], temp_mult);
 
-                    res[j * block_size + k] = temp_add;
-                    res[j * block_size + k + gap] = temp_sub;
+        for (auto i = 0; i < lvl; i++) {
+            const auto block = N >> (lvl - i);
+            const auto block_size = N >> i;
+            const auto gap = block_size >> 1;
+
+            for (auto j = 0; j < block; j++) {
+                const auto tw_index = j;
+                for (auto k = 0; k < gap; k++) {
+                    const auto idx1 = j * block_size + k;
+                    const auto idx2 = idx1 + gap;
+
+                    const auto temp_mult = modMULT(res[idx2], tw[i][tw_index]);
+                    const auto temp_add = modADD(res[idx1], temp_mult);
+                    const auto temp_sub = modSUB(res[idx1], temp_mult);
+
+                    res[idx1] = temp_add;
+                    res[idx2] = temp_sub;
                 }
             }
         }
     }
 
     void applyNtt(Ntt24Polynomial &RES, const Int8Polynomial &IN) {
-        auto N = IN.N;
+        const auto N = IN.N;
         Ntt24Polynomial format_input{N};
+
         for (int i = 0; i < N; i++) {
-            auto &valIn = IN.coeffs[i];
-            if (valIn >= 0) {
-                format_input.coeffs[i] = static_cast<Ntt24>(valIn);
-            } else {
-                format_input.coeffs[i] = static_cast<Ntt24>(valIn + MOD);
-            }
+            const auto valIn = IN.coeffs[i];
+            format_input.coeffs[i] = static_cast<Ntt24>((valIn + MOD) % MOD);
         }
+
         DIT_NR24(RES, format_input);
     }
 
@@ -188,41 +186,33 @@ namespace NttNative24 {
         auto &res = RES.coeffs;
         const auto &in = IN.coeffs;
         const auto &tw = NWC_ITW.tw_factor;
-        const auto &N = IN.N;
+        const auto N = IN.N;
         const auto lvl = calLogBase2(N);
-        auto gap = 0;
-        auto block = 0;
-        auto block_size = 0;
-        auto tw_index = 0;
-//    Ntt24 flag_a = 0, flag_b = 0, flag_tw = 0;
         res = in;
-        Ntt24 temp_add, temp_sub, temp_mult;
-//    int pos_a, pos_b;
+
         for (auto i = 0; i < lvl; i++) {
-            block = N >> (i + 1);
-            block_size = 1 << (i + 1);
-            gap = 1 << i;
-//        pos_a = 0;
-//        pos_b = 0;
-            for (auto j = 0; j < block; j++) { //debug:tw_index overflow
-                tw_index = j;
+            const auto block = N >> (i + 1);
+            const auto block_size = 1 << (i + 1);
+            const auto gap = 1 << i;
+
+            for (auto j = 0; j < block; j++) {
+                const auto tw_index = j;
                 for (auto k = 0; k < gap; k++) {
-//                flag_a = res[j * block_size + k];
-//                flag_b = res[j * block_size + k + gap];
-//                flag_tw = tw[i][tw_index];
-//                pos_a = j * block_size + k;
-//                pos_b = j * block_size + k + gap;
-                    temp_add = modADDscale(res[j * block_size + k], res[j * block_size + k + gap]);
-                    temp_sub = modSUBscale(res[j * block_size + k], res[j * block_size + k + gap]);
-                    temp_mult = modMULT(temp_sub, tw[i][tw_index]);
-                    res[j * block_size + k] = temp_add;
-                    res[j * block_size + k + gap] = temp_mult;
+                    const auto idx1 = j * block_size + k;
+                    const auto idx2 = idx1 + gap;
+
+                    const auto temp_add = modADDscale(res[idx1], res[idx2]);
+                    const auto temp_sub = modSUBscale(res[idx1], res[idx2]);
+                    const auto temp_mult = modMULT(temp_sub, tw[i][tw_index]);
+
+                    res[idx1] = temp_add;
+                    res[idx2] = temp_mult;
                 }
             }
         }
     }
 
-    void applyIntt(Int8Polynomial &out, const Ntt24Polynomial &in, int q) {
+    void applyIntt(Int8Polynomial &out, const Ntt24Polynomial &in, const int q) {
         auto N = in.N;
         Ntt24Polynomial res(N);
         DIF_RN24(res, in);
@@ -237,20 +227,8 @@ namespace NttNative24 {
             } else {
                 temp_ntt = static_cast<int32_t>(res.coeffs[i]);
             }
-//        temp_poly = static_cast<uint8_t>(temp_ntt & NTT_MASK);
-//        if (temp_poly >= POLY_MAX8) {
-//            RES.coeffs[i] = static_cast<int8_t>(temp_poly - (POLY_MAX8 << 1));
-//        } else {
-//            RES.coeffs[i] = static_cast<int8_t>(temp_poly);
-//        }
             temp_poly = temp_ntt % q;
-            if (temp_poly < loHalf) {
-                out.coeffs[i] = static_cast<int8_t>(temp_poly + q);
-            } else if (temp_poly > hiHalf) {
-                out.coeffs[i] = static_cast<int8_t>(temp_poly - q);
-            } else {
-                out.coeffs[i] = static_cast<int8_t>(temp_poly);
-            }
+            out.coeffs[i] = static_cast<int8_t>(temp_poly + ((temp_poly < loHalf) ? q : 0) - ((temp_poly > hiHalf) ? q : 0));
         }
     }
 
