@@ -550,6 +550,7 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE_NTT) {
 
 TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     YatfheParameters param {};
+    param.torusBits = 32;
     initYatfhe(param);
     // key gen
     TrgswKey trgswKey{param};
