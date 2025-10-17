@@ -608,7 +608,7 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     TrgswMP t1{param};
     t1.cPrime = in1.cPrime;
     for (auto l = 0; l < param.lApprox; l++) {
-        switchTrlevToTrgswNtt(tmpMp.c[l], in1.cPrime[l], s2pDft, param);
+        COUNT_TIME("switchTrlevToTrgswNtt", switchTrlevToTrgswNtt(tmpMp.c[l], in1.cPrime[l], s2pDft, param);)
         switchTrlevToTrgsw(t1.c[l], in1.cPrime[l], s2p, param);
     }
 
@@ -831,7 +831,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
 //    param.n = 805;
 //    param.N = 512;
 //    param.radixBits = 10;
-    param.l = 4;
+    param.l = 2;
     // param.lweStdDev = 0;
     // param.rlweStdDev = 0;
 //    param.k = 3;
@@ -845,13 +845,13 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
         genTrlweKey(trlweKey);
 
         // trgsw enc
-        int loop = 1;
+        int loop = 6;
         std::vector<TrgswMP> trgsws(loop, TrgswMP{param});
         Integer mu = 1;
         for (size_t i = 0; i < loop; i++) {
-            Integer mui = 3;
-            mu *= mui;
-            encryptLowTrgswMP(trgsws[i], mui, trgswKey, param);
+//            Integer mui = 3;
+//            mu *= mui;
+            encryptLowTrgswMP(trgsws[i], mu, trgswKey, param);
         }
         cout << "mu: " << mu << endl;
         // trlwe enc
@@ -879,9 +879,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
         // trgsw mult
         DecomposedTrlwe tmp{param};
         for (size_t i = 0; i < loop; i++) {
-            tmp = DecomposedTrlwe{param};
-            externalProductTrgswMPDecomp(tmp, trgsws[i], outD, param);
-            swap(outD, tmp);
+            externalProductTrgswMPDecomp(outD, trgsws[i], outD, param);
         }
 //        COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProductDecomp(tmp, trgswMP, in2D, param);)
 //        COUNT_TIME("trgswMPExternalProduct", trgswMPExternalProductDecomp(outD, trgswMP2, tmp, param);)
@@ -894,7 +892,7 @@ TEST(RgswTest, RGSWMP_MULT_NAIVE_DECOMP) {
         symDecTrlweToInt(decAftP, out, trlweKey, param.torusBase);
         printArray(decAftP.coeffs, "decAftP");
         printArray(multPlain.coeffs, "Plain mult");
-        ASSERT_NE(multPlain.coeffs, decAftP.coeffs);
+        ASSERT_EQ(multPlain.coeffs, decAftP.coeffs);
     }
     printBanner("RGSWMP_MULT_NAIVE_DECOMP");
 }

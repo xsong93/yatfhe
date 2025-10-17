@@ -23,12 +23,10 @@ void encryptTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
         muPoly.coeffs[pos] = decomposedMu;
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
-        for (size_t k = 0; k < param.k; k++) {
-            symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
-            for (size_t i = 0; i < param.k; i++) {
-                if (i == k) {
-                    addTorusPolynomial(trgswMP.c[lvl][k].a[i], trgswMP.c[lvl][k].a[i], muPoly);
-                }
+        if (!trgswMP.isHalf) {
+            for (size_t k = 0; k < param.k; k++) {
+                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+                addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
             }
         }
     }
@@ -41,9 +39,11 @@ void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const Trg
             muPoly.coeffs[j] = mus[j] << (param.torusBits - (lvl + 1) * param.radixBits);
         }
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
-        for (auto k = 0; k < param.k; k++) {
-            symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
-            addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
+        if (!trgswMP.isHalf) {
+            for (auto k = 0; k < param.k; k++) {
+                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+                addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
+            }
         }
     }
 }
@@ -56,10 +56,12 @@ void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey&
         muPoly.coeffs[pos] = decomposedMu;
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
         applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
-        for (size_t k = 0; k < param.k; k++) {
-            symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
-            addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
-            applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+        if (!trgswMPDft.isHalf) {
+            for (size_t k = 0; k < param.k; k++) {
+                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+                addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
+                applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+            }
         }
     }
 }
@@ -72,10 +74,12 @@ void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, const Integer mu, const
         muPoly.coeffs[pos] = decomposedMu;
         symEncTrlweMultiSampleFixedNoise(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs, noise);
         applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
-        for (size_t k = 0; k < param.k; k++) {
-            symEncTrlweSingleSampleFixedNoise(trgswMP.c[lvl][k], trgswKey.trlweKey, 0, noise);
-            addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
-            applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+        if (!trgswMPDft.isHalf) {
+            for (size_t k = 0; k < param.k; k++) {
+                symEncTrlweSingleSampleFixedNoise(trgswMP.c[lvl][k], trgswKey.trlweKey, 0, noise);
+                addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
+                applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+            }
         }
     }
 }
@@ -89,10 +93,12 @@ void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, 
         }
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
         applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
-        for (auto k = 0; k < param.k; k++) {
-            symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
-            addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
-            applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+        if (!trgswMPDft.isHalf) {
+            for (auto k = 0; k < param.k; k++) {
+                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+                addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
+                applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+            }
         }
     }
 }

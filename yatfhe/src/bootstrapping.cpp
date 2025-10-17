@@ -105,6 +105,47 @@ void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const Tl
     }
 }
 
+void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param) {
+    {
+#ifdef TERNARY
+        if (tlweKey.s[0] == 0) {
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+            symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0);
+        } else if (tlweKey.s[0] == 1) {
+            symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
+            symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0);
+        } else {
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+            symEncTrlweMultiSample(bsk.bskFirst[1], trgswKey.trlweKey, v.coeffs);
+        }
+#else
+        if (tlweKey.s[0] == 1) {
+            symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
+        } else {
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+        }
+#endif
+    }
+
+    for (auto i = 0; i < bsk.n - 1; i++) {
+#ifdef TERNARY
+        const auto si = tlweKey.s[i+1];
+        if(si == 0) {
+            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+        } else if (si == 1) {
+            encryptTrgswMPNtt(bsk.bskDft[i][0], 1, trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+        } else {
+            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][1], 1, trgswKey, 0, param);
+        }
+#else
+        encryptTrgswMPNtt(bsk.bskDft[i][0], tlweKey.s[i+1], trgswKey, 0, param);
+#endif
+    }
+}
+
 void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const Torus noise, const YatfheParameters& param) {
     for (auto i = 0; i < bsk.n; i++) {
 #ifdef TERNARY

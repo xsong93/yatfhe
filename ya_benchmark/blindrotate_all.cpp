@@ -36,6 +36,9 @@ int main(int argc, char **argv) {
     BootstrappingKeyMPPreRot bskPre{param};
     genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
 
+    BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
+    genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);
+
     // data gen
     Integer pt = 3;
     cout << "decPre: " << pt << endl;
@@ -50,12 +53,17 @@ int main(int argc, char **argv) {
     Trlwe out{param.k, param.N};
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
+    vector<TrgswMPDft> helper(param.n-1, TrgswMPDft{param});
+    TrgswMPDft gv{param};
+    encryptTrgswMPMultiNtt(gv, v.coeffs, trgswKey, param);
 
     // rot
     COUNT_TIME("blindRotateJP22Ntt single thread", blindRotateJP22Ntt(acc, bskMP.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateWithPreRotNtt single thread", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateJP22NttMT multiple threads", blindRotateJP22NttMT(acc, bskMP.bskDft, sTlwe, param);)
-    COUNT_TIME("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+//    COUNT_TIME("blindRotateWithPreRotNtt single thread", blindRotateWithPreRotNtt(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+//    COUNT_TIME("blindRotateJP22NttMT multiple threads", blindRotateJP22NttMT(acc, bskMP.bskDft, sTlwe, param);)
+//    COUNT_TIME("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
+    COUNT_TIME("blindRotateOptNtt", blindRotateOptNtt(out, bskMPOpt.bskFirst, bskMPOpt.bskDft, sTlwe, v, param);)
+
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);

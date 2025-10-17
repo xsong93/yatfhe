@@ -49,6 +49,7 @@ struct BootstrappingKeyMP {
     vector<vector<TrgswMP>> bsk {};
     int n {};
     int group {};
+    bool isHalf{false};
 
     explicit BootstrappingKeyMP() = default;
 
@@ -89,6 +90,55 @@ struct BootstrappingKeyMP {
         }
         bsk = vector(n, vector(1, TrgswMP(p, level)));
         bskDft = vector(n, vector(1, TrgswMPDft(p, level)));
+#endif
+    }
+    BootstrappingKeyMP(const YatfheParameters& p, const int level, bool half) : group(p.group), isHalf(half) {
+#ifdef TERNARY
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bsk = vector(n, vector(2, TrgswMP(p, level)));
+        bskDft = vector(n, vector(2, TrgswMPDft(p, level)));
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bsk = vector(n, vector(1, TrgswMP(p, level, isHalf)));
+        bskDft = vector(n, vector(1, TrgswMPDft(p, level, isHalf)));
+#endif
+    }
+};
+
+struct BootstrappingKeyMPOpt {
+    vector<Trlwe> bskFirst{};
+    vector<vector<TrgswMPDft>> bskDft {};
+    int n {};
+    int group {};
+    bool isHalf{false};
+
+    explicit BootstrappingKeyMPOpt() = default;
+
+    BootstrappingKeyMPOpt(const YatfheParameters& p, const int level, bool half) : group(p.group), isHalf(half) {
+#ifdef TERNARY
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(2, Trlwe{p.k, p.N});
+        bskDft = vector(n, vector(2, TrgswMPDft(p, level, isHalf)));
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(1, Trlwe{p.k, p.N});
+        bskDft = vector(n, vector(1, TrgswMPDft(p, level, isHalf)));
 #endif
     }
 };
@@ -158,6 +208,8 @@ void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKe
 void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
+
+void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param);
 
 void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, Torus noise, const YatfheParameters& param);
 

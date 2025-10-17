@@ -528,6 +528,54 @@ void blindRotateWithPreRotNttMT(Trlwe& accum, const vector<Trlwe>& trlwe, const 
 #endif
 }
 
+void blindRotateOptNtt(Trlwe& accum, const vector<Trlwe>& bskFirst,  const vector<vector<TrgswMPDft>>& bskDft,
+                       const ScaledTlwe& input, const TorusPolynomial& v, const YatfheParameters& param) {
+    const auto level = bskDft[0][0].l;
+    const auto n = param.n;
+
+#ifdef TERNARY
+    {
+        Trlwe tmp{param}, tmp2{param};
+        rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
+        rotateTrlweMinusOne(tmp2, bskFirst[1], -input.a[0]);
+        addTrlwe(tmp, tmp, tmp2);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
+    }
+    for (auto i = 0; i < n-1; i++) {
+        const int j = i + 1;
+        if (input.a[j] == 0) {
+            continue;
+        }
+        Trlwe tmp{param};
+        TrgswMPDft key0{param};
+        TrgswMPDft key1{param};
+        rotateTrgswMPMinusOneNtt(key0, bskDft[i][0], input.a[j], param);
+        rotateTrgswMPMinusOneNtt(key1, bskDft[i][1], -input.a[j], param);
+        addTrgswMPNtt(key0, key0, key1);
+
+        externalProductTrgswMPNtt(tmp, key0, accum, level, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#else
+    {
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
+    }
+    for (auto i = 0; i < n-1; i++) {
+        if (input.a[i+1] == 0) {
+            continue;
+        }
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, accum, input.a[i+1]);
+        externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], level, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#endif
+}
+
 void blindRotateJP22Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
     const auto level = bskDft[0][0].l;
 #ifdef TERNARY

@@ -16,6 +16,7 @@ struct TrgswMP {
     std::vector<Trlwe> cPrime;
     int l;
     int k;
+    bool isHalf{false};
 
     explicit TrgswMP(const YatfheParameters& p) :
             c(p.l, std::vector<Trlwe>(p.k, Trlwe(p.k, p.N))),
@@ -28,6 +29,15 @@ struct TrgswMP {
             cPrime(l, Trlwe(p.k, p.N)),
             l(l),
             k(p.k) {};
+    TrgswMP(const YatfheParameters& p, const int l, bool half) :
+            cPrime(l, Trlwe(p.k, p.N)),
+            l(l),
+            k(p.k),
+            isHalf(half){
+        if (!isHalf) {
+            c = std::vector(l, std::vector<Trlwe>(p.k, Trlwe(p.k, p.N)));
+        }
+    }
 };
 
 struct TrgswMPDft {
@@ -35,6 +45,7 @@ struct TrgswMPDft {
     std::vector<TrlweDft> cPrime;
     int l;
     int k;
+    bool isHalf{false};
 
     explicit TrgswMPDft(const YatfheParameters& p) :
             c(p.l, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N))),
@@ -47,6 +58,15 @@ struct TrgswMPDft {
             cPrime(level, TrlweDft(p.k, p.N)),
             l(level),
             k(p.k) {}
+    TrgswMPDft(const YatfheParameters& p, const int level, bool half) :
+            cPrime(level, TrlweDft(p.k, p.N)),
+            l(level),
+            k(p.k),
+            isHalf(half) {
+        if (!isHalf) {
+            c = std::vector(level, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N)));
+        }
+    }
 };
 
 struct Trgsw {
