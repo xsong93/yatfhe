@@ -534,6 +534,8 @@ void blindRotateOptNtt(Trlwe& accum, const vector<Trlwe>& bskFirst,  const vecto
     const auto n = param.n;
 
 #ifdef TERNARY
+    // handle first RLwe key component
+    // R(v) + (X^a0 - 1)R(v*s00) + (X^{-a0} - 1)R(v*s01)
     {
         Trlwe tmp{param}, tmp2{param};
         rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
@@ -542,6 +544,8 @@ void blindRotateOptNtt(Trlwe& accum, const vector<Trlwe>& bskFirst,  const vecto
         addTorusPolynomial(tmp.b, tmp.b, v);
         rotateTrlwe(accum, tmp, -input.b);
     }
+
+    // accumulate on the remaining n-1 key components
     for (auto i = 0; i < n-1; i++) {
         const int j = i + 1;
         if (input.a[j] == 0) {
@@ -558,12 +562,80 @@ void blindRotateOptNtt(Trlwe& accum, const vector<Trlwe>& bskFirst,  const vecto
         accumulateTrlwe(accum, tmp);
     }
 #else
+    // handle first Rlwe key component
+    // R(v) + (X^a0 - 1)R(v*s0)
     {
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
         addTorusPolynomial(tmp.b, tmp.b, v);
         rotateTrlwe(accum, tmp, -input.b);
     }
+
+    // accumulate on the remaining n-1 key components
+    for (auto i = 0; i < n-1; i++) {
+        if (input.a[i+1] == 0) {
+            continue;
+        }
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, accum, input.a[i+1]);
+        externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], level, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#endif
+}
+
+//todo
+//lazy init
+void blindRotateLazyNtt(Trlwe& accum,  vector<vector<TrgswMPDft>>& bskDft, const vector<Trlwe>& bskFirst,  const vector<vector<TrgswMP>>& bsk,
+                        const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2, const YatfheParameters& param) {
+    const auto level = bsk[0][0].l;
+    const auto n = param.n;
+
+#ifdef TERNARY
+    // handle first Rlwe key component
+    // R(v) + (X^a0 - 1)R(v*s00) + (X^{-a0} - 1)R(v*s01)
+    {
+        Trlwe tmp{param}, tmp2{param};
+        rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
+        rotateTrlweMinusOne(tmp2, bskFirst[1], -input.a[0]);
+        addTrlwe(tmp, tmp, tmp2);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
+    }
+
+    // accumulate on the remaining n-1 key components
+    for (auto i = 0; i < n-1; i++) {
+        const int j = i + 1;
+        if (input.a[j] == 0) {
+            continue;
+        }
+        Trlwe tmp{param};
+        TrgswMPDft key0{param};
+        TrgswMPDft key1{param};
+        rotateTrgswMPMinusOneNtt(key0, bskDft[i][0], input.a[j], param);
+        rotateTrgswMPMinusOneNtt(key1, bskDft[i][1], -input.a[j], param);
+        addTrgswMPNtt(key0, key0, key1);
+
+        externalProductTrgswMPNtt(tmp, key0, accum, level, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#else
+    // handle first Rlwe key component
+    // R(v) + (X^a0 - 1)R(v*s0)
+    {
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
+    }
+
+    for (auto i = 0; i < n-1; i++) {
+        for (auto l = 0; l < level; l++) {
+            // switchTrlevToTrgswNtt(bskDft[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
+        }
+    }
+
+    // accumulate on the remaining n-1 key components
     for (auto i = 0; i < n-1; i++) {
         if (input.a[i+1] == 0) {
             continue;

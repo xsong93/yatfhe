@@ -573,7 +573,7 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     TrlevDft s2pDft(param);
     Trlwe s2pRLWE{param.k, param.N};
     encTrlevSingleSample(s2p, trlweKey, 0, param); // (a-s, as+e)
-    for (auto i = 0; i < param.l; i++) {
+    for (auto i = 0; i < param.l; i++) {  // must use full decomp length
         NttHexl::applyNtt(s2pDft.trlweDfts[i].b, s2p.trlwes[i].b);
         for (auto j = 0; j < param.k; j++) {
             TorusPolynomial sS{param.N};
@@ -592,7 +592,7 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
 
     // trgsw enc
     TrgswMPDft in1Dft{param};
-    TrgswMP in1{param};
+    TrgswMP in1{param, param.lApprox, true};
     Integer mu1 = 1;
     encryptTrgswMP(in1, mu1, trgswKey, 0, param);
     encryptTrgswMPNtt(in1Dft, mu1, trgswKey, 0, param);
@@ -603,9 +603,9 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     decryptTrgswMPNtt(dec, in1Dft, param, trgswKey, true);
     printArray(dec.coeffs, "-mu1*s");
 
-    TrgswMP tmpMp{param};
+    TrgswMP tmpMp{param, param.lApprox};
     tmpMp.cPrime = in1.cPrime;
-    TrgswMP t1{param};
+    TrgswMP t1{param, param.lApprox};
     t1.cPrime = in1.cPrime;
     for (auto l = 0; l < param.lApprox; l++) {
         COUNT_TIME("switchTrlevToTrgswNtt", switchTrlevToTrgswNtt(tmpMp.c[l], in1.cPrime[l], s2pDft, param);)

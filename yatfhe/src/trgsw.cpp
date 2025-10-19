@@ -909,7 +909,7 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
 
 void switchTrlevToTrgswNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l;
+    const auto L = param.l; // must use full decomp length
     const auto N = param.N;
     auto& cPrimeA = cPrime.a;
     auto& cPrimeB = cPrime.b;
@@ -954,7 +954,7 @@ void switchTrlevToTrgswNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft
 
 void switchTrlevToTrgsw(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l;
+    const auto L = param.l; // must use full decomp length
     const auto N = param.N;
     auto& cPrimeA = cPrime.a;
     auto& cPrimeB = cPrime.b;
