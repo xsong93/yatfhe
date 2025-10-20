@@ -50,12 +50,21 @@ namespace NttHexl {
         return nttRotMinusOneInverseMap;
     }
 
+    std::unordered_map<int32_t, NttPolynomial> &getNttGadgetRecompMap() {
+        static std::unordered_map<int32_t, NttPolynomial> nttGadgetRecompMap;
+        return nttGadgetRecompMap;
+    }
+
     NttPolynomial &getNttRoterPoly(const int32_t rTrue, const int32_t isWrap) {
         return isWrap == 1 ? getNttRotMap().find(rTrue)->second : getNttRotInverseMap().find(rTrue)->second;
     }
 
     NttPolynomial &getNttRoterPolyMinusOne(const int32_t rTrue, const int32_t isWrap) {
         return isWrap == 1 ? getNttRotMinusOneMap().find(rTrue)->second : getNttRotMinusOneInverseMap().find(rTrue)->second;
+    }
+
+    NttPolynomial &getNttGadgetRecomper(const int32_t currL) {
+        return getNttGadgetRecompMap().find(currL)->second;
     }
 
     void initNttRotMap(int32_t degree) {

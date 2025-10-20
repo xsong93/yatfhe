@@ -57,7 +57,7 @@ int main() {
     cout << longModP(p.taoU[2] * p.taoUInv[2], p.qd[2]) << endl;
     cout << longModP(p.taoU[3] * p.taoUInv[3], p.qd[3]) << endl;
 
-/*    std::vector<std::vector<std::vector<long>>> iii(1000, std::vector<std::vector<long>>(1000, std::vector<long>(1000, 0)));
+    std::vector<std::vector<std::vector<long>>> iii(1000, std::vector<std::vector<long>>(1000, std::vector<long>(1000, 0)));
 
     COUNT_TIME("n3",
                for (size_t i = 0; i < 1000; i++) {
@@ -94,7 +94,7 @@ int main() {
                            iii[i][j][k] = i * j * k;
                        }
                    }
-               })*/
+               })
 
 
 }

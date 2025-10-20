@@ -23,6 +23,8 @@ namespace NttHexl {
 
     NttPolynomial &getNttRoterPolyMinusOne(int32_t rTrue, int32_t isWrap);
 
+    NttPolynomial &getNttGadgetRecomper(const int32_t currL);
+
     void initNttRotMap(int32_t degree);
 
     void initNttRotMinusOneMap(int32_t degree);

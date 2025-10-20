@@ -608,8 +608,9 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     TrgswMP t1{param, param.lApprox};
     t1.cPrime = in1.cPrime;
     for (auto l = 0; l < param.lApprox; l++) {
-        COUNT_TIME("switchTrlevToTrgswNtt", switchTrlevToTrgswNtt(tmpMp.c[l], in1.cPrime[l], s2pDft, param);)
-        switchTrlevToTrgsw(t1.c[l], in1.cPrime[l], s2p, param);
+        COUNT_TIME("switchTrlweToSecretEmbeddingNtt",
+                   switchTrlweToSecretEmbeddingNtt(tmpMp.c[l], in1.cPrime[l], s2pDft, param);)
+        COUNT_TIME("switchTrlweToSecretEmbedding", switchTrlweToSecretEmbedding(t1.c[l], in1.cPrime[l], s2p, param);)
     }
 
     Trlwe trlwe{param.k, param.N};

@@ -895,7 +895,7 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
             Trlwe tmp{param.k, param.N};
             vector tmpC(param.k, Trlwe{param.k, param.N});
             externalProductTrgswMPNtt(tmp, input1, in2L, param.l, param);
-            switchTrlevToTrgswNtt(tmpC, tmp, sSquare, param);
+            switchTrlweToSecretEmbeddingNtt(tmpC, tmp, sSquare, param);
             applyNttForAB(cPrimeL, tmp);
             for (auto i = 0; i < param.k; i++) {
                 applyNttForAB(cL[i], tmpC[i]);
@@ -907,7 +907,34 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
     }
 }
 
-void switchTrlevToTrgswNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
+void switchTrlweToSecretEmbeddingPreCompNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<NttPolynomial>>& decompADft, const TrlevDft& sSquare, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l; // must use full decomp length
+
+    for (auto l = 0; l < L; l++) {
+        auto& s2 = sSquare.trlweDfts[l];
+        auto& decompL = decompADft[l];
+        for (auto k1 = 0; k1 < K; k1++) {
+            auto& cA = cDft[k1].a;
+            auto& cB = cDft[k1].b;
+            auto& sA = s2.a;
+            auto& aDft = decompL[k1];
+            calModularInnerProductNtt(cPrimeDft.a[k1], aDft, getNttGadgetRecomper(l));
+            for (auto k2 = 0; k2 < K; k2++) {
+                calModularInnerProductNtt(cA[k2], aDft, sA[k2]);
+            }
+            calModularInnerProductNtt(cB, aDft, s2.b);
+        }
+    }
+
+    for (auto k1 = 0; k1 < K; k1++) {
+        for (auto k2 = 0; k2 < K; k2++) {
+            addNttPolynomial(cDft[k1].a[k2], cDft[k1].a[k2], cPrimeDft.b);
+        }
+    }
+}
+
+void switchTrlweToSecretEmbeddingNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l; // must use full decomp length
     const auto N = param.N;
@@ -952,7 +979,7 @@ void switchTrlevToTrgswNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft
     }
 }
 
-void switchTrlevToTrgsw(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param) {
+void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l; // must use full decomp length
     const auto N = param.N;

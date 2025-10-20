@@ -631,7 +631,7 @@ void blindRotateLazyNtt(Trlwe& accum,  vector<vector<TrgswMPDft>>& bskDft, const
 
     for (auto i = 0; i < n-1; i++) {
         for (auto l = 0; l < level; l++) {
-            // switchTrlevToTrgswNtt(bskDft[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
+//             switchTrlevToTrgswNtt(bskDft[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
         }
     }
 

@@ -337,8 +337,10 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 
 void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, int level, const YatfheParameters& param);
 
-void switchTrlevToTrgswNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
+void switchTrlweToSecretEmbeddingPreCompNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<NttPolynomial>>& decompADft, const TrlevDft& sSquare, const YatfheParameters& param);
 
-void switchTrlevToTrgsw(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
+void switchTrlweToSecretEmbeddingNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
+
+void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H
