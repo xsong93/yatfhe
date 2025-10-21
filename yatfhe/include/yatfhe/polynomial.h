@@ -52,6 +52,7 @@ struct Int8PolynomialD {
 };
 
 using IntPolynomial = TorusPolynomial;
+using DecompPolynomial = IntPolynomial;
 using BinPolynomial = IntPolynomial;
 
 struct NttPolynomial {

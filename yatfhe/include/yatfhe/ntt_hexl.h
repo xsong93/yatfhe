@@ -23,7 +23,7 @@ namespace NttHexl {
 
     NttPolynomial &getNttRoterPolyMinusOne(int32_t rTrue, int32_t isWrap);
 
-    NttPolynomial &getNttGadgetRecomper(const int32_t currL);
+    NttPolynomial &getNttGadgetRecomper(int32_t currL);
 
     void initNttRotMap(int32_t degree);
 
@@ -31,7 +31,19 @@ namespace NttHexl {
 
     void initNttGadgetRecompMap(int32_t bitLength, int32_t radixBit, int32_t level, int32_t degree);
 
-    void applyNtt(NttPolynomial &out, const TorusPolynomial &in);
+    template<typename Polynomial>
+    void applyNtt(NttPolynomial &out, const Polynomial &in) {
+        auto N = in.N;
+        auto q = getNttHexl().GetModulus();
+        for (size_t i = 0; i < N; i++) {
+            if (in.coeffs[i] >= 0) {
+                out.coeffs[i] = Ntt64(in.coeffs[i]);
+            } else {
+                out.coeffs[i] = Ntt64(in.coeffs[i] + q);
+            }
+        }
+        getNttHexl().ComputeForward(out.coeffs.data(), out.coeffs.data(), 1, 1);
+    }
 
     void applyIntt(TorusPolynomial &out, const NttPolynomial &in);
 

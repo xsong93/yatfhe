@@ -339,7 +339,10 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
 
 void switchTrlweToSecretEmbeddingPreCompNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<NttPolynomial>>& decompADft, const TrlevDft& sSquare, const YatfheParameters& param);
 
-void switchTrlweToSecretEmbeddingNtt(vector<Trlwe>& c, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
+void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPrimeDft, const TrlevDft& sSquare, const YatfheParameters& param);
+
+void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,
+                                        const TrlevDft& sSquare, const YatfheParameters& param);
 
 void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
 

@@ -586,7 +586,7 @@ void blindRotateOptNtt(Trlwe& accum, const vector<Trlwe>& bskFirst,  const vecto
 
 //todo
 //lazy init
-void blindRotateLazyNtt(Trlwe& accum,  vector<vector<TrgswMPDft>>& bskDft, const vector<Trlwe>& bskFirst,  const vector<vector<TrgswMP>>& bsk,
+void blindRotateLazyNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk, bool& isInitialize,
                         const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2, const YatfheParameters& param) {
     const auto level = bsk[0][0].l;
     const auto n = param.n;
@@ -631,7 +631,8 @@ void blindRotateLazyNtt(Trlwe& accum,  vector<vector<TrgswMPDft>>& bskDft, const
 
     for (auto i = 0; i < n-1; i++) {
         for (auto l = 0; l < level; l++) {
-//             switchTrlevToTrgswNtt(bskDft[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
+            bsk[i][0].c = vector(level, vector(param.k, TrlweDft(param.k, param.N)));
+            switchTrlweToSecretEmbeddingNtt(bsk[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
         }
     }
 
@@ -642,7 +643,7 @@ void blindRotateLazyNtt(Trlwe& accum,  vector<vector<TrgswMPDft>>& bskDft, const
         }
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, accum, input.a[i+1]);
-        externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], level, param);
+        externalProductTrgswMPNttInPlace(tmp, bsk[i][0], level, param);
         accumulateTrlwe(accum, tmp);
     }
 #endif

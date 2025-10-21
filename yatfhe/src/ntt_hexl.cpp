@@ -114,19 +114,6 @@ namespace NttHexl {
         }
     }
 
-    void applyNtt(NttPolynomial &out, const TorusPolynomial &in) {
-        auto N = in.N;
-        auto q = getNttHexl().GetModulus();
-        for (size_t i = 0; i < N; i++) {
-            if (in.coeffs[i] >= 0) {
-                out.coeffs[i] = Ntt64(in.coeffs[i]);
-            } else {
-                out.coeffs[i] = Ntt64(in.coeffs[i] + q);
-            }
-        }
-        getNttHexl().ComputeForward(out.coeffs.data(), out.coeffs.data(), 1, 1);
-    }
-
     void applyIntt(TorusPolynomial &out, const NttPolynomial &in) {
         auto N = in.N;
         auto q = getNttHexl().GetModulus();

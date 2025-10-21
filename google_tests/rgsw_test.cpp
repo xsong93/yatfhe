@@ -463,8 +463,8 @@ TEST(RgswTest, RGSWMP_INTERMULT_NAIVE) {
         printArray(t1.coeffs, "trgswMP1");
         decryptTrgswMP(t1, trgswMP2, param, trgswKey, false);
         printArray(t1.coeffs, "trgswMP2");
-        for (auto i = 0; i < 8; i++) {
-            COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMP(trgswMP1, trgswMP1, trgswMP2, param.lApprox, param);)
+        for (auto i = 0; i < 1; i++) {
+            COUNT_TIME("trgswMPInternalProduct", internalProductTrgswMP(trgswMP1, trgswMP1, trgswMP2, param.l, param);)
         }
         COUNT_TIME("trgswMPExternalProduct", externalProductTrgswMP(out, trgswMP1, in2, param.lApprox, param);)
 
@@ -591,7 +591,7 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     printArray(t.coeffs, "s2dec");
 
     // trgsw enc
-    TrgswMPDft in1Dft{param};
+    TrgswMPDft in1Dft{param, param.lApprox};
     TrgswMP in1{param, param.lApprox, true};
     Integer mu1 = 1;
     encryptTrgswMP(in1, mu1, trgswKey, 0, param);
@@ -603,19 +603,63 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     decryptTrgswMPNtt(dec, in1Dft, param, trgswKey, true);
     printArray(dec.coeffs, "-mu1*s");
 
-    TrgswMP tmpMp{param, param.lApprox};
-    tmpMp.cPrime = in1.cPrime;
+    TrgswMPDft tmpMp{param, param.lApprox};
+    tmpMp.cPrime = in1Dft.cPrime;
+    TrgswMPDft tmpMp2{param, param.lApprox};
+    vector decompA(param.lApprox, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
+    for(auto l = 0; l < param.lApprox; l++) {
+        tmpMp2.cPrime[l].b = in1Dft.cPrime[l].b;
+    }
+    for (auto l0 = 0; l0 < param.lApprox; l0++) {
+        auto& a = in1.cPrime[l0].a;
+        for (auto k = 0; k < param.k; k++) {
+            for (auto j = 0; j < param.N; j++) {
+                DecomposedData d{param.l};
+                gadgetDecompose(d, a[k].coeffs[j], param);
+                for (auto l = 0; l < param.l; l++) {
+                    decompA[l0][l][k].coeffs[j] = d.value[l] * d.sign;
+                }
+            }
+        }
+    }
+
+    // convert back test
+    vector aRecomp(param.l, vector(param.k, TorusPolynomial{param.N}));
+    vector aRecompDft(param.l, vector(param.k, NttPolynomial{param.N}));
+    for (auto l0 = 0; l0 < param.lApprox; l0++) {
+        for (auto l = 0; l < param.l; l++) {
+            for (auto k = 0; k < param.k; k++) {
+                NttPolynomial tmp{param.N};
+                NttHexl::applyNtt(tmp, decompA[l0][l][k]);
+                NttHexl::calModularInnerProductNtt(aRecompDft[l0][k], tmp, NttHexl::getNttGadgetRecomper(l));
+            }
+        }
+    }
+    for (auto l = 0; l < param.lApprox; l++) {
+        for (auto k = 0; k < param.k; k++) {
+            NttHexl::applyIntt(aRecomp[l][k], aRecompDft[l][k]);
+            ASSERT_EQ(aRecomp[l][k].coeffs, in1.cPrime[l].a[k].coeffs);
+        }
+    }
+
     TrgswMP t1{param, param.lApprox};
     t1.cPrime = in1.cPrime;
     for (auto l = 0; l < param.lApprox; l++) {
         COUNT_TIME("switchTrlweToSecretEmbeddingNtt",
-                   switchTrlweToSecretEmbeddingNtt(tmpMp.c[l], in1.cPrime[l], s2pDft, param);)
+                   switchTrlweToSecretEmbeddingNtt(tmpMp.c[l], tmpMp.cPrime[l], s2pDft, param);)
+        COUNT_TIME("switchTrlweToSecretEmbeddingNttOpt",
+                   switchTrlweToSecretEmbeddingNttOpt(tmpMp2.c[l], tmpMp2.cPrime[l], decompA[l], s2pDft, param);)
         COUNT_TIME("switchTrlweToSecretEmbedding", switchTrlweToSecretEmbedding(t1.c[l], in1.cPrime[l], s2p, param);)
     }
+    for (auto l = 0; l < param.lApprox; l++) {
+        printArray(in1Dft.cPrime[l].a[0].coeffs, "a0");
+        printArray(tmpMp2.cPrime[l].a[0].coeffs, "ac");
+//        tmpMp2.cPrime[l].a = tmpMp.cPrime[l].a;
+    }
+    tmpMp2.c = tmpMp.c;
 
     Trlwe trlwe{param.k, param.N};
     Trlwe res{param.k, param.N};
-    Trlwe res2{param.k, param.N};
     TorusPolynomial mu{param.N};
     IntPolynomial plainMult{param.N};
     for (auto j = 0; j < param.N; j++) {
@@ -624,12 +668,15 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     }
     symEncTrlweMultiSample(trlwe, trlweKey, mu.coeffs);
     externalProductTrgswMP(res, t1, trlwe, param.lApprox, param);
-    externalProductTrgswMP(res2, tmpMp, trlwe, param.lApprox, param);
-
     symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
     printArray(dec.coeffs, "dec");
 
-    symDecTrlweToInt(dec, res2, trlweKey, param.torusBase);
+    externalProductTrgswMPNtt(res, tmpMp, trlwe, param.lApprox, param);
+    symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
+    printArray(dec.coeffs, "dec");
+
+    externalProductTrgswMPNtt(res, tmpMp2, trlwe, param.lApprox, param);
+    symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
     printArray(dec.coeffs, "dec");
 
     ASSERT_EQ(dec.coeffs, plainMult.coeffs);
@@ -639,6 +686,7 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
 
 TEST(RgswTest, RGSWMP_INTERMULT_NTT) {
     YatfheParameters param {};
+    param.torusBits = 32;
     initYatfhe(param);
     int ti = 0;
     while (ti++ < 1) {
@@ -691,6 +739,7 @@ TEST(RgswTest, RGSWMP_INTERMULT_NTT) {
     }
     printBanner("RGSWMP_INTERMULT_NTT");
 }
+
 // max depth 4
 TEST(RgswTest, RGSW_MULT_NAIVE_CHAIN_NTT) {
     YatfheParameters param {};

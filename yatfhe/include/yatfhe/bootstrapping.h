@@ -143,6 +143,36 @@ struct BootstrappingKeyMPOpt {
     }
 };
 
+struct BootstrappingKeyMPLazy {
+    vector<Trlwe> bskFirst{};
+    vector<vector<TrgswMPDft>> bskDft {};
+    int n {};
+    int group {};
+    bool isHalf{false};
+
+    explicit BootstrappingKeyMPLazy() = default;
+
+    BootstrappingKeyMPLazy(const YatfheParameters& p, const int level, bool half) : group(p.group), isHalf(half) {
+#ifdef TERNARY
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(2, Trlwe{p.k, p.N});
+        bskDft = vector(n, vector(2, TrgswMPDft(p, level, isHalf)));
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(1, Trlwe{p.k, p.N});
+        bskDft = vector(n, vector(1, TrgswMPDft(p, level, isHalf)));
+#endif
+    }
+};
+
 struct BootstrappingKeyMPPreRot {
     vector<Trlwe> bskFirst{};
     vector<vector<TrgswMPDft>> bskDft{};
