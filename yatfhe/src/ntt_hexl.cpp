@@ -104,6 +104,16 @@ namespace NttHexl {
         }
     }
 
+    void initNttGadgetRecompMap(int32_t bitLength, int32_t radixBit, int32_t level, int32_t degree) {
+        for (auto l = 0; l < level; l++) {
+            TorusPolynomial tmp{degree};
+            NttPolynomial ntt{degree};
+            tmp.coeffs[0] = 1 << (bitLength - (l + 1) * radixBit);
+            applyNtt(ntt, tmp);
+            getNttGadgetRecompMap().insert({l, ntt});
+        }
+    }
+
     void applyNtt(NttPolynomial &out, const TorusPolynomial &in) {
         auto N = in.N;
         auto q = getNttHexl().GetModulus();

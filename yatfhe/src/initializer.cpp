@@ -47,6 +47,7 @@ void initYatfhe(YatfheParameters& param) {
     NttHexl::initNttHexl(param.N, param.qNtt);
     NttHexl::initNttRotMap(param.N);
     NttHexl::initNttRotMinusOneMap(param.N);
+    NttHexl::initNttGadgetRecompMap(param.torusBits, param.radixBits, param.l, param.N);
     NttNative64::initGlobalParamsNtt(param.N);
     NttNative32::initGlobalParamsNtt(param.N);
     NttNative24::initGlobalParamsNtt(param.N);

@@ -124,3 +124,34 @@ TEST(HEXL_TEST, NTT_ROT) {
     }
     printBanner("NTT_ROT");
 }
+
+TEST(HEXL_TEST, NTT_RECOMP) {
+    YatfheParameters param {};
+    initYatfhe(param);
+    TorusPolynomial ori{param.N};
+    vector decomp(param.N, DecomposedData{param.l});
+    for (auto j = 0; j < param.N; j++) {
+        ori.coeffs[j] = modSwitchToTorus32(j, param.torusBase);
+        gadgetDecompose(decomp[j], ori.coeffs[j], param);
+    }
+    vector decompTorus(param.l, TorusPolynomial{param.N});
+    vector decompTorusDft(param.l, NttPolynomial{param.N});
+    for (auto l = 0; l < param.l; l++) {
+        for (auto j = 0; j < param.N; j++) {
+            decompTorus[l].coeffs[j] = decomp[j].value[l] * decomp[j].sign;
+        }
+        NttHexl::applyNtt(decompTorusDft[l], decompTorus[l]);
+    }
+    NttPolynomial recompDft{param.N};
+    TorusPolynomial recomp{param.N};
+    for (auto l = 0; l < param.l; l++) {
+        NttHexl::calModularInnerProductNtt(recompDft, decompTorusDft[l], NttHexl::getNttGadgetRecomper(l));
+        NttHexl::applyIntt(recomp, recompDft);
+    }
+    IntPolynomial recompPlain{param.N};
+    for (auto j = 0; j < param.N; j++) {
+        recompPlain.coeffs[j] = modSwitchFromTorus32(recomp.coeffs[j], param.torusBase);
+    }
+    printArray(recompPlain.coeffs, "recomp");
+    ASSERT_EQ(recomp.coeffs, ori.coeffs);
+}

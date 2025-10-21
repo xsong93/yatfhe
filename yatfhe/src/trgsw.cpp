@@ -907,7 +907,8 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
     }
 }
 
-void switchTrlweToSecretEmbeddingPreCompNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<NttPolynomial>>& decompADft, const TrlevDft& sSquare, const YatfheParameters& param) {
+void switchTrlweToSecretEmbeddingPreCompNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<NttPolynomial>>& decompADft,
+                                            const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l; // must use full decomp length
 

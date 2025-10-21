@@ -29,6 +29,8 @@ namespace NttHexl {
 
     void initNttRotMinusOneMap(int32_t degree);
 
+    void initNttGadgetRecompMap(int32_t bitLength, int32_t radixBit, int32_t level, int32_t degree);
+
     void applyNtt(NttPolynomial &out, const TorusPolynomial &in);
 
     void applyIntt(TorusPolynomial &out, const NttPolynomial &in);
