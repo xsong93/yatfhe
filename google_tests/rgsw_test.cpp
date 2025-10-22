@@ -603,12 +603,13 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     decryptTrgswMPNtt(dec, in1Dft, param, trgswKey, true);
     printArray(dec.coeffs, "-mu1*s");
 
+    // init data
     TrgswMPDft tmpMp{param, param.lApprox};
     tmpMp.cPrime = in1Dft.cPrime;
     TrgswMPDft tmpMp2{param, param.lApprox};
     vector decompA(param.lApprox, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
     for(auto l = 0; l < param.lApprox; l++) {
-        tmpMp2.cPrime[l].b = in1Dft.cPrime[l].b;
+        NttHexl::applyNtt(tmpMp2.cPrime[l].b, in1.cPrime[l].b);
     }
     for (auto l0 = 0; l0 < param.lApprox; l0++) {
         auto& a = in1.cPrime[l0].a;
@@ -622,28 +623,10 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
             }
         }
     }
-
-    // convert back test
-    vector aRecomp(param.l, vector(param.k, TorusPolynomial{param.N}));
-    vector aRecompDft(param.l, vector(param.k, NttPolynomial{param.N}));
-    for (auto l0 = 0; l0 < param.lApprox; l0++) {
-        for (auto l = 0; l < param.l; l++) {
-            for (auto k = 0; k < param.k; k++) {
-                NttPolynomial tmp{param.N};
-                NttHexl::applyNtt(tmp, decompA[l0][l][k]);
-                NttHexl::calModularInnerProductNtt(aRecompDft[l0][k], tmp, NttHexl::getNttGadgetRecomper(l));
-            }
-        }
-    }
-    for (auto l = 0; l < param.lApprox; l++) {
-        for (auto k = 0; k < param.k; k++) {
-            NttHexl::applyIntt(aRecomp[l][k], aRecompDft[l][k]);
-            ASSERT_EQ(aRecomp[l][k].coeffs, in1.cPrime[l].a[k].coeffs);
-        }
-    }
-
     TrgswMP t1{param, param.lApprox};
     t1.cPrime = in1.cPrime;
+
+    // scheme switching
     for (auto l = 0; l < param.lApprox; l++) {
         COUNT_TIME("switchTrlweToSecretEmbeddingNtt",
                    switchTrlweToSecretEmbeddingNtt(tmpMp.c[l], tmpMp.cPrime[l], s2pDft, param);)
@@ -651,13 +634,8 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
                    switchTrlweToSecretEmbeddingNttOpt(tmpMp2.c[l], tmpMp2.cPrime[l], decompA[l], s2pDft, param);)
         COUNT_TIME("switchTrlweToSecretEmbedding", switchTrlweToSecretEmbedding(t1.c[l], in1.cPrime[l], s2p, param);)
     }
-    for (auto l = 0; l < param.lApprox; l++) {
-        printArray(in1Dft.cPrime[l].a[0].coeffs, "a0");
-        printArray(tmpMp2.cPrime[l].a[0].coeffs, "ac");
-//        tmpMp2.cPrime[l].a = tmpMp.cPrime[l].a;
-    }
-    tmpMp2.c = tmpMp.c;
 
+    // result validation
     Trlwe trlwe{param.k, param.N};
     Trlwe res{param.k, param.N};
     TorusPolynomial mu{param.N};
@@ -667,18 +645,23 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
         mu.coeffs[j] = modSwitchToTorus32(j, param.torusBase);
     }
     symEncTrlweMultiSample(trlwe, trlweKey, mu.coeffs);
+
+    // switchTrlweToSecretEmbedding
     externalProductTrgswMP(res, t1, trlwe, param.lApprox, param);
     symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
     printArray(dec.coeffs, "dec");
+    ASSERT_EQ(dec.coeffs, plainMult.coeffs);
 
+    // switchTrlweToSecretEmbeddingNtt
     externalProductTrgswMPNtt(res, tmpMp, trlwe, param.lApprox, param);
     symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
     printArray(dec.coeffs, "dec");
+    ASSERT_EQ(dec.coeffs, plainMult.coeffs);
 
+    // switchTrlweToSecretEmbeddingNttOpt
     externalProductTrgswMPNtt(res, tmpMp2, trlwe, param.lApprox, param);
     symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
     printArray(dec.coeffs, "dec");
-
     ASSERT_EQ(dec.coeffs, plainMult.coeffs);
 
     printBanner("RGSWMP_SCHEME_SWITCHING");
