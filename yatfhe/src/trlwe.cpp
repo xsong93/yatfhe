@@ -5,7 +5,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/polynomial.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/ntt_hexl.h"
 #include "yatfhe/gadget_decomposition.h"
 #include "yautil/control_helper.h"
@@ -249,10 +249,10 @@ void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, const int index) {
     const auto N = in.b.N;
     for (auto i = 0; i < in.k; i++) {
         for (auto j = 0; j < N; j++) {
-            out.a[i * N + j] = (j <= index) ? (in.a[i].coeffs[index - j]) : (-in.a[i].coeffs[N + index - j]);
+            out.a[i * N + j] = modSwitchFromTorusGeneral(j <= index ? in.a[i].coeffs[index - j] : -in.a[i].coeffs[N + index - j], LWE_Q, TORUS_Q);
         }
     }
-    out.b = in.b.coeffs[index];
+    out.b = modSwitchFromTorusGeneral(in.b.coeffs[index], LWE_Q, TORUS_Q);
 }
 
 // flatten a trlwe key as a tlwe key

@@ -7,7 +7,7 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/bootstrapping.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 #include "yautil/time_counter.h"

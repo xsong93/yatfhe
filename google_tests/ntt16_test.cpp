@@ -7,7 +7,7 @@
 #include "yatfhe/ntt16.h"
 #include "yatfhe/ntt64.h"
 #include "yatfhe/polynomial.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 

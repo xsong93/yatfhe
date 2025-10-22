@@ -10,7 +10,7 @@
 #include <string>
 #include "yatfhe/torus.h"
 #include "yatfhe/polynomial.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 
 namespace NttNative24 {
 

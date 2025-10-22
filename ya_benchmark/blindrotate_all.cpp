@@ -5,13 +5,12 @@
 #include "yatfhe/blind_rotate.h"
 #include "yautil/time_counter.h"
 #include "yatfhe/yatfhe_parameters.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/initializer.h"
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
     param.N = 1024;
-    param.rlweStdDev = 0;
     param.batchSize = 16;
     param.tasksPerThread = 15;
     initYatfhe(param);
@@ -36,8 +35,8 @@ int main(int argc, char **argv) {
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-    BootstrappingKeyMPPreRot bskPre{param, param.lApprox};
-    genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
+    // BootstrappingKeyMPPreRot bskPre{param, param.lApprox};
+    // genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
 
     BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
     genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);
@@ -71,9 +70,7 @@ int main(int argc, char **argv) {
     COUNT_TIME("blindRotateOptNtt", blindRotateOptNtt(out, bskMPOpt.bskFirst, bskMPOpt.bskDft, sTlwe, v, param);)
     COUNT_TIME("blindRotateLazyNtt", blindRotateLazyNtt(out, bskMPLazy.bskFirst, bskMPLazy.bskDft, bskMPLazy.iniliatized, sTlwe, v, s2Dft, param);)
 
-    Trlwe accumScaled {param.k, param.N};
-    rescaleTrlweToNewMod(accumScaled, out, LWE_Q, TORUS_Q);
-    extractTlweFromTrlwe(tmp, accumScaled, param.driftPhase);
+    extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;

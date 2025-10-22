@@ -7,7 +7,7 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlgsw.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt24.h"
 #include "yautil/tool.h"

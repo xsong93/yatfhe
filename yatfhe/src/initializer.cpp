@@ -8,7 +8,7 @@
 #include "yatfhe/ntt64.h"
 #include "yatfhe/ntt_hexl.h"
 #include "yautil/time_counter.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/multi_threading.h"
 
 int64_t TORUS_Q;

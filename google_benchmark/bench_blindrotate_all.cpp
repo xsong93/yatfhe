@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
 #include "yatfhe/blind_rotate.h"
 #include "yatfhe/bootstrapping.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlwe.h"

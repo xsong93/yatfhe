@@ -5,7 +5,7 @@
 #include <gmp.h>
 #include "yatfhe/ntt32.h"
 #include "yatfhe/polynomial.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"

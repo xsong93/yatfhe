@@ -4,7 +4,7 @@
 #include <iostream>
 #include "yautil/control_helper.h"
 #include "yatfhe/tlwe.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 
 using namespace std;
 

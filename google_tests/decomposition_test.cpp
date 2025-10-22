@@ -7,7 +7,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/gadget_decomposition.h"
 #include "yautil/tool.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/ntt_hexl.h"
 #include "yatfhe/crt.h"
 #include "yautil/time_counter.h"

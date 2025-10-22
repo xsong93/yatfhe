@@ -3,7 +3,7 @@
 //
 
 #include "yatfhe/yatfhe_parameters.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 //#include "yatfhe/ntt.h"
 #include "yatfhe/ntt24.h"
 #include "yatfhe/ntt_hexl.h"

@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 #include "yatfhe/ntt_old.h"
 #include "yatfhe/polynomial.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 

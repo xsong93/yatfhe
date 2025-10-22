@@ -7,7 +7,7 @@
 #include "yautil/time_counter.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/keyswitching.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/initializer.h"
 
 int main(int argc, char **argv) {
@@ -50,8 +50,7 @@ int main(int argc, char **argv) {
     COUNT_TIME("genNoiselessTrlweSample", genNoiselessTrlweSample(accum, v, inputModN2);) // accum = (X^-b) * (0,...,0,v)
     COUNT_TIME("blindRotateNtt", blindRotateNtt(accum, bsKey.bskDft, inputModN2, param);)
 //    COUNT_TIME("blindRotate", blindRotate(accum, bsKey.bsk, inputModN2, param);)
-    COUNT_TIME("rescaleTrlweToNewMod", rescaleTrlweToNewMod(accumScaled, accum, LWE_Q, TORUS_Q);)
-    COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, accumScaled, param.driftPhase);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, accum, param.driftPhase);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     COUNT_TIME("switchKeyForTlwe", switchKeyForTlwe(output, ksKey, tmp, param);)
 
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);

@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 #include "yatfhe/polynomial.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/tlwe.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"

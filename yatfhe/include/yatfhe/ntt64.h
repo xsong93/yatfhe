@@ -9,7 +9,7 @@
 #include <string>
 #include <gmp.h>
 #include "yatfhe/polynomial.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 
 namespace NttNative64 {
 

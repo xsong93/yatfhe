@@ -3,7 +3,7 @@
 //
 #include <random>
 #include <iostream>
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/torus.h"
 
 using namespace std;
@@ -74,15 +74,13 @@ double roundError(const double in, const int torusBase) {
 }
 
 Torus roundTorusGeneralError(const Torus in, const int torusBase, const int64_t q) {
-    auto t = modSwitchFromTorusGeneral(in, torusBase, q);
-    auto t2 = modSwitchToTorusGeneral(t, torusBase, q);
-    return t2;
+    int t = static_cast<int>(modSwitchFromTorusGeneral(in, torusBase, q));
+    return modSwitchToTorusGeneral(t, torusBase, q);
 }
 
 Torus roundTorusError(const Torus in, const int torusBase) {
     auto t = modSwitchFromTorus32(in, torusBase);
-    auto t2 = modSwitchToTorus32(t, torusBase);
-    return t2;
+    return modSwitchToTorus32(t, torusBase);
 }
 
 // To compensate the possible negative gaussian error, add sufficient sigma to the value so that it stops at the
@@ -152,7 +150,7 @@ int64_t montgomoryReduceT32(int64_t in) {
     return in < 0 ? -static_cast<int64_t>(r) : static_cast<int64_t>(r);
 }
 
-Torus subTorus(int64_t q, Torus in1, Torus in2) {
+Torus subTorus(const int64_t q, const Torus in1, const Torus in2) {
     if (q == Q_32) {
         return in1 - in2;
     }
@@ -161,7 +159,7 @@ Torus subTorus(int64_t q, Torus in1, Torus in2) {
     return (Torus)longModP(tmp, q);
 }
 
-Torus multTorus(int64_t q, Torus in1, Torus in2) {
+Torus multTorus(const int64_t q, const Torus in1, const Torus in2) {
     if (q == Q_32) {
         return in1 * in2;
     }
@@ -190,33 +188,33 @@ int64_t modInverse(int64_t a, int64_t mod) {
     return x1;
 }
 
-Torus modSwitchToTorusGeneral(int32_t mu, uint32_t mSize, int64_t torusQ) {
-    auto interv = static_cast<int32_t>(torusQ / mSize);
+Torus modSwitchToTorusGeneral(const int32_t mu, const uint32_t mSize, const int64_t torusQ) {
+    auto scale = static_cast<int32_t>(torusQ / mSize);
     int32_t mod = intModP(mu, static_cast<int32_t>(mSize));
-    return mod * interv;
+    return mod * scale;
 }
 
-int32_t modSwitchFromTorusGeneral(Torus in, uint32_t newMod, int64_t torusQ) {
-    auto interv = static_cast<int32_t>(torusQ / newMod);
-    double div = (double)in / interv;
+int64_t modSwitchFromTorusGeneral(const Torus in, const int64_t newMod, const int64_t torusQ) {
+    auto scale = static_cast<int32_t>(torusQ / newMod);
+    double div = static_cast<double>(in) / scale;
+    auto real = static_cast<int32_t>(round(div));
+    return longModP(real, newMod);
+}
+
+Torus modSwitchToTorus32(const int32_t mu, const uint32_t mSize) {
+    auto scale = static_cast<int32_t>(TORUS_Q / mSize);
+    int32_t mod = intModP(mu, static_cast<int32_t>(mSize));
+    return mod * scale;
+}
+
+int32_t modSwitchFromTorus32(const Torus in, const uint32_t newMod) {
+    auto scale = static_cast<int32_t>(TORUS_Q / newMod);
+    double div = static_cast<double>(in) / scale;
     auto real = static_cast<int32_t>(round(div));
     return intModP(real, static_cast<int32_t>(newMod));
 }
 
-Torus modSwitchToTorus32(int32_t mu, uint32_t mSize) {
-    auto interv = static_cast<int32_t>(TORUS_Q / mSize);
-    int32_t mod = intModP(mu, static_cast<int32_t>(mSize));
-    return mod * interv;
-}
-
-int32_t modSwitchFromTorus32(Torus in, uint32_t newMod) {
-    auto interv = static_cast<int32_t>(TORUS_Q / newMod);
-    double div = (double)in / interv;
-    auto real = static_cast<int32_t>(round(div));
-    return intModP(real, static_cast<int32_t>(newMod));
-}
-
-void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, Torus min, Torus max) {
+void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const Torus min, const Torus max) {
     for (auto& coeff : coeffs) {
         coeff = uniformTorusDistrib(min, max)(rng);
     }

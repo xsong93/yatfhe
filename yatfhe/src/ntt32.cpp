@@ -4,7 +4,7 @@
 
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt32.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 
 using namespace std;
 using namespace NttNative;

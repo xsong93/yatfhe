@@ -5,7 +5,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/trgsw.h"
 #include "yatfhe/keyswitching.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 

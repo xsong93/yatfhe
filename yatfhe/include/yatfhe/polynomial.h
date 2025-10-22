@@ -8,7 +8,7 @@
 #include <vector>
 #include <cstdint>
 #include "yatfhe/torus.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 
 constexpr uint8_t POLY_MAX8 = 1 << 7;
 

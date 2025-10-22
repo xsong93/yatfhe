@@ -4,7 +4,7 @@
 
 #include "yatfhe/ntt.h"
 #include "yatfhe/ntt16.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include <gmp.h>
 
 

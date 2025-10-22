@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
 

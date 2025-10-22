@@ -29,7 +29,7 @@ Torus addGaussianNoise(Torus message, double sigma, const int64_t torusQ);
 
 Torus modSwitchToTorusGeneral(int32_t mu, uint32_t mSize, int64_t torusQ);
 
-int32_t modSwitchFromTorusGeneral(Torus in, uint32_t newMod, int64_t torusQ);
+int64_t modSwitchFromTorusGeneral(Torus in, int64_t newMod, int64_t torusQ);
 
 Torus modSwitchToTorus32(int32_t mu, uint32_t mSize);
 

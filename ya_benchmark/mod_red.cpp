@@ -2,7 +2,7 @@
 // Created by Xintong Song on 2024/10/17.
 //
 
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yautil/initializer.h"
 #include "yautil/time_counter.h"

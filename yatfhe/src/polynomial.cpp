@@ -3,7 +3,7 @@
 //
 #include <iostream>
 #include "yatfhe/polynomial.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/ntt_hexl.h"
 
 /**

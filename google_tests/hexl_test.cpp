@@ -6,7 +6,7 @@
 #include "yautil/time_counter.h"
 #include "yautil/tool.h"
 #include "yatfhe/yatfhe_parameters.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yautil/initializer.h"
 #include "yatfhe/ntt64.h"
 #include <gtest/gtest.h>

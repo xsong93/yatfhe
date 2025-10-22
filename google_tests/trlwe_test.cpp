@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
-#include "yatfhe/numeric_functions.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/gadget_decomposition.h"
 #include "yatfhe/trlev.h"
 #include "yatfhe/crt.h"
