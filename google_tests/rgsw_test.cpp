@@ -557,38 +557,11 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     TrlweKey& trlweKey = trgswKey.trlweKey;
     genTrlweKey(trlweKey);
 
-    Trlev s2(param);
-    TrlevDft s2Dft(param);
-    TorusPolynomial tmp{param.N};
-    for (auto j = 0; j < param.k; j++) {
-        multTorusPolynomialAcc(tmp, trlweKey.s[j], trlweKey.s[j]);
-    }
-    printArray(tmp.coeffs, "s2");
-    encTrlevMultiSample(s2, trlweKey, tmp, param);
-    for (auto l = 0; l < param.l; l++) {
-        NttHexl::applyNttForAB(s2Dft.trlweDfts[l], s2.trlwes[l]);
-    }
-
-    Trlev s2p(param);
-    TrlevDft s2pDft(param);
-    Trlwe s2pRLWE{param.k, param.N};
-    encTrlevSingleSample(s2p, trlweKey, 0, param); // (a-s, as+e)
-    for (auto i = 0; i < param.l; i++) {  // must use full decomp length
-        NttHexl::applyNtt(s2pDft.trlweDfts[i].b, s2p.trlwes[i].b);
-        for (auto j = 0; j < param.k; j++) {
-            TorusPolynomial sS{param.N};
-            for (auto z = 0; z < param.N; z++) {
-                sS.coeffs[z] = trlweKey.s[j].coeffs[z] << (param.torusBits - (i + 1) * param.radixBits);
-            }
-            subTorusPolynomial(s2p.trlwes[i].a[j], s2p.trlwes[i].a[j], sS);
-            NttHexl::applyNtt(s2pDft.trlweDfts[i].a[j], s2p.trlwes[i].a[j]);
-        }
-    }
-    TorusPolynomial t{param.N};
-    decTrlev(t, s2, trlweKey, param);
-    printArray(t.coeffs, "s2dec");
-    decTrlev(t, s2p, trlweKey, param);
-    printArray(t.coeffs, "s2dec");
+    // enc s^2
+    Trlev s2p(param, param.l);
+    TrlevDft s2pDft(param, param.l);
+    symEncTrlevWithKey(s2p, trlweKey, trlweKey.s, true, param);
+    symEncTrlevWithKeyNtt(s2pDft, trlweKey, trlweKey.s, true, param);
 
     // trgsw enc
     TrgswMPDft in1Dft{param, param.lApprox};

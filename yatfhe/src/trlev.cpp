@@ -26,14 +26,16 @@ void encTrlevMultiSample(Trlev& output, const TrlweKey& trlweKey, const TorusPol
     }
 }
 
+// encrypt +-s*m, sign is determined by @param{isPos}
 // (a-x, as+e)
-void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const bool isPos, const YatfheParameters& param) {
+void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs, const bool isPos,
+                        const YatfheParameters& param) {
     encTrlevSingleSample(output, trlweKey, 0, param);
     for (auto i = 0; i < param.l; i++) {
         for (auto j = 0; j < param.k; j++) {
             TorusPolynomial sXm{param.N};
             for (auto z = 0; z < param.N; z++) {
-                sXm.coeffs[z] = inputs.coeffs[z] << (param.torusBits - (i + 1) * param.radixBits);
+                sXm.coeffs[z] = inputs[j].coeffs[z] << (param.torusBits - (i + 1) * param.radixBits);
             }
             if (isPos) {
                 subTorusPolynomial(output.trlwes[i].a[j], output.trlwes[i].a[j], sXm);
@@ -44,7 +46,10 @@ void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const TorusPoly
     }
 }
 
-void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs, const bool isPos, const YatfheParameters& param) {
+// encrypt +-s*m to ntt domain, sign is determined by @param{isPos}
+// (a-x, as+e)
+void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs,
+                           const bool isPos, const YatfheParameters& param) {
     Trlev s2(param);
     encTrlevSingleSample(s2, trlweKey, 0, param);
     for (auto i = 0; i < param.l; i++) {
@@ -84,7 +89,7 @@ void multTrlevWithConst(Trlwe& output, const Trlev& input, const Integer num, co
             for (auto l1 = 0; l1 < d.l; l1++) {
                 auto& currTglev = (r < k) ? input.trlwes[l1].a[r] : input.trlwes[l1].b;
 //                curr.coeffs[j] += currTglev.coeffs[j] * d.value[l1] * d.sign;
-                curr.coeffs[j] = addTorus(curr.coeffs[j], multTorus(currTglev.coeffs[j], d.value[l1] * d.sign));
+                curr.coeffs[j] = addTorus(TORUS_Q, curr.coeffs[j], multTorus(TORUS_Q, currTglev.coeffs[j], d.value[l1] * d.sign));
             }
         }
     }

@@ -514,7 +514,7 @@ TEST(BLIND_ROT, BLIND_ROT_LUT) {
     cout << "decPre: " << decPre << endl;
     ScaledTlwe sTlwe {param.N * 2, param.n};
     printTlweAB(tlwe, "tlwe");
-    rescaleTlweFromTorus32(sTlwe, tlwe);
+    rescaleTlweToNewMod(sTlwe, tlwe);
     printTlweAB(sTlwe, "sTlwe");
     printArray(tlweKey.s, "s");
 

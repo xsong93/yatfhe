@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     COUNT_TIME("genTlweKeySwitchingKey", genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);)
 
     Integer plain = 3;
-    Torus mu = modSwitchToTorus32(plain, param.torusBase);
+    Torus mu = modSwitchToTorusGeneral(plain, param.torusBase, LWE_Q);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
@@ -37,19 +37,21 @@ int main(int argc, char **argv) {
     Tlwe output {param.n};
     symEncTlwe(input, mu, tlweKey);
 
-    cout << "msg: " << modSwitchFromTorus32(mu, param.torusBase) << endl;
+    cout << "msg: " << modSwitchFromTorusGeneral(mu, param.torusBase, LWE_Q) << endl;
     auto decPre = symDecTlweToInt(input, tlweKey, param.torusBase);
     cout << "decPre: " << decPre << endl;
 
 //    COUNT_TIME("trgswFunctionalBootstrapping", trgswFunctionalBootstrappingNtt(output, input, bsKey, ksKey, v, param);)
     ScaledTlwe inputModN2 {param.N * 2, param.n};
     Trlwe accum {param.k, param.N};
+    Trlwe accumScaled {param.k, param.N};
     Tlwe tmp {ksKey.nCurrKey};
-    COUNT_TIME("rescaleTlweFromTorus32", rescaleTlweFromTorus32(inputModN2, input);) // rescale to mod 2N
+    COUNT_TIME("rescaleTlweToNewMod", rescaleTlweToNewMod(inputModN2, input);) // rescale to mod 2N
     COUNT_TIME("genNoiselessTrlweSample", genNoiselessTrlweSample(accum, v, inputModN2);) // accum = (X^-b) * (0,...,0,v)
     COUNT_TIME("blindRotateNtt", blindRotateNtt(accum, bsKey.bskDft, inputModN2, param);)
 //    COUNT_TIME("blindRotate", blindRotate(accum, bsKey.bsk, inputModN2, param);)
-    COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, accum, param.driftPhase);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    COUNT_TIME("rescaleTrlweToNewMod", rescaleTrlweToNewMod(accumScaled, accum, LWE_Q, TORUS_Q);)
+    COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, accumScaled, param.driftPhase);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     COUNT_TIME("switchKeyForTlwe", switchKeyForTlwe(output, ksKey, tmp, param);)
 
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);

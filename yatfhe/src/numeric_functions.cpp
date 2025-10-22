@@ -21,8 +21,8 @@ int calLogBase2(int N) {
     return res;
 }
 
-uniform_int_distribution<Torus>& uniformTorusDistrib() {
-    static uniform_int_distribution<Torus> instance(TORUS_MIN, TORUS_MAX);
+uniform_int_distribution<Torus>& uniformTorusDistrib(Torus min, Torus max) {
+    static uniform_int_distribution<Torus> instance(min, max);
     return instance;
 }
 
@@ -37,14 +37,13 @@ uint64_t genUInt64UniformDist(const uint64_t lowerBound, const uint64_t upperBou
 }
 
 // Gaussian sample centered in message, with standard deviation sigma
-Torus addGaussianNoise(Torus message, const double sigma) {
-    normal_distribution normalDistribution(0.0, sigma * static_cast<double>(TORUS_Q) / MESSAGE_P);
-    double e = normalDistribution(rng);
+Torus addGaussianNoise(Torus message, const double sigma, const int64_t torusQ) {
+    normal_distribution normalDistribution(0.0, sigma);
+    double e = normalDistribution(rng) * static_cast<double>(torusQ);
     auto err = static_cast<Torus>(e);
-    // Torus err = doubleToTorus32(e);
-    Torus tmp = addTorus(message, err);
+    Torus tmp = addTorus(torusQ, message, err);
     if ((message > 0 && tmp < 0) || (message < 0 && tmp > 0)) { // handle overflow
-        return message - err;
+        return subTorus(torusQ, message, err);
     }
     return tmp;
 }
@@ -72,6 +71,12 @@ double roundError(const double in, const int torusBase) {
     int mulP  = round(in * torusBase);
     int modP = mulP % torusBase;
     return modP / double(torusBase);
+}
+
+Torus roundTorusGeneralError(const Torus in, const int torusBase, const int64_t q) {
+    auto t = modSwitchFromTorusGeneral(in, torusBase, q);
+    auto t2 = modSwitchToTorusGeneral(t, torusBase, q);
+    return t2;
 }
 
 Torus roundTorusError(const Torus in, const int torusBase) {
@@ -147,27 +152,20 @@ int64_t montgomoryReduceT32(int64_t in) {
     return in < 0 ? -static_cast<int64_t>(r) : static_cast<int64_t>(r);
 }
 
-// Torus addTorus(Torus in1, Torus in2) {
-//     if (TORUS_Q == Q_32) {
-//         return in1 + in2;
-//     }
-//     auto tmp = static_cast<int64_t>(in1) + static_cast<int64_t>(in2);
-//     return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
-// }
-
-Torus subTorus(Torus in1, Torus in2) {
-    if (TORUS_Q == Q_32) {
+Torus subTorus(int64_t q, Torus in1, Torus in2) {
+    if (q == Q_32) {
         return in1 - in2;
     }
     auto tmp = static_cast<int64_t>(in1) - static_cast<int64_t>(in2);
-    return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
+//    return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
+    return (Torus)longModP(tmp, q);
 }
 
-Torus multTorus(Torus in1, Torus in2) {
-    if (TORUS_Q == Q_32) {
+Torus multTorus(int64_t q, Torus in1, Torus in2) {
+    if (q == Q_32) {
         return in1 * in2;
     }
-    return static_cast<Torus>(longModP(static_cast<int64_t>(in1) * static_cast<int64_t>(in2), TORUS_Q));
+    return static_cast<Torus>(longModP(static_cast<int64_t>(in1) * static_cast<int64_t>(in2), q));
 }
 
 // Multiplicative inverse modulo p
@@ -189,60 +187,51 @@ int64_t modInverse(int64_t a, int64_t mod) {
         x1 = t;
     }
 
-//    // Make x1 positive
-//    if (x1 < 0) {
-//        x1 += m0;
-//    }
-
     return x1;
 }
 
-Torus modSwitchToTorus32(int32_t mu, uint32_t Msize) {
-//    uint64_t interv = ((UINT64_C(1) << 63) / Msize) * 2; // width of each interval
-//    uint64_t phase64 = mu * interv;
-//    //floor to the nearest multiples of interv
-//    return phase64 >> 32;
-    auto interv = static_cast<int32_t>(TORUS_Q / Msize);
-    int32_t mod = intModP(mu, static_cast<int32_t>(Msize));
+Torus modSwitchToTorusGeneral(int32_t mu, uint32_t mSize, int64_t torusQ) {
+    auto interv = static_cast<int32_t>(torusQ / mSize);
+    int32_t mod = intModP(mu, static_cast<int32_t>(mSize));
+    return mod * interv;
+}
+
+int32_t modSwitchFromTorusGeneral(Torus in, uint32_t newMod, int64_t torusQ) {
+    auto interv = static_cast<int32_t>(torusQ / newMod);
+    double div = (double)in / interv;
+    auto real = static_cast<int32_t>(round(div));
+    return intModP(real, static_cast<int32_t>(newMod));
+}
+
+Torus modSwitchToTorus32(int32_t mu, uint32_t mSize) {
+    auto interv = static_cast<int32_t>(TORUS_Q / mSize);
+    int32_t mod = intModP(mu, static_cast<int32_t>(mSize));
     return mod * interv;
 }
 
 int32_t modSwitchFromTorus32(Torus in, uint32_t newMod) {
-//    uint64_t interv = ((UINT64_C(1) << 63) / newMod) * 2; // width of each interval
-//    uint64_t half_interval = interv / 2; // begin of the first intervall
-//    uint64_t phase64 = (uint64_t(in) << 32) + half_interval;
-//    //floor to the nearest multiples of interv
-//    return (in >= 0) ? (phase64 / interv) : (phase64 / interv - newMod);
     auto interv = static_cast<int32_t>(TORUS_Q / newMod);
     double div = (double)in / interv;
     auto real = static_cast<int32_t>(round(div));
     return intModP(real, static_cast<int32_t>(newMod));
 }
 
-uint32_t modSwitchFromTorus32Pos(Torus in, uint32_t newMod) {
-//    uint64_t interv = ((UINT64_C(1) << 63) / newMod) * 2; // width of each interval
-//    uint64_t half_interval = interv / 2; // begin of the first intervall
-//    uint64_t phase64 = (uint64_t(in) << 32) + half_interval;
-//    //floor to the nearest multiples of interv
-//    return phase64 / interv;
-    auto tmp = modSwitchFromTorus32(in, newMod); // [-newMod/2, newMod/2)
-    return tmp + newMod / 2;
-}
-
-void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs) {
+void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, Torus min, Torus max) {
     for (auto& coeff : coeffs) {
-        coeff = uniformTorusDistrib()(rng);
+        coeff = uniformTorusDistrib(min, max)(rng);
     }
 }
 
-void initCoeffsWithGaussianNoiseSingleSample(std::vector<Torus>& coeffs, const Torus msg, const double sigma) {
+void initCoeffsWithGaussianNoiseSingleSample(std::vector<Torus>& coeffs, const Torus msg, const double sigma,
+                                             const int64_t torusQ) {
     for (auto& coeff : coeffs) {
-        coeff = addGaussianNoise(msg, sigma);
+        coeff = addGaussianNoise(msg, sigma, torusQ);
     }
 }
 
-void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, const double sigma) {
+void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg,
+                                            const double sigma, const int64_t torusQ) {
     for (auto i = 0; i < coeffs.size(); i++) {
-        coeffs[i] = addGaussianNoise(msg[i], sigma);
+        coeffs[i] = addGaussianNoise(msg[i], sigma, torusQ);
     }
 }

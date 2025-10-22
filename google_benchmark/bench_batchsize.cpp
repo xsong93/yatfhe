@@ -37,7 +37,7 @@ public:
         Tlwe input{param.n};
         symEncTlwe(input, mu, tlweKey);
         sTlwe = ScaledTlwe{param.N * 2, param.n};
-        rescaleTlweFromTorus32(sTlwe, input);
+        rescaleTlweToNewMod(sTlwe, input);
         acc = Trlwe{param.k, param.N};
         genNoiselessTrlweSample(acc, v, sTlwe);
         out = Trlwe{param.k, param.N};

@@ -12,22 +12,26 @@
 void functionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
     Trlwe accum {param.k, param.N};
+    Trlwe accumScaled {param.k, param.N};
     Tlwe tmp {ksk.nCurrKey};
-    rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
+    rescaleTlweToNewMod(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     blindRotate(accum, bsk.bsk, inputModN2, param);
-    extractTlweFromTrlwe(tmp, accum, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    rescaleTrlweToNewMod(accumScaled, accum, LWE_Q, TORUS_Q);
+    extractTlweFromTrlwe(tmp, accumScaled, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     switchKeyForTlwe(out, ksk, tmp, param);
 }
 
 void functionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
     Trlwe accum {param.k, param.N};
+    Trlwe accumScaled {param.k, param.N};
     Tlwe tmp {ksk.nCurrKey};
-    rescaleTlweFromTorus32(inputModN2, input); // rescale to mod 2N
+    rescaleTlweToNewMod(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     blindRotateNtt(accum, bsk.bskDft, inputModN2, param);
-    extractTlweFromTrlwe(tmp, accum, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    rescaleTrlweToNewMod(accumScaled, accum, LWE_Q, TORUS_Q);
+    extractTlweFromTrlwe(tmp, accumScaled, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     switchKeyForTlwe(out, ksk, tmp, param);
 }
 
@@ -35,14 +39,16 @@ void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const Bootstrappin
     ScaledTlwe inputModN2{param.N * 2, param.n};
     Trlwe tv{param.k, param.N};
     Trlwe acc{param.k, param.N};
+    Trlwe accumScaled {param.k, param.N};
     std::vector<Trlwe8> accCRT(param.d, Trlwe8{param.k, param.N});
     Tlwe tmp{ksk.nCurrKey};
-    rescaleTlweFromTorus32(inputModN2, input);// rescale to mod 2N
+    rescaleTlweToNewMod(inputModN2, input);// rescale to mod 2N
     genNoiselessTrlweSample(tv, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     decompTrlweMcrt(accCRT, tv, param);
     blindRotateApproxCRTNtt(accCRT, bskCRT.bskCRT, inputModN2, param);
     trlweMcrtToCrt(accCRT, param);
     recompTrlweCrt(acc, accCRT, param);
+    rescaleTrlweToNewMod(accumScaled, acc, LWE_Q, TORUS_Q);
     extractTlweFromTrlwe(tmp, acc, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     switchKeyForTlwe(out, ksk, tmp, param);
 }

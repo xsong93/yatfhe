@@ -31,12 +31,12 @@ struct YatfheParameters {
     double lweStdDev {9.5367431640625e-07}; // 2^-20
     int64_t qLwe{Q_20};
 
-    // RLWE params
+    // RLWE params, 128-bit
     int k {1};
-    int N {1024};
-    double rlweStdDev {2.9802322387695312e-08}; // 2^-25
-    int64_t q {Q_26};
-    int torusBits {26};
+    int N {2048};
+    double rlweStdDev {7.275957614183426e-12}; // 2^-37
+    int64_t q {Q_32};
+    int torusBits {32};
     int torusBase {8}; // p|q
 
     int radixBits {8}; // b

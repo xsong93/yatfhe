@@ -44,11 +44,11 @@ void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& 
         gadgetDecompose(aBar, input.a[i], param);
         for (auto j = 0; j < param.ksLevel; j++) {
             for (auto k = 0; k < output.n; k++) {
-                mul = multTorus(aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].a[k]);
-                tmp.a[k] = addTorus(tmp.a[k], mul);
+                mul = multTorus(LWE_Q, aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].a[k]);
+                tmp.a[k] = addTorus(LWE_Q, tmp.a[k], mul);
             }
-            mul = multTorus(aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].b);
-            tmp.b = addTorus(tmp.b, mul);
+            mul = multTorus(LWE_Q, aBar.value[j] * aBar.sign, ksk.decomposedKsk[i][j].b);
+            tmp.b = addTorus(LWE_Q, tmp.b, mul);
         }
         subTlweInPlace(output, tmp);
     }

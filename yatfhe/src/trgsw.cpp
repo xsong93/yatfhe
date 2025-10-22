@@ -167,13 +167,13 @@ void addIntegerToTrgsw(Trgsw& trgsw, const Integer mu, const int pos, const Yatf
             // add to a_lii
             if (row < param.k) {
 //                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
-                trgsw.trlweSamples[lvl][row].a[row].coeffs[pos] = addTorus(trgsw.trlweSamples[lvl][row].a[row].coeffs[pos], decomposedMu);
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[pos] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].a[row].coeffs[pos], decomposedMu);
                 continue;
             }
 
             // add to b_lk
 //            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
-            trgsw.trlweSamples[lvl][row].b.coeffs[pos] = addTorus(trgsw.trlweSamples[lvl][row].b.coeffs[pos], decomposedMu);
+            trgsw.trlweSamples[lvl][row].b.coeffs[pos] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].b.coeffs[pos], decomposedMu);
         }
     }
 }
@@ -264,14 +264,14 @@ void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, co
             // add to a_lii
             if (row < param.k) {
 //                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
-                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = addTorus(trgsw.trlweSamples[lvl][row].a[row].coeffs[pos], decomposedMu);
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].a[row].coeffs[pos], decomposedMu);
                 applyNtt(trgswDft.trlweDftSamples[lvl][row].a[row], trgsw.trlweSamples[lvl][row].a[row]);
                 continue;
             }
 
             // add to b_lk
 //            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
-            trgsw.trlweSamples[lvl][row].b.coeffs[0] = addTorus(trgsw.trlweSamples[lvl][row].b.coeffs[pos], decomposedMu);
+            trgsw.trlweSamples[lvl][row].b.coeffs[0] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].b.coeffs[pos], decomposedMu);
             applyNtt(trgswDft.trlweDftSamples[lvl][row].b , trgsw.trlweSamples[lvl][row].b);
         }
     }
@@ -279,19 +279,19 @@ void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, co
 
 void trgswAddIntegerApproxCRT(Trgsw& trgsw, const Integer mu, const YatfheParameters& param) {
     for (auto lvl = 0; lvl < trgsw.l; lvl++) {
-        auto decomposedMu = multTorus(mu, param.w[lvl]);
+        auto decomposedMu = multTorus(TORUS_Q, mu, param.w[lvl]);
         for (auto row = 0; row < param.k + 1; row++) {
 
             // add to a_lii
             if (row < param.k) {
 //                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
-                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = addTorus(trgsw.trlweSamples[lvl][row].a[row].coeffs[0], decomposedMu);
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].a[row].coeffs[0], decomposedMu);
                 continue;
             }
 
             // add to b_lk
 //            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
-            trgsw.trlweSamples[lvl][row].b.coeffs[0] = addTorus(trgsw.trlweSamples[lvl][row].b.coeffs[0], decomposedMu);
+            trgsw.trlweSamples[lvl][row].b.coeffs[0] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].b.coeffs[0], decomposedMu);
         }
     }
 }
@@ -981,7 +981,6 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
     }
 }
 
-//todo
 void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,
                                         const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;

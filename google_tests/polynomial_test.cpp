@@ -33,7 +33,7 @@ TEST(PolynomialTest, PolynomialRounding) {
     symEncTlwe(ct, mu, tlweKey);
 
     ScaledTlwe scaledCt {2 * param.N, param.n};
-    rescaleTlweFromTorus32(scaledCt, ct);
+    rescaleTlweToNewMod(scaledCt, ct);
     printTlweAB(ct, "ct");
     printTlweAB(scaledCt, "scaledCt");
 

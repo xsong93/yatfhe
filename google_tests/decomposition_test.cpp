@@ -31,7 +31,7 @@ TEST(DecompositionTest, SignedDecompTest) {
     YatfheParameters param {};
     DecomposedData decomp {param.ksLevel};
     std::vector<Torus> data (10);
-    initCoeffsViaUniformDistribution(data);
+    initCoeffsViaUniformDistribution(data, TORUS_MIN, TORUS_MAX);
 //    data = {-10,-9,9,10};
     for (auto d : data) {
         signedGadgetDecomposition(decomp, d, param);
@@ -49,7 +49,7 @@ TEST(DecompositionTest, DecomposeTest) {
 //    param.ksLevel = 8;
     DecomposedData out {param.ksLevel};
     std::vector<Torus> data (10);
-    initCoeffsViaUniformDistribution(data);
+    initCoeffsViaUniformDistribution(data, TORUS_MIN, TORUS_MAX);
     for (auto d : data) {
         gadgetDecompose(out, d, param);
         printf("in: %d, ", d);

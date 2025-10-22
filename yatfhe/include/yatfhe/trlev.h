@@ -14,6 +14,9 @@ struct Trlev {
     explicit Trlev(const YatfheParameters& param) :
             trlwes(param.l,  Trlwe(param.k, param.N)),
             l(param.l) {}
+    Trlev(const YatfheParameters& param, const int level) :
+            trlwes(level,  Trlwe(param.k, param.N)),
+            l(level) {}
 };
 
 struct TrlevDft {
@@ -23,6 +26,9 @@ struct TrlevDft {
     explicit TrlevDft(const YatfheParameters& param) :
             trlweDfts(param.l, TrlweDft(param.k, param.N)),
             l(param.l) {}
+    TrlevDft(const YatfheParameters& param, const int level) :
+            trlweDfts(level, TrlweDft(param.k, param.N)),
+            l(level) {}
 };
 
 template<typename TrlevType>
@@ -45,9 +51,9 @@ void encTrlevSingleSample(Trlev& output, const TrlweKey& trlweKey, Torus input, 
 
 void encTrlevMultiSample(Trlev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const YatfheParameters& param);
 
-void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const TorusPolynomial& inputs, const bool isPos, const YatfheParameters& param);
+void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs, bool isPos, const YatfheParameters& param);
 
-void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs, const bool isPos, const YatfheParameters& param);
+void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs, bool isPos, const YatfheParameters& param);
 
 void decTrlev(TorusPolynomial& output, const Trlev& input, const TrlweKey& trlweKey, const YatfheParameters& param);
 

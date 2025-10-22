@@ -630,8 +630,8 @@ void blindRotateLazyNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vect
     }
 
     for (auto i = 0; i < n-1; i++) {
+        bsk[i][0].c = vector(level, vector(param.k, TrlweDft(param.k, param.N)));
         for (auto l = 0; l < level; l++) {
-            bsk[i][0].c = vector(level, vector(param.k, TrlweDft(param.k, param.N)));
             switchTrlweToSecretEmbeddingNtt(bsk[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
         }
     }

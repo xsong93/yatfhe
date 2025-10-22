@@ -10,9 +10,10 @@
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
+    param.N = 1024;
+    param.rlweStdDev = 0;
     param.batchSize = 16;
     param.tasksPerThread = 15;
-    param.l = param.lApprox;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
@@ -26,27 +27,32 @@ int main(int argc, char **argv) {
     TlweKey tlweKsKey = tlweKey;
     tlweKsKey.sigma = param.rlweStdDev;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
+    TrlevDft s2Dft{param, param.l};
+    symEncTrlevWithKeyNtt(s2Dft, trlweKey, trlweKey.s, true, param);
 
-    BootstrappingKeyMP bskMP{param};
+    BootstrappingKeyMP bskMP{param, param.lApprox};
     genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
 
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-    BootstrappingKeyMPPreRot bskPre{param};
+    BootstrappingKeyMPPreRot bskPre{param, param.lApprox};
     genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
 
     BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
     genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);
 
+    BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
+    genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
+
     // data gen
     Integer pt = 3;
     cout << "decPre: " << pt << endl;
-    Torus mu = modSwitchToTorus32(pt, param.torusBase);
+    Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
     Tlwe input{param.n};
     symEncTlwe(input, mu, tlweKey);
     ScaledTlwe sTlwe {param.N * 2, param.n};
-    rescaleTlweFromTorus32(sTlwe, input);
+    rescaleTlweToNewMod(sTlwe, input);
     Trlwe acc{param.k, param.N};
     genNoiselessTrlweSample(acc, v, sTlwe);
 
@@ -63,9 +69,11 @@ int main(int argc, char **argv) {
 //    COUNT_TIME("blindRotateJP22NttMT multiple threads", blindRotateJP22NttMT(acc, bskMP.bskDft, sTlwe, param);)
 //    COUNT_TIME("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
     COUNT_TIME("blindRotateOptNtt", blindRotateOptNtt(out, bskMPOpt.bskFirst, bskMPOpt.bskDft, sTlwe, v, param);)
+    COUNT_TIME("blindRotateLazyNtt", blindRotateLazyNtt(out, bskMPLazy.bskFirst, bskMPLazy.bskDft, bskMPLazy.iniliatized, sTlwe, v, s2Dft, param);)
 
-
-    extractTlweFromTrlwe(tmp, out, param.driftPhase);
+    Trlwe accumScaled {param.k, param.N};
+    rescaleTrlweToNewMod(accumScaled, out, LWE_Q, TORUS_Q);
+    extractTlweFromTrlwe(tmp, accumScaled, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;

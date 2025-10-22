@@ -39,11 +39,14 @@ const int64_t Q_CRT = static_cast<int64_t>(QD_CRT[0]) * QD_CRT[1] * QD_CRT[2] * 
 const uint64_t BARRETT_CONSTANT = UINT64_MAX / (uint64_t)Q_CRT;  // μ = floor(2^64 / TORUS_Q)
 
 extern int64_t TORUS_Q;
+extern int64_t LWE_Q;
 extern Integer MESSAGE_P;
 extern Integer INT_MAX_VALUE;
 extern Integer INT_MIN_VALUE;
 extern Integer TORUS_MAX;
 extern Integer TORUS_MIN;
+extern Integer LWE_MAX;
+extern Integer LWE_MIN;
 
 #else
 using Torus = int64_t;

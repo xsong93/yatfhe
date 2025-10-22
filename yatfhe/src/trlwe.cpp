@@ -14,9 +14,9 @@ using namespace std;
 using namespace NttHexl;
 
 void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, double sigma) {
-    initCoeffsWithGaussianNoiseSingleSample(trlwe.b.coeffs, mu, sigma);
+    initCoeffsWithGaussianNoiseSingleSample(trlwe.b.coeffs, mu, sigma, TORUS_Q);
     for (auto i = 0 ; i < trlwe.k; i++) {
-        initCoeffsViaUniformDistribution(trlwe.a[i].coeffs);
+        initCoeffsViaUniformDistribution(trlwe.a[i].coeffs, TORUS_MIN, TORUS_MAX);
     }
 }
 
@@ -32,9 +32,9 @@ void initTrlweSingleSampleFixedNoise(Trlwe& trlwe, const Torus mu, const Torus n
 }
 
 void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
-    initCoeffsWithGaussianNoiseMultiSample(trlwe.b.coeffs, mu, sigma);
+    initCoeffsWithGaussianNoiseMultiSample(trlwe.b.coeffs, mu, sigma, TORUS_Q);
     for (auto i = 0 ; i < trlwe.k; i++) {
-        initCoeffsViaUniformDistribution(trlwe.a[i].coeffs);
+        initCoeffsViaUniformDistribution(trlwe.a[i].coeffs, TORUS_MIN, TORUS_MAX);
     }
 }
 
@@ -313,5 +313,18 @@ void copyTrlwe(Trlwe& target, const Trlwe& source, const bool copyA, const bool 
         if (copyB) {
             target.b.coeffs[j] = source.b.coeffs[j];
         }
+    }
+}
+
+void rescaleTrlweToNewMod(Trlwe& output, const Trlwe& in, const int64_t newMod, const int64_t currMod) {
+    for (auto i = 0; i < in.k; i++) {
+        auto& aIn = in.a[i];
+        auto& aOut = output.a[i];
+        for (auto j = 0; j < aIn.N; j++) {
+            aOut.coeffs[j] = modSwitchFromTorusGeneral(aIn.coeffs[j], newMod, currMod);
+        }
+    }
+    for (auto j = 0; j < in.b.N; j++) {
+        output.b.coeffs[j] = modSwitchFromTorusGeneral(in.b.coeffs[j], newMod, currMod);
     }
 }

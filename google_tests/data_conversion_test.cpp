@@ -34,7 +34,7 @@ TEST(DataConvTest, doubleTorusTest) {
 
 
     for (auto k = 0; k < 100; k++) {
-        initCoeffsViaUniformDistribution(tPoly.coeffs);
+        initCoeffsViaUniformDistribution(tPoly.coeffs, TORUS_MIN, TORUS_MAX);
 //        printArray(tPoly.coeffs, "torusPoly");
         torusPolyToDoublePoly(resPoly, tPoly);
 //        printArray(resPoly.coeffs, "resPoly");
@@ -67,7 +67,7 @@ TEST(DataConvTest, intTorusTest) {
     }
 
     for (auto k = 0; k < 100; k++) {
-        initCoeffsViaUniformDistribution(tPoly.coeffs);
+        initCoeffsViaUniformDistribution(tPoly.coeffs, TORUS_MIN, TORUS_MAX);
 //        printArray(tPoly.coeffs, "torusPoly");
         torusPolyToIntPoly(resPoly, tPoly, 2 * N);
 //        printArray(resPoly.coeffs, "resPoly");
@@ -97,7 +97,7 @@ TEST(DataConvTest, SCALE_TLWE) {
         symEncTlwe(input, mu, tlweKey);
 
         ScaledTlwe inputModN2{param.N * 2, param.n};
-        rescaleTlweFromTorus32(inputModN2, input);
+        rescaleTlweToNewMod(inputModN2, input);
 
         printTlweAB(input, "input");
         printTlweAB(inputModN2, "inputModN2");

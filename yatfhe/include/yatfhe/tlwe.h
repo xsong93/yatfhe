@@ -44,11 +44,11 @@ struct TlweKey {
 
 void genTlweKey(TlweKey& key);
 
-void rescaleTlweFromTorus32(ScaledTlwe& output, const Tlwe& input);
+void rescaleTlweFromTorus(Tlwe& output, const Tlwe& input);
+
+void rescaleTlweToNewMod(ScaledTlwe& output, const Tlwe& input);
 
 void symEncTlwe(Tlwe& tlweSample, Torus message, const TlweKey& key);
-
-double symDecTlweToDouble(Tlwe& in, const TlweKey& key, int torusBase);
 
 Torus symDecTlweToTorus(Tlwe& in, const TlweKey& key, int torusBase);
 

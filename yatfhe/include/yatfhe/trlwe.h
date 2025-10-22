@@ -485,6 +485,8 @@ void rotateTrlwe8MinusOne(Trlwe8& res, const Trlwe8& input, int a, int modP);
 
 void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);
 
+void rescaleTrlweToNewMod(Trlwe& output, const Trlwe& in, int64_t newMod, int64_t currMod);
+
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput);
 
 #endif //HLS_YATFHE_TRLWE_H

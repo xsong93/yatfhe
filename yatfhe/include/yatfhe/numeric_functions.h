@@ -17,7 +17,7 @@ extern uniform_int_distribution<Binary> binaryDistrib;
 
 extern uniform_int_distribution<Integer> ternaryDistrib;
 
-uniform_int_distribution<Torus>& uniformTorusDistrib();
+uniform_int_distribution<Torus>& uniformTorusDistrib(Torus min, Torus max);
 
 int calLogBase2(int N);
 
@@ -25,17 +25,21 @@ Integer genIntUniformDist(Integer lowerBound, Integer upperBound);
 
 uint64_t genUInt64UniformDist(uint64_t lowerBound, uint64_t upperBound);
 
-Torus addGaussianNoise(Torus message, double sigma);
+Torus addGaussianNoise(Torus message, double sigma, const int64_t torusQ);
 
-Torus modSwitchToTorus32(int32_t mu, uint32_t Msize);
+Torus modSwitchToTorusGeneral(int32_t mu, uint32_t mSize, int64_t torusQ);
+
+int32_t modSwitchFromTorusGeneral(Torus in, uint32_t newMod, int64_t torusQ);
+
+Torus modSwitchToTorus32(int32_t mu, uint32_t mSize);
 
 int32_t modSwitchFromTorus32(Torus in, uint32_t newMod);
-
-uint32_t modSwitchFromTorus32Pos(Torus in, uint32_t newMod);
 
 Torus doubleToTorus32(double d);
 
 double roundError(double in, int torusBase);
+
+Torus roundTorusGeneralError(const Torus in, const int torusBase, const int64_t q);
 
 Torus roundTorusError(Torus in, int torusBase);
 
@@ -51,19 +55,20 @@ int64_t montgomoryReduceT32(int64_t in);
 
 // Torus addTorus(Torus in1, Torus in2);
 
-Torus subTorus(Torus in1, Torus in2);
+Torus subTorus(int64_t q, Torus in1, Torus in2);
 
-Torus multTorus(Torus in1, Torus in2);
+Torus multTorus(int64_t q, Torus in1, Torus in2);
 
 int64_t modInverse(int64_t a, int64_t p);
 
 double torus32ToDouble(Torus in);
 
-void initCoeffsViaUniformDistribution(vector<Torus>& coeffs);
+void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, Torus min, Torus max);
 
-void initCoeffsWithGaussianNoiseSingleSample(vector<Torus>& coeffs, Torus msg, double sigma);
+void initCoeffsWithGaussianNoiseSingleSample(vector<Torus>& coeffs, Torus msg, double sigma, const int64_t torusQ);
 
-void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, double sigma);
+void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, double sigma
+                                            , const int64_t torusQ);
 
 Integer modPow(Integer x, Integer y, Integer mod);
 
@@ -99,18 +104,19 @@ void setCoeffsValue(vector<T> coeffs, T val) {
 }
 
 template<typename... TorusArgs>
-std::common_type_t<TorusArgs...> addTorus(TorusArgs... inputs) {
-    if (TORUS_Q == Q_32) {
+std::common_type_t<TorusArgs...> addTorus(int64_t q, TorusArgs... inputs) {
+    if (q == Q_32) {
         return (inputs + ...);
     }
     int64_t tmp = (static_cast<int64_t>(inputs) + ...);
-    if (tmp > TORUS_MAX) {
-        return static_cast<std::common_type_t<TorusArgs...>>(tmp - TORUS_Q);
-    }
-    if (tmp < TORUS_MIN) {
-        return static_cast<std::common_type_t<TorusArgs...>>(tmp + TORUS_Q);
-    }
-    return static_cast<std::common_type_t<TorusArgs...>>(tmp);
+//    if (tmp > TORUS_MAX) {
+//        return static_cast<std::common_type_t<TorusArgs...>>(tmp - TORUS_Q);
+//    }
+//    if (tmp < TORUS_MIN) {
+//        return static_cast<std::common_type_t<TorusArgs...>>(tmp + TORUS_Q);
+//    }
+//    return static_cast<std::common_type_t<TorusArgs...>>(tmp);
+    return longModP(tmp, q);
 }
 
 template <typename T, typename R>
@@ -135,18 +141,18 @@ void vectorDotMultConst(vector<T>& output, vector<T>& input1, vector<R>& nums) {
 }
 
 template <typename T>
-void vectorAdd(vector<T>& output, vector<T>& input1, vector<T>& input2) {
+void vectorAdd(vector<T>& output, vector<T>& input1, vector<T>& input2, int64_t q) {
     for (auto i = 0; i < output.size(); i++) {
 //        output[i] = input1[i] + input2[i];
-        output[i] = addTorus(input1[i], input2[i]);
+        output[i] = addTorus(q, input1[i], input2[i]);
     }
 }
 
 template <typename T>
-void vectorSub(vector<T>& output, vector<T>& input1, vector<T>& input2) {
+void vectorSub(vector<T>& output, vector<T>& input1, vector<T>& input2, int64_t q) {
     for (auto i = 0; i < output.size(); i++) {
 //        output[i] = input1[i] - input2[i];
-        output[i] = subTorus(input1[i], input2[i]);
+        output[i] = subTorus(q, input1[i], input2[i]);
     }
 }
 

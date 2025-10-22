@@ -96,7 +96,7 @@ void rotateTorusPolynomialMinusOne(TorusPolynomial& out, const int a, const Toru
     Torus tmp = 0;
     for (auto i = 0; i < N; i++) {
         tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
-        out.coeffs[i] = subTorus(tmp, input.coeffs[i]);
+        out.coeffs[i] = subTorus(TORUS_Q, tmp, input.coeffs[i]);
     }
 }
 
@@ -139,9 +139,9 @@ void multTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, con
         int64_t tmp = 0;
         for (auto j = 0; j < N; j++) {
             if (j <= i) {
-                tmp += multTorus(poly1.coeffs[j], poly2.coeffs[i - j]);
+                tmp += multTorus(TORUS_Q, poly1.coeffs[j], poly2.coeffs[i - j]);
             } else {
-                tmp -= multTorus(poly1.coeffs[j], poly2.coeffs[N + i - j]);
+                tmp -= multTorus(TORUS_Q, poly1.coeffs[j], poly2.coeffs[N + i - j]);
             }
         }
         res.coeffs[i] = static_cast<Torus>(longModP(tmp, TORUS_Q));
@@ -210,12 +210,12 @@ void multTorusPolynomialAcc(TorusPolynomial& res, const TorusPolynomial& poly1, 
         int64_t tmp = 0;
         for (auto j = 0; j < N; j++) {
             if (j <= i) {
-                tmp += multTorus(poly1.coeffs[j], poly2.coeffs[i - j]);
+                tmp += multTorus(TORUS_Q, poly1.coeffs[j], poly2.coeffs[i - j]);
             } else {
-                tmp -= multTorus(poly1.coeffs[j], poly2.coeffs[N + i - j]);
+                tmp -= multTorus(TORUS_Q, poly1.coeffs[j], poly2.coeffs[N + i - j]);
             }
         }
-        res.coeffs[i] = addTorus(res.coeffs[i], static_cast<Torus>(longModP(tmp, TORUS_Q)));
+        res.coeffs[i] = addTorus(TORUS_Q, res.coeffs[i], static_cast<Torus>(longModP(tmp, TORUS_Q)));
     }
 }
 
@@ -257,7 +257,7 @@ void subIntPolynomial(IntPolynomial& res, const IntPolynomial& poly1, const IntP
 void subTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
-        res.coeffs[i] = subTorus(poly1.coeffs[i], poly2.coeffs[i]);
+        res.coeffs[i] = subTorus(TORUS_Q, poly1.coeffs[i], poly2.coeffs[i]);
     }
 }
 

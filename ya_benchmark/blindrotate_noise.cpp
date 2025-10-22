@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
         Tlwe input{param.n};
         symEncTlwe(input, mu, tlweKey);
         ScaledTlwe sTlwe {param.N * 2, param.n};
-        rescaleTlweFromTorus32(sTlwe, input);
+        rescaleTlweToNewMod(sTlwe, input);
         Trlwe acc{param.k, param.N};
         genNoiselessTrlweSample(acc, v, sTlwe);
         Trlwe out{param.k, param.N};

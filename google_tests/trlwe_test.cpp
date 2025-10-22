@@ -377,7 +377,7 @@ TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
     TorusPolynomial torusOutput(param.N);
     IntPolynomial plainOutput(param.N);
 
-    vectorAdd(torusOutput.coeffs, in1, in2);
+    vectorAdd(torusOutput.coeffs, in1, in2, TORUS_Q);
     torusPolyToIntPoly(plainOutput, torusOutput, param.torusBase);
     printArray(plainOutput.coeffs, "plainOutput Add");
 
@@ -391,7 +391,7 @@ TEST(TrlweTest, TrlweAddSubMultiSampleTest) {
         ASSERT_EQ(plainOutput.coeffs[i], output.coeffs[i]);
     }
 
-    vectorSub(torusOutput.coeffs, in1, in2);
+    vectorSub(torusOutput.coeffs, in1, in2, TORUS_Q);
     torusPolyToIntPoly(plainOutput, torusOutput, param.torusBase);
     printArray(plainOutput.coeffs, "plainOutput Sub");
 
@@ -499,11 +499,11 @@ TEST(TrlweTest, TRLWE_MULT_DECOMP) {
     for (size_t l = 0; l < param.l; l++) {
         for (size_t i = 0; i < param.k; i++) {
             for (size_t j = 0; j < param.N; j++) {
-                trlwes.trlwes[l].a[i].coeffs[j] = multTorus(trlwe.a[i].coeffs[j], da.value[l]);
+                trlwes.trlwes[l].a[i].coeffs[j] = multTorus(TORUS_Q, trlwe.a[i].coeffs[j], da.value[l]);
             }
         }
         for (size_t j = 0; j < param.N; j++) {
-            trlwes.trlwes[l].b.coeffs[j] = multTorus(trlwe.b.coeffs[j], da.value[l]);
+            trlwes.trlwes[l].b.coeffs[j] = multTorus(TORUS_Q, trlwe.b.coeffs[j], da.value[l]);
         }
     }
     printDecomposedTrlweAB(trlwes, "trlwes");

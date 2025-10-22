@@ -154,7 +154,7 @@ template<typename PolyType>
 void accumulateTorusPolynomial(PolyType& res, const PolyType& accum) {
     const int N = res.N;
     for (int i = 0; i < N; i++) {
-        res.coeffs[i] = addTorus(res.coeffs[i], accum.coeffs[i]);
+        res.coeffs[i] = addTorus(TORUS_Q, res.coeffs[i], accum.coeffs[i]);
     }
 }
 

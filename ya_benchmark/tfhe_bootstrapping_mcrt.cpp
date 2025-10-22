@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     COUNT_TIME("genTlweKeySwitchingKey", genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);)
 
     Integer plain = 3;
-    Torus mu = modSwitchToTorus32(plain, param.torusBase);
+    Torus mu = modSwitchToTorusGeneral(plain, param.torusBase, LWE_Q);
     TorusPolynomial v{param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     Tlwe output{param.n};
     symEncTlwe(input, mu, tlweKey);
 
-    cout << "msg: " << modSwitchFromTorus32(mu, param.torusBase) << endl;
+    cout << "msg: " << modSwitchFromTorusGeneral(mu, param.torusBase, LWE_Q) << endl;
     auto decPre = symDecTlweToInt(input, tlweKey, param.torusBase);
     cout << "decPre: " << decPre << endl;
 
