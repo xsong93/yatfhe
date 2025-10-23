@@ -23,6 +23,8 @@ struct TrlevDft {
     std::vector<TrlweDft> trlweDfts; // l
     int l;
 
+    TrlevDft() = default;
+
     explicit TrlevDft(const YatfheParameters& param) :
             trlweDfts(param.l, TrlweDft(param.k, param.N)),
             l(param.l) {}
