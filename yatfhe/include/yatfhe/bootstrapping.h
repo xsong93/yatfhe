@@ -119,7 +119,7 @@ struct BootstrappingKeyMPOpt {
     int n {};
     int group {};
     bool isHalf{false};
-    bool iniliatized{false};
+    bool initialized{false};
 
     explicit BootstrappingKeyMPOpt() = default;
 

@@ -94,6 +94,52 @@ void preRotateTernary(Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut, const v
     }
 }
 
+void switchSchemeInBatchBinary(vector<vector<TrgswMPDft>>& bsk, const TrlevDft& s2, const ScaledTlwe& input,
+                               const YatfheParameters& param) {
+    /**
+     * Performs:
+     *  for (auto i = 0; i < n-1; i++) {
+     *       bsk[i][0].c = vector(level, vector(param.k, TrlweDft(param.k, param.N)));
+     *       for (auto l = 0; l < level; l++) {
+     *           switchTrlweToSecretEmbeddingNtt(bsk[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
+     *       }
+     *   }
+     */
+    const auto n = param.n;
+    const auto batchSize = param.batchSize;
+    const auto tasksPerThread = param.tasksPerThread;
+    const auto level = bsk[0][0].l;
+    auto& pool = ThreadPool::instance();
+
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+
+    for (int start = 0; start < n - 1; start += batchSize * tasksPerThread) {
+        futures.clear();
+        const int end = min(start + batchSize * tasksPerThread, n - 1);
+
+        // Process tasks in chunks of 'tasksPerThread'
+        for (int chunkStart = start; chunkStart < end; chunkStart += tasksPerThread) {
+            const int chunkEnd = min(chunkStart + tasksPerThread, end);
+
+            futures.emplace_back(pool.enqueue([&bsk, &s2, &input, &param, chunkStart, chunkEnd, level] {
+                for (int i = chunkStart; i < chunkEnd; ++i) {
+                    if (input.a[i+1] == 0) {
+                        continue;
+                    }
+                    bsk[i][0].c = vector(level, vector(param.k, TrlweDft(param.k, param.N)));
+                    for (auto l = 0; l < level; l++) {
+                        switchTrlweToSecretEmbeddingNtt(bsk[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
+                    }
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.get();
+        }
+    }
+}
+
 void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     for (auto i = 0; i < param.n; i++) {
@@ -586,7 +632,7 @@ void blindRotateOptNtt(Trlwe& accum, const vector<Trlwe>& bskFirst,  const vecto
 
 //todo
 //lazy init
-void blindRotateLazyNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk, bool& isInitialize,
+void blindRotateLazyNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk, bool& initialized,
                         const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2, const YatfheParameters& param) {
     const auto level = bsk[0][0].l;
     const auto n = param.n;
@@ -629,11 +675,10 @@ void blindRotateLazyNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vect
         rotateTrlwe(accum, tmp, -input.b);
     }
 
-    for (auto i = 0; i < n-1; i++) {
-        bsk[i][0].c = vector(level, vector(param.k, TrlweDft(param.k, param.N)));
-        for (auto l = 0; l < level; l++) {
-            switchTrlweToSecretEmbeddingNtt(bsk[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
-        }
+    // calculate secret dependent part of the bsk
+    if (!initialized) {
+        switchSchemeInBatchBinary(bsk, s2, input, param);
+        initialized = true;
     }
 
     // accumulate on the remaining n-1 key components

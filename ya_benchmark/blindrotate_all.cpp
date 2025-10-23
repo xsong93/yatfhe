@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 //    COUNT_TIME("blindRotateJP22NttMT multiple threads", blindRotateJP22NttMT(acc, bskMP.bskDft, sTlwe, param);)
 //    COUNT_TIME("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
     COUNT_TIME("blindRotateOptNtt", blindRotateOptNtt(out, bskMPOpt.bskFirst, bskMPOpt.bskDft, sTlwe, v, param);)
-    COUNT_TIME("blindRotateLazyNtt", blindRotateLazyNtt(out, bskMPLazy.bskFirst, bskMPLazy.bskDft, bskMPLazy.iniliatized, sTlwe, v, s2Dft, param);)
+    COUNT_TIME("blindRotateLazyNtt", blindRotateLazyNtt(out, bskMPLazy.bskFirst, bskMPLazy.bskDft, bskMPLazy.initialized, sTlwe, v, s2Dft, param);)
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);

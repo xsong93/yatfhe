@@ -23,7 +23,7 @@ void blindRotateWithPreRotNttMT(Trlwe& accum, const vector<Trlwe>& trlwe, const 
 void blindRotateOptNtt(Trlwe& accum, const vector<Trlwe>& bskFirst,  const vector<vector<TrgswMPDft>>& bskDft,
                        const ScaledTlwe& input, const TorusPolynomial& v, const YatfheParameters& param);
 
-void blindRotateLazyNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk, bool& isInitialize,
+void blindRotateLazyNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk, bool& initialized,
                         const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2, const YatfheParameters& param);
 
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
