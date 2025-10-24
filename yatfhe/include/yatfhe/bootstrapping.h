@@ -145,16 +145,25 @@ struct BootstrappingKeyMPOpt {
 };
 
 struct BootstrappingKeyMPLazy {
+#ifdef TERNARY
     vector<Trlwe> bskFirst{};
-    vector<vector<TrgswMPDft>> bskDft {};
-    int n {};
-    int group {};
-    bool isHalf{false};
+    vector<TrgswMPDft> bskSecond{};
+    vector<vector<TrgswMPDft>> bskDft{};
+    vector<vector<vector<DecompPolynomial>>> bskDecomp{};
+#else
+    Trlwe bskFirst{};
+    TrgswMPDft bskSecond{};
+    vector<TrgswMPDft> bskDft{};
+    vector<vector<vector<vector<DecompPolynomial>>>> bskDecompA{};
+#endif
+    int n{};
+    int level{};
+    int group{};
     bool iniliatized{false};
 
     explicit BootstrappingKeyMPLazy() = default;
 
-    BootstrappingKeyMPLazy(const YatfheParameters& p, const int level, bool half) : group(p.group), isHalf(half) {
+    BootstrappingKeyMPLazy(const YatfheParameters& p, const int level) : group(p.group), level(level) {
 #ifdef TERNARY
         if (group == 1) {
             n = p.n;
@@ -169,8 +178,10 @@ struct BootstrappingKeyMPLazy {
         } else {
             n = p.n / group * (1 << group);
         }
-        bskFirst = vector(1, Trlwe{p.k, p.N});
-        bskDft = vector(n, vector(1, TrgswMPDft(p, level, isHalf)));
+        bskFirst = Trlwe{p.k, p.N};
+        bskSecond = TrgswMPDft{p, level, false};
+        bskDft = vector(n - 2, TrgswMPDft{p, level, true, true});
+        bskDecompA = vector(n - 2, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N}))));
 #endif
     }
 };
@@ -242,6 +253,8 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
 void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param);
+
+void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param);
 
 void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, Torus noise, const YatfheParameters& param);
 

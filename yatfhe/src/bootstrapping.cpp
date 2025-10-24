@@ -152,6 +152,64 @@ void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, co
     }
 }
 
+void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param) {
+    // process first two key components
+    {
+#ifdef TERNARY
+        if (tlweKey.s[0] == 0) {
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+            symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0);
+        } else if (tlweKey.s[0] == 1) {
+            symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
+            symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0);
+        } else {
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+            symEncTrlweMultiSample(bsk.bskFirst[1], trgswKey.trlweKey, v.coeffs);
+        }
+#else
+        if (tlweKey.s[0] == 1) {
+            symEncTrlweMultiSample(bsk.bskFirst, trgswKey.trlweKey, v.coeffs);
+        } else {
+            symEncTrlweSingleSample(bsk.bskFirst, trgswKey.trlweKey, 0);
+        }
+        encryptTrgswMPNtt(bsk.bskSecond, tlweKey.s[1], trgswKey, 0, param);
+#endif
+    }
+
+    // process remaining n - 2 components
+    for (auto i = 0; i < bsk.n - 2; i++) {
+#ifdef TERNARY
+        const auto si = tlweKey.s[i+1];
+        if(si == 0) {
+            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+        } else if (si == 1) {
+            encryptTrgswMPNtt(bsk.bskDft[i][0], 1, trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+        } else {
+            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][1], 1, trgswKey, 0, param);
+        }
+#else
+        TrgswMP tmp{param, bsk.level, true};
+        encryptTrgswMP(tmp, tlweKey.s[i + 2], trgswKey, 0, param);
+        for (auto l0 = 0; l0 < bsk.level; l0++) {
+            auto& a = tmp.cPrime[l0].a;
+            auto& dA = bsk.bskDecompA[i][l0];
+            for (auto k = 0; k < param.k; k++) {
+                for (auto j = 0; j < param.N; j++) {
+                    DecomposedData d{param.l};
+                    gadgetDecompose(d, a[k].coeffs[j], param);
+                    for (auto l = 0; l < param.l; l++) {
+                        dA[l][k].coeffs[j] = d.value[l] * d.sign;
+                    }
+                }
+            }
+        }
+#endif
+    }
+}
+
 void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const Torus noise, const YatfheParameters& param) {
     for (auto i = 0; i < bsk.n; i++) {
 #ifdef TERNARY

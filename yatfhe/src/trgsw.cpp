@@ -236,8 +236,6 @@ void rotateTrgswMPMinusOneNtt(TrgswMPDft& out, const TrgswMPDft& in, const int r
     if (rot % (param.N * 2) == 0) {
         return;
     }
-    TrlweDft rotT1{param.k, param.N};
-    TrlweDft rotT2{param.k, param.N};
     for (auto lvl = 0; lvl < out.l; lvl++) {
         rotateTrlweMinusOneNtt(out.cPrime[lvl], in.cPrime[lvl], rot);
         for (auto row = 0; row < param.k; row++) {

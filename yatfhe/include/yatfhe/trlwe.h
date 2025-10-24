@@ -94,6 +94,13 @@ struct TrlweDft{
             a(k, NttPolynomial(N)),
             b(NttPolynomial(N)),
             k(k) {};
+    TrlweDft(int k, int N, bool onlyB) :
+            b(NttPolynomial(N)),
+            k(k) {
+        if (!onlyB) {
+            a = vector(k, NttPolynomial(N));
+        }
+    };
 };
 
 struct TrlweDft14{

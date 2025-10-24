@@ -58,9 +58,8 @@ int main(int argc, char **argv) {
     Trlwe out{param.k, param.N};
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
-    vector<TrgswMPDft> helper(param.n-1, TrgswMPDft{param});
-    TrgswMPDft gv{param};
-    encryptTrgswMPMultiNtt(gv, v.coeffs, trgswKey, param);
+    TrgswMPDft one{param};
+    encryptTrgswMPNtt(one, 1, trgswKey, 0, param);
 
     // rot
     COUNT_TIME("blindRotateJP22Ntt single thread", blindRotateJP22Ntt(acc, bskMP.bskDft, sTlwe, param);)
@@ -69,6 +68,8 @@ int main(int argc, char **argv) {
 //    COUNT_TIME("blindRotateWithPreRotNtt multiple threads", blindRotateWithPreRotNttMT(out, bskPre.bskFirst, bskPre.bskDft, sTlwe, param);)
     COUNT_TIME("blindRotateOptNtt", blindRotateOptNtt(out, bskMPOpt.bskFirst, bskMPOpt.bskDft, sTlwe, v, param);)
     COUNT_TIME("blindRotateLazyNtt", blindRotateLazyNtt(out, bskMPLazy.bskFirst, bskMPLazy.bskDft, bskMPLazy.initialized, sTlwe, v, s2Dft, param);)
+    COUNT_TIME("blindRotateLazyOptNtt", blindRotateLazyOptNtt(out, bskMPLazy.bskFirst, bskMPLazy.bskDft, bskMPLazy.initialized, sTlwe, v, s2Dft, one, param);)
+
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
