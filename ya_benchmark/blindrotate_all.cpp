@@ -39,10 +39,13 @@ int main(int argc, char **argv) {
     // genBootstrappingKeyMPPreRot(bskPre, trgswKey, tlweKey, v, param.batchSize, param);
 
     BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
-    genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);
+    COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
 
     BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
     genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
+
+    BootstrappingKeyMPLazy bskMPLazyOpt{param, param.lApprox};
+    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazy(bskMPLazyOpt, trgswKey, tlweKey, v, param);)
 
     // data gen
     Integer pt = 3;

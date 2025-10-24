@@ -40,6 +40,19 @@ struct Int8Polynomial {
             N(N) {};
 };
 
+struct Int16Polynomial {
+    std::vector<int16_t> coeffs {}; // N
+    int N {};
+
+    explicit Int16Polynomial(int N) :
+            coeffs(N, 0),
+            N(N) {};
+
+    Int16Polynomial(int N, int16_t value) :
+            coeffs(N, value),
+            N(N) {};
+};
+
 struct Int8PolynomialD {
     std::vector<std::vector<int8_t>> coeffs {}; // N * d
     int N {};
@@ -52,7 +65,7 @@ struct Int8PolynomialD {
 };
 
 using IntPolynomial = TorusPolynomial;
-using DecompPolynomial = IntPolynomial;
+using DecompPolynomial = Int16Polynomial;
 using BinPolynomial = IntPolynomial;
 
 struct NttPolynomial {
