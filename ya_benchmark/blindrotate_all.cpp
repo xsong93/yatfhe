@@ -11,8 +11,8 @@
 int main(int argc, char **argv) {
     YatfheParameters param{};
     param.N = 1024;
-    param.batchSize = 16;
-    param.tasksPerThread = 15;
+    param.batchSize = 3;
+    param.tasksPerThread = 1;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
@@ -38,8 +38,11 @@ int main(int argc, char **argv) {
     COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
     BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
     genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
+    BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
+    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);)
     BootstrappingKeyMPLazy bskMPLazyOpt{param, param.lApprox, true, true};
     COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazy(bskMPLazyOpt, trgswKey, tlweKey, v, param);)
+
 
     // data gen
     Integer pt = 3;
@@ -55,6 +58,7 @@ int main(int argc, char **argv) {
     Trlwe out{param.k, param.N};
     Trlwe out2{param.k, param.N};
     Trlwe out3{param.k, param.N};
+    Trlwe out4{param.k, param.N};
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
     TrgswMPDft one{param};
@@ -65,21 +69,21 @@ int main(int argc, char **argv) {
     // GINX server procedure
     {
         BootstrappingKeyMP bskMPServer{param, param.lApprox};
-        bskMPServer = bskMP;
-        COUNT_TIME("blindRotateJP22Ntt single thread", blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);)
+        COUNT_TIME("blindRotateGINXNtt key", bskMPServer = bskMP;)
+        COUNT_TIME("blindRotateGINXNtt", blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);)
     }
 
     // optimized GINX server procedure
     {
         BootstrappingKeyMPOpt bskMPOptServer{param, param.lApprox, false};
-        bskMPOptServer = bskMPOpt;
+        COUNT_TIME("blindRotateOptNtt key", bskMPOptServer = bskMPOpt;)
         COUNT_TIME("blindRotateOptNtt", blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft, sTlwe, v, param);)
     }
 
     // parallel naive lazy key initialization server procedure
     {
         BootstrappingKeyMPOpt bskMPLazyServer{param, param.lApprox, true};
-        bskMPLazyServer = bskMPLazy;
+        COUNT_TIME("blindRotateLazyNtt key", bskMPLazyServer = bskMPLazy;)
         COUNT_TIME("blindRotateLazyNtt", blindRotateLazyNtt(out2, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyServer.initialized, sTlwe, v, s2Dft, param);)
     }
 
@@ -87,16 +91,36 @@ int main(int argc, char **argv) {
     {
         BootstrappingKeyMPOpt bskMPLazyServer{param, param.lApprox, true, true};
         if (!bskMPLazyServer.initialized) {
-            bskMPLazyServer.bskFirst = bskMPLazyOpt.bskFirst;
-            bskMPLazyServer.bskDft[0] = bskMPLazyOpt.bskFull[0];
-            bskMPLazyServer.bskDft[1] = bskMPLazyOpt.bskFull[1];
-            for (auto i = 2; i < param.n - 1; i++) {
-                bskMPLazyServer.bskDft[i] = bskMPLazyOpt.bskTrim[i - 2];
-            }
-            COUNT_TIME("blindRotateLazyOptNtt", blindRotateLazyOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyOpt.bskDecompA, sTlwe, v, s2Dft, one, param);)
+            COUNT_TIME("blindRotateLazyPipeNtt key", {
+                bskMPLazyServer.bskFirst = bskMPLazyPipe.bskFirst;
+                bskMPLazyServer.bskDft[0] = bskMPLazyPipe.bskFull[0];
+                bskMPLazyServer.bskDft[1] = bskMPLazyPipe.bskFull[1];
+                for (auto i = 2; i < param.n - 1; i++) {
+                    bskMPLazyServer.bskDft[i] = bskMPLazyPipe.bskTrim[i - 2];
+                }
+            })
+            COUNT_TIME("blindRotateLazyPipeNtt", blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one, param);)
             bskMPLazyServer.initialized = true;
         } else {
             blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
+        }
+    }
+
+
+    // optimized lazy key initialization server procedure
+    {
+        BootstrappingKeyMPOpt bskMPLazyServer{param, param.lApprox, true, true};
+        if (!bskMPLazyServer.initialized) {
+            COUNT_TIME("blindRotateLazyMTNtt key", {
+                bskMPLazyServer.bskFirst = bskMPLazyOpt.bskFirst;
+                for (auto i = 0; i < param.n - 1; i++) {
+                    bskMPLazyServer.bskDft[i] = bskMPLazyOpt.bskTrim[i];
+                }
+            })
+            COUNT_TIME("blindRotateLazyMTNtt", blindRotateLazyMTNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyOpt.bskDecompA, sTlwe, v, s2Dft, param);)
+            bskMPLazyServer.initialized = true;
+        } else {
+            blindRotateOptNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
         }
     }
 
@@ -122,7 +146,13 @@ int main(int argc, char **argv) {
     extractTlweFromTrlwe(tmp, out3, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-    cout << "decAft(LAZY_OPT): "<< decAft << endl;
-    cout << "err(LAZY_OPT):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "decAft(LAZY_Pipe): "<< decAft << endl;
+    cout << "err(LAZY_Pipe):" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, out4, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(LAZY_MT): "<< decAft << endl;
+    cout << "err(LAZY_MT):" << calTlweError(output, tlweKey, mu) << endl;
     return 0;
 }

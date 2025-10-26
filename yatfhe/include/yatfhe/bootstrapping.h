@@ -166,7 +166,6 @@ struct BootstrappingKeyMPOpt {
 
 struct BootstrappingKeyMPLazy {
     vector<Trlwe> bskFirst{};
-    vector<vector<TrgswMPDft>> bskFull{};
     vector<vector<TrgswMPDft>> bskTrim{};
     vector<vector<vector<vector<vector<DecompPolynomial>>>>> bskDecompA{};
     int n{};
@@ -184,9 +183,44 @@ struct BootstrappingKeyMPLazy {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(2, Trlwe{p.k, p.N});
+        bskTrim = vector(n - 1, vector(2, TrgswMPDft{p, level, isHalf, isOnlyB}));
+        bskDecompA = vector(n - 1, vector(2, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(1, Trlwe{p.k, p.N});
+        bskTrim = vector(n - 1, vector(1, TrgswMPDft{p, level, isHalf, isOnlyB}));
+        bskDecompA = vector(n - 1, vector(1, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
+#endif
+    }
+};
+
+struct BootstrappingKeyMPLazyPipe {
+    vector<Trlwe> bskFirst{};
+    vector<vector<TrgswMPDft>> bskFull{};
+    vector<vector<TrgswMPDft>> bskTrim{};
+    vector<vector<vector<vector<vector<DecompPolynomial>>>>> bskDecompA{};
+    int n{};
+    int level{};
+    int group{};
+    bool initialized{false};
+
+    explicit BootstrappingKeyMPLazyPipe() = default;
+
+    BootstrappingKeyMPLazyPipe(const YatfheParameters& p, const int level, const bool isHalf, const bool isOnlyB) : level(level), group(p.group) {
+#ifdef TERNARY
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(2, Trlwe{p.k, p.N});
         bskFull = vector(2, vector(2, TrgswMPDft{p, level}));
         bskTrim = vector(n - 3, vector(2, TrgswMPDft{p, level, isHalf, isOnlyB}));
-        bskDecompA = vector(n - 2, vector(2, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
+        bskDecompA = vector(n - 3, vector(2, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
 #else
         if (group == 1) {
             n = p.n;
@@ -267,9 +301,12 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
 
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
+void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
+                               const TorusPolynomial& v, const YatfheParameters& param);
+
 void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param);
 
-void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param);
+void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param);
 
 void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, Torus noise, const YatfheParameters& param);
 

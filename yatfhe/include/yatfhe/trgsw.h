@@ -43,8 +43,8 @@ struct TrgswMP {
 struct TrgswMPDft {
     std::vector<std::vector<TrlweDft>> c;
     std::vector<TrlweDft> cPrime;
-    int l;
-    int k;
+    int l{};
+    int k{};
     bool isHalf{false};
 
     TrgswMPDft() = default;

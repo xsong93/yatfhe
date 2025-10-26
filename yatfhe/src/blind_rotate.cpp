@@ -140,6 +140,49 @@ void switchSchemeInBatchBinary(vector<vector<TrgswMPDft>>& bsk, const TrlevDft& 
     }
 }
 
+void switchSchemeInBatchBinaryOpt(vector<vector<TrgswMPDft>>& bsk, const TrlevDft& s2, const ScaledTlwe& input,
+                               const YatfheParameters& param,
+                               const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA) {
+    const auto n = param.n;
+    const auto batchSize = param.batchSize;
+    const auto tasksPerThread = param.tasksPerThread;
+    const auto level = bsk[0][0].l;
+    auto& pool = ThreadPool::instance();
+
+    vector<future<void>> futures;
+    futures.reserve(batchSize);
+
+    for (int start = 0; start < n - 1; start += batchSize * tasksPerThread) {
+        futures.clear();
+        const int end = min(start + batchSize * tasksPerThread, n - 1);
+
+        // Process tasks in chunks of 'tasksPerThread'
+        for (int chunkStart = start; chunkStart < end; chunkStart += tasksPerThread) {
+            const int chunkEnd = min(chunkStart + tasksPerThread, end);
+
+            futures.emplace_back(pool.enqueue([&bsk, &s2, &input, &param, &bskDecompA, chunkStart, chunkEnd, level] {
+                for (int i = chunkStart; i < chunkEnd; ++i) {
+                    if (input.a[i+1] == 0) {
+                        continue;
+                    }
+                    for (auto l = 0; l < level; l++) {
+                        auto& c = bsk[i][0].c[l];
+                        auto& cPrime = bsk[i][0].cPrime[l];
+                        auto& decompA = bskDecompA[i][0][l];
+                        c.resize(param.k, TrlweDft(param.k, param.N));
+                        cPrime.a.resize(param.k, NttPolynomial(param.N));
+                        switchTrlweToSecretEmbeddingNttOpt(bsk[i][0].c[l], bsk[i][0].cPrime[l],
+                            decompA, s2, param);
+                    }
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.get();
+        }
+    }
+}
+
 void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     Trlwe temp{param.k, param.N};
     for (auto i = 0; i < param.n; i++) {
@@ -693,18 +736,51 @@ void blindRotateLazyNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vect
 #endif
 }
 
-//todo
-void blindRotateLazyOptNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
+void blindRotateLazyMTNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
+                           const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
+                           const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
+                           const YatfheParameters& param) {
+    const auto level = bsk[0][0].l;
+    const auto n = param.n;
+
+#ifdef TERNARY
+#else
+    // handle first Rlwe key component
+    // R(v) + (X^a0 - 1)R(v*s0)
+    {
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
+    }
+
+    // calculate secret dependent part of the bsk
+    switchSchemeInBatchBinaryOpt(bsk, s2, input, param, bskDecompA);
+
+    // accumulate on the remaining n-1 key components
+    for (auto i = 0; i < n-1; i++) {
+        if (input.a[i+1] == 0) {
+            continue;
+        }
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, accum, input.a[i+1]);
+        externalProductTrgswMPNttInPlace(tmp, bsk[i][0], level, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#endif
+}
+
+void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
                            const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
                            const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
                            const TrgswMPDft& one, const YatfheParameters& param) {
     const auto level = bsk[0][0].l;
     const auto n = param.n;
-    const auto k = param.k;
-    alignas(64) vector rotated(2, TrgswMPDft{param, level});
+    TrgswMPDft rotated0{param, level};
+    TrgswMPDft rotated1{param, level};
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(2 + 2 * level);
+    futures.reserve(2 + level);
 
 #ifdef TERNARY
 #else
@@ -718,70 +794,47 @@ void blindRotateLazyOptNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<v
         rotateTrlwe(accum, tmp, -input.b);
 
         if (input.a[1] != 0) {
-            rotateTrgswMPMinusOneNtt(rotated[0], bsk[0][0], input.a[1], param);
-            addTrgswMPNtt(rotated[0], rotated[0], one);
-        } else {
-            rotated[0] = one;
+            rotateTrgswMPMinusOneNtt(rotated0, bsk[0][0], input.a[1], param);
+            addTrgswMPNtt(rotated0, rotated0, one);
         }
     }
 
     // accumulate on the n - 1 key components
     for (auto i = 0; i < n - 1; i++) {
-        const int currIdx = i % 2;
-        const int nextIdx = (i + 1) % 2;
-        auto& currRotated = rotated[currIdx];
-        auto& nextRotated = rotated[nextIdx];
+        auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
+        auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
 
-        // 步骤1: 外部乘积计算（异步）
-        futures.emplace_back(pool.enqueue([&accum, &currRotated, level, &param] {
-            externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
-        }));
+        // accumulation
+        if (input.a[i + 1] != 0) {
+            futures.emplace_back(pool.enqueue([&accum, &currRotated, level, &param] {
+                externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
+            }));
+        }
 
-        // 如果不是最后一次迭代，准备下一次的旋转密钥
-        if (i < n - 2) {
+        // automorphism
+        if (i < n - 2 && input.a[i + 2] != 0) {
             const int nextKeyIdx = i + 1;
             const auto aNext = input.a[nextKeyIdx + 1]; // input.a[i+2]
             auto& nextBsk = bsk[nextKeyIdx][0];
 
-            // 并行处理每个level
-            for (int l = 0; l < level; ++l) {
-                // futures.emplace_back(pool.enqueue([&nextBsk, &nextRotated, &one,
-                //                                  aNext, k, l] {
-                    auto& nextBskCL = nextBsk.c[l];
-                    auto& nextBskCprimeL = nextBsk.cPrime[l];
-                    auto& nextRotatedCL = nextRotated.c[l];
-                    auto& nextRotatedCprimeL = nextRotated.cPrime[l];
-
-                    if (aNext != 0) {
-                        // 旋转并加一操作
-                        rotateTrlweMinusOneNtt(nextRotatedCprimeL, nextBskCprimeL, aNext);
-                        addTrlweNtt(nextRotatedCprimeL, nextRotatedCprimeL, one.cPrime[l]);
-
-                        for (int kIdx = 0; kIdx < k; ++kIdx) {
-                            rotateTrlweMinusOneNtt(nextRotatedCL[kIdx], nextBskCL[kIdx], aNext);
-                            addTrlweNtt(nextRotatedCL[kIdx], nextRotatedCL[kIdx], one.c[l][kIdx]);
-                        }
-                    } else {
-                        // 直接复制单位元素
-                        nextRotatedCprimeL = one.cPrime[l];
-                        nextRotatedCL = one.c[l];
-                    }
-                // }));
-            }
+            futures.emplace_back(pool.enqueue([&nextBsk, &nextRotated, &one, aNext, param] {
+                rotateTrgswMPMinusOneNtt(nextRotated, nextBsk, aNext, param);
+                addTrgswMPNtt(nextRotated, nextRotated, one);
+            }));
         }
 
-        // 步骤3: 预加载下一轮的密钥分解数据（如果适用）
+        // scheme switching
         if (i < n - 3) {
-            for (auto l = 0; l < level; l++) {
-                auto& c = bsk[i + 2][0].c[l];
-                auto& cPrime = bsk[i + 2][0].cPrime[l];
-                auto& decompA = bskDecompA[i][0][l];
-                futures.emplace_back(pool.enqueue([&c, &cPrime, &param, &s2, &decompA] {
+            futures.emplace_back(pool.enqueue([&bsk, i, &param, level, &s2, &bskDecompA] {
+                for (auto l = 0; l < level; l++) {
+                    auto& c = bsk[i + 2][0].c[l];
+                    auto& cPrime = bsk[i + 2][0].cPrime[l];
+                    auto& decompA = bskDecompA[i][0][l];
                     c.resize(param.k, TrlweDft(param.k, param.N));
                     cPrime.a.resize(param.k, NttPolynomial(param.N));
                     switchTrlweToSecretEmbeddingNttOpt(c, cPrime, decompA, s2, param);
-                }));
-            }
+                }
+            }));
         }
 
         for (auto& f : futures) {

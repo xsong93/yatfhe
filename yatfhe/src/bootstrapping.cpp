@@ -152,20 +152,49 @@ void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, co
     }
 }
 
-void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param) {
+void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
+                               const TorusPolynomial& v, const YatfheParameters& param) {
+    // process first key components
+    {
+#ifdef TERNARY
+#else
+        if (tlweKey.s[0] == 1) {
+            symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
+        } else {
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+        }
+#endif
+    }
+
+    // process remaining n - 1 components
+    for (auto i = 0; i < bsk.n - 1; i++) {
+#ifdef TERNARY
+#else
+        TrgswMP tmp{param, bsk.level, true};
+        encryptTrgswMP(tmp, tlweKey.s[i + 1], trgswKey, 0, param);
+        for (auto l0 = 0; l0 < bsk.level; l0++) {
+            auto& a = tmp.cPrime[l0].a;
+            auto& dA = bsk.bskDecompA[i][0][l0];
+            for (auto k = 0; k < param.k; k++) {
+                for (auto j = 0; j < param.N; j++) {
+                    DecomposedData d{param.l};
+                    gadgetDecompose(d, a[k].coeffs[j], param);
+                    for (auto l = 0; l < param.l; l++) {
+                        dA[l][k].coeffs[j] = d.value[l] * d.sign;
+                    }
+                }
+            }
+            NttHexl::applyNtt(bsk.bskTrim[i][0].cPrime[l0].b, tmp.cPrime[l0].b);
+        }
+#endif
+    }
+}
+
+void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
+                                   const TorusPolynomial& v, const YatfheParameters& param) {
     // process first two key components
     {
 #ifdef TERNARY
-        if (tlweKey.s[0] == 0) {
-            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
-            symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0);
-        } else if (tlweKey.s[0] == 1) {
-            symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
-            symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0);
-        } else {
-            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
-            symEncTrlweMultiSample(bsk.bskFirst[1], trgswKey.trlweKey, v.coeffs);
-        }
 #else
         if (tlweKey.s[0] == 1) {
             symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
@@ -180,17 +209,6 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
     // process remaining n - 3 components
     for (auto i = 0; i < bsk.n - 3; i++) {
 #ifdef TERNARY
-        const auto si = tlweKey.s[i+1];
-        if(si == 0) {
-            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
-            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
-        } else if (si == 1) {
-            encryptTrgswMPNtt(bsk.bskDft[i][0], 1, trgswKey, 0, param);
-            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
-        } else {
-            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
-            encryptTrgswMPNtt(bsk.bskDft[i][1], 1, trgswKey, 0, param);
-        }
 #else
         TrgswMP tmp{param, bsk.level, true};
         encryptTrgswMP(tmp, tlweKey.s[i + 3], trgswKey, 0, param);
@@ -206,6 +224,7 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
                     }
                 }
             }
+            NttHexl::applyNtt(bsk.bskTrim[i][0].cPrime[l0].b, tmp.cPrime[l0].b);
         }
 #endif
     }
