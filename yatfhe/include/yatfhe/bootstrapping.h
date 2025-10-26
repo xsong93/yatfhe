@@ -131,7 +131,7 @@ struct BootstrappingKeyMPOpt {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(2, Trlwe{p.k, p.N});
-        bskDft = vector(n, vector(2, TrgswMPDft(p, level, isHalf)));
+        bskDft = vector(n - 1, vector(2, TrgswMPDft(p, level, isHalf)));
 #else
         if (group == 1) {
             n = p.n;
@@ -139,31 +139,11 @@ struct BootstrappingKeyMPOpt {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(1, Trlwe{p.k, p.N});
-        bskDft = vector(n, vector(1, TrgswMPDft(p, level, isHalf)));
+        bskDft = vector(n - 1, vector(1, TrgswMPDft(p, level, isHalf)));
 #endif
     }
-};
 
-struct BootstrappingKeyMPLazy {
-#ifdef TERNARY
-    vector<Trlwe> bskFirst{};
-    vector<TrgswMPDft> bskSecond{};
-    vector<vector<TrgswMPDft>> bskDft{};
-    vector<vector<vector<DecompPolynomial>>> bskDecomp{};
-#else
-    Trlwe bskFirst{};
-    TrgswMPDft bskSecond{};
-    vector<TrgswMPDft> bskDft{};
-    vector<vector<vector<vector<DecompPolynomial>>>> bskDecompA{};
-#endif
-    int n{};
-    int level{};
-    int group{};
-    bool iniliatized{false};
-
-    explicit BootstrappingKeyMPLazy() = default;
-
-    BootstrappingKeyMPLazy(const YatfheParameters& p, const int level) : group(p.group), level(level) {
+    BootstrappingKeyMPOpt(const YatfheParameters& p, const int level, bool half, const bool isOnlyB) : group(p.group), isHalf(half) {
 #ifdef TERNARY
         if (group == 1) {
             n = p.n;
@@ -171,17 +151,52 @@ struct BootstrappingKeyMPLazy {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(2, Trlwe{p.k, p.N});
-        bskDft = vector(n, vector(2, TrgswMPDft(p, level, isHalf)));
+        bskDft = vector(n - 1, vector(2, TrgswMPDft(p, level, isHalf)));
 #else
         if (group == 1) {
             n = p.n;
         } else {
             n = p.n / group * (1 << group);
         }
-        bskFirst = Trlwe{p.k, p.N};
-        bskSecond = TrgswMPDft{p, level, false};
-        bskDft = vector(n - 2, TrgswMPDft{p, level, true, true});
-        bskDecompA = vector(n - 2, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N}))));
+        bskFirst = vector(1, Trlwe{p.k, p.N});
+        bskDft = vector(n - 1, vector(1, TrgswMPDft(p, level, isHalf)));
+#endif
+    }
+};
+
+struct BootstrappingKeyMPLazy {
+    vector<Trlwe> bskFirst{};
+    vector<vector<TrgswMPDft>> bskFull{};
+    vector<vector<TrgswMPDft>> bskTrim{};
+    vector<vector<vector<vector<vector<DecompPolynomial>>>>> bskDecompA{};
+    int n{};
+    int level{};
+    int group{};
+    bool initialized{false};
+
+    explicit BootstrappingKeyMPLazy() = default;
+
+    BootstrappingKeyMPLazy(const YatfheParameters& p, const int level, const bool isHalf, const bool isOnlyB) : level(level), group(p.group) {
+#ifdef TERNARY
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(2, Trlwe{p.k, p.N});
+        bskFull = vector(2, vector(2, TrgswMPDft{p, level}));
+        bskTrim = vector(n - 3, vector(2, TrgswMPDft{p, level, isHalf, isOnlyB}));
+        bskDecompA = vector(n - 2, vector(2, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(1, Trlwe{p.k, p.N});
+        bskFull = vector(2, vector(1, TrgswMPDft{p, level}));
+        bskTrim = vector(n - 3, vector(1, TrgswMPDft{p, level, isHalf, isOnlyB}));
+        bskDecompA = vector(n - 3, vector(1, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
 #endif
     }
 };

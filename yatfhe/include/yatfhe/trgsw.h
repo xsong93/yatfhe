@@ -50,33 +50,37 @@ struct TrgswMPDft {
     TrgswMPDft() = default;
 
     explicit TrgswMPDft(const YatfheParameters& p) :
-            c(p.l, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N))),
+            c(p.l, std::vector(p.k, TrlweDft(p.k, p.N))),
             cPrime(p.l, TrlweDft(p.k, p.N)),
             l(p.l),
             k(p.k) {}
 
     TrgswMPDft(const YatfheParameters& p, const int level) :
-            c(level, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N))),
+            c(level, std::vector(p.k, TrlweDft(p.k, p.N))),
             cPrime(level, TrlweDft(p.k, p.N)),
             l(level),
             k(p.k) {}
+
     TrgswMPDft(const YatfheParameters& p, const int level, bool half) :
             cPrime(level, TrlweDft(p.k, p.N)),
             l(level),
             k(p.k),
             isHalf(half) {
         if (!isHalf) {
-            c = std::vector(level, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N)));
+            c.resize(level, std::vector(p.k, TrlweDft(p.k, p.N)));
         }
     }
+
     TrgswMPDft(const YatfheParameters& p, const int level, bool half, bool onlyB) :
-            cPrime(level, TrlweDft(p.k, p.N)),
             l(level),
             k(p.k),
             isHalf(half) {
         if (!isHalf) {
-            c = std::vector(level, std::vector<TrlweDft>(p.k, TrlweDft(p.k, p.N, onlyB)));
+            c.resize(level, std::vector(p.k, TrlweDft(p.k, p.N)));
+        } else {
+            c.resize(level);
         }
+        cPrime.resize(level, TrlweDft(p.k, p.N, onlyB));
     }
 };
 

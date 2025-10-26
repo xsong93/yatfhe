@@ -168,16 +168,17 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
         }
 #else
         if (tlweKey.s[0] == 1) {
-            symEncTrlweMultiSample(bsk.bskFirst, trgswKey.trlweKey, v.coeffs);
+            symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
         } else {
-            symEncTrlweSingleSample(bsk.bskFirst, trgswKey.trlweKey, 0);
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
         }
-        encryptTrgswMPNtt(bsk.bskSecond, tlweKey.s[1], trgswKey, 0, param);
+        encryptTrgswMPNtt(bsk.bskFull[0][0], tlweKey.s[1], trgswKey, 0, param);
+        encryptTrgswMPNtt(bsk.bskFull[1][0], tlweKey.s[2], trgswKey, 0, param);
 #endif
     }
 
-    // process remaining n - 2 components
-    for (auto i = 0; i < bsk.n - 2; i++) {
+    // process remaining n - 3 components
+    for (auto i = 0; i < bsk.n - 3; i++) {
 #ifdef TERNARY
         const auto si = tlweKey.s[i+1];
         if(si == 0) {
@@ -192,10 +193,10 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
         }
 #else
         TrgswMP tmp{param, bsk.level, true};
-        encryptTrgswMP(tmp, tlweKey.s[i + 2], trgswKey, 0, param);
+        encryptTrgswMP(tmp, tlweKey.s[i + 3], trgswKey, 0, param);
         for (auto l0 = 0; l0 < bsk.level; l0++) {
             auto& a = tmp.cPrime[l0].a;
-            auto& dA = bsk.bskDecompA[i][l0];
+            auto& dA = bsk.bskDecompA[i][0][l0];
             for (auto k = 0; k < param.k; k++) {
                 for (auto j = 0; j < param.N; j++) {
                     DecomposedData d{param.l};

@@ -85,22 +85,26 @@ struct Trlwe8D {
             k(k) {};
 };
 
-struct TrlweDft{
-    std::vector<NttPolynomial> a; // k
-    NttPolynomial b; // 1
+struct TrlweDft {
+    std::vector<NttPolynomial> a;
+    NttPolynomial b;
     int k;
+    bool a_initialized;
 
     TrlweDft(int k, int N) :
-            a(k, NttPolynomial(N)),
-            b(NttPolynomial(N)),
-            k(k) {};
+        a(k, NttPolynomial(N)),
+        b(NttPolynomial(N)),
+        k(k),
+        a_initialized(true) {}
+
     TrlweDft(int k, int N, bool onlyB) :
-            b(NttPolynomial(N)),
-            k(k) {
-        if (!onlyB) {
-            a = vector(k, NttPolynomial(N));
+        b(NttPolynomial(N)),
+        k(k),
+        a_initialized(!onlyB) {
+        if (a_initialized) {
+            a.resize(k, NttPolynomial(N));
         }
-    };
+    }
 };
 
 struct TrlweDft14{
