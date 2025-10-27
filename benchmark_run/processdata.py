@@ -355,24 +355,27 @@ def generate_report(df, out_path: str):
 
 
 if __name__ == "__main__":
-    out_dir = 'results_i5'
-    data1 = 'result_batchsize_i5.json'
-    data2 = 'result_i5_bench_blindrotate_all.json'
+    # out_dir = 'results_i5'
+    # data1 = 'result_batchsize_i5.json'
+    # data2 = 'result_i5_bench_blindrotate_all.json'
+
+    out_dir = 'results_9950x3d'
+    data2 = 'result_9950x3d_bench_blindrotate_new.json'
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     # Load and process data
-    df = load_and_process_data(data1)
+    # df = load_and_process_data(data1)
     df2 = load_and_process_data2(data2)
 
     # Generate visualizations
-    create_heatmap(df, out_dir+'/heatmap.png')
-    create_3d_surface(df, out_dir+'/3d_surface_dense_plateau.png')
-    create_line_plot(df, out_dir+'/execution_time.png')
+    # create_heatmap(df, out_dir+'/heatmap.png')
+    # create_3d_surface(df, out_dir+'/3d_surface_dense_plateau.png')
+    # create_line_plot(df, out_dir+'/execution_time.png')
     plot_benchmark_barchart(df2, out_dir+'/comparison_barchart.png')
 
     # Generate report
-    generate_report(df, out_dir+'/performance_report.txt')
+    # generate_report(df, out_dir+'/performance_report.txt')
 
     print("Analysis complete. Created:")
     print("- heatmap.png")

@@ -1,6 +1,6 @@
 #! /bin/bash
-BENCHMARK_EXEC="bench_blindrotate_vembed"
-OUTPUT_PREFIX="result_i5"
+BENCHMARK_EXEC="bench_blindrotate_new"
+OUTPUT_PREFIX="result_9950x3d"
 
 # Run the benchmark
 "./$BENCHMARK_EXEC" \

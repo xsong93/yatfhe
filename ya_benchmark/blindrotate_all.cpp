@@ -96,9 +96,6 @@ int main(int argc, char **argv) {
             serialize(bskMPOptServer.bskFirst[0], oss1);
             const std::string &data1 = oss1.str();
             buffer.insert(buffer.end(), data1.begin(), data1.end());
-            std::ofstream outFile("bsk_serialized_GINX_opt_first.bin", std::ios::binary | std::ios::app);
-            outFile.write(buffer.data(), buffer.size());
-            buffer.clear();
             for (auto i = 0; i < param.n - 1; i++) {
                 std::ostringstream oss(std::ios::binary);
                 serialize(bskMPOptServer.bskDft[i][0], oss);
@@ -172,19 +169,22 @@ int main(int argc, char **argv) {
             COUNT_TIME("LAZY_MT serialize", {
                 vector<char> buffer;
                 std::ostringstream oss1(std::ios::binary);
-                serialize(bskMPLazyServer.bskFirst[0], oss1);
+                serialize(bskMPLazyOpt.bskFirst[0], oss1);
                 const std::string &data1 = oss1.str();
                 buffer.insert(buffer.end(), data1.begin(), data1.end());
-                std::ofstream outFile("bsk_serialized_LAZY_MT_first.bin", std::ios::binary | std::ios::app);
-                outFile.write(buffer.data(), buffer.size());
-                buffer.clear();
                 for (auto i = 0; i < param.n - 1; i++) {
                     std::ostringstream oss(std::ios::binary);
-                    serialize(bskMPLazyServer.bskDft[i][0], oss);
+                    serialize(bskMPLazyOpt.bskTrim[i][0], oss);
                     const std::string &data = oss.str();
                     buffer.insert(buffer.end(), data.begin(), data.end());
                 }
-                std::ofstream outFile2("bsk_serialized_LAZY_MT_bsk.bin", std::ios::binary | std::ios::app);
+                for (auto i = 0; i < param.n - 1; i++) {
+                    std::ostringstream oss(std::ios::binary);
+                    serializeNestedVector(bskMPLazyOpt.bskDecompA[i][0], oss);
+                    const std::string &data = oss.str();
+                    buffer.insert(buffer.end(), data.begin(), data.end());
+                }
+                std::ofstream outFile2("bsk_serialized_LAZY_MT.bin", std::ios::binary | std::ios::app);
                 outFile2.write(buffer.data(), buffer.size());
                 buffer.clear();
             })
