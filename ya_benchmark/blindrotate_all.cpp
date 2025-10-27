@@ -7,6 +7,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric.h"
 #include "yautil/initializer.h"
+#include "yautil/ya_serializer.h"
 
 int main(int argc, char **argv) {
     YatfheParameters param{};
@@ -70,6 +71,18 @@ int main(int argc, char **argv) {
     {
         BootstrappingKeyMP bskMPServer{param, param.lApprox};
         COUNT_TIME("blindRotateGINXNtt key", bskMPServer = bskMP;)
+        COUNT_TIME("GINX serialize", {
+            vector<char> buffer;
+            for (auto i = 0; i < param.n; i++) {
+                std::ostringstream oss(std::ios::binary);
+                serialize(bskMPServer.bskDft[i][0], oss);
+                const std::string &data = oss.str();
+                buffer.insert(buffer.end(), data.begin(), data.end());
+            }
+            std::ofstream outFile("bsk_serialized_GINX.bin", std::ios::binary | std::ios::app);
+            outFile.write(buffer.data(), buffer.size());
+            buffer.clear();
+        })
         COUNT_TIME("blindRotateGINXNtt", blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);)
     }
 
@@ -77,6 +90,25 @@ int main(int argc, char **argv) {
     {
         BootstrappingKeyMPOpt bskMPOptServer{param, param.lApprox, false};
         COUNT_TIME("blindRotateOptNtt key", bskMPOptServer = bskMPOpt;)
+        COUNT_TIME("GINX_opt serialize", {
+            vector<char> buffer;
+            std::ostringstream oss1(std::ios::binary);
+            serialize(bskMPOptServer.bskFirst[0], oss1);
+            const std::string &data1 = oss1.str();
+            buffer.insert(buffer.end(), data1.begin(), data1.end());
+            std::ofstream outFile("bsk_serialized_GINX_opt_first.bin", std::ios::binary | std::ios::app);
+            outFile.write(buffer.data(), buffer.size());
+            buffer.clear();
+            for (auto i = 0; i < param.n - 1; i++) {
+                std::ostringstream oss(std::ios::binary);
+                serialize(bskMPOptServer.bskDft[i][0], oss);
+                const std::string &data = oss.str();
+                buffer.insert(buffer.end(), data.begin(), data.end());
+            }
+            std::ofstream outFile2("bsk_serialized_GINX_opt_bsk.bin", std::ios::binary | std::ios::app);
+            outFile2.write(buffer.data(), buffer.size());
+            buffer.clear();
+        })
         COUNT_TIME("blindRotateOptNtt", blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft, sTlwe, v, param);)
     }
 
@@ -106,8 +138,27 @@ int main(int argc, char **argv) {
         }
     }
 
+    // optimized lazy key initialization with serialization server procedure
+    {
+        BootstrappingKeyMPOpt bskMPLazyServer{param, param.lApprox, true, true};
+        if (!bskMPLazyServer.initialized) {
+            COUNT_TIME("blindRotateLazyPipeNtt key", {
+                bskMPLazyServer.bskFirst = bskMPLazyPipe.bskFirst;
+                bskMPLazyServer.bskDft[0] = bskMPLazyPipe.bskFull[0];
+                bskMPLazyServer.bskDft[1] = bskMPLazyPipe.bskFull[1];
+                for (auto i = 2; i < param.n - 1; i++) {
+                    bskMPLazyServer.bskDft[i] = bskMPLazyPipe.bskTrim[i - 2];
+                }
+            })
+            COUNT_TIME("blindRotateLazyPipeSerializationNtt", blindRotateLazyPipeSerializationNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one, param);)
+            bskMPLazyServer.initialized = true;
+        } else {
+            blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
+        }
+    }
 
-    // optimized lazy key initialization server procedure
+
+    // optimized lazy key initialization MT server procedure
     {
         BootstrappingKeyMPOpt bskMPLazyServer{param, param.lApprox, true, true};
         if (!bskMPLazyServer.initialized) {
@@ -118,6 +169,25 @@ int main(int argc, char **argv) {
                 }
             })
             COUNT_TIME("blindRotateLazyMTNtt", blindRotateLazyMTNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyOpt.bskDecompA, sTlwe, v, s2Dft, param);)
+            COUNT_TIME("LAZY_MT serialize", {
+                vector<char> buffer;
+                std::ostringstream oss1(std::ios::binary);
+                serialize(bskMPLazyServer.bskFirst[0], oss1);
+                const std::string &data1 = oss1.str();
+                buffer.insert(buffer.end(), data1.begin(), data1.end());
+                std::ofstream outFile("bsk_serialized_LAZY_MT_first.bin", std::ios::binary | std::ios::app);
+                outFile.write(buffer.data(), buffer.size());
+                buffer.clear();
+                for (auto i = 0; i < param.n - 1; i++) {
+                    std::ostringstream oss(std::ios::binary);
+                    serialize(bskMPLazyServer.bskDft[i][0], oss);
+                    const std::string &data = oss.str();
+                    buffer.insert(buffer.end(), data.begin(), data.end());
+                }
+                std::ofstream outFile2("bsk_serialized_LAZY_MT_bsk.bin", std::ios::binary | std::ios::app);
+                outFile2.write(buffer.data(), buffer.size());
+                buffer.clear();
+            })
             bskMPLazyServer.initialized = true;
         } else {
             blindRotateOptNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);

@@ -1,5 +1,5 @@
 #! /bin/bash
-BENCHMARK_EXEC="bench_batchsize"
+BENCHMARK_EXEC="bench_blindrotate_vembed"
 OUTPUT_PREFIX="result_i5"
 
 # Run the benchmark

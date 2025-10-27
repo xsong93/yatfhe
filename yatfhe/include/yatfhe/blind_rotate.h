@@ -36,6 +36,11 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
                            const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
                            const TrgswMPDft& one, const YatfheParameters& param);
 
+void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
+                                         const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
+                                         const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
+                                         const TrgswMPDft& one, const YatfheParameters& param);
+
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateJP22Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);

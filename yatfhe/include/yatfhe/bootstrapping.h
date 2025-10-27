@@ -159,7 +159,7 @@ struct BootstrappingKeyMPOpt {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(1, Trlwe{p.k, p.N});
-        bskDft = vector(n - 1, vector(1, TrgswMPDft(p, level, isHalf)));
+        bskDft = vector(n - 1, vector(1, TrgswMPDft(p, level, isHalf, isOnlyB)));
 #endif
     }
 };

@@ -91,6 +91,8 @@ struct TrlweDft {
     int k;
     bool a_initialized;
 
+    TrlweDft() = default;
+
     TrlweDft(int k, int N) :
         a(k, NttPolynomial(N)),
         b(NttPolynomial(N)),

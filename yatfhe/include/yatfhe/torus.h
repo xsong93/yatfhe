@@ -13,6 +13,7 @@
 
 #ifdef TORUS32
 using Torus = int32_t; // use 32-bit int as torus to handle modular arithmetic naturally
+using Decomp = int16_t;
 using Ntt14 = uint16_t;
 using Ntt16 = uint32_t;
 using Ntt24 = uint32_t;

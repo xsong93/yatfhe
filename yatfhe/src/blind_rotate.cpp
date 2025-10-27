@@ -1,11 +1,13 @@
 //
 // Created by xintong on 4/21/25.
 //
+#include <mutex>
 #include "yatfhe/blind_rotate.h"
 #include "yatfhe/cmux.h"
 #include "yatfhe/ntt_hexl.h"
 #include "yautil/time_counter.h"
 #include "yautil/multi_threading.h"
+#include "yautil/ya_serializer.h"
 
 void preRotateBinary(Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut, const vector<Trlwe>& key1,
                      const vector<vector<TrgswMPDft>>& trgswDftsIn, const ScaledTlwe& in, const int batchSize,
@@ -820,6 +822,120 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
             futures.emplace_back(pool.enqueue([&nextBsk, &nextRotated, &one, aNext, param] {
                 rotateTrgswMPMinusOneNtt(nextRotated, nextBsk, aNext, param);
                 addTrgswMPNtt(nextRotated, nextRotated, one);
+            }));
+        }
+
+        // scheme switching
+        if (i < n - 3) {
+            futures.emplace_back(pool.enqueue([&bsk, i, &param, level, &s2, &bskDecompA] {
+                for (auto l = 0; l < level; l++) {
+                    auto& c = bsk[i + 2][0].c[l];
+                    auto& cPrime = bsk[i + 2][0].cPrime[l];
+                    auto& decompA = bskDecompA[i][0][l];
+                    c.resize(param.k, TrlweDft(param.k, param.N));
+                    cPrime.a.resize(param.k, NttPolynomial(param.N));
+                    switchTrlweToSecretEmbeddingNttOpt(c, cPrime, decompA, s2, param);
+                }
+            }));
+        }
+
+        for (auto& f : futures) {
+            f.get();
+        }
+        futures.clear();
+    }
+#endif
+}
+
+void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
+                            const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
+                            const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
+                            const TrgswMPDft& one, const YatfheParameters& param) {
+    const auto level = bsk[0][0].l;
+    const auto n = param.n;
+    TrgswMPDft rotated0{param, level};
+    TrgswMPDft rotated1{param, level};
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(2 + level);
+    vector<char> buffer;
+
+#ifdef TERNARY
+#else
+    // handle first two key components
+    // R(v) + (X^a0 - 1)R(v*s0)
+    // G(1) + (X^a1 - 1)G(s1)
+    {
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
+
+        if (input.a[1] != 0) {
+            rotateTrgswMPMinusOneNtt(rotated0, bsk[0][0], input.a[1], param);
+            addTrgswMPNtt(rotated0, rotated0, one);
+        }
+    }
+
+    // serialize first two key components
+    {
+        std::ostringstream oss(std::ios::binary);
+
+        // Serialize bskFirst[0]
+        serialize(bskFirst[0], oss);
+        const std::string& serializedFirst = oss.str();
+        buffer.insert(buffer.end(), serializedFirst.begin(), serializedFirst.end());
+
+        // Reset oss for the next object
+        oss.str("");  // Clear the stream
+        oss.clear();   // Reset error flags
+
+        // Serialize bsk[0][0]
+        serialize(bsk[0][0], oss);
+        const std::string& serializedSecond = oss.str();
+        buffer.insert(buffer.end(), serializedSecond.begin(), serializedSecond.end());
+    }
+
+    // accumulate on the n - 1 key components
+    for (auto i = 0; i < n - 1; i++) {
+        auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
+        auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
+
+        // accumulation
+        if (input.a[i + 1] != 0) {
+            futures.emplace_back(pool.enqueue([&accum, &currRotated, level, &param] {
+                externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
+            }));
+        }
+
+        // automorphism
+        if (i < n - 2) {
+            const int nextKeyIdx = i + 1;
+            const auto aNext = input.a[nextKeyIdx + 1]; // input.a[i+2]
+            auto& nextBsk = bsk[nextKeyIdx][0];
+
+            futures.emplace_back(pool.enqueue([i, &nextBsk, &nextRotated, &one, aNext, &buffer, &bskDecompA, param] {
+                // serialization
+                std::ostringstream oss(std::ios::binary);
+                serialize(nextBsk, oss);
+                const std::string& data = oss.str();
+                buffer.insert(buffer.end(), data.begin(), data.end());
+                if (i < param.n - 3) {
+                    oss.str("");
+                    oss.clear();
+                    serializeNestedVector(bskDecompA[i][0], oss);
+                    const std::string& data2 = oss.str();
+                    buffer.insert(buffer.end(), data2.begin(), data2.end());
+                }
+                std::ofstream outFile("bsk_serialized_PIPE.bin", std::ios::binary | std::ios::app);
+                outFile.write(buffer.data(), buffer.size());
+                buffer.clear();
+
+                if (aNext != 0) {
+                    // rotation
+                    rotateTrgswMPMinusOneNtt(nextRotated, nextBsk, aNext, param);
+                    addTrgswMPNtt(nextRotated, nextRotated, one);
+                }
             }));
         }
 
