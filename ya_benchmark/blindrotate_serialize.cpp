@@ -79,9 +79,16 @@ int main(int argc, char **argv) {
                 const std::string &data = oss.str();
                 buffer.insert(buffer.end(), data.begin(), data.end());
             }
-            std::ofstream outFile("bsk_serialized_GINX.bin", std::ios::binary | std::ios::app);
+            std::ostringstream ossExtra(std::ios::binary);
+            writePOD(ossExtra, bskMPServer.n);
+            writePOD(ossExtra, bskMPServer.group);
+            writePOD(ossExtra, bskMPServer.isHalf);
+            const std::string &extraData = ossExtra.str();
+            buffer.insert(buffer.end(), extraData.begin(), extraData.end());
+            std::ofstream outFile("bsk_serialized_GINX.bin", std::ios::binary | std::ios::trunc);
             outFile.write(buffer.data(), buffer.size());
             buffer.clear();
+            outFile.close();
         })
         COUNT_TIME("blindRotateGINXNtt", blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);)
     }
@@ -102,18 +109,21 @@ int main(int argc, char **argv) {
                 const std::string &data = oss.str();
                 buffer.insert(buffer.end(), data.begin(), data.end());
             }
-            std::ofstream outFile2("bsk_serialized_GINX_opt_bsk.bin", std::ios::binary | std::ios::app);
+            std::ofstream outFile2("bsk_serialized_GINX_opt_bsk.bin", std::ios::binary | std::ios::trunc);
             outFile2.write(buffer.data(), buffer.size());
             buffer.clear();
         })
-        COUNT_TIME("blindRotateOptNtt", blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft, sTlwe, v, param);)
+        COUNT_TIME("blindRotateOptNtt", blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft,
+                                                          sTlwe, v, param);)
     }
 
     // parallel naive lazy key initialization server procedure
     {
         BootstrappingKeyMPOpt bskMPLazyServer{param, param.lApprox, true};
         COUNT_TIME("blindRotateLazyNtt key", bskMPLazyServer = bskMPLazy;)
-        COUNT_TIME("blindRotateLazyNtt", blindRotateLazyNtt(out2, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyServer.initialized, sTlwe, v, s2Dft, param);)
+        COUNT_TIME("blindRotateLazyNtt",
+                   blindRotateLazyNtt(out2, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+                                      bskMPLazyServer.initialized, sTlwe, v, s2Dft, param);)
     }
 
     // optimized lazy key initialization server procedure
@@ -128,7 +138,9 @@ int main(int argc, char **argv) {
                     bskMPLazyServer.bskDft[i] = bskMPLazyPipe.bskTrim[i - 2];
                 }
             })
-            COUNT_TIME("blindRotateLazyPipeNtt", blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one, param);)
+            COUNT_TIME("blindRotateLazyPipeNtt",
+                       blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+                                              bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one, param);)
             bskMPLazyServer.initialized = true;
         } else {
             blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
@@ -147,7 +159,9 @@ int main(int argc, char **argv) {
                     bskMPLazyServer.bskDft[i] = bskMPLazyPipe.bskTrim[i - 2];
                 }
             })
-            COUNT_TIME("blindRotateLazyPipeSerializationNtt", blindRotateLazyPipeSerializationNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one, param);)
+            COUNT_TIME("blindRotateLazyPipeSerializationNtt",
+                       blindRotateLazyPipeSerializationNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+                                                           bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one, param);)
             bskMPLazyServer.initialized = true;
         } else {
             blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
@@ -165,7 +179,9 @@ int main(int argc, char **argv) {
                     bskMPLazyServer.bskDft[i] = bskMPLazyOpt.bskTrim[i];
                 }
             })
-            COUNT_TIME("blindRotateLazyMTNtt", blindRotateLazyMTNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyOpt.bskDecompA, sTlwe, v, s2Dft, param);)
+            COUNT_TIME("blindRotateLazyMTNtt",
+                       blindRotateLazyMTNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+                                            bskMPLazyOpt.bskDecompA, sTlwe, v, s2Dft, param);)
             COUNT_TIME("LAZY_MT serialize", {
                 vector<char> buffer;
                 std::ostringstream oss1(std::ios::binary);
@@ -184,7 +200,7 @@ int main(int argc, char **argv) {
                     const std::string &data = oss.str();
                     buffer.insert(buffer.end(), data.begin(), data.end());
                 }
-                std::ofstream outFile2("bsk_serialized_LAZY_MT.bin", std::ios::binary | std::ios::app);
+                std::ofstream outFile2("bsk_serialized_LAZY_MT.bin", std::ios::binary | std::ios::trunc);
                 outFile2.write(buffer.data(), buffer.size());
                 buffer.clear();
             })

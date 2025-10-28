@@ -1,6 +1,6 @@
 #! /bin/bash
-BENCHMARK_EXEC="bench_blindrotate_new"
-OUTPUT_PREFIX="result_9950x3d"
+BENCHMARK_EXEC="bench_keygen"
+OUTPUT_PREFIX="result_i5"
 
 # Run the benchmark
 "./$BENCHMARK_EXEC" \

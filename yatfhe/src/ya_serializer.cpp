@@ -102,19 +102,123 @@ void deserialize(TrgswMPDft& t, std::istream& is) {
     readPOD(is, t.l);
     readPOD(is, t.k);
     readPOD(is, t.isHalf);
-    // Deserialize c
-    int outer_size;
-    readPOD(is, outer_size);
-    t.c.resize(outer_size);
-    for (auto& inner : t.c) {
-        int inner_size;
-        readPOD(is, inner_size);
-        inner.resize(inner_size);
-        for (auto& trlwe : inner) deserialize(trlwe, is);
+
+    // Only deserialize c if !isHalf (mirror serialization)
+    if (!t.isHalf) {
+        int outer_size;
+        readPOD(is, outer_size);
+        t.c.resize(outer_size);
+        for (auto& inner : t.c) {
+            int inner_size;
+            readPOD(is, inner_size);
+            inner.resize(inner_size);
+            for (auto& trlwe : inner) deserialize(trlwe, is);
+        }
+    } else {
+        t.c.clear();  // Ensure c is empty if isHalf
     }
+
     // Deserialize cPrime
     int cPrime_size;
     readPOD(is, cPrime_size);
     t.cPrime.resize(cPrime_size);
     for (auto& trlwe : t.cPrime) deserialize(trlwe, is);
+}
+
+void deserializeBskMP(BootstrappingKeyMP& bsk, const std::string& filename, int n) {
+    std::ifstream inFile(filename, std::ios::binary);
+    bsk.bskDft.resize(n);  // Initialize outer vector (size = n)
+
+    for (int i = 0; i < n; ++i) {
+        bsk.bskDft[i].resize(1);       // Initialize inner vector (size = 1)
+        deserialize(bsk.bskDft[i][0], inFile);  // Read TrgswMPDft in order
+    }
+
+    // Read remaining fields (n, group, isHalf) if they were serialized
+    inFile.read(reinterpret_cast<char*>(&bsk.n), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bsk.group), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bsk.isHalf), sizeof(bool));
+}
+
+void deserializeBskMPOpt(BootstrappingKeyMPOpt& bskOpt, const std::string& filename, int n) {
+    std::ifstream inFile(filename, std::ios::binary);
+    if (!inFile) throw std::runtime_error("Failed to open file");
+
+    bskOpt.bskFirst.resize(1);      // bskFirst is a vector of size 1
+    bskOpt.bskDft.resize(n - 1);     // bskDft has n-1 elements
+
+    // Step 1: Deserialize bskFirst[0]
+    deserialize(bskOpt.bskFirst[0], inFile);
+
+    // Step 2: Deserialize bskDft[i][0] for i = 0 to n-2
+    for (int i = 0; i < n - 1; ++i) {
+        bskOpt.bskDft[i].resize(1);  // Each bskDft[i] is a vector of size 1
+        deserialize(bskOpt.bskDft[i][0], inFile);
+    }
+
+    // Step 3: Deserialize remaining fields (n, group, isHalf, initialized)
+    inFile.read(reinterpret_cast<char*>(&bskOpt.n), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bskOpt.group), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bskOpt.isHalf), sizeof(bool));
+    inFile.read(reinterpret_cast<char*>(&bskOpt.initialized), sizeof(bool));
+}
+
+void deserializeBskLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, int n) {
+    std::ifstream inFile(filename, std::ios::binary);
+    if (!inFile) throw std::runtime_error("Failed to open file");
+
+    bskLazy.bskFirst.resize(1);       // bskFirst is a vector of size 1
+    bskLazy.bskTrim.resize(n - 1);    // bskTrim has n-1 elements
+    bskLazy.bskDecompA.resize(n - 1); // bskDecompA has n-1 elements
+
+    // Step 1: Deserialize bskFirst[0]
+    deserialize(bskLazy.bskFirst[0], inFile);
+
+    // Step 2: Deserialize bskTrim[i][0] for i = 0 to n-2
+    for (int i = 0; i < n - 1; ++i) {
+        bskLazy.bskTrim[i].resize(1);  // Each bskTrim[i] is a vector of size 1
+        deserialize(bskLazy.bskTrim[i][0], inFile);
+    }
+
+    // Step 3: Deserialize bskDecompA[i][0] for i = 0 to n-2
+    for (int i = 0; i < n - 1; ++i) {
+        bskLazy.bskDecompA[i].resize(1);  // Each bskDecompA[i] is a vector of size 1
+        deserializeNestedVector(bskLazy.bskDecompA[i][0], inFile);
+    }
+
+    // Step 4: Deserialize metadata (n, level, group, initialized)
+    inFile.read(reinterpret_cast<char*>(&bskLazy.n), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bskLazy.level), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bskLazy.group), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bskLazy.initialized), sizeof(bool));
+}
+
+void deserializeBskLazyPipe(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, int n) {
+    std::ifstream inFile(filename, std::ios::binary);
+    if (!inFile) throw std::runtime_error("Failed to open file");
+
+    bskLazy.bskFirst.resize(1);       // bskFirst is a vector of size 1
+    bskLazy.bskTrim.resize(n - 1);    // bskTrim has n-1 elements
+    bskLazy.bskDecompA.resize(n - 2); // bskDecompA has n-1 elements
+
+    // Step 1: Deserialize bskFirst[0], bskFull[0]
+    deserialize(bskLazy.bskFirst[0], inFile);
+    deserialize(bskLazy.bskTrim[0][0], inFile);
+
+    // Step 2: Deserialize bskTrim[i][0] for i = 1 to n-3,
+    // and bskDecompA[i][0] for i = 1 to n-4
+    for (int i = 1; i < n - 2; ++i) {
+        bskLazy.bskTrim[i].resize(1);  // Each bskTrim[i] is a vector of size 1
+        deserialize(bskLazy.bskTrim[i][0], inFile);
+        if (i < n - 3) {
+            bskLazy.bskDecompA[i].resize(1);   // Each bskDecompA[i] is a vector of size 1
+            deserializeNestedVector(bskLazy.bskDecompA[i][0], inFile);
+        }
+    }
+
+    // Step 4: Deserialize metadata (n, level, group, initialized)
+    inFile.read(reinterpret_cast<char*>(&bskLazy.n), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bskLazy.level), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bskLazy.group), sizeof(int));
+    inFile.read(reinterpret_cast<char*>(&bskLazy.initialized), sizeof(bool));
 }

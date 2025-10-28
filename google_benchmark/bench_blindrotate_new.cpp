@@ -21,7 +21,6 @@ public:
         param.tasksPerThread = 1;
         initYatfhe(param);
 
-        // client side
         // key gen
         TlweKey tlweKey{param.n, param.lweStdDev};
         TrgswKey trgswKey{param};
@@ -37,12 +36,8 @@ public:
         v = TorusPolynomial{param.N};
         generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-        bskMP = BootstrappingKeyMP{param, param.lApprox};
-        genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
         bskMPOpt = BootstrappingKeyMPOpt{param, param.lApprox, false};
         genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);
-        bskMPLazy = BootstrappingKeyMPOpt{param, param.lApprox, true};
-        genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
         bskMPLazyPipe = BootstrappingKeyMPLazyPipe{param, param.lApprox, true, true};
         genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);
         bskMPLazyOpt = BootstrappingKeyMPLazy{param, param.lApprox, true, true};
@@ -66,10 +61,7 @@ public:
 
 protected:
     YatfheParameters param;
-    BootstrappingKeyMP bskMP;
-    BootstrappingKeyMPPreRot bskPre;
     BootstrappingKeyMPOpt bskMPOpt;
-    BootstrappingKeyMPOpt bskMPLazy;
     BootstrappingKeyMPLazyPipe bskMPLazyPipe;
     BootstrappingKeyMPLazy bskMPLazyOpt;
     TorusPolynomial v;
@@ -158,12 +150,18 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, OURS_PIPELINE)(benchmark::State& state)
 
 BENCHMARK_REGISTER_F(BlindRotateBenchmark, GINX_OPT)
     ->Unit(benchmark::kMicrosecond)
-    ->Iterations(500);
+    ->Iterations(500)
+    ->UseRealTime()
+    ->MeasureProcessCPUTime();
 BENCHMARK_REGISTER_F(BlindRotateBenchmark, OURS_NAIVE)
     ->Unit(benchmark::kMicrosecond)
-    ->Iterations(500);
+    ->Iterations(500)
+    ->UseRealTime()
+    ->MeasureProcessCPUTime();
 BENCHMARK_REGISTER_F(BlindRotateBenchmark, OURS_PIPELINE)
     ->Unit(benchmark::kMicrosecond)
-    ->Iterations(500);
+    ->Iterations(500)
+    ->UseRealTime()
+    ->MeasureProcessCPUTime();
 
 BENCHMARK_MAIN();

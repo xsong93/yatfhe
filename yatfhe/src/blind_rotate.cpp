@@ -782,7 +782,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
     TrgswMPDft rotated1{param, level};
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(2 + level);
+    futures.reserve(2);
 
 #ifdef TERNARY
 #else
@@ -805,13 +805,6 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
     for (auto i = 0; i < n - 1; i++) {
         auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
         auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
-
-        // accumulation
-        if (input.a[i + 1] != 0) {
-            futures.emplace_back(pool.enqueue([&accum, &currRotated, level, &param] {
-                externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
-            }));
-        }
 
         // automorphism
         if (i < n - 2 && input.a[i + 2] != 0) {
@@ -839,6 +832,11 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
             }));
         }
 
+        // accumulation
+        if (input.a[i + 1] != 0) {
+            externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
+        }
+
         for (auto& f : futures) {
             f.get();
         }
@@ -857,7 +855,7 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
     TrgswMPDft rotated1{param, level};
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(2 + level);
+    futures.reserve(2);
     vector<char> buffer;
 
 #ifdef TERNARY
@@ -900,13 +898,6 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
     for (auto i = 0; i < n - 1; i++) {
         auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
         auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
-
-        // accumulation
-        if (input.a[i + 1] != 0) {
-            futures.emplace_back(pool.enqueue([&accum, &currRotated, level, &param] {
-                externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
-            }));
-        }
 
         // automorphism
         if (i < n - 2) {
@@ -951,6 +942,11 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
                     switchTrlweToSecretEmbeddingNttOpt(c, cPrime, decompA, s2, param);
                 }
             }));
+        }
+
+        // accumulation
+        if (input.a[i + 1] != 0) {
+            externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
         }
 
         for (auto& f : futures) {

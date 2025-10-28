@@ -11,6 +11,7 @@
 #include "yatfhe/polynomial.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
+#include "yatfhe/bootstrapping.h"
 
 void serialize(const NttPolynomial& p, std::ostream& os);
 
@@ -35,6 +36,14 @@ void deserialize(TrlweDft& t, std::istream& is);
 void serialize(const TrgswMPDft& t, std::ostream& os);
 
 void deserialize(TrgswMPDft& t, std::istream& is);
+
+void deserializeBskMP(BootstrappingKeyMP& bsk, const std::string& filename, int n);
+
+void deserializeBskMPOpt(BootstrappingKeyMPOpt& bskOpt, const std::string& filename, int n);
+
+void deserializeBskLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, int n);
+
+void deserializeBskLazyPipe(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, int n);
 
 // Helper to write/read POD types and vectors
 template <typename T>
