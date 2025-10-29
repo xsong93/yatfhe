@@ -37,13 +37,19 @@ void serialize(const TrgswMPDft& t, std::ostream& os);
 
 void deserialize(TrgswMPDft& t, std::istream& is);
 
+void serializeBskMP(const BootstrappingKeyMP& t, const std::string& filename);
+
+void serializeBskMPOpt(const BootstrappingKeyMPOpt& t, const std::string& filename);
+
 void deserializeBskMP(BootstrappingKeyMP& bsk, const std::string& filename, int n);
 
 void deserializeBskMPOpt(BootstrappingKeyMPOpt& bskOpt, const std::string& filename, int n);
 
-void deserializeBskLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, int n);
+void serializeBskMPLazy(const BootstrappingKeyMPLazy& t, const std::string& filename);
 
-void deserializeBskLazyPipe(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, int n);
+void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, int n);
+
+void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::string& filename, int n);
 
 // Helper to write/read POD types and vectors
 template <typename T>

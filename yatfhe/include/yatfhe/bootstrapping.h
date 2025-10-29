@@ -118,12 +118,11 @@ struct BootstrappingKeyMPOpt {
     vector<vector<TrgswMPDft>> bskDft {};
     int n {};
     int group {};
-    bool isHalf{false};
     bool initialized{false};
 
     explicit BootstrappingKeyMPOpt() = default;
 
-    BootstrappingKeyMPOpt(const YatfheParameters& p, const int level, bool half) : group(p.group), isHalf(half) {
+    BootstrappingKeyMPOpt(const YatfheParameters& p, const int level, bool half) : group(p.group) {
 #ifdef TERNARY
         if (group == 1) {
             n = p.n;
@@ -139,11 +138,11 @@ struct BootstrappingKeyMPOpt {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(1, Trlwe{p.k, p.N});
-        bskDft = vector(n - 1, vector(1, TrgswMPDft(p, level, isHalf)));
+        bskDft = vector(n - 1, vector(1, TrgswMPDft(p, level, half)));
 #endif
     }
 
-    BootstrappingKeyMPOpt(const YatfheParameters& p, const int level, bool half, const bool isOnlyB) : group(p.group), isHalf(half) {
+    BootstrappingKeyMPOpt(const YatfheParameters& p, const int level, bool half, const bool isOnlyB) : group(p.group) {
 #ifdef TERNARY
         if (group == 1) {
             n = p.n;
@@ -159,7 +158,7 @@ struct BootstrappingKeyMPOpt {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(1, Trlwe{p.k, p.N});
-        bskDft = vector(n - 1, vector(1, TrgswMPDft(p, level, isHalf, isOnlyB)));
+        bskDft = vector(n - 1, vector(1, TrgswMPDft(p, level, half, isOnlyB)));
 #endif
     }
 };
@@ -200,8 +199,7 @@ struct BootstrappingKeyMPLazy {
 
 struct BootstrappingKeyMPLazyPipe {
     vector<Trlwe> bskFirst{};
-    vector<vector<TrgswMPDft>> bskFull{};
-    vector<vector<TrgswMPDft>> bskTrim{};
+    vector<vector<TrgswMPDft>> bskDft{};
     vector<vector<vector<vector<vector<DecompPolynomial>>>>> bskDecompA{};
     int n{};
     int level{};
@@ -228,8 +226,11 @@ struct BootstrappingKeyMPLazyPipe {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(1, Trlwe{p.k, p.N});
-        bskFull = vector(2, vector(1, TrgswMPDft{p, level}));
-        bskTrim = vector(n - 3, vector(1, TrgswMPDft{p, level, isHalf, isOnlyB}));
+        auto bskFull = vector(2, vector(1, TrgswMPDft{p, level}));
+        auto bskTrim = vector(n - 3, vector(1, TrgswMPDft{p, level, isHalf, isOnlyB}));
+        bskDft.reserve(bskFull.size() + bskTrim.size());
+        bskDft.insert(bskDft.end(), bskFull.begin(), bskFull.end());
+        bskDft.insert(bskDft.end(), bskTrim.begin(), bskTrim.end());
         bskDecompA = vector(n - 3, vector(1, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
 #endif
     }

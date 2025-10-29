@@ -63,8 +63,10 @@ namespace NttHexl {
 
     template<typename T, typename R>
     void applyNttForAB(T &out, R &in) {
-        for (auto row = 0; row < in.a.size(); row++) {
-            applyNtt(out.a[row], in.a[row]);
+        if (out.a_initialized) {
+            for (auto row = 0; row < in.a.size(); row++) {
+                applyNtt(out.a[row], in.a[row]);
+            }
         }
         applyNtt(out.b, in.b);
     }

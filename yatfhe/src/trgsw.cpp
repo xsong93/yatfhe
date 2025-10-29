@@ -49,7 +49,7 @@ void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const Trg
 }
 
 void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
-    TrgswMP trgswMP{param};
+    TrgswMP trgswMP{param, trgswMPDft.l, trgswMPDft.isHalf};
     TorusPolynomial muPoly{param.N};
     for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
@@ -67,7 +67,7 @@ void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey&
 }
 
 void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const Torus noise, const YatfheParameters& param) {
-    TrgswMP trgswMP{param};
+    TrgswMP trgswMP{param, trgswMPDft.l, trgswMPDft.isHalf};
     TorusPolynomial muPoly{param.N};
     for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
@@ -85,7 +85,7 @@ void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, const Integer mu, const
 }
 
 void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param) {
-    TrgswMP trgswMP{param};
+    TrgswMP trgswMP{param, trgswMPDft.l, trgswMPDft.isHalf};
     TorusPolynomial muPoly{param.N};
     for (auto lvl = 0; lvl < trgswMPDft.l; lvl++) {
         for (int j = 0; j < mus.size(); j++) {

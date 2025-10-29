@@ -28,8 +28,8 @@ struct Rlwe {
 struct Trlwe {
     std::vector<TorusPolynomial> a; // k
     TorusPolynomial b; // 1
-    int N;
-    int k;
+    int N{};
+    int k{};
 
     Trlwe() = default;
 
@@ -88,10 +88,16 @@ struct Trlwe8D {
 struct TrlweDft {
     std::vector<NttPolynomial> a;
     NttPolynomial b;
-    int k;
-    bool a_initialized;
+    int k{};
+    bool a_initialized{};
 
     TrlweDft() = default;
+
+    explicit TrlweDft(const YatfheParameters& p):
+            a(p.k, NttPolynomial(p.N)),
+            b(NttPolynomial(p.N)),
+            k(p.k),
+            a_initialized(true) {}
 
     TrlweDft(int k, int N) :
         a(k, NttPolynomial(N)),

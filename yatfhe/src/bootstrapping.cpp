@@ -201,8 +201,8 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& tr
         } else {
             symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
         }
-        encryptTrgswMPNtt(bsk.bskFull[0][0], tlweKey.s[1], trgswKey, 0, param);
-        encryptTrgswMPNtt(bsk.bskFull[1][0], tlweKey.s[2], trgswKey, 0, param);
+        encryptTrgswMPNtt(bsk.bskDft[0][0], tlweKey.s[1], trgswKey, 0, param);
+        encryptTrgswMPNtt(bsk.bskDft[1][0], tlweKey.s[2], trgswKey, 0, param);
 #endif
     }
 
@@ -224,7 +224,7 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& tr
                     }
                 }
             }
-            NttHexl::applyNtt(bsk.bskTrim[i][0].cPrime[l0].b, tmp.cPrime[l0].b);
+            NttHexl::applyNtt(bsk.bskDft[i + 2][0].cPrime[l0].b, tmp.cPrime[l0].b);
         }
 #endif
     }

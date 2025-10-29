@@ -74,78 +74,32 @@ protected:
 
 BENCHMARK_DEFINE_F(BlindRotateBenchmark, GINX_OPT)(benchmark::State& state) {
     for (auto _ : state) {
-        auto bskMPOptServer = bskMPOpt;
-        {
-                vector<char> buffer;
-                std::ostringstream oss1(std::ios::binary);
-                serialize(bskMPOptServer.bskFirst[0], oss1);
-                const std::string &data1 = oss1.str();
-                buffer.insert(buffer.end(), data1.begin(), data1.end());
-                for (auto i = 0; i < param.n - 1; i++) {
-                    std::ostringstream oss(std::ios::binary);
-                    serialize(bskMPOptServer.bskDft[i][0], oss);
-                    const std::string &data = oss.str();
-                    buffer.insert(buffer.end(), data.begin(), data.end());
-                }
-                std::ofstream outFile2("bsk_serialized_GINX_opt_bsk.bin", std::ios::binary | std::ios::app);
-                outFile2.write(buffer.data(), buffer.size());
-                buffer.clear();
-        }
-        blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft, sTlwe, v, param);
+        deserializeBskMPOpt(bskMPOpt, "BSK_GINX_OPT.bin", param.n);
+        blindRotateOptNtt(out, bskMPOpt.bskFirst, bskMPOpt.bskDft, sTlwe, v, param);
     }
-    std::filesystem::remove("bsk_serialized_GINX_opt_bsk.bin");
+    std::filesystem::remove("BSK_GINX_OPT.bin");
 }
 
 BENCHMARK_DEFINE_F(BlindRotateBenchmark, OURS_NAIVE)(benchmark::State& state) {
-    BootstrappingKeyMPOpt bskMPLazyServer{param, param.lApprox, true, true};
     for (auto _ : state) {
-        {
-            {
-                bskMPLazyServer.bskFirst = bskMPLazyOpt.bskFirst;
-                for (auto i = 0; i < param.n - 1; i++) {
-                    bskMPLazyServer.bskDft[i] = bskMPLazyOpt.bskTrim[i];
-                }
-            }
-            blindRotateLazyMTNtt(out, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyOpt.bskDecompA, sTlwe, v, s2Dft, param);
-            {
-                vector<char> buffer;
-                std::ostringstream oss1(std::ios::binary);
-                serialize(bskMPLazyServer.bskFirst[0], oss1);
-                const std::string &data1 = oss1.str();
-                buffer.insert(buffer.end(), data1.begin(), data1.end());
-                for (auto i = 0; i < param.n - 1; i++) {
-                    std::ostringstream oss(std::ios::binary);
-                    serialize(bskMPLazyServer.bskDft[i][0], oss);
-                    const std::string &data = oss.str();
-                    buffer.insert(buffer.end(), data.begin(), data.end());
-                }
-                std::ofstream outFile2("bsk_serialized_LAZY_MT_bsk.bin", std::ios::binary | std::ios::app);
-                outFile2.write(buffer.data(), buffer.size());
-                buffer.clear();
-            }
-            bskMPLazyServer.initialized = true;
-        }
+        deserializeBskMPLazy(bskMPLazyOpt, "BSK_PAL_LAZY.bin", param.n);
+        blindRotateLazyMTNtt(out, bskMPLazyOpt.bskFirst, bskMPLazyOpt.bskTrim, bskMPLazyOpt.bskDecompA,
+                             sTlwe, v, s2Dft, param);
+        bskMPLazyOpt.initialized = true;
+        bskMPLazyOpt.bskDecompA.clear();
     }
-    std::filesystem::remove("bsk_serialized_LAZY_MT_bsk.bin");
+    std::filesystem::remove("BSK_PAL_LAZY.bin");
 }
 
 BENCHMARK_DEFINE_F(BlindRotateBenchmark, OURS_PIPELINE)(benchmark::State& state) {
-    BootstrappingKeyMPOpt bskMPLazyServer{param, param.lApprox, true, true};
     for (auto _ : state) {
-        {
-            {
-                bskMPLazyServer.bskFirst = bskMPLazyPipe.bskFirst;
-                bskMPLazyServer.bskDft[0] = bskMPLazyPipe.bskFull[0];
-                bskMPLazyServer.bskDft[1] = bskMPLazyPipe.bskFull[1];
-                for (auto i = 2; i < param.n - 1; i++) {
-                    bskMPLazyServer.bskDft[i] = bskMPLazyPipe.bskTrim[i - 2];
-                }
-            }
-            blindRotateLazyPipeSerializationNtt(out, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one, param);
-            bskMPLazyServer.initialized = true;
-        }
+        blindRotateLazyPipeSerializationNtt(out, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft,
+                                            bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one,
+                                            "BSK_PIPE.bin", param);
+        bskMPLazyPipe.initialized = true;
+        bskMPLazyPipe.bskDecompA.clear();
     }
-    std::filesystem::remove("bsk_serialized_PIPE.bin");
+    std::filesystem::remove("BSK_PIPE.bin");
 }
 
 BENCHMARK_REGISTER_F(BlindRotateBenchmark, GINX_OPT)
