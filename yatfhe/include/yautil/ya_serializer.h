@@ -49,6 +49,8 @@ void serializeBskMPLazy(const BootstrappingKeyMPLazy& t, const std::string& file
 
 void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, int n);
 
+void serializeBskLazyPipe(BootstrappingKeyMPLazyPipe& t, const std::string& filename);
+
 void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::string& filename, int n);
 
 // Helper to write/read POD types and vectors

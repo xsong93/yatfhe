@@ -118,7 +118,6 @@ struct BootstrappingKeyMPOpt {
     vector<vector<TrgswMPDft>> bskDft {};
     int n {};
     int group {};
-    bool initialized{false};
 
     explicit BootstrappingKeyMPOpt() = default;
 

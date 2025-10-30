@@ -60,7 +60,6 @@ void verifyBskMP(const BootstrappingKeyMP& a, const BootstrappingKeyMP& b) {
 void verifyBskMPOpt(const BootstrappingKeyMPOpt& a, const BootstrappingKeyMPOpt& b) {
     ASSERT_EQ(a.n, b.n);
     ASSERT_EQ(a.group, b.group);
-    ASSERT_EQ(a.initialized, b.initialized);
     for (auto d = 0; d < a.bskFirst.size(); d++) {
         verifyTrlwe(a.bskFirst[d], b.bskFirst[d]);
     }

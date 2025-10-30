@@ -1,5 +1,5 @@
 #! /bin/bash
-BENCHMARK_EXEC="bench_keygen"
+BENCHMARK_EXEC="bench_readkey"
 OUTPUT_PREFIX="result_i5"
 
 # Run the benchmark

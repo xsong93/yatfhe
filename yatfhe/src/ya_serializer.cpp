@@ -164,7 +164,6 @@ void serializeBskMPOpt(const BootstrappingKeyMPOpt& t, const std::string& filena
     }
     writePOD(os, t.n);
     writePOD(os, t.group);
-    writePOD(os, t.initialized);
     os.close();
 }
 
@@ -184,10 +183,9 @@ void deserializeBskMPOpt(BootstrappingKeyMPOpt& bskOpt, const std::string& filen
         deserialize(bskOpt.bskDft[i][0], inFile);
     }
 
-    // Step 3: Deserialize remaining fields (n, group, isHalf, initialized)
+    // Step 3: Deserialize remaining fields (n, group)
     readPOD(inFile, bskOpt.n);
     readPOD(inFile, bskOpt.group);
-    readPOD(inFile, bskOpt.initialized);
     inFile.close();
 }
 
@@ -238,7 +236,26 @@ void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& fi
     inFile.close();
 }
 
-// match the serialization order inside blindRotateLazyPipeSerializationNtt function
+void serializeBskLazyPipe(BootstrappingKeyMPLazyPipe& t, const std::string& filename) {
+    std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+
+    // Step 1: Write bskFirst[0] and bskDft[0][0] (written outside loop)
+    serialize(t.bskFirst[0], os);
+    serialize(t.bskDft[0][0], os);
+
+    // Step 2: Write alternating pattern: bskDft[i+1][0], bskDecompA[i][0]
+    for (int i = 0; i < t.n - 2; ++i) {
+        // Write bskDft[i+1][0]
+        serialize(t.bskDft[i + 1][0], os);
+
+        // Write bskDecompA[i][0] (if applicable)
+        if (i < t.n - 3) {
+            serializeNestedVector(t.bskDecompA[i][0], os);
+        }
+    }
+    os.close();
+}
+
 void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::string& filename, int n) {
     std::ifstream inFile(filename, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
@@ -255,7 +272,7 @@ void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::stri
 
     // Step 2: Read alternating pattern: bskDft[i+1][0], bskDecompA[i][0]
     for (int i = 0; i < n - 2; ++i) {
-        // Read bskDft[i+1][0] (written as nextBsk in serialization)
+        // Read bskDft[i+1][0]
         bskLazy.bskDft[i + 1].resize(1);
         deserialize(bskLazy.bskDft[i + 1][0], inFile);
 

@@ -850,7 +850,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
 void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
                             const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
                             const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
-                            const TrgswMPDft& one, const string& filename, const YatfheParameters& param) {
+                            const TrgswMPDft& one, const string& filename, const bool isTrunc, const YatfheParameters& param) {
     const auto level = bsk[0][0].l;
     const auto n = param.n;
     TrgswMPDft rotated0{param, level};
@@ -878,7 +878,7 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
     }
 
     // serialize first two key components
-    std::ofstream outFile(filename, std::ios::binary | std::ios::trunc);
+    std::ofstream outFile(filename, std::ios::binary | (isTrunc ? std::ios::trunc : std::ios::app));
     std::ostringstream oss(std::ios::binary);
     serialize(bskFirst[0], oss);
     serialize(bsk[0][0], oss);
