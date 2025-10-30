@@ -156,8 +156,8 @@ int main(int argc, char **argv) {
     extractTlweFromTrlwe(tmp, out2, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-    cout << "decAft(LAZY): "<< decAft << endl;
-    cout << "err(LAZY):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "decAft(LAZY_SERIA): "<< decAft << endl;
+    cout << "err(LAZY_SERIA):" << calTlweError(output, tlweKey, mu) << endl;
 
     extractTlweFromTrlwe(tmp, out3, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);

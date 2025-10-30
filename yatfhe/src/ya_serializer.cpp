@@ -238,34 +238,33 @@ void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& fi
     inFile.close();
 }
 
+// match the serialization order inside blindRotateLazyPipeSerializationNtt function
 void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::string& filename, int n) {
     std::ifstream inFile(filename, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
-    bskLazy.bskFirst.resize(1);       // bskFirst is a vector of size 1
-    bskLazy.bskDft.resize(n - 1);    // bskDft has n-1 elements
-    bskLazy.bskDecompA.resize(n - 3); // bskDecompA has n-3 elements
+    // Resize vectors to match serialization structure
+    bskLazy.bskFirst.resize(1);
+    bskLazy.bskDft.resize(n - 1);      // bsk[0] to bsk[n-2]
+    bskLazy.bskDecompA.resize(n - 3);  // bskDecompA[0] to bskDecompA[n-4]
 
-    // Step 2: Deserialize bskTrim[i][0] for i = 1 to n-3,
-    // and bskDecompA[i][0] for i = 1 to n-4
-    for (int i = 1; i < n - 2; ++i) {
-        bskLazy.bskDft[i].resize(1);  // Each bskDft[i] is a vector of size 1
-        deserialize(bskLazy.bskDft[i][0], inFile);
-        if (i < n - 3) {
-            bskLazy.bskDecompA[i].resize(1);   // Each bskDecompA[i] is a vector of size 1
-            deserializeNestedVector(bskLazy.bskDecompA[i][0], inFile);
-        }
-    }
-
-    // Step 1: Deserialize bskFirst[0], bskDft[0]
+    // Step 1: Read bskFirst[0] and bskDft[0][0] (written outside loop)
     deserialize(bskLazy.bskFirst[0], inFile);
     bskLazy.bskDft[0].resize(1);
     deserialize(bskLazy.bskDft[0][0], inFile);
 
-//    // Step 4: Deserialize metadata (n, level, group, initialized)
-//    readPOD(inFile, bskLazy.n);
-//    readPOD(inFile, bskLazy.level);
-//    readPOD(inFile, bskLazy.group);
-//    readPOD(inFile, bskLazy.initialized);
+    // Step 2: Read alternating pattern: bskDft[i+1][0], bskDecompA[i][0]
+    for (int i = 0; i < n - 2; ++i) {
+        // Read bskDft[i+1][0] (written as nextBsk in serialization)
+        bskLazy.bskDft[i + 1].resize(1);
+        deserialize(bskLazy.bskDft[i + 1][0], inFile);
+
+        // Read bskDecompA[i][0] (if applicable)
+        if (i < n - 3) {
+            bskLazy.bskDecompA[i].resize(1);
+            deserializeNestedVector(bskLazy.bskDecompA[i][0], inFile);
+        }
+    }
+
     inFile.close();
 }

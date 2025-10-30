@@ -822,6 +822,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
         // scheme switching
         if (i < n - 3) {
             futures.emplace_back(pool.enqueue([&bsk, i, &param, level, &s2, &bskDecompA] {
+                bsk[i + 2][0].c.resize(level);
                 for (auto l = 0; l < level; l++) {
                     auto& c = bsk[i + 2][0].c[l];
                     auto& cPrime = bsk[i + 2][0].cPrime[l];
@@ -877,33 +878,14 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
     }
 
     // serialize first two key components
-//    std::ostringstream oss(std::ios::binary);
     std::ofstream outFile(filename, std::ios::binary | std::ios::trunc);
-//    {
-//
-//        // Serialize bskFirst[0]
-//        serialize(bskFirst[0], outFile);
-////        const std::string& serializedFirst = oss.str();
-////        buffer.insert(buffer.end(), serializedFirst.begin(), serializedFirst.end());
-////
-////        // Reset oss for the next object
-////        oss.str("");  // Clear the stream
-////        oss.clear();   // Reset error flags
-//
-//        // Serialize bsk[0][0]
-//        serialize(bsk[0][0], outFile);
-////        const std::string& serializedSecond = oss.str();
-////        buffer.insert(buffer.end(), serializedSecond.begin(), serializedSecond.end());
-//    }
+    std::ostringstream oss(std::ios::binary);
+    serialize(bskFirst[0], oss);
+    serialize(bsk[0][0], oss);
+
 
     // accumulate on the n - 1 key components
     for (auto i = 0; i < n - 1; i++) {
-        if (i == n - 2) {
-            futures.emplace_back(pool.enqueue([&bskFirst, &bsk, &outFile] {
-                serialize(bskFirst[0], outFile);
-                serialize(bsk[0][0], outFile);
-            }));
-        }
         auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
         auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
 
@@ -913,26 +895,15 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
             const auto aNext = input.a[nextKeyIdx + 1]; // input.a[i+2]
             auto& nextBsk = bsk[nextKeyIdx][0];
 
-            futures.emplace_back(pool.enqueue([i, &nextBsk, &nextRotated, &one, aNext, &outFile, &bskDecompA, param] {
+            futures.emplace_back(pool.enqueue([i, &nextBsk, &nextRotated, &one, aNext, &outFile, &oss, &bskDecompA, param] {
                 // serialization
-//                std::ostringstream oss(std::ios::binary);
-                serialize(nextBsk, outFile);
-//                const std::string& data = oss.str();
-//                buffer.insert(buffer.end(), data.begin(), data.end());
+                serialize(nextBsk, oss);
                 if (i < param.n - 3) {
-//                    oss.str("");
-//                    oss.clear();
-                    serializeNestedVector(bskDecompA[i][0], outFile);
-//                    const std::string& data2 = oss.str();
-//                    buffer.insert(buffer.end(), data2.begin(), data2.end());
+                    serializeNestedVector(bskDecompA[i][0], oss);
                 }
-//                std::ofstream outFile("bsk_serialized_PIPE.bin", std::ios::binary | std::ios::app);
-////                outFile.write(buffer.data(), buffer.size());
-////                buffer.clear();
-//                outFile << oss.str();
-//                oss.str("");
-//                oss.clear();
-//                outFile.close();
+                outFile << oss.str();
+                oss.str("");
+                oss.clear();
 
                 if (aNext != 0) {
                     // rotation
