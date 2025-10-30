@@ -287,7 +287,7 @@ def create_line_plot(df, out_path: str):
     plt.close()
 
 
-def plot_benchmark_barchart(df, out_path: str):
+def plot_benchmark_barchart(df, out_path: str, method_name: str):
     # Calculate performance metrics
     fastest = df.loc[df['real_time_ms'].idxmin()]
     slowest = df.loc[df['real_time_ms'].idxmax()]
@@ -318,7 +318,7 @@ def plot_benchmark_barchart(df, out_path: str):
                 fontsize=10)
 
     # Formatting
-    plt.title('Method Performance Comparison\n'
+    plt.title(method_name + ' Performance Comparison\n'
               'Benchmark Iteration = 500',
               pad=20)
     plt.xlabel('Method', labelpad=15)
@@ -360,19 +360,30 @@ if __name__ == "__main__":
     # data2 = 'result_i5_bench_blindrotate_all.json'
 
     out_dir = 'results_9950x3d'
-    data2 = 'result_9950x3d_bench_blindrotate_new.json'
+    data2 = 'result_9950x3d_bench_blindrotate_basemethod.json'
+    data3 = 'result_9950x3d_bench_keygen.json'
+    data4 = 'result_9950x3d_bench_readkey.json'
+    data5 = 'result_9950x3d_bench_writekey.json'
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     # Load and process data
     # df = load_and_process_data(data1)
     df2 = load_and_process_data2(data2)
+    df3 = load_and_process_data2(data3)
+    df4 = load_and_process_data2(data4)
+    df5 = load_and_process_data2(data5)
 
     # Generate visualizations
     # create_heatmap(df, out_dir+'/heatmap.png')
     # create_3d_surface(df, out_dir+'/3d_surface_dense_plateau.png')
     # create_line_plot(df, out_dir+'/execution_time.png')
-    plot_benchmark_barchart(df2, out_dir+'/comparison_barchart.png')
+    plot_benchmark_barchart(df2, out_dir+'/comparison_barchart2.png', "Blind Rotation")
+
+    plot_benchmark_barchart(df3, out_dir+'/comparison_barchart3.png', "Bootstrapping Key Gen")
+    plot_benchmark_barchart(df4, out_dir+'/comparison_barchart4.png', "Initial Run")
+    plot_benchmark_barchart(df5, out_dir+'/comparison_barchart5.png', "Write Key")
+
 
     # Generate report
     # generate_report(df, out_dir+'/performance_report.txt')
