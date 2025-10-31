@@ -8,6 +8,7 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yautil/initializer.h"
+#include "yautil/tool.h"
 #include "yautil/ya_serializer.h"
 
 class BlindRotateBenchmark : public benchmark::Fixture {
@@ -50,7 +51,11 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, GINX)(benchmark::State& state) {
     BootstrappingKeyMP bskMP{param, param.lApprox};
     genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
     for (auto _ : state) {
+        state.PauseTiming();
+        clearFileCache();
+        state.ResumeTiming();
         blindRotateJP22Ntt(acc, bskMP.bskDft, sTlwe, param);
+        benchmark::DoNotOptimize(acc);
     }
 }
 
@@ -58,7 +63,11 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, GINX_OPT)(benchmark::State& state) {
     BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
     genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);
     for (auto _ : state) {
+        state.PauseTiming();
+        clearFileCache();
+        state.ResumeTiming();
         blindRotateOptNtt(out, bskMPOpt.bskFirst, bskMPOpt.bskDft, sTlwe, v, param);
+        benchmark::DoNotOptimize(out);
     }
 }
 
@@ -69,8 +78,12 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, LAZY_SINGLETHREAD)(benchmark::State& st
     localP.batchSize = 1;
     localP.tasksPerThread = 1;
     for (auto _ : state) {
+        state.PauseTiming();
+        clearFileCache();
+        state.ResumeTiming();
         blindRotateLazyMTNtt(out, bskMPLazyOpt.bskFirst, bskMPLazyOpt.bskTrim, bskMPLazyOpt.bskDecompA,
                              sTlwe, v, s2Dft, localP);
+        benchmark::DoNotOptimize(out);
     }
 }
 
@@ -81,8 +94,12 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, LAZY_NAIVE_MULTITHREAD)(benchmark::Stat
     localP.batchSize = 3;
     localP.tasksPerThread = 1;
     for (auto _ : state) {
+        state.PauseTiming();
+        clearFileCache();
+        state.ResumeTiming();
         blindRotateLazyMTNtt(out, bskMPLazyOpt.bskFirst, bskMPLazyOpt.bskTrim, bskMPLazyOpt.bskDecompA,
                              sTlwe, v, s2Dft, localP);
+        benchmark::DoNotOptimize(out);
     }
 }
 
@@ -90,8 +107,12 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, LAZY_PIPELINE)(benchmark::State& state)
     BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
     genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);
     for (auto _ : state) {
+        state.PauseTiming();
+        clearFileCache();
+        state.ResumeTiming();
         blindRotateLazyPipeNtt(out, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft,
                                bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one, param);
+        benchmark::DoNotOptimize(out);
     }
 }
 
@@ -99,9 +120,13 @@ BENCHMARK_DEFINE_F(BlindRotateBenchmark, LAZY_PIPELINE_S)(benchmark::State& stat
     BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
     genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);
     for (auto _ : state) {
+        state.PauseTiming();
+        clearFileCache();
+        state.ResumeTiming();
         blindRotateLazyPipeSerializationNtt(out, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft,
                                bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one, "LAZY_PIPELINE_S.bin",
                                false, param);
+        benchmark::DoNotOptimize(out);
     }
 }
 

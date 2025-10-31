@@ -1,6 +1,6 @@
 {
   "context": {
-    "date": "2025-10-30T22:55:19+08:00",
+    "date": "2025-10-31T16:37:55+08:00",
     "host_name": "DESKTOP-B7ART1V",
     "executable": "./bench_readkey",
     "num_cpus": 32,
@@ -33,7 +33,7 @@
         "num_sharing": 32
       }
     ],
-    "load_avg": [0.782715,0.296387,0.131348],
+    "load_avg": [0.781738,0.228027,0.15918],
     "library_version": "v1.9.4-53-g4e26a9e6",
     "library_build_type": "release",
     "json_schema_version": 1
@@ -49,8 +49,8 @@
       "repetition_index": 0,
       "threads": 1,
       "iterations": 100,
-      "real_time": 2.6680778474000021e+05,
-      "cpu_time": 2.6503993029000005e+05,
+      "real_time": 4.4216645345000870e+05,
+      "cpu_time": 2.8067392433000001e+05,
       "time_unit": "us"
     },
     {
@@ -63,8 +63,8 @@
       "repetition_index": 0,
       "threads": 1,
       "iterations": 100,
-      "real_time": 2.4658526501999973e+05,
-      "cpu_time": 2.4747306391999999e+05,
+      "real_time": 4.2490495897000073e+05,
+      "cpu_time": 2.6506837784999999e+05,
       "time_unit": "us"
     },
     {
@@ -77,8 +77,8 @@
       "repetition_index": 0,
       "threads": 1,
       "iterations": 100,
-      "real_time": 2.5734778940999944e+05,
-      "cpu_time": 2.5589577469000019e+05,
+      "real_time": 4.0842399097000452e+05,
+      "cpu_time": 2.6468636478000006e+05,
       "time_unit": "us"
     }
   ]

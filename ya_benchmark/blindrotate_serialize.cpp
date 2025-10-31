@@ -7,6 +7,7 @@
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric.h"
 #include "yautil/initializer.h"
+#include "yautil/tool.h"
 #include "yautil/ya_serializer.h"
 
 int main(int argc, char **argv) {
@@ -37,12 +38,12 @@ int main(int argc, char **argv) {
     COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
     BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
     COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
-//    BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
-//    genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
-//    BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
-//    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);)
-//    BootstrappingKeyMPLazy bskMPLazyOpt{param, param.lApprox, true, true};
-//    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazy(bskMPLazyOpt, trgswKey, tlweKey, v, param);)
+    BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
+    genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
+    BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
+    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);)
+    BootstrappingKeyMPLazy bskMPLazyOpt{param, param.lApprox, true, true};
+    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazy(bskMPLazyOpt, trgswKey, tlweKey, v, param);)
 
 
     // data gen
@@ -69,106 +70,105 @@ int main(int argc, char **argv) {
     // server side
     // GINX server procedure
     {
+        clearFileCache();
         BootstrappingKeyMP bskMPServer;
         COUNT_TIME("GINX write key", serializeBskMP(bskMP, "BSK_GINX.bin");)
+        clearFileCache();
         COUNT_TIME("GINX read key", deserializeBskMP(bskMPServer, "BSK_GINX.bin", param.n);)
-//        COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);)
+        COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);)
     }
 
     // optimized GINX server procedure
     {
+        clearFileCache();
         BootstrappingKeyMPOpt bskMPOptServer;
         COUNT_TIME("GINX_OPT write key", serializeBskMPOpt(bskMPOpt, "BSK_GINX_OPT.bin");)
+        clearFileCache();
         COUNT_TIME("GINX_OPT read key", deserializeBskMPOpt(bskMPOptServer, "BSK_GINX_OPT.bin", param.n))
-//        COUNT_TIME("GINX_OPT blindRotate", blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft,
-//                                                          sTlwe, v, param);)
+        COUNT_TIME("GINX_OPT blindRotate", blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft,
+                                                          sTlwe, v, param);)
     }
-//
-////    // parallel naive lazy key initialization server procedure
-////    {
-////        BootstrappingKeyMPOpt bskMPLazyServer{param, param.lApprox, true};
-////        COUNT_TIME("blindRotateLazyNtt key", bskMPLazyServer = bskMPLazy;)
-////        COUNT_TIME("blindRotateLazyNtt",
-////                   blindRotateLazyNtt(out2, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
-////                                      bskMPLazyServer.initialized, sTlwe, v, s2Dft, param);)
-////    }
-//
+
 //    // pipelined lazy key initialization with serialization server procedure
-//    {
-//        if (!bskMPLazyPipe.initialized) {
-//            COUNT_TIME("PIPE_LAZY blindRotate + write key",
-//                       blindRotateLazyPipeSerializationNtt(out2, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft,
-//                                                           bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one,
-//                                                           "BSK_PIPE.bin", true, param);)
-//            bskMPLazyPipe.initialized = true;
-//            bskMPLazyPipe.bskDecompA.clear();
-//        } else {
-//            blindRotateOptNtt(out2, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft, sTlwe, v, param);
-//        }
-//    }
-//
+    {
+        if (!bskMPLazyPipe.initialized) {
+            clearFileCache();
+            COUNT_TIME("PIPE_LAZY blindRotate + write key",
+                       blindRotateLazyPipeSerializationNtt(out2, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft,
+                                                           bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one,
+                                                           "BSK_PIPE.bin", true, param);)
+            bskMPLazyPipe.initialized = true;
+            bskMPLazyPipe.bskDecompA.clear();
+        } else {
+            blindRotateOptNtt(out2, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft, sTlwe, v, param);
+        }
+    }
+
 //    // pipelined lazy key initialization server procedure
-//    {
-//        BootstrappingKeyMPLazyPipe bskMPLazyServer;
-//        if (!bskMPLazyServer.initialized) {
-//            COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
-//            COUNT_TIME("PIPE_LAZY blindRotate",
-//                       blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
-//                                              bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, one, param);)
-//            bskMPLazyServer.initialized = true;
-//            bskMPLazyServer.bskDecompA.clear();
-//        } else {
-//            blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
-//        }
-//    }
-//
-//
-//    // parallel lazy key initialization server procedure
-//    {
-//        BootstrappingKeyMPLazy bskMPLazyServer;
-//        if (!bskMPLazyServer.initialized) {
-//            COUNT_TIME("PARALLEL_LAZY write key", serializeBskMPLazy(bskMPLazyOpt, "BSK_PAL_LAZY.bin");)
-//            COUNT_TIME("PARALLEL_LAZY read key", deserializeBskMPLazy(bskMPLazyServer, "BSK_PAL_LAZY.bin", param.n);)
-//            COUNT_TIME("PARALLEL_LAZY blindRotate",
-//                       blindRotateLazyMTNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskTrim,
-//                                            bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, param);)
-//
-//            bskMPLazyServer.initialized = true;
-//            bskMPLazyServer.bskDecompA.clear();
-//        } else {
-//            blindRotateOptNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskTrim, sTlwe, v, param);
-//        }
-//    }
-//
-//    // client side
-//    extractTlweFromTrlwe(tmp, acc, param.driftPhase);
-//    switchKeyForTlwe(output, ksKey, tmp, param);
-//    auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-//    cout << "decAft(GINX): "<< decAft << endl;
-//    cout << "err(GINX):" << calTlweError(output, tlweKey, mu) << endl;
-//
-//    extractTlweFromTrlwe(tmp, out, param.driftPhase);
-//    switchKeyForTlwe(output, ksKey, tmp, param);
-//    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-//    cout << "decAft(GINX_OPT): "<< decAft << endl;
-//    cout << "err(GINX_OPT):" << calTlweError(output, tlweKey, mu) << endl;
-//
-//    extractTlweFromTrlwe(tmp, out2, param.driftPhase);
-//    switchKeyForTlwe(output, ksKey, tmp, param);
-//    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-//    cout << "decAft(LAZY_SERIA): "<< decAft << endl;
-//    cout << "err(LAZY_SERIA):" << calTlweError(output, tlweKey, mu) << endl;
-//
-//    extractTlweFromTrlwe(tmp, out3, param.driftPhase);
-//    switchKeyForTlwe(output, ksKey, tmp, param);
-//    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-//    cout << "decAft(LAZY_Pipe): "<< decAft << endl;
-//    cout << "err(LAZY_Pipe):" << calTlweError(output, tlweKey, mu) << endl;
-//
-//    extractTlweFromTrlwe(tmp, out4, param.driftPhase);
-//    switchKeyForTlwe(output, ksKey, tmp, param);
-//    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-//    cout << "decAft(LAZY_MT): "<< decAft << endl;
-//    cout << "err(LAZY_MT):" << calTlweError(output, tlweKey, mu) << endl;
+    {
+        BootstrappingKeyMPLazyPipe bskMPLazyServer;
+        if (!bskMPLazyServer.initialized) {
+            clearFileCache();
+            COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
+            COUNT_TIME("PIPE_LAZY blindRotate",
+                       blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+                                              bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, one, param);)
+            bskMPLazyServer.initialized = true;
+            bskMPLazyServer.bskDecompA.clear();
+        } else {
+            blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
+        }
+    }
+
+
+    // parallel lazy key initialization server procedure
+    {
+        BootstrappingKeyMPLazy bskMPLazyServer;
+        if (!bskMPLazyServer.initialized) {
+            clearFileCache();
+            COUNT_TIME("PARALLEL_LAZY write key", serializeBskMPLazy(bskMPLazyOpt, "BSK_PAL_LAZY.bin");)
+            clearFileCache();
+            COUNT_TIME("PARALLEL_LAZY read key", deserializeBskMPLazy(bskMPLazyServer, "BSK_PAL_LAZY.bin", param.n);)
+            COUNT_TIME("PARALLEL_LAZY blindRotate",
+                       blindRotateLazyMTNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskTrim,
+                                            bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, param);)
+
+            bskMPLazyServer.initialized = true;
+            bskMPLazyServer.bskDecompA.clear();
+        } else {
+            blindRotateOptNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskTrim, sTlwe, v, param);
+        }
+    }
+
+    // client side
+    extractTlweFromTrlwe(tmp, acc, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(GINX): "<< decAft << endl;
+    cout << "err(GINX):" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, out, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(GINX_OPT): "<< decAft << endl;
+    cout << "err(GINX_OPT):" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, out2, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(LAZY_SERIA): "<< decAft << endl;
+    cout << "err(LAZY_SERIA):" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, out3, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(LAZY_Pipe): "<< decAft << endl;
+    cout << "err(LAZY_Pipe):" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, out4, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(LAZY_MT): "<< decAft << endl;
+    cout << "err(LAZY_MT):" << calTlweError(output, tlweKey, mu) << endl;
     return 0;
 }

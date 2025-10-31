@@ -7,6 +7,7 @@
 #include "yautil/initializer.h"
 #include "yautil/ya_serializer.h"
 #include "yatfhe/blind_rotate.h"
+#include "yautil/tool.h"
 
 class ReadKeyBenchmark : public benchmark::Fixture {
 public:
@@ -49,6 +50,7 @@ BENCHMARK_DEFINE_F(ReadKeyBenchmark, GINX)(benchmark::State& state) {
     genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
     serializeBskMP(bskMP, "BSK_GINX.bin");
     for (auto _ : state) {
+        clearFileCache();
         BootstrappingKeyMP bskMPServer;
         deserializeBskMP(bskMPServer, "BSK_GINX.bin", param.n);
         blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);
@@ -60,6 +62,7 @@ BENCHMARK_DEFINE_F(ReadKeyBenchmark, GINX_OPT)(benchmark::State& state) {
     genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);
     serializeBskMPOpt(bskMPOpt, "BSK_GINX_OPT.bin");
     for (auto _ : state) {
+        clearFileCache();
         BootstrappingKeyMPOpt bskMPOptServer;
         deserializeBskMPOpt(bskMPOptServer, "BSK_GINX_OPT.bin", param.n);
         blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft,sTlwe, v, param);
@@ -71,6 +74,7 @@ BENCHMARK_DEFINE_F(ReadKeyBenchmark, LAZY_PIPE)(benchmark::State& state) {
     genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);
     serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE.bin");
     for (auto _ : state) {
+        clearFileCache();
         BootstrappingKeyMPLazyPipe bskMPLazyServer;
         deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);
         blindRotateLazyPipeNtt(out, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,

@@ -1,6 +1,6 @@
 {
   "context": {
-    "date": "2025-10-30T23:00:36+08:00",
+    "date": "2025-10-31T18:21:58+08:00",
     "host_name": "DESKTOP-B7ART1V",
     "executable": "./bench_blindrotate_basemethod",
     "num_cpus": 32,
@@ -33,7 +33,7 @@
         "num_sharing": 32
       }
     ],
-    "load_avg": [0.0576172,0.33252,0.222656],
+    "load_avg": [0.579102,0.655273,0.379395],
     "library_version": "v1.9.4-53-g4e26a9e6",
     "library_build_type": "release",
     "json_schema_version": 1
@@ -49,8 +49,8 @@
       "repetition_index": 0,
       "threads": 1,
       "iterations": 100,
-      "real_time": 2.4017353075999836e+05,
-      "cpu_time": 2.4028597956000001e+05,
+      "real_time": 2.3333063666956150e+05,
+      "cpu_time": 2.3730584340999991e+05,
       "time_unit": "us"
     },
     {
@@ -63,8 +63,8 @@
       "repetition_index": 0,
       "threads": 1,
       "iterations": 100,
-      "real_time": 2.3762860157999967e+05,
-      "cpu_time": 2.3748610953000010e+05,
+      "real_time": 2.3175315443993895e+05,
+      "cpu_time": 2.3611410944000044e+05,
       "time_unit": "us"
     },
     {
@@ -77,8 +77,8 @@
       "repetition_index": 0,
       "threads": 1,
       "iterations": 100,
-      "real_time": 3.7068290812999976e+05,
-      "cpu_time": 3.6838350574999995e+05,
+      "real_time": 3.5846415799973329e+05,
+      "cpu_time": 3.6392060162999993e+05,
       "time_unit": "us"
     },
     {
@@ -91,8 +91,8 @@
       "repetition_index": 0,
       "threads": 1,
       "iterations": 100,
-      "real_time": 3.0430391563999822e+05,
-      "cpu_time": 3.6902070588000014e+05,
+      "real_time": 2.9553454384003999e+05,
+      "cpu_time": 3.6703097719999845e+05,
       "time_unit": "us"
     },
     {
@@ -105,8 +105,8 @@
       "repetition_index": 0,
       "threads": 1,
       "iterations": 100,
-      "real_time": 2.4507457746000000e+05,
-      "cpu_time": 3.6995433883000002e+05,
+      "real_time": 2.3840984333022789e+05,
+      "cpu_time": 3.6569015552000055e+05,
       "time_unit": "us"
     },
     {
@@ -119,8 +119,8 @@
       "repetition_index": 0,
       "threads": 1,
       "iterations": 100,
-      "real_time": 2.4781562921999919e+05,
-      "cpu_time": 4.0528250100000011e+05,
+      "real_time": 2.3981929820998630e+05,
+      "cpu_time": 3.8461936891999812e+05,
       "time_unit": "us"
     }
   ]

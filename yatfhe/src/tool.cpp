@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 #include "yautil/tool.h"
+
+#include <thread>
+
 #include "yatfhe/trlwe.h"
 
 using namespace std;
@@ -116,4 +119,10 @@ void printBanner(const string& msg) {
     }
     std::cout << std::endl;
 #endif
+}
+
+void clearFileCache() {
+    // Clear page cache, dentries, and inodes
+    system("sync; echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null");
+    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Let it settle
 }

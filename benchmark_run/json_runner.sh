@@ -1,5 +1,5 @@
 #! /bin/bash
-BENCHMARK_EXEC="bench_writekey"
+BENCHMARK_EXEC="bench_blindrotate_basemethod"
 OUTPUT_PREFIX="result_9950x3d"
 
 # Run the benchmark

@@ -184,4 +184,6 @@ void printMsg(const T in, const string& msg) {
 
 void printBanner(const string& msg);
 
+void clearFileCache();
+
 #endif //HLS_YATFHE_TOOL_H
