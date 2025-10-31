@@ -329,6 +329,7 @@ def plot_benchmark_barchart(df, out_path: str, method_name: str):
     plt.tight_layout()
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
+    print("Created:" + out_path)
 
 
 def generate_report(df, out_path: str):
@@ -389,9 +390,9 @@ if __name__ == "__main__":
     # Generate report
     # generate_report(df, out_dir+'/performance_report.txt')
 
-    print("Analysis complete. Created:")
-    print("- heatmap.png")
-    print("- 3d_surface.png")
-    print("- line_plot.png")
-    print("- bar_chart.png")
-    print("- performance_report.txt")
+    print("Analysis complete.")
+    # print("- heatmap.png")
+    # print("- 3d_surface.png")
+    # print("- line_plot.png")
+    # print("- bar_chart.png")
+    # print("- performance_report.txt")
