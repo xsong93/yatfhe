@@ -40,6 +40,7 @@ def load_and_process_data2(file_path):
         benchmarks.append({
             'method': run['name'].split('/')[1],
             'real_time_ms': run['real_time'] / 1000,
+            'iterations': run['iterations']
         })
 
     return pd.DataFrame(benchmarks)
@@ -171,7 +172,7 @@ def create_3d_surface(df, out_path: str):
                         ax.plot(hull_points[:, 0], hull_points[:, 1], hull_z,
                                 color='red', linewidth=3, linestyle='--',
                                 label=label)
-                        boundary_label_added = True  # 后续绘制不再添加标签
+                        boundary_label_added = True
                 except:
                     pass
 
@@ -319,7 +320,7 @@ def plot_benchmark_barchart(df, out_path: str, method_name: str):
 
     # Formatting
     plt.title(method_name + ' Performance Comparison\n'
-              'Benchmark Iteration = 500',
+              'Benchmark Iteration = ' + str(df['iterations'].mean()),
               pad=20)
     plt.xlabel('Method', labelpad=15)
     plt.ylabel('Execution Time (ms)', labelpad=15)
