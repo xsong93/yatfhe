@@ -596,6 +596,7 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
             }
         }
     }
+    TrgswMPDft tmpMp3{param, param.lApprox};
     TrgswMP t1{param, param.lApprox};
     t1.cPrime = in1.cPrime;
 
@@ -605,6 +606,7 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
                    switchTrlweToSecretEmbeddingNtt(tmpMp.c[l], tmpMp.cPrime[l], s2pDft, param);)
         COUNT_TIME("switchTrlweToSecretEmbeddingNttOpt",
                    switchTrlweToSecretEmbeddingNttOpt(tmpMp2.c[l], tmpMp2.cPrime[l], decompA[l], s2pDft, param);)
+        COUNT_TIME("switchTrlweToSecretEmbeddingNttMix", switchTrlweToSecretEmbeddingNttMix(tmpMp3.c[l], tmpMp3.cPrime[l], in1.cPrime[l], s2pDft, param);)
         COUNT_TIME("switchTrlweToSecretEmbedding", switchTrlweToSecretEmbedding(t1.c[l], in1.cPrime[l], s2p, param);)
     }
 
@@ -626,13 +628,19 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
     ASSERT_EQ(dec.coeffs, plainMult.coeffs);
 
     // switchTrlweToSecretEmbeddingNtt
-    externalProductTrgswMPNtt(res, tmpMp, trlwe, param.lApprox, param);
+    COUNT_TIME("externalProductTrgswMPNtt", externalProductTrgswMPNtt(res, tmpMp, trlwe, param.lApprox, param);)
     symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
     printArray(dec.coeffs, "dec");
     ASSERT_EQ(dec.coeffs, plainMult.coeffs);
 
     // switchTrlweToSecretEmbeddingNttOpt
     externalProductTrgswMPNtt(res, tmpMp2, trlwe, param.lApprox, param);
+    symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
+    printArray(dec.coeffs, "dec");
+    ASSERT_EQ(dec.coeffs, plainMult.coeffs);
+
+    // switchTrlweToSecretEmbeddingNttMix
+    externalProductTrgswMPNtt(res, tmpMp3, trlwe, param.lApprox, param);
     symDecTrlweToInt(dec, res, trlweKey, param.torusBase);
     printArray(dec.coeffs, "dec");
     ASSERT_EQ(dec.coeffs, plainMult.coeffs);

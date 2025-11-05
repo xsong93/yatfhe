@@ -902,36 +902,6 @@ void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1,
     }
 }
 
-void switchTrlweToSecretEmbeddingPreCompNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<NttPolynomial>>& decompADft,
-                                            const TrlevDft& sSquare, const YatfheParameters& param) {
-    const auto K = param.k;
-    const auto L = param.l; // must use full decomp length
-
-    // calculate a * S^2
-    for (auto l = 0; l < L; l++) {
-        auto& s2 = sSquare.trlweDfts[l];
-        auto& decompL = decompADft[l];
-        for (auto k1 = 0; k1 < K; k1++) {
-            auto& cA = cDft[k1].a;
-            auto& cB = cDft[k1].b;
-            auto& sA = s2.a;
-            auto& aDft = decompL[k1];
-            calModularInnerProductNtt(cPrimeDft.a[k1], aDft, getNttGadgetRecomper(l)); // calculate recomposed cPrime'a in ntt domain
-            for (auto k2 = 0; k2 < K; k2++) {
-                calModularInnerProductNtt(cA[k2], aDft, sA[k2]);
-            }
-            calModularInnerProductNtt(cB, aDft, s2.b);
-        }
-    }
-
-    // adding b
-    for (auto k1 = 0; k1 < K; k1++) {
-        for (auto k2 = 0; k2 < K; k2++) {
-            addNttPolynomial(cDft[k1].a[k2], cDft[k1].a[k2], cPrimeDft.b);
-        }
-    }
-}
-
 void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPrimeDft, const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l; // must use full decomp length
@@ -1005,6 +975,56 @@ void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrime
     }
 
     // adding b
+    for (auto k1 = 0; k1 < K; k1++) {
+        for (auto k2 = 0; k2 < K; k2++) {
+            addNttPolynomial(cDft[k1].a[k2], cDft[k1].a[k2], cPrimeDft.b);
+        }
+    }
+}
+
+void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const Trlwe& cPrime,
+                                        const TrlevDft& sSquare, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l; // must use full decomp length
+    const auto N = param.N;
+    auto& cPrimeA = cPrime.a;
+    auto& cPrimeB = cPrime.b;
+
+    vector decompA(L, Trlwe{K, N});
+
+    for (auto row = 0; row < K; row++) {
+        auto& currIn = cPrimeA[row];
+        for (auto j = 0; j < N; j++) {
+            DecomposedData d {L};
+            gadgetDecompose(d, currIn.coeffs[j], param);
+            for (auto lvl = 0; lvl < L; lvl++) {
+                auto& currOut = decompA[lvl].a[row];
+                currOut.coeffs[j] = d.value[lvl] * d.sign;
+            }
+        }
+    }
+
+    // calculate a * S^2
+    for (auto l = 0; l < L; l++) {
+        auto& s2 = sSquare.trlweDfts[l];
+        auto& decompL = decompA[l];
+        for (auto k1 = 0; k1 < K; k1++) {
+            auto& cA = cDft[k1].a;
+            auto& cB = cDft[k1].b;
+            auto& sA = s2.a;
+            auto& a = decompL.a[k1];
+            NttPolynomial aDft{N};
+            applyNtt(aDft, a);
+            calModularInnerProductNtt(cPrimeDft.a[k1], aDft, getNttGadgetRecomper(l)); // calculate recomposed cPrimes'a in ntt domain
+            for (auto k2 = 0; k2 < K; k2++) {
+                calModularInnerProductNtt(cA[k2], aDft, sA[k2]);
+            }
+            calModularInnerProductNtt(cB, aDft, s2.b);
+        }
+    }
+
+    // adding b
+    applyNtt(cPrimeDft.b, cPrime.b);
     for (auto k1 = 0; k1 < K; k1++) {
         for (auto k2 = 0; k2 < K; k2++) {
             addNttPolynomial(cDft[k1].a[k2], cDft[k1].a[k2], cPrimeDft.b);

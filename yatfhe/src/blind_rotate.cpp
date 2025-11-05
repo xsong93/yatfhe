@@ -847,6 +847,81 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
 #endif
 }
 
+//todo
+void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<TrgswMPDft>& bskSecond,
+                               const vector<vector<TrgswMP>>& bskPrime,
+                               const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
+                               const Trlwe& one, const YatfheParameters& param) {
+    const auto level = bskPrime[0][0].l;
+    const auto n = param.n;
+    TrgswMPDft rotated0{param, level};
+    TrgswMPDft rotated1{param, level};
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(2);
+
+#ifdef TERNARY
+#else
+    // handle first two key components
+    // R(v) + (X^a0 - 1)R(v*s0)
+    // G(1) + (X^a1 - 1)G(s1)
+    {
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
+
+        if (input.a[1] != 0) {
+            rotateTrgswMPMinusOneNtt(rotated0, bsk[0][0], input.a[1], param);
+            addTrgswMPNtt(rotated0, rotated0, one);
+        }
+    }
+
+    // accumulate on the n - 1 key components
+    for (auto i = 0; i < n - 1; i++) {
+        auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
+        auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
+
+        // automorphism
+        if (i < n - 2 && input.a[i + 2] != 0) {
+            const int nextKeyIdx = i + 1;
+            const auto aNext = input.a[nextKeyIdx + 1]; // input.a[i+2]
+            auto& nextBsk = bsk[nextKeyIdx][0];
+
+            futures.emplace_back(pool.enqueue([&nextBsk, &nextRotated, &one, aNext, param] {
+                rotateTrgswMPMinusOneNtt(nextRotated, nextBsk, aNext, param);
+                addTrgswMPNtt(nextRotated, nextRotated, one);
+            }));
+        }
+
+        // scheme switching
+        if (i < n - 3) {
+            futures.emplace_back(pool.enqueue([&bsk, i, &param, level, &s2, &bskDecompA] {
+                bsk[i + 2][0].c.resize(level);
+                for (auto l = 0; l < level; l++) {
+                    auto& c = bsk[i + 2][0].c[l];
+                    auto& cPrime = bsk[i + 2][0].cPrime[l];
+                    auto& decompA = bskDecompA[i][0][l];
+                    c.resize(param.k, TrlweDft(param.k, param.N));
+                    cPrime.a.resize(param.k, NttPolynomial(param.N));
+                    switchTrlweToSecretEmbeddingNttOpt(c, cPrime, decompA, s2, param);
+                }
+            }));
+        }
+
+        // accumulation
+        if (input.a[i + 1] != 0) {
+            externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
+        }
+
+        for (auto& f : futures) {
+            f.get();
+        }
+        futures.clear();
+    }
+#endif
+}
+
 void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
                             const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
                             const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
