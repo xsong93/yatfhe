@@ -856,8 +856,8 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
     const auto n = param.n;
     TrgswMPDft expanded0{param, level};
     TrgswMPDft expanded1{param, level};
-    TrgswMP rotated0{param};
-    TrgswMP rotated1{param};
+    TrgswMP rotated0{param, level};
+    TrgswMP rotated1{param, level};
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(2);
@@ -874,12 +874,12 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
         addTorusPolynomial(tmp.b, tmp.b, v);
         rotateTrlwe(accum, tmp, -input.b);
 
-        if (input.a[1] != 0) {
+        {
             rotateTrgswMPMinusOneNtt(expanded0, bskSecond[0], input.a[1], param);
             addTrgswMPNtt(expanded0, expanded0, oneG);
         }
 
-        if (input.a[2] != 0) {
+        {
             for (auto l = 0; l < level; l++) {
                 rotateTrlweMinusOne(rotated0.cPrime[l], bskPrime[0][0].cPrime[l], input.a[2]);
                 rotated0.cPrime[l].b.coeffs[0] = addTorus(TORUS_Q, rotated0.cPrime[l].b.coeffs[0], 1 << (param.torusBits - (l + 1) * param.radixBits));
