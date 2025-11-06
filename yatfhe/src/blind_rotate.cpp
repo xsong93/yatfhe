@@ -851,20 +851,23 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
 void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<TrgswMPDft>& bskSecond,
                                const vector<vector<TrgswMP>>& bskPrime,
                                const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
-                               const Trlwe& one, const YatfheParameters& param) {
+                               const TrgswMPDft& oneG, const YatfheParameters& param) {
     const auto level = bskPrime[0][0].l;
     const auto n = param.n;
-    TrgswMPDft rotated0{param, level};
-    TrgswMPDft rotated1{param, level};
+    TrgswMPDft expanded0{param, level};
+    TrgswMPDft expanded1{param, level};
+    TrgswMP rotated0{param};
+    TrgswMP rotated1{param};
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(2);
 
 #ifdef TERNARY
 #else
-    // handle first two key components
+    // handle first three key components
     // R(v) + (X^a0 - 1)R(v*s0)
     // G(1) + (X^a1 - 1)G(s1)
+    // R(1) + (X^a2 - 1)R(s2)
     {
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
@@ -872,46 +875,51 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
         rotateTrlwe(accum, tmp, -input.b);
 
         if (input.a[1] != 0) {
-            rotateTrgswMPMinusOneNtt(rotated0, bsk[0][0], input.a[1], param);
-            addTrgswMPNtt(rotated0, rotated0, one);
+            rotateTrgswMPMinusOneNtt(expanded0, bskSecond[0], input.a[1], param);
+            addTrgswMPNtt(expanded0, expanded0, oneG);
+        }
+
+        if (input.a[2] != 0) {
+            for (auto l = 0; l < level; l++) {
+                rotateTrlweMinusOne(rotated0.cPrime[l], bskPrime[0][0].cPrime[l], input.a[2]);
+                rotated0.cPrime[l].b.coeffs[0] = addTorus(TORUS_Q, rotated0.cPrime[l].b.coeffs[0], 1 << (param.torusBits - (l + 1) * param.radixBits));
+            }
         }
     }
 
     // accumulate on the n - 1 key components
     for (auto i = 0; i < n - 1; i++) {
+        auto& currExpanded = i % 2 == 0 ? expanded0 : expanded1;
+        auto& nextExpanded = i % 2 == 0 ? expanded1 : expanded0;
         auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
         auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
 
         // automorphism
-        if (i < n - 2 && input.a[i + 2] != 0) {
+        if (i < n - 3) {
             const int nextKeyIdx = i + 1;
-            const auto aNext = input.a[nextKeyIdx + 1]; // input.a[i+2]
-            auto& nextBsk = bsk[nextKeyIdx][0];
+            const auto aNext = input.a[nextKeyIdx + 2]; // input.a[i+3]
+            auto& nextBsk = bskPrime[nextKeyIdx][0];
 
-            futures.emplace_back(pool.enqueue([&nextBsk, &nextRotated, &one, aNext, param] {
-                rotateTrgswMPMinusOneNtt(nextRotated, nextBsk, aNext, param);
-                addTrgswMPNtt(nextRotated, nextRotated, one);
+            futures.emplace_back(pool.enqueue([&nextBsk, &nextRotated, aNext, level, param] {
+                for (auto l = 0; l < level; l++) {
+                    rotateTrlweMinusOne(nextRotated.cPrime[l], nextBsk.cPrime[l], aNext);
+                    nextRotated.cPrime[l].b.coeffs[0] = addTorus(TORUS_Q, nextRotated.cPrime[l].b.coeffs[0], 1 << (param.torusBits - (l + 1) * param.radixBits));
+                }
             }));
         }
 
         // scheme switching
-        if (i < n - 3) {
-            futures.emplace_back(pool.enqueue([&bsk, i, &param, level, &s2, &bskDecompA] {
-                bsk[i + 2][0].c.resize(level);
+        if (i < n - 2) {
+            futures.emplace_back(pool.enqueue([&nextExpanded, &currRotated, &param, level, &s2] {
                 for (auto l = 0; l < level; l++) {
-                    auto& c = bsk[i + 2][0].c[l];
-                    auto& cPrime = bsk[i + 2][0].cPrime[l];
-                    auto& decompA = bskDecompA[i][0][l];
-                    c.resize(param.k, TrlweDft(param.k, param.N));
-                    cPrime.a.resize(param.k, NttPolynomial(param.N));
-                    switchTrlweToSecretEmbeddingNttOpt(c, cPrime, decompA, s2, param);
+                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currRotated.cPrime[l], s2, param);
                 }
             }));
         }
 
         // accumulation
         if (input.a[i + 1] != 0) {
-            externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
+            externalProductTrgswMPNttInPlace(accum, currExpanded, level, param);
         }
 
         for (auto& f : futures) {

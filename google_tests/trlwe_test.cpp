@@ -65,17 +65,12 @@ TEST(TrlweTest, TrlweEncDecSingleSampleTest) {
     TrlweDft trlweDft {param.k, param.N};
     genTrlweKey(trlweKey);
 
-    double plain =  -1.0 / param.torusBase;
-    Torus mu = doubleToTorus32(plain);
+    Integer plain = 1;
+    Torus mu = modSwitchToTorus32(plain, param.torusBase);
 
-    DoublePolynomial output {param.N};
+    IntPolynomial output {param.N};
     symEncTrlweSingleSampleNtt(trlwe, trlweDft, trlweKey, mu);
-//    symEncTrlweSingleSample(trlwe, trlweKey, mu);
-//    printTrlweAB(trlwe, "trlwe");
-//    applyInttForAB(intt, trlweDft);
-//    printTrlweAB(intt, "intt");
-    symDecTrlweNtt(output, trlweDft, trlweKey, param.torusBase);
-//    symDecTrlweToDouble(output, trlwe, trlweKey, param.torusBase);
+    symDecTrlweToIntNtt(output, trlweDft, trlweKey, param.torusBase);
 
     cout << "mu:" << plain <<endl;
     printArray(output.coeffs, "output");
@@ -83,6 +78,24 @@ TEST(TrlweTest, TrlweEncDecSingleSampleTest) {
         ASSERT_EQ(plain, coeff);
     }
     printBanner("TrlweEncDecSingleSampleTest");
+}
+
+TEST(TrlweTest, TRLWE_ENC_ONE) {
+    YatfheParameters param {};
+    initYatfhe(param);
+
+    TrlweKey trlweKey {param.k, param.N, param.rlweStdDev};
+    Trlwe trlwe {param.k, param.N};
+    genTrlweKey(trlweKey);
+
+    trlwe.b.coeffs[0] = modSwitchToTorus32(1, param.torusBase);
+
+    IntPolynomial output {param.N};
+    symDecTrlweToInt(output, trlwe, trlweKey, param.torusBase);
+
+    printArray(output.coeffs, "output");
+    ASSERT_EQ(1, output.coeffs[0]);
+    printBanner("TRLWE_ENC_ONE");
 }
 
 TEST(TrlweTest, TrlweEncDecMultiSampleTest) {

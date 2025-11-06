@@ -34,16 +34,18 @@ int main(int argc, char **argv) {
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-    BootstrappingKeyMP bskMP{param, param.lApprox};
-    COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
-    BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
-    COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
-    BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
-    genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
-    BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
-    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);)
-    BootstrappingKeyMPLazy bskMPLazyOpt{param, param.lApprox, true, true};
-    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazy(bskMPLazyOpt, trgswKey, tlweKey, v, param);)
+//    BootstrappingKeyMP bskMP{param, param.lApprox};
+//    COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
+//    BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
+//    COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
+//    BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
+//    genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
+//    BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
+//    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);)
+//    BootstrappingKeyMPLazy bskMPLazyOpt{param, param.lApprox, true, true};
+//    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazy(bskMPLazyOpt, trgswKey, tlweKey, v, param);)
+    BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
+    COUNT_TIME("genBootstrappingKeyMPLazyPipeAlt", genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);)
 
 
     // data gen
@@ -61,13 +63,14 @@ int main(int argc, char **argv) {
     Trlwe out2{param.k, param.N};
     Trlwe out3{param.k, param.N};
     Trlwe out4{param.k, param.N};
+    Trlwe out5{param.k, param.N};
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
     TrgswMPDft one{param};
     encryptTrgswMPNtt(one, 1, trgswKey, 0, param);
 
 
-    // server side
+/*    // server side
     // GINX server procedure
     {
         clearFileCache();
@@ -102,7 +105,7 @@ int main(int argc, char **argv) {
         } else {
             blindRotateOptNtt(out2, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft, sTlwe, v, param);
         }
-    }
+    }*/
 
 //    // pipelined lazy key initialization server procedure
     {
@@ -121,7 +124,7 @@ int main(int argc, char **argv) {
     }
 
 
-    // parallel lazy key initialization server procedure
+/*    // parallel lazy key initialization server procedure
     {
         BootstrappingKeyMPLazy bskMPLazyServer;
         if (!bskMPLazyServer.initialized) {
@@ -138,6 +141,16 @@ int main(int argc, char **argv) {
         } else {
             blindRotateOptNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskTrim, sTlwe, v, param);
         }
+    }*/
+
+    // pipelined lazy key initialization alternative server procedure
+    {
+//        BootstrappingKeyMPLazyPipe bskMPLazyServer;
+        clearFileCache();
+//            COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
+        COUNT_TIME("PIPE_LAZY_ALT blindRotate",
+                   blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt.bskFirst, bskMPLazyPipeAlt.bskSecond,
+                                             bskMPLazyPipeAlt.bskPrime, sTlwe, v, s2Dft, one, param);)
     }
 
     // client side
@@ -170,5 +183,11 @@ int main(int argc, char **argv) {
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(LAZY_MT): "<< decAft << endl;
     cout << "err(LAZY_MT):" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, out5, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(LAZY_PIPE_ALT): "<< decAft << endl;
+    cout << "err(LAZY_PIPE_ALT):" << calTlweError(output, tlweKey, mu) << endl;
     return 0;
 }

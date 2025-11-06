@@ -602,12 +602,12 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
 
     // scheme switching
     for (auto l = 0; l < param.lApprox; l++) {
+        COUNT_TIME("switchTrlweToSecretEmbedding", switchTrlweToSecretEmbedding(t1.c[l], in1.cPrime[l], s2p, param);)
         COUNT_TIME("switchTrlweToSecretEmbeddingNtt",
                    switchTrlweToSecretEmbeddingNtt(tmpMp.c[l], tmpMp.cPrime[l], s2pDft, param);)
         COUNT_TIME("switchTrlweToSecretEmbeddingNttOpt",
                    switchTrlweToSecretEmbeddingNttOpt(tmpMp2.c[l], tmpMp2.cPrime[l], decompA[l], s2pDft, param);)
         COUNT_TIME("switchTrlweToSecretEmbeddingNttMix", switchTrlweToSecretEmbeddingNttMix(tmpMp3.c[l], tmpMp3.cPrime[l], in1.cPrime[l], s2pDft, param);)
-        COUNT_TIME("switchTrlweToSecretEmbedding", switchTrlweToSecretEmbedding(t1.c[l], in1.cPrime[l], s2p, param);)
     }
 
     // result validation

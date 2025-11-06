@@ -230,6 +230,30 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& tr
     }
 }
 
+void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
+                                   const TorusPolynomial& v, const YatfheParameters& param) {
+    // process first two key components
+    {
+#ifdef TERNARY
+#else
+        if (tlweKey.s[0] == 1) {
+            symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
+        } else {
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+        }
+        encryptTrgswMPNtt(bsk.bskSecond[0], tlweKey.s[1], trgswKey, 0, param);
+#endif
+    }
+
+    // process remaining n - 2 components
+    for (auto i = 0; i < bsk.n - 2; i++) {
+#ifdef TERNARY
+#else
+        encryptTrgswMP(bsk.bskPrime[i][0], tlweKey.s[i + 2], trgswKey, 0, param);
+#endif
+    }
+}
+
 void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const Torus noise, const YatfheParameters& param) {
     for (auto i = 0; i < bsk.n; i++) {
 #ifdef TERNARY

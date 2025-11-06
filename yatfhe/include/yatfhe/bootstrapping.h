@@ -235,6 +235,40 @@ struct BootstrappingKeyMPLazyPipe {
     }
 };
 
+struct BootstrappingKeyMPLazyPipeAlt {
+    vector<Trlwe> bskFirst{};
+    vector<TrgswMPDft> bskSecond;
+    vector<vector<TrgswMP>> bskPrime;
+    int n{};
+    int level{};
+    int group{};
+    bool initialized{false};
+
+    explicit BootstrappingKeyMPLazyPipeAlt() = default;
+
+    BootstrappingKeyMPLazyPipeAlt(const YatfheParameters& p, const int level, const bool isHalf) : level(level), group(p.group) {
+#ifdef TERNARY
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(2, Trlwe{p.k, p.N});
+        bskSecond = vector(2, TrgswMPDft{p, level});
+        bskPrime = vector(p.n - 2, vector(2, TrgswMP{p, level, isHalf}));
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskFirst = vector(1, Trlwe{p.k, p.N});
+        bskSecond = vector(1, TrgswMPDft{p, level});
+        bskPrime = vector(p.n - 2, vector(1, TrgswMP{p, level, isHalf}));
+#endif
+    }
+};
+
 struct BootstrappingKeyMPPreRot {
     vector<Trlwe> bskFirst{};
     vector<vector<TrgswMPDft>> bskDft{};
@@ -289,26 +323,37 @@ struct BootstrappingKeyCRT {
             bskCRT(param.n, std::vector<TrgswDft24>(param.d, TrgswDft24(param.dh, param.k, param.N))) {};
 };
 
-void functionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
+void functionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk,
+                             const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
 
-void functionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
+void functionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk,
+                                const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
 
-void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const BootstrappingKeyCRT& bskCRT, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
+void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const BootstrappingKeyCRT& bskCRT,
+                                const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
 
-void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
+void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey,
+                                  const YatfheParameters& param);
 
 void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
-void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
+void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
+                           const YatfheParameters& param);
 
 void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
                                const TorusPolynomial& v, const YatfheParameters& param);
 
-void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param);
+void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
+                              const TorusPolynomial& v, const YatfheParameters& param);
 
-void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param);
+void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
+                                   const TorusPolynomial& v, const YatfheParameters& param);
 
-void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, Torus noise, const YatfheParameters& param);
+void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
+                                      const TorusPolynomial& v, const YatfheParameters& param);
+
+void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, Torus noise,
+                                     const YatfheParameters& param);
 
 void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                  const TorusPolynomial& v, int batchSize, const YatfheParameters& param);
