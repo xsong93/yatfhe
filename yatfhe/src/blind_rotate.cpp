@@ -860,8 +860,8 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
     TrgswMP rotated1{param, level};
     vector decompA0(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
     vector decompA1(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
-    TorusPolynomial b0{param.N};
-    TorusPolynomial b1{param.N};
+    vector b0(level, TorusPolynomial{param.N});
+    vector b1(level, TorusPolynomial{param.N});
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(2);
@@ -887,7 +887,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
             for (auto l = 0; l < level; l++) {
                 rotateTrlweMinusOne(rotated0.cPrime[l], bskPrime[0][0].cPrime[l], input.a[2]);
                 rotated0.cPrime[l].b.coeffs[0] = addTorus(TORUS_Q, rotated0.cPrime[l].b.coeffs[0], 1 << (param.torusBits - (l + 1) * param.radixBits));
-                b0 = rotated0.cPrime[l].b;
+                b0[l] = rotated0.cPrime[l].b;
                 for (auto row = 0; row < param.k; row++) {
                     auto& currIn = rotated0.cPrime[l].a[row];
                     for (auto j = 0; j < param.N; j++) {
@@ -923,7 +923,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
                 for (auto l = 0; l < level; l++) {
                     rotateTrlweMinusOne(nextRotated.cPrime[l], nextBsk.cPrime[l], aNext);
                     nextRotated.cPrime[l].b.coeffs[0] = addTorus(TORUS_Q, nextRotated.cPrime[l].b.coeffs[0], 1 << (param.torusBits - (l + 1) * param.radixBits));
-                    nextB = nextRotated.cPrime[l].b;
+                    nextB[l] = nextRotated.cPrime[l].b;
                     for (auto row = 0; row < param.k; row++) {
                         auto& currIn = nextRotated.cPrime[l].a[row];
                         for (auto j = 0; j < param.N; j++) {
@@ -947,7 +947,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
                     for (auto& item : nextExpanded.c[l]) {
                         clearTrlwe(item);
                     }
-                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currDecompA[l], currB, s2, param);
+                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currDecompA[l], currB[l], s2, param);
                 }
             }));
         }

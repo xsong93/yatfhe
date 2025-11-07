@@ -13,7 +13,6 @@
 int main(int argc, char **argv) {
     YatfheParameters param{};
 //    param.N = 1024;
-    param.n=7;
     param.batchSize = 3;
     param.tasksPerThread = 1;
     initYatfhe(param);
@@ -108,21 +107,21 @@ int main(int argc, char **argv) {
         }
     }*/
 
-//    // pipelined lazy key initialization server procedure
-    // {
-    //     BootstrappingKeyMPLazyPipe bskMPLazyServer;
-    //     if (!bskMPLazyServer.initialized) {
-    //         clearFileCache();
-    //         COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
-    //         COUNT_TIME("PIPE_LAZY blindRotate",
-    //                    blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
-    //                                           bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, one, param);)
-    //         bskMPLazyServer.initialized = true;
-    //         bskMPLazyServer.bskDecompA.clear();
-    //     } else {
-    //         blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
-    //     }
-    // }
+    // pipelined lazy key initialization server procedure
+     {
+         BootstrappingKeyMPLazyPipe bskMPLazyServer;
+         if (!bskMPLazyServer.initialized) {
+             clearFileCache();
+             COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
+             COUNT_TIME("PIPE_LAZY blindRotate",
+                        blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+                                               bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, one, param);)
+             bskMPLazyServer.initialized = true;
+             bskMPLazyServer.bskDecompA.clear();
+         } else {
+             blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
+         }
+     }
 
 
 /*    // parallel lazy key initialization server procedure
@@ -147,7 +146,7 @@ int main(int argc, char **argv) {
     // pipelined lazy key initialization alternative server procedure
     {
 //        BootstrappingKeyMPLazyPipe bskMPLazyServer;
-        // clearFileCache();
+        clearFileCache();
 //            COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
         COUNT_TIME("PIPE_LAZY_ALT blindRotate",
                    blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt.bskFirst, bskMPLazyPipeAlt.bskSecond,
