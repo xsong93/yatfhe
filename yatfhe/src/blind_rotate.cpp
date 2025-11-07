@@ -896,9 +896,8 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
 
         // automorphism
         if (i < n - 3) {
-            const int nextKeyIdx = i + 1;
-            const auto aNext = input.a[nextKeyIdx + 2]; // input.a[i+3]
-            auto& nextBsk = bskPrime[nextKeyIdx][0];
+            const auto aNext = input.a[i + 3]; // input.a[i+3]
+            auto& nextBsk = bskPrime[i + 1][0];
 
             futures.emplace_back(pool.enqueue([&nextBsk, &nextRotated, aNext, level, param] {
                 for (auto l = 0; l < level; l++) {
@@ -912,6 +911,10 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
         if (i < n - 2) {
             futures.emplace_back(pool.enqueue([&nextExpanded, &currRotated, &param, level, &s2] {
                 for (auto l = 0; l < level; l++) {
+                    clearTrlwe(nextExpanded.cPrime[l]);
+                    for (auto& item : nextExpanded.c[l]) {
+                        clearTrlwe(item);
+                    }
                     switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currRotated.cPrime[l], s2, param);
                 }
             }));

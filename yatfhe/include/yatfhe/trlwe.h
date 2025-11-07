@@ -452,6 +452,14 @@ void recompTrlweCrtNO(TrlweTypeA& out, TrlweTypeB& inCRT, const YatfheParameters
     }
 }
 
+template<typename TrlweType>
+void clearTrlwe(TrlweType& obj) {
+    for (auto & poly : obj.a) {
+        std::fill(poly.coeffs.begin(), poly.coeffs.end(), 0);
+    }
+    std::fill(obj.b.coeffs.begin(), obj.b.coeffs.end(), 0);
+}
+
 void genTrlweKey(TrlweKey& key);
 
 void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu);

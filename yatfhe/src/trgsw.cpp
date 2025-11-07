@@ -988,7 +988,6 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
     const auto L = param.l; // must use full decomp length
     const auto N = param.N;
     auto& cPrimeA = cPrime.a;
-    auto& cPrimeB = cPrime.b;
 
     vector decompA(L, Trlwe{K, N});
 
