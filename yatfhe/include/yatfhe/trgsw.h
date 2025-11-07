@@ -357,8 +357,9 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
 void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,
                                         const TrlevDft& sSquare, const YatfheParameters& param);
 
-void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const Trlwe& cPrime,
-                                        const TrlevDft& sSquare, const YatfheParameters& param);
+void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,
+                                        const TorusPolynomial& cPrimeB, const TrlevDft& sSquare,
+                                        const YatfheParameters& param);
 
 void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
 

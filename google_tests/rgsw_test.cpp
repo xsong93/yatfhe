@@ -607,7 +607,7 @@ TEST(RgswTest, RGSWMP_SCHEME_SWITCHING) {
                    switchTrlweToSecretEmbeddingNtt(tmpMp.c[l], tmpMp.cPrime[l], s2pDft, param);)
         COUNT_TIME("switchTrlweToSecretEmbeddingNttOpt",
                    switchTrlweToSecretEmbeddingNttOpt(tmpMp2.c[l], tmpMp2.cPrime[l], decompA[l], s2pDft, param);)
-        COUNT_TIME("switchTrlweToSecretEmbeddingNttMix", switchTrlweToSecretEmbeddingNttMix(tmpMp3.c[l], tmpMp3.cPrime[l], in1.cPrime[l], s2pDft, param);)
+        COUNT_TIME("switchTrlweToSecretEmbeddingNttMix", switchTrlweToSecretEmbeddingNttMix(tmpMp3.c[l], tmpMp3.cPrime[l], decompA[l], in1.cPrime[l].b, s2pDft, param);)
     }
 
     // result validation

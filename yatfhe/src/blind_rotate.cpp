@@ -858,6 +858,10 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
     TrgswMPDft expanded1{param, level};
     TrgswMP rotated0{param, level};
     TrgswMP rotated1{param, level};
+    vector decompA0(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
+    vector decompA1(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
+    TorusPolynomial b0{param.N};
+    TorusPolynomial b1{param.N};
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(2);
@@ -883,6 +887,18 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
             for (auto l = 0; l < level; l++) {
                 rotateTrlweMinusOne(rotated0.cPrime[l], bskPrime[0][0].cPrime[l], input.a[2]);
                 rotated0.cPrime[l].b.coeffs[0] = addTorus(TORUS_Q, rotated0.cPrime[l].b.coeffs[0], 1 << (param.torusBits - (l + 1) * param.radixBits));
+                b0 = rotated0.cPrime[l].b;
+                for (auto row = 0; row < param.k; row++) {
+                    auto& currIn = rotated0.cPrime[l].a[row];
+                    for (auto j = 0; j < param.N; j++) {
+                        DecomposedData d {param.l};
+                        gadgetDecompose(d, currIn.coeffs[j], param);
+                        for (auto lvl = 0; lvl < param.l; lvl++) {
+                            auto& currOut = decompA0[l][lvl][row];
+                            currOut.coeffs[j] = d.value[lvl] * d.sign;
+                        }
+                    }
+                }
             }
         }
     }
@@ -893,29 +909,45 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vect
         auto& nextExpanded = i % 2 == 0 ? expanded1 : expanded0;
         auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
         auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
+        auto& currDecompA = i % 2 == 0 ? decompA0 : decompA1;
+        auto& nextDecompA = i % 2 == 0 ? decompA1 : decompA0;
+        auto& currB = i % 2 == 0 ? b0 : b1;
+        auto& nextB = i % 2 == 0 ? b1 : b0;
 
         // automorphism
         if (i < n - 3) {
             const auto aNext = input.a[i + 3]; // input.a[i+3]
             auto& nextBsk = bskPrime[i + 1][0];
 
-            futures.emplace_back(pool.enqueue([&nextBsk, &nextRotated, aNext, level, param] {
+            futures.emplace_back(pool.enqueue([&nextBsk, &nextRotated, &nextDecompA, &nextB, aNext, level, param] {
                 for (auto l = 0; l < level; l++) {
                     rotateTrlweMinusOne(nextRotated.cPrime[l], nextBsk.cPrime[l], aNext);
                     nextRotated.cPrime[l].b.coeffs[0] = addTorus(TORUS_Q, nextRotated.cPrime[l].b.coeffs[0], 1 << (param.torusBits - (l + 1) * param.radixBits));
+                    nextB = nextRotated.cPrime[l].b;
+                    for (auto row = 0; row < param.k; row++) {
+                        auto& currIn = nextRotated.cPrime[l].a[row];
+                        for (auto j = 0; j < param.N; j++) {
+                            DecomposedData d {param.l};
+                            gadgetDecompose(d, currIn.coeffs[j], param);
+                            for (auto lvl = 0; lvl < param.l; lvl++) {
+                                auto& currOut = nextDecompA[l][lvl][row];
+                                currOut.coeffs[j] = d.value[lvl] * d.sign;
+                            }
+                        }
+                    }
                 }
             }));
         }
 
         // scheme switching
         if (i < n - 2) {
-            futures.emplace_back(pool.enqueue([&nextExpanded, &currRotated, &param, level, &s2] {
+            futures.emplace_back(pool.enqueue([&nextExpanded, &currDecompA, &currB, &param, level, &s2] {
                 for (auto l = 0; l < level; l++) {
                     clearTrlwe(nextExpanded.cPrime[l]);
                     for (auto& item : nextExpanded.c[l]) {
                         clearTrlwe(item);
                     }
-                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currRotated.cPrime[l], s2, param);
+                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currDecompA[l], currB, s2, param);
                 }
             }));
         }

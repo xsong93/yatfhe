@@ -13,6 +13,7 @@
 int main(int argc, char **argv) {
     YatfheParameters param{};
 //    param.N = 1024;
+    param.n=7;
     param.batchSize = 3;
     param.tasksPerThread = 1;
     initYatfhe(param);
