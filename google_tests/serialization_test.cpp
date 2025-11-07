@@ -7,6 +7,7 @@
 #include "yatfhe/numeric.h"
 #include "yautil/tool.h"
 #include "yautil/initializer.h"
+#include "yautil/time_counter.h"
 #include "yautil/ya_serializer.h"
 
 void verifyTrlwe(const Trlwe& a, const Trlwe& b) {
@@ -235,9 +236,9 @@ TEST(SERIALIZATION, TRGSW) {
     outFile.close();
 
     TrgswMPDft readTrgswDft;
-    std::ifstream inFile("SERIALIZATION_TEST_TRGSW.bin", std::ios::binary);
-    deserialize(readTrgswDft, inFile);
-    inFile.close();
+    COUNT_TIME("inFile", std::ifstream inFile("SERIALIZATION_TEST_TRGSW.bin", std::ios::binary);)
+    COUNT_TIME("deserialize", deserialize(readTrgswDft, inFile);)
+    COUNT_TIME("close", inFile.close();)
     verifyTrgswMPDft(readTrgswDft, trgswDft);
 
     printBanner("SERIALIZATION.TRGSW");

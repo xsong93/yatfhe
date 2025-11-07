@@ -490,6 +490,8 @@ void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft,
 
 void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param);
 
+void gadgetDecomposeTrlweA(vector<vector<DecompPolynomial>>& output, const vector<TorusPolynomial>& a, const YatfheParameters& param);
+
 void gadgetDecomposeTrlweNtt(DecomposedTrlweDft& output, const TrlweDft& input, const YatfheParameters& param);
 
 void recomposeTrlwe(Trlwe& output, const DecomposedTrlwe& input, const YatfheParameters& param);
@@ -505,6 +507,8 @@ void rotateTrlwe(Trlwe& res, const Trlwe& input, int a);
 void rotateTrlweNtt(TrlweDft& res, const TrlweDft& input, const int r);
 
 void rotateTrlweMinusOne(Trlwe& res, const Trlwe& input, int a);
+
+void rotateTrlweMinusOneBPlusOne(Trlwe& res, TorusPolynomial& b, const Trlwe& input, int a, Torus one);
 
 void rotateTrlweMinusOneNtt(TrlweDft& res, const TrlweDft& input, const int r);
 

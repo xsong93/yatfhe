@@ -190,6 +190,23 @@ void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const Yat
     }
 }
 
+void gadgetDecomposeTrlweA(vector<vector<DecompPolynomial>>& output, const vector<TorusPolynomial>& a, const YatfheParameters& param) {
+    const auto k = param.k;
+    const auto N = param.N;
+    const auto l = param.l;
+    for (auto row = 0; row < k; row++) {
+        auto& currIn = a[row];
+        for (auto j = 0; j < N; j++) {
+            DecomposedData d{l};
+            gadgetDecompose(d, currIn.coeffs[j], param);
+            for (auto lvl = 0; lvl < l; lvl++) {
+                auto& currOut = output[lvl][row];
+                currOut.coeffs[j] = d.value[lvl] * d.sign;
+            }
+        }
+    }
+}
+
 // G^-1 * Trlwe = DecomposedTrlwe
 void gadgetDecomposeTrlweNtt(DecomposedTrlweDft& output, const TrlweDft& input, const YatfheParameters& param) {
     const auto k = input.k;
@@ -285,6 +302,14 @@ void rotateTrlweMinusOne(Trlwe& res, const Trlwe& input, const int a) {
         rotateTorusPolynomialMinusOne(res.a[i], a, input.a[i]);
     }
     rotateTorusPolynomialMinusOne(res.b, a, input.b);
+}
+
+void rotateTrlweMinusOneBPlusOne(Trlwe& res, TorusPolynomial& b, const Trlwe& input, const int a, const Torus one) {
+    for (auto i = 0; i < input.a.size(); i++) {
+        rotateTorusPolynomialMinusOne(res.a[i], a, input.a[i]);
+    }
+    rotateTorusPolynomialMinusOne(b, a, input.b);
+    b.coeffs[0] = addTorus(TORUS_Q, b.coeffs[0], one);
 }
 
 void rotateTrlweMinusOneNtt(TrlweDft& res, const TrlweDft& input, const int r) {

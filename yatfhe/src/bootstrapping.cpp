@@ -241,15 +241,15 @@ void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const 
         } else {
             symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
         }
-        encryptTrgswMPNtt(bsk.bskSecond[0], tlweKey.s[1], trgswKey, 0, param);
+        // encryptTrgswMPNtt(bsk.bskSecond[0], tlweKey.s[1], trgswKey, 0, param);
 #endif
     }
 
     // process remaining n - 2 components
-    for (auto i = 0; i < bsk.n - 2; i++) {
+    for (auto i = 0; i < bsk.n - 1; i++) {
 #ifdef TERNARY
 #else
-        encryptTrgswMP(bsk.bskPrime[i][0], tlweKey.s[i + 2], trgswKey, 0, param);
+        encryptTrgswMP(bsk.bskPrime[i][0], tlweKey.s[i + 1], trgswKey, 0, param);
 #endif
     }
 }

@@ -29,8 +29,6 @@ int main(int argc, char **argv) {
     TlweKey tlweKsKey = tlweKey;
     tlweKsKey.sigma = param.rlweStdDev;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
-    TrlevDft s2Dft{param, param.l};
-    symEncTrlevWithKeyNtt(s2Dft, trlweKey, trlweKey.s, true, param);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
@@ -45,6 +43,7 @@ int main(int argc, char **argv) {
 //    BootstrappingKeyMPLazy bskMPLazyOpt{param, param.lApprox, true, true};
 //    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazy(bskMPLazyOpt, trgswKey, tlweKey, v, param);)
     BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
+    symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trlweKey, trlweKey.s, true, param);
     COUNT_TIME("genBootstrappingKeyMPLazyPipeAlt", genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);)
 
 
@@ -108,20 +107,20 @@ int main(int argc, char **argv) {
     }*/
 
     // pipelined lazy key initialization server procedure
-     {
-         BootstrappingKeyMPLazyPipe bskMPLazyServer;
-         if (!bskMPLazyServer.initialized) {
-             clearFileCache();
-             COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
-             COUNT_TIME("PIPE_LAZY blindRotate",
-                        blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
-                                               bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, one, param);)
-             bskMPLazyServer.initialized = true;
-             bskMPLazyServer.bskDecompA.clear();
-         } else {
-             blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
-         }
-     }
+     // {
+     //     BootstrappingKeyMPLazyPipe bskMPLazyServer;
+     //     if (!bskMPLazyServer.initialized) {
+     //         clearFileCache();
+     //         COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
+     //         COUNT_TIME("PIPE_LAZY blindRotate",
+     //                    blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+     //                                           bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, one, param);)
+     //         bskMPLazyServer.initialized = true;
+     //         bskMPLazyServer.bskDecompA.clear();
+     //     } else {
+     //         blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
+     //     }
+     // }
 
 
 /*    // parallel lazy key initialization server procedure
@@ -149,8 +148,7 @@ int main(int argc, char **argv) {
         clearFileCache();
 //            COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
         COUNT_TIME("PIPE_LAZY_ALT blindRotate",
-                   blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt.bskFirst, bskMPLazyPipeAlt.bskSecond,
-                                             bskMPLazyPipeAlt.bskPrime, sTlwe, v, s2Dft, one, param);)
+                   blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt.bskFirst, bskMPLazyPipeAlt.bskPrime, bskMPLazyPipeAlt.s2Dft, sTlwe, v, param);)
     }
 
     // client side
