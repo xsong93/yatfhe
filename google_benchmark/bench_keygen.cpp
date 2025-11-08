@@ -38,26 +38,15 @@ BENCHMARK_DEFINE_F(KeyGenBenchmark, GINX)(benchmark::State& state) {
     }
 }
 
-BENCHMARK_DEFINE_F(KeyGenBenchmark, GINX_OPT)(benchmark::State& state) {
-    for (auto _ : state) {
-        BootstrappingKeyMPOpt bskMPOpt {param, param.lApprox, false};
-        genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);
-    }
-}
-
 BENCHMARK_DEFINE_F(KeyGenBenchmark, LAZY_PIPE)(benchmark::State& state) {
     for (auto _ : state) {
-        BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
-        genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);
+        BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
+        symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
+        genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);
     }
 }
 
 BENCHMARK_REGISTER_F(KeyGenBenchmark, GINX)
-    ->Unit(benchmark::kMicrosecond)
-    ->Iterations(10)
-    ->UseRealTime()
-    ->MeasureProcessCPUTime();
-BENCHMARK_REGISTER_F(KeyGenBenchmark, GINX_OPT)
     ->Unit(benchmark::kMicrosecond)
     ->Iterations(10)
     ->UseRealTime()

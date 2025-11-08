@@ -53,46 +53,28 @@ BENCHMARK_DEFINE_F(ReadKeyBenchmark, GINX)(benchmark::State& state) {
         state.PauseTiming();
         clearFileCache();
         state.ResumeTiming();
-        BootstrappingKeyMP bskMPServer;
-        deserializeBskMP(bskMPServer, "BSK_GINX.bin", param.n);
-        blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);
-    }
-}
-
-BENCHMARK_DEFINE_F(ReadKeyBenchmark, GINX_OPT)(benchmark::State& state) {
-    BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
-    genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);
-    serializeBskMPOpt(bskMPOpt, "BSK_GINX_OPT.bin");
-    for (auto _ : state) {
-        state.PauseTiming();
-        clearFileCache();
-        state.ResumeTiming();
-        BootstrappingKeyMPOpt bskMPOptServer;
-        deserializeBskMPOpt(bskMPOptServer, "BSK_GINX_OPT.bin", param.n);
-        blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft,sTlwe, v, param);
+        BootstrappingKeyMP bskServer;
+        deserializeBskMP(bskServer, "BSK_GINX.bin", param.n);
+        blindRotateJP22Ntt(acc, bskServer.bskDft, sTlwe, param);
     }
 }
 
 BENCHMARK_DEFINE_F(ReadKeyBenchmark, LAZY_PIPE)(benchmark::State& state) {
-    BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
-    genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);
-    serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE.bin");
+    BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
+    symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
+    genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);
+    serializeBskLazyPipeAlt(bskMPLazyPipeAlt, "BSK_PIPE_ALT.bin");
     for (auto _ : state) {
         state.PauseTiming();
         clearFileCache();
         state.ResumeTiming();
-        BootstrappingKeyMPLazyPipe bskMPLazyServer;
-        deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);
-        blindRotateLazyPipeNtt(out, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
-                               bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, one, param);
+        BootstrappingKeyMPLazyPipeAlt bskServer;
+        blindRotateLazyPipeAltInitNtt(out, bskServer.bskFirst, bskServer.bskPrime,bskServer.s2Dft, sTlwe,
+            v, "BSK_PIPE_ALT.bin", param);
     }
 }
 
 BENCHMARK_REGISTER_F(ReadKeyBenchmark, GINX)
-    ->Unit(benchmark::kMicrosecond)
-    ->Iterations(100)
-    ->UseRealTime();
-BENCHMARK_REGISTER_F(ReadKeyBenchmark, GINX_OPT)
     ->Unit(benchmark::kMicrosecond)
     ->Iterations(100)
     ->UseRealTime();
