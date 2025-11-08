@@ -32,16 +32,16 @@ int main(int argc, char **argv) {
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
-//    BootstrappingKeyMP bskMP{param, param.lApprox};
-//    COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
-//    BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
-//    COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
-//    BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
-//    genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
-//    BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
-//    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);)
-//    BootstrappingKeyMPLazy bskMPLazyOpt{param, param.lApprox, true, true};
-//    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazy(bskMPLazyOpt, trgswKey, tlweKey, v, param);)
+    BootstrappingKeyMP bskMP{param, param.lApprox};
+    COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
+    BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
+    COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
+    BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
+    genBootstrappingKeyMPOpt(bskMPLazy, trgswKey, tlweKey, v, param);
+    BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
+    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);)
+    BootstrappingKeyMPLazy bskMPLazyOpt{param, param.lApprox, true, true};
+    COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazy(bskMPLazyOpt, trgswKey, tlweKey, v, param);)
     BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
     symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trlweKey, trlweKey.s, true, param);
     COUNT_TIME("genBootstrappingKeyMPLazyPipeAlt", genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);)
@@ -55,21 +55,22 @@ int main(int argc, char **argv) {
     symEncTlwe(input, mu, tlweKey);
     ScaledTlwe sTlwe {param.N * 2, param.n};
     rescaleTlweToNewMod(sTlwe, input);
-    Trlwe acc{param.k, param.N};
+    Trlwe acc{param};
     genNoiselessTrlweSample(acc, v, sTlwe);
 
-    Trlwe out{param.k, param.N};
-    Trlwe out2{param.k, param.N};
-    Trlwe out3{param.k, param.N};
-    Trlwe out4{param.k, param.N};
-    Trlwe out5{param.k, param.N};
+    Trlwe out{param};
+    Trlwe out2{param};
+    Trlwe out3{param};
+    Trlwe out4{param};
+    Trlwe out5{param};
+    Trlwe out6{param};
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
     TrgswMPDft one{param};
     encryptTrgswMPNtt(one, 1, trgswKey, 0, param);
 
 
-/*    // server side
+    // server side
     // GINX server procedure
     {
         clearFileCache();
@@ -97,33 +98,33 @@ int main(int argc, char **argv) {
             clearFileCache();
             COUNT_TIME("PIPE_LAZY blindRotate + write key",
                        blindRotateLazyPipeSerializationNtt(out2, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft,
-                                                           bskMPLazyPipe.bskDecompA, sTlwe, v, s2Dft, one,
+                                                           bskMPLazyPipe.bskDecompA, sTlwe, v, bskMPLazyPipeAlt.s2Dft, one,
                                                            "BSK_PIPE.bin", true, param);)
             bskMPLazyPipe.initialized = true;
             bskMPLazyPipe.bskDecompA.clear();
         } else {
             blindRotateOptNtt(out2, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft, sTlwe, v, param);
         }
-    }*/
+    }
 
     // pipelined lazy key initialization server procedure
-     // {
-     //     BootstrappingKeyMPLazyPipe bskMPLazyServer;
-     //     if (!bskMPLazyServer.initialized) {
-     //         clearFileCache();
-     //         COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
-     //         COUNT_TIME("PIPE_LAZY blindRotate",
-     //                    blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
-     //                                           bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, one, param);)
-     //         bskMPLazyServer.initialized = true;
-     //         bskMPLazyServer.bskDecompA.clear();
-     //     } else {
-     //         blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
-     //     }
-     // }
+     {
+         BootstrappingKeyMPLazyPipe bskMPLazyServer;
+         if (!bskMPLazyServer.initialized) {
+             clearFileCache();
+             COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
+             COUNT_TIME("PIPE_LAZY blindRotate",
+                        blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+                                               bskMPLazyServer.bskDecompA, sTlwe, v, bskMPLazyPipeAlt.s2Dft, one, param);)
+             bskMPLazyServer.initialized = true;
+             bskMPLazyServer.bskDecompA.clear();
+         } else {
+             blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
+         }
+     }
 
 
-/*    // parallel lazy key initialization server procedure
+    // parallel lazy key initialization server procedure
     {
         BootstrappingKeyMPLazy bskMPLazyServer;
         if (!bskMPLazyServer.initialized) {
@@ -133,22 +134,30 @@ int main(int argc, char **argv) {
             COUNT_TIME("PARALLEL_LAZY read key", deserializeBskMPLazy(bskMPLazyServer, "BSK_PAL_LAZY.bin", param.n);)
             COUNT_TIME("PARALLEL_LAZY blindRotate",
                        blindRotateLazyMTNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskTrim,
-                                            bskMPLazyServer.bskDecompA, sTlwe, v, s2Dft, param);)
+                                            bskMPLazyServer.bskDecompA, sTlwe, v, bskMPLazyPipeAlt.s2Dft, param);)
 
             bskMPLazyServer.initialized = true;
             bskMPLazyServer.bskDecompA.clear();
         } else {
             blindRotateOptNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskTrim, sTlwe, v, param);
         }
-    }*/
+    }
 
     // pipelined lazy key initialization alternative server procedure
     {
-//        BootstrappingKeyMPLazyPipe bskMPLazyServer;
         clearFileCache();
-//            COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
         COUNT_TIME("PIPE_LAZY_ALT blindRotate",
-                   blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt.bskFirst, bskMPLazyPipeAlt.bskPrime, bskMPLazyPipeAlt.s2Dft, sTlwe, v, param);)
+                   blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt.bskFirst, bskMPLazyPipeAlt.bskPrime,
+                       bskMPLazyPipeAlt.s2Dft, sTlwe, v, param);)
+        COUNT_TIME("PIPE_LAZY_ALT write key",serializeBskLazyPipeAlt(bskMPLazyPipeAlt, "BSK_PIPE_ALT.bin");)
+    }
+
+    {
+        BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAltServer;
+        clearFileCache();
+        COUNT_TIME("PIPE_LAZY_ALT_INIT blindRotate",
+                   blindRotateLazyPipeAltInitNtt(out6, bskMPLazyPipeAltServer.bskFirst, bskMPLazyPipeAltServer.bskPrime,
+                       bskMPLazyPipeAltServer.s2Dft, sTlwe, v, "BSK_PIPE_ALT.bin", param);)
     }
 
     // client side
@@ -187,5 +196,12 @@ int main(int argc, char **argv) {
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(LAZY_PIPE_ALT): "<< decAft << endl;
     cout << "err(LAZY_PIPE_ALT):" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, out6, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(PIPE_LAZY_ALT_INIT): "<< decAft << endl;
+    cout << "err(PIPE_LAZY_ALT_INIT):" << calTlweError(output, tlweKey, mu) << endl;
+
     return 0;
 }
