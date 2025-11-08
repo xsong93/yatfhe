@@ -82,6 +82,66 @@ void deserialize(TrlweDft& t, std::istream& is) {
     }
 }
 
+// Serialize TrlevDft
+void serialize(const TrlevDft& t, std::ostream& os) {
+    writePOD(os, t.l);
+    writePOD(os, static_cast<int>(t.trlweDfts.size()));
+    for (const auto& trlweDft : t.trlweDfts) serialize(trlweDft, os);
+}
+
+void deserialize(TrlevDft& t, std::istream& is) {
+    readPOD(is, t.l);
+    int trlweDfts_size;
+    readPOD(is, trlweDfts_size);
+    t.trlweDfts.resize(trlweDfts_size);
+    for (auto& trlweDft : t.trlweDfts) deserialize(trlweDft, is);
+}
+
+// Serialize TrgswMP
+void serialize(const TrgswMP& t, std::ostream& os) {
+    writePOD(os, t.l);
+    writePOD(os, t.k);
+    writePOD(os, t.isHalf);
+    // Serialize c (vector<vector<Trlwe>>)
+    if (!t.isHalf) {
+        writePOD(os, static_cast<int>(t.c.size()));
+        for (const auto &inner: t.c) {
+            writePOD(os, static_cast<int>(inner.size()));
+            for (const auto &trlwe: inner) serialize(trlwe, os);
+        }
+    }
+    // Serialize cPrime (vector<Trlwe>)
+    writePOD(os, static_cast<int>(t.cPrime.size()));
+    for (const auto& trlwe : t.cPrime) serialize(trlwe, os);
+}
+
+void deserialize(TrgswMP& t, std::istream& is) {
+    readPOD(is, t.l);
+    readPOD(is, t.k);
+    readPOD(is, t.isHalf);
+
+    // Only deserialize c if !isHalf (mirror serialization)
+    if (!t.isHalf) {
+        int outer_size;
+        readPOD(is, outer_size);
+        t.c.resize(outer_size);
+        for (auto& inner : t.c) {
+            int inner_size;
+            readPOD(is, inner_size);
+            inner.resize(inner_size);
+            for (auto& trlwe : inner) deserialize(trlwe, is);
+        }
+    } else {
+        t.c.clear();  // Ensure c is empty if isHalf
+    }
+
+    // Deserialize cPrime
+    int cPrime_size;
+    readPOD(is, cPrime_size);
+    t.cPrime.resize(cPrime_size);
+    for (auto& trlwe : t.cPrime) deserialize(trlwe, is);
+}
+
 // Serialize TrgswMPDft
 void serialize(const TrgswMPDft& t, std::ostream& os) {
     writePOD(os, t.l);
@@ -138,7 +198,7 @@ void serializeBskMP(const BootstrappingKeyMP& t, const std::string& filename) {
     os.close();
 }
 
-void deserializeBskMP(BootstrappingKeyMP& bsk, const std::string& filename, int n) {
+void deserializeBskMP(BootstrappingKeyMP& bsk, const std::string& filename, const int n) {
     std::ifstream inFile(filename, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
@@ -167,7 +227,7 @@ void serializeBskMPOpt(const BootstrappingKeyMPOpt& t, const std::string& filena
     os.close();
 }
 
-void deserializeBskMPOpt(BootstrappingKeyMPOpt& bskOpt, const std::string& filename, int n) {
+void deserializeBskMPOpt(BootstrappingKeyMPOpt& bskOpt, const std::string& filename, const int n) {
     std::ifstream inFile(filename, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
@@ -205,7 +265,7 @@ void serializeBskMPLazy(const BootstrappingKeyMPLazy& t, const std::string& file
     os.close();
 }
 
-void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, int n) {
+void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, const int n) {
     std::ifstream inFile(filename, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
@@ -236,7 +296,7 @@ void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& fi
     inFile.close();
 }
 
-void serializeBskLazyPipe(BootstrappingKeyMPLazyPipe& t, const std::string& filename) {
+void serializeBskLazyPipe(const BootstrappingKeyMPLazyPipe& t, const std::string& filename) {
     std::ofstream os(filename, std::ios::binary | std::ios::trunc);
 
     // Step 1: Write bskFirst[0] and bskDft[0][0] (written outside loop)
@@ -256,7 +316,7 @@ void serializeBskLazyPipe(BootstrappingKeyMPLazyPipe& t, const std::string& file
     os.close();
 }
 
-void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::string& filename, int n) {
+void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::string& filename, const int n) {
     std::ifstream inFile(filename, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
@@ -283,5 +343,49 @@ void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::stri
         }
     }
 
+    inFile.close();
+}
+
+void serializeBskLazyPipeAlt(const BootstrappingKeyMPLazyPipeAlt& t, const std::string& filename) {
+    std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+
+    // Step 1: Write bskFirst[0] and s2Dft
+    serialize(t.bskFirst[0], os);
+    serialize(t.s2Dft, os);
+
+    // Step 2: Write bskPrime[i][0]
+    for (int i = 0; i < t.n - 1; ++i) {
+        serialize(t.bskPrime[i][0], os);
+    }
+
+    // Step 3: Write meta data
+    writePOD(os, t.n);
+    writePOD(os, t.level);
+    writePOD(os, t.group);
+    os.close();
+}
+
+void deserializeBskLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bskLazy, const std::string& filename, const int n) {
+    std::ifstream inFile(filename, std::ios::binary);
+    if (!inFile) throw std::runtime_error("Failed to open file");
+
+    // Resize vectors to match serialization structure
+    bskLazy.bskFirst.resize(1);
+    bskLazy.bskPrime.resize(n - 1);
+
+    // Step 1: Read bskFirst[0] and s2Dft
+    deserialize(bskLazy.bskFirst[0], inFile);
+    deserialize(bskLazy.s2Dft, inFile);
+
+    // Step 2: Read bskPrime[i][0]
+    for (int i = 0; i < n - 1; ++i) {
+        bskLazy.bskPrime[i].resize(1);
+        deserialize(bskLazy.bskPrime[i][0], inFile);
+    }
+
+    // Step 3: Read meta data
+    readPOD(inFile, bskLazy.n);
+    readPOD(inFile, bskLazy.level);
+    readPOD(inFile, bskLazy.group);
     inFile.close();
 }

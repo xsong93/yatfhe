@@ -236,13 +236,12 @@ struct BootstrappingKeyMPLazyPipe {
 };
 
 struct BootstrappingKeyMPLazyPipeAlt {
-    vector<Trlwe> bskFirst{};
+    vector<Trlwe> bskFirst;
     vector<vector<TrgswMP>> bskPrime;
     TrlevDft s2Dft;
     int n{};
     int level{};
     int group{};
-    bool initialized{false};
 
     explicit BootstrappingKeyMPLazyPipeAlt() = default;
 

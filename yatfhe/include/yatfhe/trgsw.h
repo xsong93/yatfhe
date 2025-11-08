@@ -18,6 +18,8 @@ struct TrgswMP {
     int k;
     bool isHalf{false};
 
+    TrgswMP() = default;
+
     explicit TrgswMP(const YatfheParameters& p) :
             c(p.l, std::vector<Trlwe>(p.k, Trlwe(p.k, p.N))),
             cPrime(p.l, Trlwe(p.k, p.N)),

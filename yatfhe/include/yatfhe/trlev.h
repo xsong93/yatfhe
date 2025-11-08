@@ -9,7 +9,7 @@
 
 struct Trlev {
     std::vector<Trlwe> trlwes; // l
-    int l;
+    int l{};
 
     explicit Trlev(const YatfheParameters& param) :
             trlwes(param.l,  Trlwe(param.k, param.N)),
@@ -21,7 +21,7 @@ struct Trlev {
 
 struct TrlevDft {
     std::vector<TrlweDft> trlweDfts; // l
-    int l;
+    int l{};
 
     TrlevDft() = default;
 

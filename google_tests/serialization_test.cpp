@@ -32,6 +32,28 @@ void verifyTrlweDft(const TrlweDft& a, const TrlweDft& b) {
     }
 }
 
+void verifyTrlevDft(const TrlevDft& a, const TrlevDft& b) {
+    ASSERT_EQ(a.l, b.l);
+    for (auto i = 0; i < a.l; i++) {
+        verifyTrlweDft(a.trlweDfts[i], b.trlweDfts[i]);
+    }
+}
+
+void verifyTrgswMP(const TrgswMP& a, const TrgswMP& b) {
+    ASSERT_EQ(a.l, b.l);
+    ASSERT_EQ(a.k, b.k);
+    ASSERT_EQ(a.isHalf, b.isHalf);
+    for (auto l = 0; l < a.l; l++) {
+        verifyTrlwe(a.cPrime[l],  b.cPrime[l]);
+        if (a.isHalf) {
+            continue;
+        }
+        for (auto i = 0; i < b.k; i++) {
+            verifyTrlwe(a.c[l][i],  b.c[l][i]);
+        }
+    }
+}
+
 void verifyTrgswMPDft(const TrgswMPDft& a, const TrgswMPDft& b) {
     ASSERT_EQ(a.l, b.l);
     ASSERT_EQ(a.k, b.k);
@@ -94,6 +116,21 @@ void verifyBskMPLazy(const BootstrappingKeyMPLazy& a, const BootstrappingKeyMPLa
                     }
                 }
             }
+        }
+    }
+}
+
+void verifyBskMPLazyAlt(const BootstrappingKeyMPLazyPipeAlt& a, const BootstrappingKeyMPLazyPipeAlt& b) {
+    ASSERT_EQ(a.n, b.n);
+    ASSERT_EQ(a.level, b.level);
+    ASSERT_EQ(a.group, b.group);
+    for (auto d = 0; d < a.bskFirst.size(); d++) {
+        verifyTrlwe(a.bskFirst[d], b.bskFirst[d]);
+    }
+    verifyTrlevDft(a.s2Dft, b.s2Dft);
+    for (auto i = 0; i < a.n - 1; i++) {
+        for (auto d = 0; d < a.bskPrime[i].size(); d++) {
+            verifyTrgswMP(a.bskPrime[i][d], b.bskPrime[i][d]);
         }
     }
 }
@@ -313,7 +350,6 @@ TEST(SERIALIZATION, BSKMPOPT) {
 
 TEST(SERIALIZATION, BSKMPLAZY) {
     YatfheParameters param{};
-    param.N = 1024;
     initYatfhe(param);
 
     // client side
@@ -324,9 +360,7 @@ TEST(SERIALIZATION, BSKMPLAZY) {
     TlweKeySwitchingKey ksKey{param};
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
-    TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.sigma = param.rlweStdDev;
-    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
+
     TrlevDft s2Dft{param, param.l};
     symEncTrlevWithKeyNtt(s2Dft, trlweKey, trlweKey.s, true, param);
     TorusPolynomial v {param.N};
@@ -335,12 +369,42 @@ TEST(SERIALIZATION, BSKMPLAZY) {
     BootstrappingKeyMPLazy bskMPLazy{param, param.lApprox, true, true};
     genBootstrappingKeyMPLazy(bskMPLazy, trgswKey, tlweKey, v, param);
 
-    serializeBskMPLazy(bskMPLazy, "SERIALIZATION_TEST_BSKMPLAZY.bin");
+    COUNT_TIME("serializeBskMPLazy", serializeBskMPLazy(bskMPLazy, "SERIALIZATION_TEST_BSKMPLAZY.bin");)
 
     BootstrappingKeyMPLazy readBskMPLazy;
-    deserializeBskMPLazy(readBskMPLazy, "SERIALIZATION_TEST_BSKMPLAZY.bin", param.n);
+    COUNT_TIME("deserializeBskMPLazy", deserializeBskMPLazy(readBskMPLazy, "SERIALIZATION_TEST_BSKMPLAZY.bin", param.n);)
 
     verifyBskMPLazy(bskMPLazy, readBskMPLazy);
 
     printBanner("SERIALIZATION.BSKMPLAZY");
+}
+
+TEST(SERIALIZATION, BSKMPLAZY_ALT) {
+    YatfheParameters param{};
+    initYatfhe(param);
+
+    // client side
+    // key gen
+    TlweKey tlweKey{param.n, param.lweStdDev};
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    TlweKeySwitchingKey ksKey{param};
+    genTlweKey(tlweKey);
+    genTrlweKey(trlweKey);
+
+    TorusPolynomial v {param.N};
+    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+
+    BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
+    symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trlweKey, trlweKey.s, true, param);
+    genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);
+
+    COUNT_TIME("serializeBskLazyPipeAlt", serializeBskLazyPipeAlt(bskMPLazyPipeAlt, "SERIALIZATION_TEST_BSKMPLAZY_ALT.bin");)
+
+    BootstrappingKeyMPLazyPipeAlt readBskMPLazyAlt;
+    COUNT_TIME("deserializeBskLazyPipeAlt", deserializeBskLazyPipeAlt(readBskMPLazyAlt, "SERIALIZATION_TEST_BSKMPLAZY_ALT.bin", param.n);)
+
+    verifyBskMPLazyAlt(bskMPLazyPipeAlt, readBskMPLazyAlt);
+
+    printBanner("SERIALIZATION.BSKMPLAZY_ALT");
 }
