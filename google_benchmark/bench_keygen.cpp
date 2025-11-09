@@ -5,6 +5,7 @@
 #include "yatfhe/trlwe.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yautil/initializer.h"
+#include "yautil/ya_serializer.h"
 
 class KeyGenBenchmark : public benchmark::Fixture {
 public:
@@ -35,6 +36,13 @@ BENCHMARK_DEFINE_F(KeyGenBenchmark, GINX)(benchmark::State& state) {
     for (auto _ : state) {
         BootstrappingKeyMP bskMP{param, param.lApprox};
         genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
+        state.PauseTiming();
+        string file;
+        file.append("./keys/GINX/BSK_GINX_")
+            .append(to_string(state.iterations()))
+            .append(".bin");
+        serializeBskMP(bskMP, file);
+        state.ResumeTiming();
     }
 }
 
@@ -43,17 +51,24 @@ BENCHMARK_DEFINE_F(KeyGenBenchmark, LAZY_PIPE)(benchmark::State& state) {
         BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
         symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
         genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);
+        state.PauseTiming();
+        string file;
+        file.append("./keys/LAZY/BSK_PIPE_")
+            .append(to_string(state.iterations()))
+            .append(".bin");
+        serializeBskLazyPipeAlt(bskMPLazyPipeAlt, file);
+        state.ResumeTiming();
     }
 }
 
 BENCHMARK_REGISTER_F(KeyGenBenchmark, GINX)
     ->Unit(benchmark::kMicrosecond)
-    ->Iterations(10)
+    ->Iterations(100)
     ->UseRealTime()
     ->MeasureProcessCPUTime();
 BENCHMARK_REGISTER_F(KeyGenBenchmark, LAZY_PIPE)
     ->Unit(benchmark::kMicrosecond)
-    ->Iterations(10)
+    ->Iterations(100)
     ->UseRealTime()
     ->MeasureProcessCPUTime();
 

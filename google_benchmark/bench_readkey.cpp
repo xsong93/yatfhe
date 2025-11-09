@@ -20,7 +20,6 @@ public:
         TrlweKey& trlweKey = trgswKey.trlweKey;
         genTlweKey(tlweKey);
         genTrlweKey(trlweKey);
-        symEncTrlevWithKeyNtt(s2Dft, trlweKey, trlweKey.s, true, param);
         generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
         // data gen
@@ -30,7 +29,6 @@ public:
         symEncTlwe(input, mu, tlweKey);
         rescaleTlweToNewMod(sTlwe, input);
         genNoiselessTrlweSample(acc, v, sTlwe);
-        encryptTrgswMPNtt(one, 1, trgswKey, 0, param);
     }
 
 protected:
@@ -41,8 +39,6 @@ protected:
     Trlwe acc{param};
     Trlwe out{param};
     ScaledTlwe sTlwe{param.N * 2, param.n};
-    TrlevDft s2Dft{param, param.l};
-    TrgswMPDft one{param};
 };
 
 BENCHMARK_DEFINE_F(ReadKeyBenchmark, GINX)(benchmark::State& state) {
