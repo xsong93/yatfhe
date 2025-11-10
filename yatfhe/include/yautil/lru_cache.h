@@ -34,24 +34,22 @@ public:
     SimpleLRUCache(size_t capacity, std::function<ValueType(const KeyType&)> loader)
         : capacity_(capacity), loader_(std::move(loader)) {}
 
-    ValueType get(const KeyType& key) {
+    std::pair<ValueType, bool> get(const KeyType& key) {
         auto it = node_map_.find(key);
         if (it != node_map_.end()) {
-
             node_list_.splice(node_list_.begin(), node_list_, it->second);
-            return it->second->value;
+            return {it->second->value, true};
         }
 
         ValueType value = loader_(key);
 
         put(key, value);
-        return value;
+        return {value, false};
     }
 
     void put(const KeyType& key, const ValueType& value) {
         auto it = node_map_.find(key);
         if (it != node_map_.end()) {
-            // 键已存在，更新值并移动到头部
             it->second->value = value;
             node_list_.splice(node_list_.begin(), node_list_, it->second);
             return;
@@ -98,7 +96,7 @@ private:
         auto last_node = node_list_.end();
         --last_node;
 
-        std::cout << "Evicting key: " << last_node->key << std::endl;
+        printMsg(last_node->key, "Evicting key");
         node_map_.erase(last_node->key);
         node_list_.pop_back();
     }
