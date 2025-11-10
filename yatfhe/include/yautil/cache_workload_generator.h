@@ -2,8 +2,8 @@
 // Created by xsong93 on 11/10/25.
 //
 
-#ifndef BASE_CACHEWORKLOADGENERATOR_H
-#define BASE_CACHEWORKLOADGENERATOR_H
+#ifndef BASE_CACHE_WORKLOAD_GENERATOR_H
+#define BASE_CACHE_WORKLOAD_GENERATOR_H
 
 #include <cstdint>
 #include <vector>
@@ -13,16 +13,14 @@
 
 class CacheWorkloadGenerator {
 private:
-    ZipfDistribution zipf_;
-    std::random_device rd_;
-    std::mt19937 gen_;
+    ZipfDistribution zipf;
 
 public:
-    CacheWorkloadGenerator(double zipf_param = 1.2, int dataSize = 50) : zipf_(zipf_param, dataSize), gen_(rd_()) {}
+    explicit CacheWorkloadGenerator(double zipfParam = 1.2, int dataSize = 50) : zipf(zipfParam, dataSize) {}
 
     // generate access pattern with Zipf distribution
-    std::vector<int> generate_access_pattern(size_t length) {
-        return zipf_.generate_batch(length);
+    std::vector<int> generateAccessPattern(size_t length) {
+        return zipf.generateBatch(length);
     }
 
     // hot, cold data
@@ -38,19 +36,19 @@ public:
         std::uniform_int_distribution<int> hot_dist(0, hot_range - 1);
 
         for (size_t i = 0; i < hot_accesses; ++i) {
-            workload.push_back(hot_dist(gen_));
+            workload.push_back(hot_dist(rng));
         }
 
         // cold data（20% access）
         std::uniform_int_distribution<int> cold_dist(hot_range, dataSize);
 
         for (size_t i = 0; i < cold_accesses; ++i) {
-            workload.push_back(cold_dist(gen_));
+            workload.push_back(cold_dist(rng));
         }
 
-        std::shuffle(workload.begin(), workload.end(), gen_);
+        std::shuffle(workload.begin(), workload.end(), rng);
         return workload;
     }
 };
 
-#endif //BASE_CACHEWORKLOADGENERATOR_H
+#endif //BASE_CACHE_WORKLOAD_GENERATOR_H
