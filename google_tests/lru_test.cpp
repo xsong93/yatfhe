@@ -7,6 +7,8 @@
 #include "yautil/tool.h"
 #include "yautil/cache_manager.h"
 #include "yautil/initializer.h"
+#include "yautil/zipf.h"
+#include "yautil/CacheWorkloadGenerator.h"
 
 TEST(LRU_TEST, LRU) {
     YatfheParameters param{};
@@ -101,4 +103,33 @@ TEST(LRU_TEST, LRU) {
     cache.preload_lazy_keys({35, 45});
 
     std::cout << "Test completed successfully!" << std::endl;
+}
+
+TEST(LRU_TEST, LRU_ZIPF) {
+    SimpleCacheManager cache(512, 20);
+    CacheWorkloadGenerator workload_gen(0.8);
+
+    auto access_pattern = workload_gen.generate_access_pattern(100);
+    printArray(access_pattern, "access_pattern");
+
+    std::cout << "Testing cache with Zipf distribution (s=1.2)" << std::endl;
+
+    size_t hits = 0;
+
+    for (int id : access_pattern) {
+        try {
+            if (id % 2 == 0) {
+                cache.getGinxKey(id);
+            } else {
+                cache.getLazyKey(id);
+            }
+            ++hits;
+        } catch (const std::exception& e) {
+            std::cerr << "Error accessing ID " << id << ": " << e.what() << std::endl;
+        }
+    }
+
+    auto stats = cache.getStats();
+    std::cout << "Total requests: " << stats.totalRequests << std::endl;
+    std::cout << "Hit rate: " << stats.overallHitRate() * 100 << "%" << std::endl;
 }
