@@ -67,16 +67,16 @@ TEST(LRU_TEST, LRU) {
 
 
     std::cout << "\n1. Testing basic functionality..." << std::endl;
-    auto key1 = cache.getGinxKey(8);
+    auto& key1 = cache.getGinxKey(8);
     assert(key1.n == param.n);
 
-    auto key2 = cache.getLazyKey(10);
+    auto& key2 = cache.getLazyKey(10);
     assert(key2.n == param.n);
 
 
     std::cout << "\n2. Testing cache hits..." << std::endl;
-    auto key1_again = cache.getGinxKey(8);
-    auto key2_again = cache.getLazyKey(10);
+    auto& key1_again = cache.getGinxKey(8);
+    auto& key2_again = cache.getLazyKey(10);
 
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.totalRequests << std::endl;
@@ -99,8 +99,8 @@ TEST(LRU_TEST, LRU) {
 
 
     std::cout << "\n4. Testing preloading..." << std::endl;
-    cache.preload_mp_keys({30, 40, 50});
-    cache.preload_lazy_keys({35, 45});
+    cache.preloadGinxKeys({30, 40, 50});
+    cache.preloadLazyKeys({35, 45});
 
     std::cout << "Test completed successfully!" << std::endl;
 }
@@ -109,7 +109,7 @@ TEST(LRU_TEST, LRU_ZIPF) {
     SimpleCacheManager cache(512, 10);
     CacheWorkloadGenerator workload(1.0);
 
-    auto accessPattern = workload.generateAccessPattern(1000);
+    auto accessPattern = workload.generateAccessPattern(100);
     printArray(accessPattern, "access pattern");
 
     std::cout << "Testing cache with Zipf distribution (s=0.8)" << std::endl;

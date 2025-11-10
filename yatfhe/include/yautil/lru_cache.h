@@ -8,9 +8,7 @@
 #include <unordered_map>
 #include <list>
 #include <functional>
-#include <string>
 #include <fstream>
-#include <iostream>
 
 template<typename KeyType, typename ValueType>
 class SimpleLRUCache {
@@ -27,24 +25,30 @@ private:
     size_t capacity_;
     NodeList node_list_;
     NodeMap node_map_;
-    std::function<ValueType(const KeyType&)> loader_;
+    std::function<void(ValueType&, const KeyType&)> loader_;
 
 public:
 
-    SimpleLRUCache(size_t capacity, std::function<ValueType(const KeyType&)> loader)
+    SimpleLRUCache(size_t capacity, std::function<void(ValueType&, const KeyType&)> loader)
         : capacity_(capacity), loader_(std::move(loader)) {}
 
-    std::pair<ValueType, bool> get(const KeyType& key) {
+    std::pair<ValueType&, bool> get(const KeyType& key) {
         auto it = node_map_.find(key);
         if (it != node_map_.end()) {
             node_list_.splice(node_list_.begin(), node_list_, it->second);
             return {it->second->value, true};
         }
 
-        ValueType value = loader_(key);
+        return {loadAndInsert(key), false};
+    }
 
-        put(key, value);
-        return {value, false};
+    ValueType* getSimple(const KeyType& key) {
+        auto it = node_map_.find(key);
+        if (it != node_map_.end()) {
+            node_list_.splice(node_list_.begin(), node_list_, it->second);
+            return &it->second->value;
+        }
+        return nullptr;
     }
 
     void put(const KeyType& key, const ValueType& value) {
@@ -89,6 +93,18 @@ public:
     }
 
 private:
+
+    ValueType& loadAndInsert(const KeyType& key) {
+        if (node_list_.size() >= capacity_) evict();
+
+        node_list_.emplace_front(key, ValueType{});
+        auto new_node = node_list_.begin();
+
+        loader_(new_node->value, key);
+        node_map_[key] = new_node;
+
+        return new_node->value;
+    }
 
     void evict() {
         if (node_list_.empty()) return;

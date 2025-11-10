@@ -17,22 +17,18 @@ private:
 public:
     explicit DiskReader(const int n) : fixedN(n) {}
 
-    BootstrappingKeyMP readGinx(const int id) {
+     void readGinx(BootstrappingKeyMP& bsk, const int id) {
         const std::string filename = generateGinxKeyFilename(id);
         printMsg(filename, "Loading GINX key from disk");
 
-        BootstrappingKeyMP bsk;
         deserializeBskMP(bsk, filename, fixedN);
-        return bsk;
     }
 
-    BootstrappingKeyMPLazyPipeAlt readLazy(const int id) {
+    void readLazy(BootstrappingKeyMPLazyPipeAlt&bsk, const int id) {
         std::string filename = generateLazyKeyFilename(id);
         printMsg(filename, "Loading Lazy key from disk");
 
-        BootstrappingKeyMPLazyPipeAlt bskLazy;
-        deserializeBskLazyPipeAlt(bskLazy, filename, fixedN);
-        return bskLazy;
+        deserializeBskLazyPipeAlt(bsk, filename, fixedN);
     }
 
     static std::string generateGinxKeyFilename(const int id) {
@@ -58,39 +54,35 @@ private:
 
 public:
     explicit SimpleCacheManager(const int n, const size_t capacity = DEFAULT_CAPACITY)
-        : ginxCache(capacity, [this](const int id) { return diskReader.readGinx(id); })
-        , lazyCache(capacity, [this](const int id) { return diskReader.readLazy(id); })
+        : ginxCache(capacity, [this](BootstrappingKeyMP& result, const int id) {
+            diskReader.readGinx(result, id);
+        })
+        , lazyCache(capacity, [this](BootstrappingKeyMPLazyPipeAlt& result, const int id) {
+            diskReader.readLazy(result, id);
+        })
         , diskReader(n) {}
 
-    BootstrappingKeyMP getGinxKey(int id) {
+    BootstrappingKeyMP& getGinxKey(const int id) {
         ++totalRequests;
 
-        if (id < 0 || id > 50) {
-            throw std::out_of_range("ID must be between 0 and 50");
-        }
-
-        auto result = ginxCache.get(id);
-        if (result.second) {
+        auto [fst, snd] = ginxCache.get(id);
+        if (snd) {
             ++ginxHits;
         }
-        return result.first;
+        return fst;
     }
 
-    BootstrappingKeyMPLazyPipeAlt getLazyKey(int id) {
+    BootstrappingKeyMPLazyPipeAlt* getLazyKey(const int id) {
         ++totalRequests;
 
-        if (id < 0 || id > 50) {
-            throw std::out_of_range("ID must be between 0 and 50");
-        }
-
-        auto result = lazyCache.get(id);
-        if (result.second) {
+        auto* result = lazyCache.getSimple(id);
+        if (result != nullptr) {
             ++lazyHits;
         }
-        return result.first;
+        return result;
     }
 
-    void preload_mp_keys(const std::vector<int>& ids) {
+    void preloadGinxKeys(const std::vector<int>& ids) {
         for (int id : ids) {
             if (id >= 0 && id <= 50) {
                 ginxCache.get(id);
@@ -98,7 +90,7 @@ public:
         }
     }
 
-    void preload_lazy_keys(const std::vector<int>& ids) {
+    void preloadLazyKeys(const std::vector<int>& ids) {
         for (int id : ids) {
             if (id >= 0 && id <= 50) {
                 lazyCache.get(id);
@@ -106,11 +98,11 @@ public:
         }
     }
 
-    void put_mp_key(int id, const BootstrappingKeyMP& key) {
+    void putMpKey(const int id, const BootstrappingKeyMP& key) {
         ginxCache.put(id, key);
     }
 
-    void put_lazy_key(int id, const BootstrappingKeyMPLazyPipeAlt& key) {
+    void putLazyKey(const int id, const BootstrappingKeyMPLazyPipeAlt& key) {
         lazyCache.put(id, key);
     }
 
@@ -164,11 +156,15 @@ public:
         lazyHits = 0;
     }
 
-    void resize(size_t new_capacity) {
+    void resize(const size_t new_capacity) {
         ginxCache = SimpleLRUCache<int, BootstrappingKeyMP>(
-            new_capacity, [this](int id) { return diskReader.readGinx(id); });
+            new_capacity, [this](BootstrappingKeyMP& bsk, const int id) {
+                diskReader.readGinx(bsk, id);
+            });
         lazyCache = SimpleLRUCache<int, BootstrappingKeyMPLazyPipeAlt>(
-            new_capacity, [this](int id) { return diskReader.readLazy(id); });
+            new_capacity, [this](BootstrappingKeyMPLazyPipeAlt& bsk, const int id) {
+                diskReader.readLazy(bsk, id);
+            });
     }
 };
 
