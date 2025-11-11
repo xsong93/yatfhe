@@ -15,9 +15,11 @@ private:
     std::vector<double> probabilities;
     std::vector<double> cumulative;
     std::uniform_real_distribution<double> dist;
+    std::random_device rd_;
+    std::mt19937 gen_;
 
 public:
-    ZipfDistribution(double s = 1.0, int N = 50) : dist(0.0, 1.0), N(N) {
+    ZipfDistribution(double s = 1.0, int N = 50) : gen_(rd_()), dist(0.0, 1.0), N(N) {
         probabilities.resize(N);
         cumulative.resize(N);
         calculateDistribution(s);
@@ -25,9 +27,7 @@ public:
 
     // generate random number
     int generate() {
-        random_device random;
-        mt19937 randNumGen(random());
-        double u = dist(randNumGen);
+        double u = dist(gen_);
 
         for (int i = 1; i <= N; ++i) {
             if (u <= cumulative[i]) {

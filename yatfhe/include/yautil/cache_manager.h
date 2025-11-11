@@ -42,15 +42,16 @@ public:
 
 class SimpleCacheManager {
 private:
-    static constexpr size_t DEFAULT_CAPACITY = 25;
+    static constexpr size_t DEFAULT_CAPACITY{25};
 
     SimpleLRUCache<int, BootstrappingKeyMP> ginxCache;
     SimpleLRUCache<int, BootstrappingKeyMPLazyPipeAlt> lazyCache;
     DiskReader diskReader;
 
-    size_t totalRequests = 0;
-    size_t ginxHits = 0;
-    size_t lazyHits = 0;
+    size_t ginxRequest{};
+    size_t lazyRequest{};
+    size_t ginxHits{};
+    size_t lazyHits{};
 
 public:
     explicit SimpleCacheManager(const int n, const size_t capacity = DEFAULT_CAPACITY)
@@ -63,7 +64,7 @@ public:
         , diskReader(n) {}
 
     BootstrappingKeyMP& getGinxKey(const int id) {
-        ++totalRequests;
+        ++ginxRequest;
 
         auto [fst, snd] = ginxCache.get(id);
         if (snd) {
@@ -73,7 +74,7 @@ public:
     }
 
     BootstrappingKeyMPLazyPipeAlt& getLazyKey(const int id) {
-        ++totalRequests;
+        ++lazyRequest;
 
         auto [fst, snd] = lazyCache.get(id);
         if (snd) {
@@ -83,7 +84,7 @@ public:
     }
 
     BootstrappingKeyMPLazyPipeAlt* getLazyKeySimple(const int id) {
-        ++totalRequests;
+        ++lazyRequest;
 
         auto* result = lazyCache.getSimple(id);
         if (result != nullptr) {
@@ -117,32 +118,30 @@ public:
     }
 
     struct Stats {
-        size_t totalRequests;
         size_t ginxHits;
+        size_t ginxRequest;
         size_t lazyHits;
+        size_t lazyRequest;
         size_t ginxCacheSize;
         size_t lazyCacheSize;
         size_t mpCacheCapacity;
         size_t lazyCacheCapacity;
 
-        double overallHitRate() const {
-            return totalRequests > 0 ? static_cast<double>(ginxHits + lazyHits) / totalRequests : 0.0;
-        }
-
         double ginxHitRate() const {
-            return ginxHits > 0 ? static_cast<double>(ginxHits) / (ginxHits + (totalRequests - ginxHits - lazyHits)) : 0.0;
+            return ginxHits > 0 ? static_cast<double>(ginxHits) / ginxRequest : 0.0;
         }
 
         double lazyHitRate() const {
-            return lazyHits > 0 ? static_cast<double>(lazyHits) / (lazyHits + (totalRequests - ginxHits - lazyHits)) : 0.0;
+            return lazyHits > 0 ? static_cast<double>(lazyHits) / lazyRequest : 0.0;
         }
     };
 
     Stats getStats() const {
         return Stats{
-                totalRequests,
                 ginxHits,
+                ginxRequest,
                 lazyHits,
+                lazyRequest,
                 ginxCache.size(),
                 lazyCache.size(),
                 ginxCache.capacity(),
@@ -161,9 +160,10 @@ public:
     void clearAll() {
         ginxCache.clear();
         lazyCache.clear();
-        totalRequests = 0;
         ginxHits = 0;
+        ginxRequest = 0;
         lazyHits = 0;
+        lazyRequest = 0;
     }
 
     void resize(const size_t new_capacity) {
