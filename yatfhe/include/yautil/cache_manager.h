@@ -72,7 +72,17 @@ public:
         return fst;
     }
 
-    BootstrappingKeyMPLazyPipeAlt* getLazyKey(const int id) {
+    BootstrappingKeyMPLazyPipeAlt& getLazyKey(const int id) {
+        ++totalRequests;
+
+        auto [fst, snd] = lazyCache.get(id);
+        if (snd) {
+            ++lazyHits;
+        }
+        return fst;
+    }
+
+    BootstrappingKeyMPLazyPipeAlt* getLazyKeySimple(const int id) {
         ++totalRequests;
 
         auto* result = lazyCache.getSimple(id);

@@ -9,6 +9,7 @@
 #include <list>
 #include <functional>
 #include <fstream>
+#include "yautil/tool.h"
 
 template<typename KeyType, typename ValueType>
 class SimpleLRUCache {

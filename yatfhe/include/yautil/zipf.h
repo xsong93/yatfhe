@@ -25,7 +25,9 @@ public:
 
     // generate random number
     int generate() {
-        double u = dist(rng);
+        random_device random;
+        mt19937 randNumGen(random());
+        double u = dist(randNumGen);
 
         for (int i = 1; i <= N; ++i) {
             if (u <= cumulative[i]) {

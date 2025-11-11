@@ -47,6 +47,8 @@ public:
         Integer pt = 3;
         Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
         symEncTlwe(input, mu, tlweKey);
+
+        printArray(accessPattern, "access pattern");
     }
 
 protected:
@@ -114,11 +116,12 @@ BENCHMARK_DEFINE_F(ZipfBenchmark, GINX)(benchmark::State& state) {
     std::vector<double> iterationTimesUs;
 
     for (auto _ : state) {
+        int iter = iterationTimesUs.size() + 1;
         auto start = std::chrono::high_resolution_clock::now();
 
         rescaleTlweToNewMod(sTlwe, input);
         genNoiselessTrlweSample(acc, v, sTlwe);
-        auto& bskServer = cache.getGinxKey(accessPattern[state.iterations()]);
+        auto& bskServer = cache.getGinxKey(accessPattern[iter]);
         blindRotateJP22Ntt(acc, bskServer.bskDft, sTlwe, param);
         Tlwe tmp{dummyKsKey.nCurrKey}, output{param.n};
         extractTlweFromTrlwe(tmp, acc, param.driftPhase);
@@ -137,19 +140,20 @@ BENCHMARK_DEFINE_F(ZipfBenchmark, GINX)(benchmark::State& state) {
 BENCHMARK_DEFINE_F(ZipfBenchmark, LAZY)(benchmark::State& state) {
     std::vector<double> iterationTimesUs;
     for (auto _ : state) {
+        int iter = iterationTimesUs.size() + 1;
         auto start = std::chrono::high_resolution_clock::now();
 
         rescaleTlweToNewMod(sTlwe, input);
-        auto* bskServer = cache.getLazyKey(accessPattern[state.iterations()]);
+        auto* bskServer = cache.getLazyKeySimple(accessPattern[iter]);
         Trlwe out{param};
         if (bskServer != nullptr) {
             blindRotateLazyPipeAltNtt(out, bskServer->bskFirst, bskServer->bskPrime,bskServer->s2Dft, sTlwe, v, param);
         } else {
             BootstrappingKeyMPLazyPipeAlt bsk;
-            std::string file = DiskReader::generateLazyKeyFilename(state.iterations());
+            std::string file = DiskReader::generateLazyKeyFilename(accessPattern[iter]);
             blindRotateLazyPipeAltInitNtt(out, bsk.bskFirst, bsk.bskPrime,bsk.s2Dft, sTlwe,
                 v, file, param);
-            cache.putLazyKey(accessPattern[state.iterations()], bsk);
+            cache.putLazyKey(accessPattern[iter], bsk);
         }
 
         Tlwe tmp{dummyKsKey.nCurrKey}, output{param.n};
