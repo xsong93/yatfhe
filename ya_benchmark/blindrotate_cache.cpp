@@ -20,6 +20,82 @@
 
 using json = nlohmann::json;
 
+class CommandLineParser {
+private:
+    std::map<std::string, std::string> arguments_;
+    std::vector<std::string> positionalArgs_;
+
+public:
+    CommandLineParser(int argc, char** argv) {
+        parseArguments(argc, argv);
+    }
+
+    int getInt(const std::string& name, int defaultValue) const {
+        auto it = arguments_.find(name);
+        if (it != arguments_.end()) {
+            return std::atoi(it->second.c_str());
+        }
+        return defaultValue;
+    }
+
+    double getDouble(const std::string& name, double defaultValue) const {
+        auto it = arguments_.find(name);
+        if (it != arguments_.end()) {
+            return std::atof(it->second.c_str());
+        }
+        return defaultValue;
+    }
+
+    std::string getString(const std::string& name, const std::string& defaultValue) const {
+        auto it = arguments_.find(name);
+        if (it != arguments_.end()) {
+            return it->second;
+        }
+        return defaultValue;
+    }
+
+    bool hasFlag(const std::string& flag) const {
+        return arguments_.find(flag) != arguments_.end();
+    }
+
+    void printUsage(const std::string& programName) const {
+        std::cout << "Usage: " << programName << " [Options]" << std::endl;
+        std::cout << "Options:" << std::endl;
+        std::cout << "  --cap=N      Cache capacity (Default: 5)" << std::endl;
+        std::cout << "  --s=N        Zipf s (Default: 0.8)" << std::endl;
+        std::cout << "  --pat=N      Request size (Default: 1000)" << std::endl;
+        std::cout << "  --help       Show helps." << std::endl;
+        std::cout << std::endl;
+        std::cout << "Usage example:" << std::endl;
+        std::cout << "  " << programName << " --cap=10 --s=1.0 --pat=2000" << std::endl;
+        std::cout << "  " << programName << " --s=0.9" << std::endl;
+    }
+
+private:
+    void parseArguments(int argc, char** argv) {
+        for (int i = 1; i < argc; ++i) {
+            std::string arg = argv[i];
+
+            if (arg == "--help") {
+                arguments_["help"] = "true";
+            }
+            else if (arg.substr(0, 2) == "--") {
+                size_t pos = arg.find('=');
+                if (pos != std::string::npos) {
+                    std::string name = arg.substr(2, pos - 2);
+                    std::string value = arg.substr(pos + 1);
+                    arguments_[name] = value;
+                } else {
+                    arguments_[arg.substr(2)] = "true";
+                }
+            }
+            else {
+                positionalArgs_.push_back(arg);
+            }
+        }
+    }
+};
+
 void benchStat(const std::vector<long>& iteration_times_us, const string& benchName, const string& saveFileName) {
 
     // Calculate statistics
@@ -90,7 +166,7 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
 
 
     std::vector<long> iterationTimesUs;
-    for (auto i = 1; i <= 50; i++) {
+    for (auto i = 0; i < 100; i++) {
         clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateLazyKeyFilename(id);
@@ -148,7 +224,7 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
 
     // server side
     std::vector<long> iterationTimesUs;
-    for (auto i = 1; i <= 50; i++) {
+    for (auto i = 0; i < 100; i++) {
         clearFileCache();
         auto start = steady_clock::now();
 
@@ -174,27 +250,36 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
 }
 
 int main(int argc, char **argv) {
-    YatfheParameters param{};
-    initYatfhe(param);
-    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
+    CommandLineParser parser(argc, argv);
 
-    // default
-    int cacheCapacity = 5;
-    double zipfParam = 0.8;
-    int patternSize = 1000;
+    if (parser.hasFlag("help")) {
+        parser.printUsage(argv[0]);
+        return 0;
+    }
 
-    if (argc > 1) {
-        cacheCapacity = std::atoi(argv[1]);
+    int cacheCapacity = parser.getInt("cap", 5);
+    double zipfParam = parser.getDouble("s", 0.8);
+    int patternSize = parser.getInt("pat", 1000);
+
+    if (cacheCapacity <= 0) {
+        std::cerr << "Error: Cache capacity should be larger than 0，using default 5" << std::endl;
+        cacheCapacity = 5;
     }
-    if (argc > 2) {
-        zipfParam = std::atof(argv[2]);
+    if (zipfParam <= 0) {
+        std::cerr << "Error: Zipf s should be larger than 0，using default 0.8" << std::endl;
+        zipfParam = 0.8;
     }
-    if (argc > 3) {
-        patternSize = std::atoi(argv[3]);
+    if (patternSize <= 0) {
+        std::cerr << "Error: Request pattern size should be larger than 0，using default 1000" << std::endl;
+        patternSize = 1000;
     }
 
     printf("User param: Cache capacity=%d, Zipf s=%.1f, Max request count=%d\n",
            cacheCapacity, zipfParam, patternSize);
+
+    YatfheParameters param{};
+    initYatfhe(param);
+    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
     // init cache
     SimpleCacheManager cache(param.n, cacheCapacity);
