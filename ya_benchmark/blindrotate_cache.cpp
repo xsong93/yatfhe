@@ -96,7 +96,7 @@ private:
     }
 };
 
-void benchStat(const std::vector<long>& iteration_times_us, const string& benchName, const string& saveFileName) {
+void benchStat(const std::vector<long>& iteration_times_us, const long request, const double hitRate, const string& benchName, const string& saveFileName) {
 
     // Calculate statistics
     double sum = 0.0;
@@ -131,7 +131,9 @@ void benchStat(const std::vector<long>& iteration_times_us, const string& benchN
         {"average_time_us", average_time},
         {"min_time_us", min_time},
         {"max_time_us", max_time},
-        {"total_time_us", sum}
+        {"total_time_us", sum},
+        {"total_requests", request},
+        {"hit_rate", hitRate}
     };
 
     // Write to file
@@ -194,11 +196,12 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
 
         iterationTimesUs.push_back(elapsedUs);
     }
-    benchStat(iterationTimesUs, "Benchmark/LAZY", "lazy_benchmark_results.json");
     printArray(iterationTimesUs, "iterationTimesUs");
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.lazyRequest << std::endl;
     std::cout << "Hit rate: " << stats.lazyHitRate() * 100 << "%" << std::endl;
+    benchStat(iterationTimesUs, stats.lazyRequest, stats.lazyHitRate(),
+              "Benchmark/LAZY", "lazy_benchmark_results.json");
 }
 
 void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern) {
@@ -242,11 +245,12 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
 
         iterationTimesUs.push_back(elapsedUs);
     }
-    benchStat(iterationTimesUs, "Benchmark/GINX", "ginx_benchmark_results.json");
     printArray(iterationTimesUs, "iterationTimesUs");
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.ginxRequest << std::endl;
     std::cout << "Hit rate: " << stats.ginxHitRate() * 100 << "%" << std::endl;
+    benchStat(iterationTimesUs, stats.ginxRequest, stats.ginxHitRate(),
+              "Benchmark/GINX", "ginx_benchmark_results.json");
 }
 
 int main(int argc, char **argv) {
@@ -258,7 +262,7 @@ int main(int argc, char **argv) {
     }
 
     int cacheCapacity = parser.getInt("cap", 5);
-    double zipfParam = parser.getDouble("s", 0.8);
+    double zipfParam = parser.getDouble("s", 0.83);
     int patternSize = parser.getInt("pat", 1000);
 
     if (cacheCapacity <= 0) {
@@ -267,14 +271,14 @@ int main(int argc, char **argv) {
     }
     if (zipfParam <= 0) {
         std::cerr << "Error: Zipf s should be larger than 0，using default 0.8" << std::endl;
-        zipfParam = 0.8;
+        zipfParam = 0.83;
     }
     if (patternSize <= 0) {
         std::cerr << "Error: Request pattern size should be larger than 0，using default 1000" << std::endl;
         patternSize = 1000;
     }
 
-    printf("User param: Cache capacity=%d, Zipf s=%.1f, Max request count=%d\n",
+    printf("User param: Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n",
            cacheCapacity, zipfParam, patternSize);
 
     YatfheParameters param{};

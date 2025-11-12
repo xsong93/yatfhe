@@ -7,41 +7,41 @@
 #include "yautil/control_helper.h"
 #include "yautil/tool.h"
 
-time_point<high_resolution_clock> TimeCounter::timeGlobal = high_resolution_clock::now();
+time_point<steady_clock> TimeCounter::timeGlobal = steady_clock::now();
 
 TimeCounter::TimeCounter() {
-    time = high_resolution_clock::now();
+    time = steady_clock::now();
     printTime("init timer");
 }
 
 void TimeCounter::resetTime() {
-    time = high_resolution_clock::now();
+    time = steady_clock::now();
 }
 
-time_point<high_resolution_clock> TimeCounter::getTime() {
+time_point<steady_clock> TimeCounter::getTime() {
     return time;
 }
 
 void TimeCounter::printTime(const std::string& message) {
 #ifdef ENABLE_TIMER
-    printMsg(duration_cast<microseconds>(high_resolution_clock::now() - getTime()).count(),
+    printMsg(duration_cast<microseconds>(steady_clock::now() - getTime()).count(),
              "elapsed time (" + message + ") in us");
 #endif
 }
 
-void TimeCounter::printTime(const std::string& message, time_point<high_resolution_clock>& start) {
+void TimeCounter::printTime(const std::string& message, time_point<steady_clock>& start) {
 #ifdef ENABLE_TIMER
-    printMsg(duration_cast<microseconds>(high_resolution_clock::now() - start).count(),
+    printMsg(duration_cast<microseconds>(steady_clock::now() - start).count(),
              "elapsed time (" + message + ") in us");
 #endif
 }
 
-void TimeCounter::printTime(const std::string& message, time_point<high_resolution_clock>& start, long interval) {
+void TimeCounter::printTime(const std::string& message, time_point<steady_clock>& start, long interval) {
 #ifdef ENABLE_TIMER
     if (interval <= 0) {
         interval = 1;
     }
-    printMsg((duration_cast<microseconds>(high_resolution_clock::now() - start).count()) / interval,
+    printMsg((duration_cast<microseconds>(steady_clock::now() - start).count()) / interval,
              "elapsed time (" + message + ") in us");
 #endif
 }
