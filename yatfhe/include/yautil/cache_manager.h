@@ -63,6 +63,15 @@ public:
         })
         , diskReader(n) {}
 
+    SimpleCacheManager(const int n, const size_t ginxCapacity, const size_t lazyCapacity)
+            : ginxCache(ginxCapacity, [this](BootstrappingKeyMP& result, const int id) {
+        diskReader.readGinx(result, id);
+    })
+            , lazyCache(lazyCapacity, [this](BootstrappingKeyMPLazyPipeAlt& result, const int id) {
+                diskReader.readLazy(result, id);
+            })
+            , diskReader(n) {}
+
     BootstrappingKeyMP& getGinxKey(const int id) {
         ++ginxRequest;
 

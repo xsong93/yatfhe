@@ -125,7 +125,7 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
 
         additional_info += f"\n{analysis['method']}:\n"
         additional_info += f"  Total requests: {total_requests}\n"
-        additional_info += f"  Hit rate: {hit_rate:.1f}%"
+        additional_info += f"  Hit rate: {hit_rate:.3f}%"
 
     # Create a text box below the legend
     ax1.text(1.02, 0.2, additional_info, transform=ax1.transAxes, fontsize=9,
@@ -355,14 +355,12 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
     fig = plt.figure(figsize=(18, 12))
 
     # Create subplots
-    ax1 = plt.subplot2grid((2, 3), (0, 0), colspan=2)  # Main CDF
-    ax2 = plt.subplot2grid((2, 3), (0, 2))              # Percentile table
-    ax3 = plt.subplot2grid((2, 3), (1, 0))              # P50-P90 zoom
-    ax4 = plt.subplot2grid((2, 3), (1, 1))              # P90-P99.9 zoom
-    ax5 = plt.subplot2grid((2, 3), (1, 2))              # Statistical summary
+    ax1 = plt.subplot2grid((2, 4), (0, 0), colspan=4)  # Main CDF
+    ax2 = plt.subplot2grid((2, 4), (1, 0), colspan=3)   # P90-P99.9 zoom
+    ax3 = plt.subplot2grid((2, 4), (1, 3))              # Statistical summary
+
 
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
-    percentile_results = {}
 
     # Main CDF Plot
     for i, analysis in enumerate(analyses):
@@ -392,6 +390,11 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
                 if idx < len(cdf):
                     ax1.plot(percentiles[p_key], cdf[idx] * 100,
                              'o', color=colors[i], markersize=8)
+                    if p == 90:
+                        ax1.annotate(f'P{p}',
+                                 xy=(percentiles[p_key], cdf[idx] * 100),
+                                 xytext=(10, 5), textcoords='offset points',
+                                 fontsize=9, alpha=0.8)
 
     ax1.set_xlabel('Latency (milliseconds)', fontsize=12)
     ax1.set_ylabel('Percentage of Completed Requests (%)', fontsize=12)
@@ -399,49 +402,6 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
     ax1.grid(True, alpha=0.3)
     ax1.legend()
     ax1.set_ylim(0, 100)
-
-    # Percentile Table
-    ax2.axis('off')
-    if percentile_results:
-        table_data = []
-        headers = ['Method', 'P50', 'P90', 'P99', 'P99.9']
-
-        for method_name, percentiles in percentile_results.items():
-            row = [
-                method_name,
-                f"{percentiles.get('P50', 0):.1f}",
-                f"{percentiles.get('P90', 0):.1f}",
-                f"{percentiles.get('P99', 0):.1f}",
-                f"{percentiles.get('P99.9', 0):.1f}"
-            ]
-            table_data.append(row)
-
-        table = ax2.table(cellText=table_data, colLabels=headers, loc='center')
-        table.auto_set_font_size(False)
-        table.set_fontsize(10)
-        table.scale(1, 2)
-        ax2.set_title('Percentiles (ms)', fontsize=12, fontweight='bold')
-
-    # P50-P90 Zoom
-    for i, analysis in enumerate(analyses):
-        all_times = analysis['all_times']
-        if not all_times:
-            continue
-
-        sorted_data = np.sort(all_times)
-        cdf = np.arange(1, len(sorted_data) + 1) / len(sorted_data)
-
-        # Filter data for P50-P90 range
-        mask = (cdf >= 0.5) & (cdf <= 0.9)
-        if np.any(mask):
-            ax3.plot(sorted_data[mask], cdf[mask] * 100,
-                     color=colors[i], linewidth=2, label=analysis['method'])
-
-    ax3.set_xlabel('Latency (ms)')
-    ax3.set_ylabel('Percentage (%)')
-    ax3.set_title('P50 - P90 Range', fontsize=12)
-    ax3.grid(True, alpha=0.3)
-    ax3.legend(fontsize=8)
 
     # P90-P99.9 Zoom
     for i, analysis in enumerate(analyses):
@@ -455,17 +415,40 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
         # Filter data for P90-P99.9 range
         mask = (cdf >= 0.9) & (cdf <= 0.999)
         if np.any(mask):
-            ax4.plot(sorted_data[mask], cdf[mask] * 100,
-                     color=colors[i], linewidth=2, label=analysis['method'])
+            x_data = sorted_data[mask]
+            y_data = cdf[mask] * 100
 
-    ax4.set_xlabel('Latency (ms)')
-    ax4.set_ylabel('Percentage (%)')
-    ax4.set_title('P90 - P99.9 Range (Tail Latency)', fontsize=12)
-    ax4.grid(True, alpha=0.3)
-    ax4.legend(fontsize=8)
+            # Plot original data
+            ax2.plot(x_data, y_data, color=colors[i], linewidth=2,
+                     label=analysis['method'], alpha=0.7)
+
+            # Add fitted line (linear regression)
+            if len(x_data) > 1:
+                # Perform linear regression
+                slope, intercept, r_value, p_value, std_err = stats.linregress(x_data, y_data)
+
+                # Create fitted line
+                x_fit = np.linspace(x_data.min(), x_data.max(), 100)
+                y_fit = slope * x_fit + intercept
+
+                # Plot fitted line
+                ax2.plot(x_fit, y_fit, color=colors[i], linestyle='--',
+                         linewidth=1.5, alpha=0.8,
+                         label=f"{analysis['method']} fit (k={slope:.4f})")
+
+                # Add slope information as text
+                ax2.text(0.05, 0.95 - i*0.1, f"{analysis['method']}: k={slope:.4f}",
+                         transform=ax2.transAxes, fontsize=9, color=colors[i],
+                         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
+
+    ax2.set_xlabel('Latency (ms)')
+    ax2.set_ylabel('Percentage (%)')
+    ax2.set_title('P90 - P99.9 Range (Tail Latency) with Fitted Lines', fontsize=12)
+    ax2.grid(True, alpha=0.3)
+    # ax2.legend(fontsize=8)
 
     # Statistical Summary
-    ax5.axis('off')
+    ax3.axis('off')
     if percentile_results:
         stats_text = "STATISTICAL SUMMARY\n"
         stats_text += "=" * 20 + "\n\n"
@@ -476,13 +459,12 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
             stats_text += f"P90:  {percentiles.get('P90', 0):.1f}ms\n"
             stats_text += f"P99:  {percentiles.get('P99', 0):.1f}ms\n"
             stats_text += f"P99.9: {percentiles.get('P99.9', 0):.1f}ms\n"
-            stats_text += f"P99/P50: {percentiles.get('P99', 0)/percentiles.get('P50', 1):.2f}x\n"
             stats_text += "\n"
 
-        ax5.text(0.1, 0.95, stats_text, transform=ax5.transAxes, fontsize=10,
+        ax3.text(0.1, 0.95, stats_text, transform=ax3.transAxes, fontsize=10,
                  verticalalignment='top', fontfamily='monospace',
                  bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray"))
-        ax5.set_title('Statistical Summary', fontsize=12, fontweight='bold')
+        ax3.set_title('Statistical Summary', fontsize=12, fontweight='bold')
 
     plt.tight_layout()
     plt.savefig(output_filename, dpi=300, bbox_inches='tight')
@@ -491,45 +473,23 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
     return percentile_results
 
 
-def print_percentile_analysis(percentile_results):
-    """Print detailed percentile analysis"""
-    print("\n" + "="*80)
-    print("LATENCY PERCENTILE ANALYSIS")
-    print("="*80)
-
-    for method_name, percentiles in percentile_results.items():
-        print(f"\n{method_name}:")
-        print("-" * 40)
-        print(f"P50   (Median):    {percentiles.get('P50', 0):8.1f} ms")
-        print(f"P90   (90th %ile): {percentiles.get('P90', 0):8.1f} ms")
-        print(f"P99   (99th %ile): {percentiles.get('P99', 0):8.1f} ms")
-        print(f"P99.9 (99.9th %ile): {percentiles.get('P99.9', 0):8.1f} ms")
-
-        # Calculate ratios
-        p50 = percentiles.get('P50', 1)
-        p99_p50_ratio = percentiles.get('P99', 0) / p50 if p50 > 0 else 0
-        p999_p50_ratio = percentiles.get('P99.9', 0) / p50 if p50 > 0 else 0
-
-        print(f"P99/P50 Ratio:     {p99_p50_ratio:8.2f}x")
-        print(f"P99.9/P50 Ratio:   {p999_p50_ratio:8.2f}x")
-
-
 # Usage example
 if __name__ == "__main__":
+
+    idx = '1'
+
+    path1 = 'server/ginx_benchmark_results_' + idx + '.json'
+    path2 = 'server/lazy_benchmark_results_' + idx + '.json'
     json_files = [
-        "server/ginx_benchmark_results.json",
-        "server/lazy_benchmark_results.json"
+        path1,
+        path2
     ]
 
-    # First get your analyses data (using your existing function)
-    analyses = plot_corrected_benchmark_analysis(json_files, "high_low_analysis.png")
+    analyses = plot_corrected_benchmark_analysis(json_files, 'high_low_analysis_' + idx + '.png')
 
     if analyses:
         # Plot CDF with percentiles
-        percentile_results = plot_cdf_with_percentiles(analyses, "cdf_analysis.png")
+        percentile_results = plot_cdf_with_percentiles(analyses, 'cdf_analysis_' + idx + '.png')
 
         # Plot detailed CDF analysis
-        detailed_results = plot_detailed_cdf_analysis(analyses, "detailed_cdf_analysis.png")
-
-        # Print analysis
-        print_percentile_analysis(percentile_results)
+        detailed_results = plot_detailed_cdf_analysis(analyses, 'detailed_cdf_analysis_' + idx + '.png')

@@ -96,7 +96,8 @@ private:
     }
 };
 
-void benchStat(const std::vector<long>& iteration_times_us, const long request, const double hitRate, const string& benchName, const string& saveFileName) {
+void benchStat(const std::vector<long>& iteration_times_us, const long request, const double hitRate, const string& benchName,
+               const int cacheCap, const string& saveFileName) {
 
     // Calculate statistics
     double sum = 0.0;
@@ -114,6 +115,7 @@ void benchStat(const std::vector<long>& iteration_times_us, const long request, 
     // Create JSON structure
     nlohmann::json results;
     results["benchmark_name"] = benchName;
+    results["pressure_ratio"] = 50 / cacheCap;
     results["total_iterations"] = iteration_times_us.size();
     results["time_unit"] = "microseconds";
 
@@ -145,7 +147,8 @@ void benchStat(const std::vector<long>& iteration_times_us, const long request, 
     std::cout << "Average time: " << average_time << " μs" << std::endl;
 }
 
-void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern) {
+void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
+               const int cacheCap, const int sizeRatio) {
     // client side
     // key gen
     TlweKey tlweKey{param.n, param.lweStdDev};
@@ -167,8 +170,17 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
     symEncTlwe(input, mu, tlweKey);
 
 
+    // server
+    // warm up
+    cout << "warm up" << endl;
+    for (auto i = 0; i < cacheCap * sizeRatio; i++) {
+        cache.getLazyKey(accessPattern[i]);
+    }
+
+    cout << "normal run" << endl;
+    // normal run
     std::vector<long> iterationTimesUs;
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = cacheCap * sizeRatio; i < 100 + cacheCap * sizeRatio; i++) {
         clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateLazyKeyFilename(id);
@@ -200,11 +212,12 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.lazyRequest << std::endl;
     std::cout << "Hit rate: " << stats.lazyHitRate() * 100 << "%" << std::endl;
-    benchStat(iterationTimesUs, stats.lazyRequest, stats.lazyHitRate(),
-              "Benchmark/LAZY", "lazy_benchmark_results.json");
+    string file = "lazy_benchmark_results_" + to_string(cacheCap) + ".json";
+    benchStat(iterationTimesUs, iterationTimesUs.size(), stats.lazyHitRate(),
+              "Benchmark/LAZY",  cacheCap, file);
 }
 
-void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern) {
+void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern, const int cacheCap) {
     // client side
     // key gen
     TlweKey tlweKey{param.n, param.lweStdDev};
@@ -225,9 +238,18 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     Tlwe input{param.n};
     symEncTlwe(input, mu, tlweKey);
 
+
     // server side
+    // warm up
+    cout << "warm up" << endl;
+    for (auto i = 0; i < cacheCap; i++) {
+        cache.getGinxKey(accessPattern[i]);
+    }
+
+    cout << "normal run" << endl;
+    // normal run
     std::vector<long> iterationTimesUs;
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = cacheCap; i < 100 + cacheCap; i++) {
         clearFileCache();
         auto start = steady_clock::now();
 
@@ -249,8 +271,9 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.ginxRequest << std::endl;
     std::cout << "Hit rate: " << stats.ginxHitRate() * 100 << "%" << std::endl;
-    benchStat(iterationTimesUs, stats.ginxRequest, stats.ginxHitRate(),
-              "Benchmark/GINX", "ginx_benchmark_results.json");
+    string file = "ginx_benchmark_results_" + to_string(cacheCap) + ".json";
+    benchStat(iterationTimesUs, iterationTimesUs.size(), stats.ginxHitRate(),
+              "Benchmark/GINX", cacheCap, file);
 }
 
 int main(int argc, char **argv) {
@@ -270,7 +293,7 @@ int main(int argc, char **argv) {
         cacheCapacity = 5;
     }
     if (zipfParam <= 0) {
-        std::cerr << "Error: Zipf s should be larger than 0，using default 0.8" << std::endl;
+        std::cerr << "Error: Zipf parameter should be larger than 0，using default 0.83" << std::endl;
         zipfParam = 0.83;
     }
     if (patternSize <= 0) {
@@ -285,14 +308,18 @@ int main(int argc, char **argv) {
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
+    int sizeRatio = 67156489/16919095; // ginx key size / lazy key size
+
+    printMsg(sizeRatio, "Key size ratio (GINX/LAZY)");
+
     // init cache
-    SimpleCacheManager cache(param.n, cacheCapacity);
+    SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * sizeRatio);
     CacheWorkloadGenerator workload(zipfParam);
     auto accessPattern = workload.generateAccessPattern(patternSize);
     printArray(accessPattern, "access pattern");
 
-    benchGinx(param, cache, accessPattern);
-    benchLazy(param, cache, accessPattern);
+    benchGinx(param, cache, accessPattern, cacheCapacity);
+    benchLazy(param, cache, accessPattern, cacheCapacity, sizeRatio);
 
     return 0;
 }
