@@ -63,6 +63,7 @@ public:
         std::cout << "Options:" << std::endl;
         std::cout << "  --cap=N      Cache capacity (Default: 5)" << std::endl;
         std::cout << "  --s=N        Zipf s (Default: 0.8)" << std::endl;
+        std::cout << "  --m=N        Size ratio of two keys (Default: 4)" << std::endl;
         std::cout << "  --pat=N      Request size (Default: 1000)" << std::endl;
         std::cout << "  --help       Show helps." << std::endl;
         std::cout << std::endl;
@@ -115,7 +116,7 @@ void benchStat(const std::vector<long>& iteration_times_us, const long request, 
     // Create JSON structure
     nlohmann::json results;
     results["benchmark_name"] = benchName;
-    results["pressure_ratio"] = 50 / cacheCap;
+    results["pressure_ratio"] = 50.0 / cacheCap;
     results["total_iterations"] = iteration_times_us.size();
     results["time_unit"] = "microseconds";
 
@@ -148,7 +149,7 @@ void benchStat(const std::vector<long>& iteration_times_us, const long request, 
 }
 
 void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
-               const int cacheCap, const int sizeRatio) {
+               const int cacheCap) {
     // client side
     // key gen
     TlweKey tlweKey{param.n, param.lweStdDev};
@@ -173,14 +174,16 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
     // server
     // warm up
     cout << "warm up" << endl;
-    for (auto i = 0; i < cacheCap * sizeRatio; i++) {
+    for (auto i = 0; i < accessPattern.size()/2; i++) {
         cache.getLazyKey(accessPattern[i]);
     }
+    steady_clock::now();
+    cache.resetStats();
 
     cout << "normal run" << endl;
     // normal run
     std::vector<long> iterationTimesUs;
-    for (auto i = cacheCap * sizeRatio; i < 100 + cacheCap * sizeRatio; i++) {
+    for (auto i = accessPattern.size()/2; i < 100 + accessPattern.size()/2; i++) {
         clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateLazyKeyFilename(id);
@@ -242,14 +245,15 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     // server side
     // warm up
     cout << "warm up" << endl;
-    for (auto i = 0; i < cacheCap; i++) {
+    for (auto i = 0; i < accessPattern.size()/2; i++) {
         cache.getGinxKey(accessPattern[i]);
     }
+    cache.resetStats();
 
     cout << "normal run" << endl;
     // normal run
     std::vector<long> iterationTimesUs;
-    for (auto i = cacheCap; i < 100 + cacheCap; i++) {
+    for (auto i = accessPattern.size()/2; i < 100 + accessPattern.size()/2; i++) {
         clearFileCache();
         auto start = steady_clock::now();
 
@@ -277,6 +281,8 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
 }
 
 int main(int argc, char **argv) {
+    int sizeRatio = round(67156489.0/16919095.0); // ginx key size / lazy key size
+
     CommandLineParser parser(argc, argv);
 
     if (parser.hasFlag("help")) {
@@ -286,7 +292,8 @@ int main(int argc, char **argv) {
 
     int cacheCapacity = parser.getInt("cap", 5);
     double zipfParam = parser.getDouble("s", 0.83);
-    int patternSize = parser.getInt("pat", 1000);
+    int multiplier = parser.getInt("m", sizeRatio);
+    int patternSize = parser.getInt("pat", 2000);
 
     if (cacheCapacity <= 0) {
         std::cerr << "Error: Cache capacity should be larger than 0，using default 5" << std::endl;
@@ -296,8 +303,12 @@ int main(int argc, char **argv) {
         std::cerr << "Error: Zipf parameter should be larger than 0，using default 0.83" << std::endl;
         zipfParam = 0.83;
     }
+    if (multiplier <= 0) {
+        std::cerr << "Error: m should be no less than 1，using default 4" << std::endl;
+        multiplier = sizeRatio;
+    }
     if (patternSize <= 0) {
-        std::cerr << "Error: Request pattern size should be larger than 0，using default 1000" << std::endl;
+        std::cerr << "Error: Request pattern size should be larger than 0，using default 2000" << std::endl;
         patternSize = 1000;
     }
 
@@ -308,18 +319,16 @@ int main(int argc, char **argv) {
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
-    int sizeRatio = 67156489/16919095; // ginx key size / lazy key size
-
     printMsg(sizeRatio, "Key size ratio (GINX/LAZY)");
 
     // init cache
-    SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * sizeRatio);
+    SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
     CacheWorkloadGenerator workload(zipfParam);
     auto accessPattern = workload.generateAccessPattern(patternSize);
     printArray(accessPattern, "access pattern");
 
     benchGinx(param, cache, accessPattern, cacheCapacity);
-    benchLazy(param, cache, accessPattern, cacheCapacity, sizeRatio);
+    benchLazy(param, cache, accessPattern, cacheCapacity);
 
     return 0;
 }

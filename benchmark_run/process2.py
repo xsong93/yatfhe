@@ -108,7 +108,7 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
                     linestyle=':', alpha=0.9, linewidth=2,
                     label=f"{analysis['method']} Low Avg: {analysis['low_avg']:.1f}ms")
 
-    ax1.set_title('Execution Time with High/Low Value Analysis', fontsize=14, fontweight='bold')
+    ax1.set_title('Execution Time Across 100 Requests', fontsize=14, fontweight='bold')
     ax1.set_xlabel('Iteration Number')
     ax1.set_ylabel('Execution Time (milliseconds)')
     ax1.grid(True, alpha=0.3)
@@ -145,14 +145,19 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
     statistics_info = []
 
     for i, analysis in enumerate(analyses):
-        if analysis['high_values']:
-            boxplot_data.append(analysis['high_values'])
-            boxplot_labels.append(f"{analysis['method']}\nHigh\n(n={analysis['high_count']})")
-            box_colors.append('lightblue')
+        # if analysis['high_values']:
+        #     boxplot_data.append(analysis['high_values'])
+        #     boxplot_labels.append(f"{analysis['method']}\nHigh\n(n={analysis['high_count']})")
+        #     box_colors.append('lightblue')
+        #
+        # if analysis['low_values']:
+        #     boxplot_data.append(analysis['low_values'])
+        #     boxplot_labels.append(f"{analysis['method']}\nLow\n(n={analysis['low_count']})")
+        #     box_colors.append('lightcoral')
 
-        if analysis['low_values']:
-            boxplot_data.append(analysis['low_values'])
-            boxplot_labels.append(f"{analysis['method']}\nLow\n(n={analysis['low_count']})")
+        if analysis['all_times']:
+            boxplot_data.append(analysis['all_times'])
+            boxplot_labels.append(f"{analysis['method']}\n(n={len(analysis['all_times'])})")
             box_colors.append('lightcoral')
 
         # Calculate detailed statistics for the entire dataset (all_times)
@@ -171,14 +176,14 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
         })
 
     if boxplot_data:
-        box_plot = ax2.boxplot(boxplot_data, labels=boxplot_labels, patch_artist=True)
+        box_plot = ax2.boxplot(boxplot_data, tick_labels=boxplot_labels, patch_artist=True)
 
         # Set box plot colors
         for patch, color in zip(box_plot['boxes'], box_colors):
             patch.set_facecolor(color)
             patch.set_alpha(0.7)
 
-        ax2.set_title('High/Low Value Distribution Comparison with Statistics', fontsize=14, fontweight='bold')
+        ax2.set_title('Distribution Comparison', fontsize=14, fontweight='bold')
         ax2.set_ylabel('Execution Time (milliseconds)')
         ax2.grid(True, alpha=0.3)
 
@@ -355,9 +360,10 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
     fig = plt.figure(figsize=(18, 12))
 
     # Create subplots
-    ax1 = plt.subplot2grid((2, 4), (0, 0), colspan=4)  # Main CDF
-    ax2 = plt.subplot2grid((2, 4), (1, 0), colspan=3)   # P90-P99.9 zoom
-    ax3 = plt.subplot2grid((2, 4), (1, 3))              # Statistical summary
+    ax1 = plt.subplot2grid((2, 4), (0, 0), colspan=3)  # Main CDF
+    ax2 = plt.subplot2grid((2, 4), (1, 2), colspan=2)   # P90-P99.9 zoom
+    ax3 = plt.subplot2grid((2, 4), (0, 3))              # Statistical summary
+    ax4 = plt.subplot2grid((2, 4), (1, 0), colspan=2)   # P50-P90 zoom
 
 
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
@@ -402,6 +408,30 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
     ax1.grid(True, alpha=0.3)
     ax1.legend()
     ax1.set_ylim(0, 100)
+
+    # -P90 Zoom
+    for i, analysis in enumerate(analyses):
+        all_times = analysis['all_times']
+        if not all_times:
+            continue
+
+        sorted_data = np.sort(all_times)
+        cdf = np.arange(1, len(sorted_data) + 1) / len(sorted_data)
+
+        # Filter data for P50-90 range
+        mask = cdf <= 0.9
+        if np.any(mask):
+            x_data = sorted_data[mask]
+            y_data = cdf[mask] * 100
+
+            # Plot original data
+            ax4.plot(x_data, y_data, color=colors[i], linewidth=2,
+                     label=analysis['method'], alpha=0.7)
+
+    ax4.set_xlabel('Latency (ms)')
+    ax4.set_ylabel('Percentage (%)')
+    ax4.set_title('P0 - P90 Range', fontsize=12)
+    ax4.grid(True, alpha=0.3)
 
     # P90-P99.9 Zoom
     for i, analysis in enumerate(analyses):
@@ -476,7 +506,7 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
 # Usage example
 if __name__ == "__main__":
 
-    idx = '1'
+    idx = '5'
 
     path1 = 'server/ginx_benchmark_results_' + idx + '.json'
     path2 = 'server/lazy_benchmark_results_' + idx + '.json'

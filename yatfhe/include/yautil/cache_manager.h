@@ -166,6 +166,14 @@ public:
         return lazyCache.get_keys();
     }
 
+
+    void resetStats() {
+        ginxHits = 0;
+        ginxRequest = 0;
+        lazyHits = 0;
+        lazyRequest = 0;
+    }
+
     void clearAll() {
         ginxCache.clear();
         lazyCache.clear();
