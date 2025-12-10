@@ -850,7 +850,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
 void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, const vector<vector<TrgswMP>>& bskPrime,
                                const TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
                                const YatfheParameters& param) {
-    const auto level = bskPrime[0][0].l;
+    const auto level = param.lApprox;
     const auto n = param.n;
     TrgswMPDft expanded0{param, level};
     TrgswMPDft expanded1{param, level};
@@ -860,7 +860,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, cons
     vector b1(level, TorusPolynomial{param.N});
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(2);
+    futures.reserve(1 + level);
 
 #ifdef TERNARY
 #else
@@ -936,15 +936,16 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, cons
 
         // scheme switching
         if (i < n - 2) {
-            futures.emplace_back(pool.enqueue([&nextExpanded, &currDecompA, &currB, &param, level, &s2] {
-                for (auto l = 0; l < level; l++) {
+            for (auto l = 0; l < level; l++) {
+                futures.emplace_back(pool.enqueue([&nextExpanded, &currDecompA, &currB, &param, l, &s2] {
                     clearTrlwe(nextExpanded.cPrime[l]);
-                    for (auto& item : nextExpanded.c[l]) {
+                    for (auto &item: nextExpanded.c[l]) {
                         clearTrlwe(item);
                     }
-                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currDecompA[l], currB[l], s2, param);
-                }
-            }));
+                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currDecompA[l],
+                                                       currB[l], s2, param);
+                }));
+            }
         }
 
         // accumulation
@@ -973,7 +974,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
     vector b1(level, TorusPolynomial{param.N});
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(2);
+    futures.reserve(1 + level);
     std::ifstream inFile(fileName, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
@@ -1066,15 +1067,16 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
 
         // scheme switching
         if (i < n - 2) {
-            futures.emplace_back(pool.enqueue([&nextExpanded, &currDecompA, &currB, &param, level, &s2] {
-                for (auto l = 0; l < level; l++) {
+            for (auto l = 0; l < level; l++) {
+                futures.emplace_back(pool.enqueue([&nextExpanded, &currDecompA, &currB, &param, l, &s2] {
                     clearTrlwe(nextExpanded.cPrime[l]);
-                    for (auto& item : nextExpanded.c[l]) {
+                    for (auto &item: nextExpanded.c[l]) {
                         clearTrlwe(item);
                     }
-                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currDecompA[l], currB[l], s2, param);
-                }
-            }));
+                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currDecompA[l],
+                                                       currB[l], s2, param);
+                }));
+            }
         }
 
         // accumulation

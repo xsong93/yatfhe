@@ -66,6 +66,7 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
 
     # Analyze each dataset
     analyses = []
+    pressure_ratio = 0
     for file_path in existing_files:
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -77,6 +78,8 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
             # Use fixed version analysis
             analysis = analyze_high_low_values_fixed(data, method_name)
             analyses.append(analysis)
+
+            pressure_ratio = data['pressure_ratio']
 
         except Exception as e:
             print(f"Error processing {file_path}: {e}")
@@ -108,7 +111,7 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
                     linestyle=':', alpha=0.9, linewidth=2,
                     label=f"{analysis['method']} Low Avg: {analysis['low_avg']:.1f}ms")
 
-    ax1.set_title('Execution Time Across 100 Requests', fontsize=14, fontweight='bold')
+    ax1.set_title(f'Execution Time Across 100 Requests with Pressure Ratio: {pressure_ratio}', fontsize=14, fontweight='bold')
     ax1.set_xlabel('Iteration Number')
     ax1.set_ylabel('Execution Time (milliseconds)')
     ax1.grid(True, alpha=0.3)
@@ -117,7 +120,8 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
     legend_handles, legend_labels = ax1.get_legend_handles_labels()
 
     # Add additional information below the legend
-    additional_info = ""
+    additional_info = "CACHE STATS\n"
+    additional_info += "=" * 20 + "\n"
     for i, analysis in enumerate(analyses):
         # Get total_requests and hit_rate from your analysis data
         total_requests = analysis.get('total_requests', len(analysis['all_times']))
@@ -193,7 +197,7 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
             sorted_stats = sorted(statistics_info, key=lambda x: x['overall_std'], reverse=True)
 
             stats_text = "DATASET COMPARISON\n"
-            stats_text += "=" * 30 + "\n\n"
+            stats_text += "=" * 25 + "\n\n"
 
             for i, stats in enumerate(sorted_stats):
                 stats_text += f"{stats['method']}:\n"
@@ -506,7 +510,7 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
 # Usage example
 if __name__ == "__main__":
 
-    idx = '5'
+    idx = '1'
 
     path1 = 'server/ginx_benchmark_results_' + idx + '.json'
     path2 = 'server/lazy_benchmark_results_' + idx + '.json'

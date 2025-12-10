@@ -615,9 +615,21 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
     DecomposedTrlweDft decomposedTrlweDft{param, level};
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(level);
     for (auto i = 0; i < level; i++) {
-        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+        futures.emplace_back(pool.enqueue([&decomposedTrlweDft, &decomposedTrlwe, i] {
+            applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+        }));
     }
+    for (auto& f : futures) {
+        f.get();
+    }
+//
+//    for (auto i = 0; i < level; i++) {
+//        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+//    }
 
     TrlweDft resA{k, N};
     TrlweDft resB{k, N};
@@ -650,9 +662,22 @@ void externalProductTrgswMPNttInPlace(Trlwe& acc, const TrgswMPDft& trgswMPInput
     DecomposedTrlweDft decomposedTrlweDft{param, level};
     gadgetDecomposeTrlwe(decomposedTrlwe, acc, param);
 
+    // ntt
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(level);
     for (auto i = 0; i < level; i++) {
-        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+        futures.emplace_back(pool.enqueue([&decomposedTrlweDft, &decomposedTrlwe, i] {
+            applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+        }));
     }
+    for (auto& f : futures) {
+        f.get();
+    }
+//
+//    for (auto i = 0; i < level; i++) {
+//        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+//    }
 
     TrlweDft resA{k, N};
     TrlweDft resB{k, N};
@@ -1004,6 +1029,24 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
 //        }
 //    }
 
+    // ntt
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(L);
+    vector nttAs(L, vector(K, NttPolynomial{N}));
+    for (auto l = 0; l < L; l++) {
+        auto& decompL = decompA[l];
+        for (auto k = 0; k < K; k++) {
+            auto& a = decompL[k];
+            futures.emplace_back(pool.enqueue([&a, &nttAs, l, k] {
+                applyNtt(nttAs[l][k], a);
+            }));
+        }
+    }
+    for (auto& f : futures) {
+        f.get();
+    }
+
     // calculate a * S^2
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
@@ -1013,13 +1056,13 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
             auto& cB = cDft[k1].b;
             auto& sA = s2.a;
             auto& a = decompL[k1];
-            NttPolynomial aDft{N};
-            applyNtt(aDft, a);
-            calModularInnerProductNtt(cPrimeDft.a[k1], aDft, getNttGadgetRecomper(l)); // calculate recomposed cPrimes'a in ntt domain
+//            NttPolynomial aDft{N};
+//            applyNtt(aDft, a);
+            calModularInnerProductNtt(cPrimeDft.a[k1], nttAs[l][k1], getNttGadgetRecomper(l)); // calculate recomposed cPrimes'a in ntt domain
             for (auto k2 = 0; k2 < K; k2++) {
-                calModularInnerProductNtt(cA[k2], aDft, sA[k2]);
+                calModularInnerProductNtt(cA[k2], nttAs[l][k1], sA[k2]);
             }
-            calModularInnerProductNtt(cB, aDft, s2.b);
+            calModularInnerProductNtt(cB, nttAs[l][k1], s2.b);
         }
     }
 
