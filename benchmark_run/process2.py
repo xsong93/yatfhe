@@ -190,19 +190,19 @@ def plot_corrected_benchmark_analysis(json_file_paths, output_filename="benchmar
         additional_info += "COMPARISON SUMMARY:\n"
         additional_info += f"Highest Std: {highest_std['method']} ({highest_std['overall_std']:.1f}ms)\n"
         additional_info += f"Lowest Std:  {lowest_std['method']} ({lowest_std['overall_std']:.1f}ms)\n"
-        additional_info += f"Std Ratio:   {std_ratio:.2f}x difference\n"
+        additional_info += f"Std Ratio:   {std_ratio:.2f}x\n"
 
     # Create a text box below the legend
-    ax2.text(0.0, 1.0, additional_info, transform=ax2.transAxes, fontsize=9,
+    ax2.text(-0.2, 1.0, additional_info, transform=ax2.transAxes, fontsize=14,
              verticalalignment='top', horizontalalignment='left',
-             bbox=dict(boxstyle="round,pad=0.8", facecolor="lightyellow", alpha=0.9,
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.9,
                        edgecolor='black', linewidth=1),
              fontfamily='monospace', linespacing=1.2)
 
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.3, hspace=0.3)  # Adjust right margin to make space for statistics
     plt.savefig(output_filename, dpi=300, bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
     return analyses
 
@@ -333,7 +333,7 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
         })
 
     if boxplot_data:
-        box_plot = ax2.boxplot(boxplot_data, tick_labels=boxplot_labels, patch_artist=True)
+        box_plot = ax2.boxplot(boxplot_data, labels=boxplot_labels, patch_artist=True)
 
         # Set box plot colors
         for patch, color in zip(box_plot['boxes'], box_colors):
@@ -371,7 +371,7 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
                           colWidths=[0.2, 0.2, 0.2, 0.2, 0.2, 0.2])
 
         table.auto_set_font_size(False)
-        table.set_fontsize(11)
+        table.set_fontsize(14)
         table.scale(1, 2)
 
         # Style table
@@ -386,7 +386,7 @@ def plot_detailed_cdf_analysis(analyses, output_filename="detailed_cdf_analysis.
 
     plt.tight_layout()
     plt.savefig(output_filename, dpi=300, bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
     return percentile_results
 
@@ -406,10 +406,10 @@ if __name__ == "__main__":
         path2
     ]
 
-    analyses = plot_corrected_benchmark_analysis(json_files, 'high_low_analysis_' + idx + '.png')
+    analyses = plot_corrected_benchmark_analysis(json_files, 'fig_high_low_analysis_' + idx + '.png')
 
     if analyses:
         percentile_results = cal_percentiles(analyses)
 
         # Plot detailed CDF analysis
-        detailed_results = plot_detailed_cdf_analysis(analyses, 'detailed_cdf_analysis_' + idx + '.png')
+        detailed_results = plot_detailed_cdf_analysis(analyses, 'fig_detailed_cdf_analysis_' + idx + '.png')

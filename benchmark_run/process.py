@@ -22,7 +22,7 @@ def analyze_data(data, method_name):
     }
 
 
-def plot_analysis(json_file_paths, output_filename="avg_analysis.png"):
+def plot_analysis(json_file_paths, output_filename="fig_avg_analysis.png"):
     """Plot benchmark analysis chart"""
 
     # Check if files exist
@@ -167,7 +167,7 @@ def plot_analysis(json_file_paths, output_filename="avg_analysis.png"):
         stats_text += f"Slope Ratio: {slope_ratio:.2f}x\n"
 
     # Add the statistics text to the right panel
-    ax2.text(0.0, 0.98, stats_text, transform=ax2.transAxes, fontsize=9,
+    ax2.text(0.0, 0.98, stats_text, transform=ax2.transAxes, fontsize=14,
              verticalalignment='top', horizontalalignment='left',
              bbox=dict(boxstyle="round,pad=0.5", facecolor="lightyellow", alpha=0.9,
                        edgecolor='black', linewidth=1),
