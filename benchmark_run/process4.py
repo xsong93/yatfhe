@@ -206,7 +206,7 @@ def plot_combined_analysis(json_file_paths, output_filename="combined_analysis.p
             box_colors.append('lightcoral')
 
     if boxplot_data:
-        box_plot = ax3.boxplot(boxplot_data, labels=boxplot_labels, patch_artist=True)
+        box_plot = ax3.boxplot(boxplot_data, tick_labels=boxplot_labels, patch_artist=True)
 
         # Set box plot colors
         for patch, color in zip(box_plot['boxes'], box_colors):
@@ -283,7 +283,7 @@ def plot_combined_analysis(json_file_paths, output_filename="combined_analysis.p
 
         row = [
             method,
-            f"{stats['hit_rate']:.3f}",
+            f"{stats['hit_rate']:.1f}",
             f"{stats['overall_avg']:.1f}",
             f"{stats['overall_std']:.1f}",
             f"{stats['high_avg']:.1f}",
@@ -292,7 +292,7 @@ def plot_combined_analysis(json_file_paths, output_filename="combined_analysis.p
             f"{percentiles.get('P90', 0):.1f}",
             f"{percentiles.get('P99', 0):.1f}",
             f"{p999:.1f}",
-            f"{p999_p50_ratio:.2f}"
+            f"{p999_p50_ratio:.1f}"
         ]
         table_data.append(row)
 
@@ -320,14 +320,14 @@ def plot_combined_analysis(json_file_paths, output_filename="combined_analysis.p
             cell.set_text_props(color='black', fontsize=9)
 
     # Highlight important columns
-    highlight_cols = ['Avg (ms)', 'Std (ms)', 'CV (%)', 'P99.9/P50']
+    highlight_cols = ['Avg (ms)', 'Std (ms)', 'P99.9/P50']
     col_indices = [headers.index(col) for col in highlight_cols if col in headers]
 
     for i in range(len(table_data)):
         for col_idx in col_indices:
             cell = table[(i+1, col_idx)]
-            if headers[col_idx] in ['CV (%)', 'P99.9/P50']:
-                cell.set_text_props(weight='bold', color='#d62728', fontsize=9)
+            if headers[col_idx] in ['P99.9/P50']:
+                cell.set_text_props(weight='bold', fontsize=9)
             else:
                 cell.set_text_props(weight='bold', fontsize=9)
 
