@@ -38,7 +38,7 @@ BENCHMARK_DEFINE_F(KeyGenBenchmark, GINX)(benchmark::State& state) {
         genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
         state.PauseTiming();
         string file;
-        file.append("./keys/GINX/BSK_GINX_")
+        file.append("BSK_GINX_")
             .append(to_string(state.iterations()))
             .append(".bin");
         serializeBskMP(bskMP, file);
@@ -53,7 +53,7 @@ BENCHMARK_DEFINE_F(KeyGenBenchmark, LAZY_PIPE)(benchmark::State& state) {
         genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);
         state.PauseTiming();
         string file;
-        file.append("./keys/LAZY/BSK_PIPE_")
+        file.append("BSK_LAZY_")
             .append(to_string(state.iterations()))
             .append(".bin");
         serializeBskLazyPipeAlt(bskMPLazyPipeAlt, file);

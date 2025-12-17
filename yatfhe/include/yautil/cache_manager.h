@@ -36,7 +36,7 @@ public:
     }
 
     static std::string generateLazyKeyFilename(const int id) {
-        return "BSK_PIPE_" + std::to_string(id) + ".bin";
+        return "BSK_LAZY_" + std::to_string(id) + ".bin";
     }
 };
 

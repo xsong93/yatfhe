@@ -97,10 +97,10 @@ def plot_analysis(json_file_paths, output_filename="fig_avg_analysis.png"):
                          fontsize=6,
                          color=colors[i % len(colors)])
 
-    ax.set_title('Average Execution Time under Different Pressure Ratio',
-                  fontsize=8, fontweight='bold', pad=20)
-    ax.set_xlabel('Pressure Ratio', fontsize=8)
-    ax.set_ylabel('Average Execution Time (milliseconds)', fontsize=8)
+    # ax.set_title('Average Execution Time under Different Pressure Ratio',
+    #               fontsize=8, fontweight='bold', pad=20)
+    ax.set_xlabel('Pressure Ratio', fontsize=12)
+    ax.set_ylabel('Average Execution Time (milliseconds)', fontsize=12)
     ax.grid(True, alpha=0.3, linestyle='--')
 
     # Set x-axis ticks
