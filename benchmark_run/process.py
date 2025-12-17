@@ -73,105 +73,49 @@ def plot_analysis(json_file_paths, output_filename="fig_avg_analysis.png"):
         data_by_method[method]['pressure_ratios'] = [pressure_ratios[i] for i in sorted_indices]
         data_by_method[method]['averages'] = [averages[i] for i in sorted_indices]
 
-    # Create figure with two subplots: left for main plot, right for statistics
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8), gridspec_kw={'width_ratios': [3, 1]})
+    fig, ax = plt.subplots(figsize=(6, 4))
 
     colors = ['#1f77b4', '#ff7f0e']  # Blue and orange
 
-    # Main plot (left)
     for i, (method, data) in enumerate(data_by_method.items()):
         pressure_ratios = data['pressure_ratios']
         averages = data['averages']
 
         # Plot all points with connecting lines
-        ax1.plot(pressure_ratios, averages,
-                 marker='o', linestyle='-', linewidth=2, markersize=8,
+        ax.plot(pressure_ratios, averages,
+                 marker='o', linestyle='-', linewidth=1, markersize=2,
                  color=colors[i % len(colors)], alpha=0.7,
                  label=method)
 
         # Add value labels on each data point
         for j, (x, y) in enumerate(zip(pressure_ratios, averages)):
-            ax1.annotate(f'{y:.0f}',
+            ax.annotate(f'{y:.0f}',
                          xy=(x, y),
                          xytext=(0, 10),  # Offset 10 points upward
                          textcoords='offset points',
                          ha='center', va='bottom',
-                         fontsize=9,
+                         fontsize=6,
                          color=colors[i % len(colors)])
 
-    ax1.set_title('Average Execution Time under Different Pressure Ratio',
-                  fontsize=16, fontweight='bold', pad=20)
-    ax1.set_xlabel('Pressure Ratio', fontsize=12)
-    ax1.set_ylabel('Average Execution Time (milliseconds)', fontsize=12)
-    ax1.grid(True, alpha=0.3, linestyle='--')
+    ax.set_title('Average Execution Time under Different Pressure Ratio',
+                  fontsize=8, fontweight='bold', pad=20)
+    ax.set_xlabel('Pressure Ratio', fontsize=8)
+    ax.set_ylabel('Average Execution Time (milliseconds)', fontsize=8)
+    ax.grid(True, alpha=0.3, linestyle='--')
 
     # Set x-axis ticks
     unique_pressure_ratios = sorted(set([ratio for data in data_by_method.values()
                                          for ratio in data['pressure_ratios']]))
-    ax1.set_xticks(unique_pressure_ratios)
-    ax1.set_xticklabels([f'{ratio}x' for ratio in unique_pressure_ratios])
+    ax.set_xticks(unique_pressure_ratios)
+    ax.set_xticklabels([f'{ratio}x' for ratio in unique_pressure_ratios],
+                       rotation=60,
+                       ha='center',
+                       va='top')
+
+    ax.tick_params(axis='both', labelsize=6)
 
     # Add legend
-    ax1.legend(loc='best', fontsize=10, frameon=True, fancybox=True, framealpha=0.8)
-
-    # Statistics panel (right)
-    ax2.axis('off')  # Turn off axis for the statistics panel
-
-    # Create statistical information
-    stats_text = "PERFORMANCE TREND ANALYSIS\n"
-    stats_text += "=" * 30 + "\n\n"
-    slopes = []
-
-    for method, data in data_by_method.items():
-        pressure_ratios = data['pressure_ratios']
-        averages = data['averages']
-
-        if len(averages) > 1:
-            # Calculate trend (slope)
-            slope, intercept, r_value, p_value, std_err = stats.linregress(pressure_ratios, averages)
-            slopes.append(slope)
-            trend = "↗ Increasing" if slope > 0 else ("↘ Decreasing" if slope < 0 else "→ Stable")
-
-            stats_text += f"{method}:\n"
-            stats_text += f"  Slope: {slope:.2f}\n"
-            stats_text += f"  Min: {min(averages):.0f} ms\n"
-            stats_text += f"  Max: {max(averages):.0f} ms\n"
-        else:
-            slopes.append(0)  # Default if not enough data
-
-    # Add comparison summary
-    if len(data_by_method) > 1:
-        # Calculate which method has better performance
-        methods = list(data_by_method.keys())
-
-        # Method with smallest slope (best)
-        best_slope_idx = np.argmin(slopes)
-        best_method = methods[best_slope_idx]
-        best_slope = slopes[best_slope_idx]
-
-        # Method with largest slope (worst)
-        worst_slope_idx = np.argmax(slopes)
-        worst_method = methods[worst_slope_idx]
-        worst_slope = slopes[worst_slope_idx]
-
-        # Calculate slope ratio
-        if best_slope != 0:
-            slope_ratio = abs(worst_slope / best_slope)
-        else:
-            slope_ratio = float('inf') if worst_slope != 0 else 1.0
-
-        stats_text += "\nCOMPARISON SUMMARY\n"
-        stats_text += "=" * 20 + "\n\n"
-        stats_text += f"Best: {best_method}\n"
-        stats_text += f"Worst: {worst_method}\n"
-        stats_text += f"Slope Ratio: {slope_ratio:.2f}x\n"
-
-    # Add the statistics text to the right panel
-    ax2.text(0.0, 0.98, stats_text, transform=ax2.transAxes, fontsize=14,
-             verticalalignment='top', horizontalalignment='left',
-             bbox=dict(boxstyle="round,pad=0.5", facecolor="lightyellow", alpha=0.9,
-                       edgecolor='black', linewidth=1),
-             fontfamily='monospace', linespacing=1.2)
+    ax.legend(loc='best', fontsize=8, frameon=True, fancybox=True, framealpha=0.8)
 
     plt.tight_layout()
     plt.savefig(output_filename, dpi=300, bbox_inches='tight')

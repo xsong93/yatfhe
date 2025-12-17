@@ -150,6 +150,7 @@ void benchStat(const std::vector<long>& iteration_times_us, const long request, 
 
 void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
                const int cacheCap) {
+    cout << "bench lazy" << endl;
     // client side
     // key gen
     TlweKey tlweKey{param.n, param.lweStdDev};
@@ -172,6 +173,10 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
 
 
     // server
+    ScaledTlwe sTlwe {param.N * 2, param.n};
+    rescaleTlweToNewMod(sTlwe, input);
+    Trlwe out{param};
+
     // warm up
     cout << "warm up" << endl;
     for (auto i = 0; i < accessPattern.size()/2; i++) {
@@ -188,27 +193,17 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
         auto id = accessPattern[i];
         std::string file = DiskReader::generateLazyKeyFilename(id);
         auto start = steady_clock::now();
-
-        ScaledTlwe sTlwe {param.N * 2, param.n};
-        rescaleTlweToNewMod(sTlwe, input);
         auto* bskServer = cache.getLazyKeySimple(id);
-        Trlwe out{param};
         if (bskServer != nullptr) {
             blindRotateLazyPipeAltNtt(out, bskServer->bskFirst, bskServer->bskPrime,bskServer->s2Dft, sTlwe, v, param);
         } else {
             BootstrappingKeyMPLazyPipeAlt bsk;
-            printMsg(file, "Loading Lazy key from disk");
             blindRotateLazyPipeAltInitNtt(out, bsk.bskFirst, bsk.bskPrime,bsk.s2Dft, sTlwe,
                 v, file, param);
             cache.putLazyKey(id, bsk);
         }
-
-        Tlwe tmp{ksKey.nCurrKey}, output{param.n};
-        extractTlweFromTrlwe(tmp, out, param.driftPhase);
-        switchKeyForTlwe(output, ksKey, tmp, param);
-
-        auto elapsedUs = duration_cast<microseconds>(steady_clock::now() - start).count();
-
+        auto end = steady_clock::now();
+        auto elapsedUs = duration_cast<microseconds>(end - start).count();
         iterationTimesUs.push_back(elapsedUs);
     }
     printArray(iterationTimesUs, "iterationTimesUs");
@@ -220,7 +215,9 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
               "Benchmark/LAZY",  cacheCap, file);
 }
 
-void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern, const int cacheCap) {
+void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
+               const int cacheCap) {
+    cout << "bench ginx" << endl;
     // client side
     // key gen
     TlweKey tlweKey{param.n, param.lweStdDev};
@@ -243,6 +240,11 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
 
 
     // server side
+    ScaledTlwe sTlwe {param.N * 2, param.n};
+    Trlwe acc{param};
+    rescaleTlweToNewMod(sTlwe, input);
+    genNoiselessTrlweSample(acc, v, sTlwe);
+
     // warm up
     cout << "warm up" << endl;
     for (auto i = 0; i < accessPattern.size()/2; i++) {
@@ -256,19 +258,10 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     for (auto i = accessPattern.size()/2; i < 100 + accessPattern.size()/2; i++) {
         clearFileCache();
         auto start = steady_clock::now();
-
-        ScaledTlwe sTlwe {param.N * 2, param.n};
-        Trlwe acc{param};
-        rescaleTlweToNewMod(sTlwe, input);
-        genNoiselessTrlweSample(acc, v, sTlwe);
         auto& bskServer = cache.getGinxKey(accessPattern[i]);
         blindRotateJP22Ntt(acc, bskServer.bskDft, sTlwe, param);
-        Tlwe tmp{ksKey.nCurrKey}, output{param.n};
-        extractTlweFromTrlwe(tmp, acc, param.driftPhase);
-        switchKeyForTlwe(output, ksKey, tmp, param);
-
-        auto elapsedUs = duration_cast<microseconds>(steady_clock::now() - start).count();
-
+        auto end = steady_clock::now();
+        auto elapsedUs = duration_cast<microseconds>(end - start).count();
         iterationTimesUs.push_back(elapsedUs);
     }
     printArray(iterationTimesUs, "iterationTimesUs");
@@ -327,8 +320,8 @@ int main(int argc, char **argv) {
     auto accessPattern = workload.generateAccessPattern(patternSize);
     printArray(accessPattern, "access pattern");
 
-    benchGinx(param, cache, accessPattern, cacheCapacity);
     benchLazy(param, cache, accessPattern, cacheCapacity);
+    benchGinx(param, cache, accessPattern, cacheCapacity);
 
     return 0;
 }
