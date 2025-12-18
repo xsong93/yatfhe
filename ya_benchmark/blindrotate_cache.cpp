@@ -149,7 +149,7 @@ void benchStat(const std::vector<long>& iteration_times_us, const long request, 
 }
 
 void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
-               const int cacheCap) {
+               const int cacheCap, bool isSave) {
     cout << "bench lazy" << endl;
     // client side
     // key gen
@@ -181,8 +181,8 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
     cout << "warm up" << endl;
     for (auto i = 0; i < accessPattern.size()/2; i++) {
         cache.getLazyKey(accessPattern[i]);
+        steady_clock::now();
     }
-    steady_clock::now();
     cache.resetStats();
 
     cout << "normal run" << endl;
@@ -198,9 +198,8 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
             blindRotateLazyPipeAltNtt(out, bskServer->bskFirst, bskServer->bskPrime,bskServer->s2Dft, sTlwe, v, param);
         } else {
             BootstrappingKeyMPLazyPipeAlt bsk;
-            blindRotateLazyPipeAltInitNtt(out, bsk.bskFirst, bsk.bskPrime,bsk.s2Dft, sTlwe,
-                v, file, param);
-            cache.putLazyKey(id, bsk);
+            blindRotateLazyPipeAltInitNtt(out, bsk.bskFirst, bsk.bskPrime,bsk.s2Dft, sTlwe, v, file, param);
+            cache.putLazyKey(id, std::move(bsk));
         }
         auto end = steady_clock::now();
         auto elapsedUs = duration_cast<microseconds>(end - start).count();
@@ -211,12 +210,14 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
     std::cout << "Total requests: " << stats.lazyRequest << std::endl;
     std::cout << "Hit rate: " << stats.lazyHitRate() * 100 << "%" << std::endl;
     string file = "lazy_benchmark_results_" + to_string(cacheCap) + ".json";
-    benchStat(iterationTimesUs, iterationTimesUs.size(), stats.lazyHitRate(),
-              "Benchmark/LAZY",  cacheCap, file);
+    if (isSave) {
+        benchStat(iterationTimesUs, iterationTimesUs.size(), stats.lazyHitRate(),
+                  "Benchmark/LAZY",  cacheCap, file);
+    }
 }
 
 void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
-               const int cacheCap) {
+               const int cacheCap, bool isSave) {
     cout << "bench ginx" << endl;
     // client side
     // key gen
@@ -249,6 +250,7 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     cout << "warm up" << endl;
     for (auto i = 0; i < accessPattern.size()/2; i++) {
         cache.getGinxKey(accessPattern[i]);
+        steady_clock::now();
     }
     cache.resetStats();
 
@@ -257,9 +259,20 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     std::vector<long> iterationTimesUs;
     for (auto i = accessPattern.size()/2; i < 100 + accessPattern.size()/2; i++) {
         clearFileCache();
+        auto id = accessPattern[i];
+        std::string file = DiskReader::generateGinxKeyFilename(id);
         auto start = steady_clock::now();
-        auto& bskServer = cache.getGinxKey(accessPattern[i]);
-        blindRotateJP22Ntt(acc, bskServer.bskDft, sTlwe, param);
+        // auto& bskServer = cache.getGinxKey(accessPattern[i]);
+        // blindRotateJP22Ntt(acc, bskServer.bskDft, sTlwe, param);
+        auto* bskServer = cache.getGinxKeySimple(id);
+        if (bskServer != nullptr) {
+            blindRotateJP22Ntt(acc, bskServer->bskDft, sTlwe, param);
+        } else {
+            BootstrappingKeyMP bsk;
+            deserializeBskMP(bsk, file, param.n);
+            blindRotateJP22Ntt(acc, bsk.bskDft, sTlwe, param);
+            cache.putMpKey(id, std::move(bsk));
+        }
         auto end = steady_clock::now();
         auto elapsedUs = duration_cast<microseconds>(end - start).count();
         iterationTimesUs.push_back(elapsedUs);
@@ -269,8 +282,10 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     std::cout << "Total requests: " << stats.ginxRequest << std::endl;
     std::cout << "Hit rate: " << stats.ginxHitRate() * 100 << "%" << std::endl;
     string file = "ginx_benchmark_results_" + to_string(cacheCap) + ".json";
-    benchStat(iterationTimesUs, iterationTimesUs.size(), stats.ginxHitRate(),
-              "Benchmark/GINX", cacheCap, file);
+    if (isSave) {
+        benchStat(iterationTimesUs, iterationTimesUs.size(), stats.ginxHitRate(),
+                  "Benchmark/GINX", cacheCap, file);
+    }
 }
 
 int main(int argc, char **argv) {
@@ -305,8 +320,8 @@ int main(int argc, char **argv) {
         patternSize = 1000;
     }
 
-    printf("User param: Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n",
-           cacheCapacity, zipfParam, patternSize);
+    // printf("User param: Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n",
+    //        cacheCapacity, zipfParam, patternSize);
 
     YatfheParameters param{};
     initYatfhe(param);
@@ -314,14 +329,91 @@ int main(int argc, char **argv) {
 
     printMsg(sizeRatio, "Key size ratio (GINX/LAZY)");
 
-    // init cache
-    SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
-    CacheWorkloadGenerator workload(zipfParam);
-    auto accessPattern = workload.generateAccessPattern(patternSize);
-    printArray(accessPattern, "access pattern");
+    // warm up cycle
+    {
+        cacheCapacity = 25;
+        multiplier = 1;
+        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
+        // init cache
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        CacheWorkloadGenerator workload(zipfParam);
+        auto accessPattern = workload.generateAccessPattern(patternSize);
+        printArray(accessPattern, "access pattern");
 
-    benchLazy(param, cache, accessPattern, cacheCapacity);
-    benchGinx(param, cache, accessPattern, cacheCapacity);
+        benchLazy(param, cache, accessPattern, cacheCapacity, false);
+        benchGinx(param, cache, accessPattern, cacheCapacity, false);
+    }
+
+    // benchmarking
+    {
+        cacheCapacity = 100;
+        multiplier = 1;
+        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
+        // init cache
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        CacheWorkloadGenerator workload(zipfParam);
+        auto accessPattern = workload.generateAccessPattern(patternSize);
+        printArray(accessPattern, "access pattern");
+
+        benchLazy(param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+    }
+
+    {
+        cacheCapacity = 25;
+        multiplier = sizeRatio;
+        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
+        // init cache
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        CacheWorkloadGenerator workload(zipfParam);
+        auto accessPattern = workload.generateAccessPattern(patternSize);
+        printArray(accessPattern, "access pattern");
+
+        benchLazy(param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+    }
+
+    {
+        cacheCapacity = 10;
+        multiplier = sizeRatio;
+        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
+        // init cache
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        CacheWorkloadGenerator workload(zipfParam);
+        auto accessPattern = workload.generateAccessPattern(patternSize);
+        printArray(accessPattern, "access pattern");
+
+        benchLazy(param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+    }
+
+    {
+        cacheCapacity = 5;
+        multiplier = sizeRatio;
+        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
+        // init cache
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        CacheWorkloadGenerator workload(zipfParam);
+        auto accessPattern = workload.generateAccessPattern(patternSize);
+        printArray(accessPattern, "access pattern");
+
+        benchLazy(param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+    }
+
+    {
+        cacheCapacity = 1;
+        multiplier = 1;
+        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
+        // init cache
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        CacheWorkloadGenerator workload(zipfParam);
+        auto accessPattern = workload.generateAccessPattern(patternSize);
+        printArray(accessPattern, "access pattern");
+
+        benchLazy(param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+    }
 
     return 0;
 }

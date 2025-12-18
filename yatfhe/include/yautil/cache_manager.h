@@ -82,6 +82,16 @@ public:
         return fst;
     }
 
+    const BootstrappingKeyMP* getGinxKeySimple(const int id) {
+        ++ginxRequest;
+
+        const auto* result = ginxCache.getSimple(id);
+        if (result != nullptr) {
+            ++ginxHits;
+        }
+        return result;
+    }
+
     BootstrappingKeyMPLazyPipeAlt& getLazyKey(const int id) {
         ++lazyRequest;
 
@@ -92,10 +102,10 @@ public:
         return fst;
     }
 
-    BootstrappingKeyMPLazyPipeAlt* getLazyKeySimple(const int id) {
+    const BootstrappingKeyMPLazyPipeAlt* getLazyKeySimple(const int id) {
         ++lazyRequest;
 
-        auto* result = lazyCache.getSimple(id);
+        const auto* result = lazyCache.getSimple(id);
         if (result != nullptr) {
             ++lazyHits;
         }
@@ -118,12 +128,12 @@ public:
         }
     }
 
-    void putMpKey(const int id, const BootstrappingKeyMP& key) {
-        ginxCache.put(id, key);
+    void putMpKey(const int id, BootstrappingKeyMP&& key) {
+        ginxCache.put(id, std::move(key));
     }
 
-    void putLazyKey(const int id, const BootstrappingKeyMPLazyPipeAlt& key) {
-        lazyCache.put(id, key);
+    void putLazyKey(const int id, BootstrappingKeyMPLazyPipeAlt&& key) {
+        lazyCache.put(id, std::move(key));
     }
 
     struct Stats {

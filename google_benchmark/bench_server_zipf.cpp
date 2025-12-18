@@ -92,7 +92,7 @@ BENCHMARK_DEFINE_F(ZipfBenchmark, LAZY)(benchmark::State& state) {
             std::string file = DiskReader::generateLazyKeyFilename(accessPattern[request]);
             blindRotateLazyPipeAltInitNtt(out, bsk.bskFirst, bsk.bskPrime,bsk.s2Dft, sTlwe,
                 v, file, param);
-            cache.putLazyKey(accessPattern[request], bsk);
+            cache.putLazyKey(accessPattern[request], std::move(bsk));
         }
         Tlwe tmp{dummyKsKey.nCurrKey}, output{param.n};
         extractTlweFromTrlwe(tmp, out, param.driftPhase);

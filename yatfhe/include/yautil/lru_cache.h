@@ -52,7 +52,7 @@ public:
         return nullptr;
     }
 
-    void put(const KeyType& key, const ValueType& value) {
+    void put(const KeyType& key, const ValueType&& value) {
         auto it = node_map_.find(key);
         if (it != node_map_.end()) {
             it->second->value = value;
@@ -64,7 +64,7 @@ public:
             evict();
         }
 
-        node_list_.emplace_front(key, value);
+        node_list_.emplace_front(key, std::move(value));
         node_map_[key] = node_list_.begin();
     }
 
