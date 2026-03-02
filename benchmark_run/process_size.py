@@ -156,8 +156,8 @@ def plot_file_size_comparison(file_paths, output_filename="file_size_comparison.
 
 # Usage example
 if __name__ == "__main__":
-    file1 = "server/BSK_GINX_1.bin"
-    file2 = "server/BSK_LAZY_1.bin"
+    file1 = "server/BSK_GINX_size.bin"
+    file2 = "server/BSK_OURS_size.bin"
 
     file_paths = [file1, file2]
 

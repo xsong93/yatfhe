@@ -41,6 +41,9 @@ def plot_analysis(json_file_paths, output_filename="fig_avg_analysis.png"):
             # Get method name
             method_name = data.get('benchmark_name', 'Unknown').split('/')[-1]
 
+            if method_name == 'LAZY':
+                method_name = 'OURS'
+
             # Use fixed version analysis
             analysis = analyze_data(data, method_name)
             analyses.append(analysis)
@@ -135,47 +138,4 @@ if __name__ == "__main__":
         json_files.append(f'server/ginx_benchmark_results_{ratio}.json')
         json_files.append(f'server/lazy_benchmark_results_{ratio}.json')
 
-    analyses = plot_analysis(json_files)
-
-    # Print detailed statistical information
-    print("="*50)
-    print("PERFORMANCE ANALYSIS SUMMARY")
-    print("="*50)
-
-    # Group by method
-    ginx_data = []
-    lazy_data = []
-
-    for analysis in analyses:
-        if 'ginx' in analysis['method'].lower():
-            ginx_data.append((analysis['pressure_ratio'], analysis['avg']))
-        elif 'lazy' in analysis['method'].lower():
-            lazy_data.append((analysis['pressure_ratio'], analysis['avg']))
-
-    # Sort
-    ginx_data.sort(key=lambda x: x[0])
-    lazy_data.sort(key=lambda x: x[0])
-
-    print("\nGINX Performance:")
-    print("-" * 30)
-    for ratio, avg in ginx_data:
-        print(f"  Pressure {ratio}x: {avg:.0f}ms")
-
-    if len(ginx_data) > 1:
-        ratios = [x[0] for x in ginx_data]
-        avgs = [x[1] for x in ginx_data]
-        slope, intercept, r_value, p_value, std_err = stats.linregress(ratios, avgs)
-        print(f"\n  Trend: {'Increasing' if slope > 0 else 'Decreasing' if slope < 0 else 'Stable'}")
-        print(f"  Slope: {slope:.2f} ms per pressure unit")
-
-    print("\nLAZY Performance:")
-    print("-" * 30)
-    for ratio, avg in lazy_data:
-        print(f"  Pressure {ratio}x: {avg:.0f}ms")
-
-    if len(lazy_data) > 1:
-        ratios = [x[0] for x in lazy_data]
-        avgs = [x[1] for x in lazy_data]
-        slope, intercept, r_value, p_value, std_err = stats.linregress(ratios, avgs)
-        print(f"\n  Trend: {'Increasing' if slope > 0 else 'Decreasing' if slope < 0 else 'Stable'}")
-        print(f"  Slope: {slope:.2f} ms per pressure unit")
+    plot_analysis(json_files)
