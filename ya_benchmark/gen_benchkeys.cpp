@@ -29,6 +29,15 @@ int main(){
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
     for (int i = 1; i <= 50; i++) {
+        BootstrappingKeyWWL24 bskWWL24{param, param.lApprox};
+        genBootstrappingKeyWWL24(bskWWL24, trgswKey, tlweKey, param);
+        string file;
+        file.append("BSK_WWL+24_")
+                .append(to_string(i))
+                .append(".bin");
+        serializeBskWWL24(bskWWL24, file);
+    }
+    for (int i = 1; i <= 50; i++) {
         BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
         symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
         genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);
@@ -43,7 +52,7 @@ int main(){
         genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
         string file;
         file.append("BSK_GINX_")
-                .append(to_string(1))
+                .append(to_string(i))
                 .append(".bin");
         serializeBskMP(bskMP, file);
     }

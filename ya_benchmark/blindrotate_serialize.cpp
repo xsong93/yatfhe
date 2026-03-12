@@ -34,6 +34,8 @@ int main(int argc, char **argv) {
 
     BootstrappingKeyMP bskMP{param, param.lApprox};
     COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
+    BootstrappingKeyWWL24 bskWWL24{param, param.lApprox};
+    COUNT_TIME("genBootstrappingKeyWWL24", genBootstrappingKeyWWL24(bskWWL24, trgswKey, tlweKey, param);)
     BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
     COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
     BootstrappingKeyMPOpt bskMPLazy{param, param.lApprox, true};
@@ -64,6 +66,7 @@ int main(int argc, char **argv) {
     Trlwe out4{param};
     Trlwe out5{param};
     Trlwe out6{param};
+    Trlwe out7{param};
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
     TrgswMPDft one{param};
@@ -160,6 +163,16 @@ int main(int argc, char **argv) {
                        bskMPLazyPipeAltServer.s2Dft, sTlwe, v, "BSK_PIPE_ALT.bin", param);)
     }
 
+    // WWL24 procedure
+    {
+        clearFileCache();
+        BootstrappingKeyWWL24 bskWWL24Server;
+        COUNT_TIME("WWL24 write key", serializeBskWWL24(bskWWL24, "BSK_WWL.bin");)
+        clearFileCache();
+        COUNT_TIME("WWL24 read key", deserializeBskWWL24(bskWWL24Server, "BSK_WWL.bin", param.n);)
+        COUNT_TIME("WWL24 blindRotate", blindRotateWWL24Ntt(out7, bskWWL24Server.bskDft, sTlwe, bskWWL24Server.s2Dft, param);)
+    }
+
     // client side
     extractTlweFromTrlwe(tmp, acc, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
@@ -202,6 +215,12 @@ int main(int argc, char **argv) {
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(PIPE_LAZY_ALT_INIT): "<< decAft << endl;
     cout << "err(PIPE_LAZY_ALT_INIT):" << calTlweError(output, tlweKey, mu) << endl;
+
+    extractTlweFromTrlwe(tmp, out7, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(WWL24): "<< decAft << endl;
+    cout << "err(WWL24):" << calTlweError(output, tlweKey, mu) << endl;
 
     return 0;
 }

@@ -45,6 +45,10 @@ void serialize(const TrgswMPDft& t, std::ostream& os);
 
 void deserialize(TrgswMPDft& t, std::istream& is);
 
+void serializeBskWWL24(const BootstrappingKeyWWL24& t, const std::string& filename);
+
+void deserializeBskWWL24(BootstrappingKeyWWL24& bsk, const std::string& filename, const int n);
+
 void serializeBskMP(const BootstrappingKeyMP& t, const std::string& filename);
 
 void serializeBskMPOpt(const BootstrappingKeyMPOpt& t, const std::string& filename);

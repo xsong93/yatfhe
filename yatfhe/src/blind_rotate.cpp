@@ -1186,6 +1186,35 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
 #endif
 }
 
+void blindRotateWWL24Ntt(Trlwe& accum, vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const TrlevDft& s2, const YatfheParameters& param) {
+    const auto level = bskDft[0][0].l;
+#ifdef TERNARY
+#else
+    for (auto i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        auto& pool = ThreadPool::instance();
+        vector<future<void>> futures;
+        futures.reserve(level);
+        for (auto l = 0; l < level; l++) {
+            futures.emplace_back(pool.enqueue([&bskDft, &s2, &param, l, level, i] {
+                bskDft[i][0].c.resize(level, vector(param.k, TrlweDft(param.k, param.N)));
+                switchTrlweToSecretEmbeddingNtt(bskDft[i][0].c[l], bskDft[i][0].cPrime[l], s2, param);
+            }));
+        }
+        for (auto& f : futures) {
+            f.get();
+        }
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, accum, input.a[i]);
+        externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], level, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#endif
+}
+
+
 void blindRotateJP22Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
     const auto level = bskDft[0][0].l;
 #ifdef TERNARY

@@ -209,10 +209,10 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.lazyRequest << std::endl;
     std::cout << "Hit rate: " << stats.lazyHitRate() * 100 << "%" << std::endl;
-    string file = "lazy_benchmark_results_" + to_string(cacheCap) + ".json";
+    string file = "ours_benchmark_results_" + to_string(cacheCap) + ".json";
     if (isSave) {
         benchStat(iterationTimesUs, iterationTimesUs.size(), stats.lazyHitRate(),
-                  "Benchmark/LAZY",  cacheCap, file);
+                  "Benchmark/OURS",  cacheCap, file);
     }
 }
 
@@ -281,15 +281,16 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.ginxRequest << std::endl;
     std::cout << "Hit rate: " << stats.ginxHitRate() * 100 << "%" << std::endl;
-    string file = "ginx_benchmark_results_" + to_string(cacheCap) + ".json";
+    string file = "tfhe_benchmark_results_" + to_string(cacheCap) + ".json";
     if (isSave) {
         benchStat(iterationTimesUs, iterationTimesUs.size(), stats.ginxHitRate(),
-                  "Benchmark/GINX", cacheCap, file);
+                  "Benchmark/TFHE", cacheCap, file);
     }
 }
 
 int main(int argc, char **argv) {
     int sizeRatio = round(67156489.0/16919095.0); // ginx key size / lazy key size
+    int sizeRatio2 = round(33709652.0/16919095.0); // wwl+24 key size / lazy key size
 
     CommandLineParser parser(argc, argv);
 
@@ -301,6 +302,7 @@ int main(int argc, char **argv) {
     int cacheCapacity = parser.getInt("cap", 5);
     double zipfParam = parser.getDouble("s", 0.83);
     int multiplier = parser.getInt("m", sizeRatio);
+    int multiplier2 = parser.getInt("m2", sizeRatio2);
     int patternSize = parser.getInt("pat", 2000);
 
     if (cacheCapacity <= 0) {
@@ -317,7 +319,7 @@ int main(int argc, char **argv) {
     }
     if (patternSize <= 0) {
         std::cerr << "Error: Request pattern size should be larger than 0，using default 2000" << std::endl;
-        patternSize = 1000;
+        patternSize = 2000;
     }
 
     // printf("User param: Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n",
@@ -327,7 +329,6 @@ int main(int argc, char **argv) {
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
-    printMsg(sizeRatio, "Key size ratio (GINX/LAZY)");
 
     // warm up cycle
     {

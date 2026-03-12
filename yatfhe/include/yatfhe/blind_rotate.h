@@ -54,6 +54,8 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
 
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 
+void blindRotateWWL24Ntt(Trlwe& accum, vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const TrlevDft& s2, const YatfheParameters& param);
+
 void blindRotateJP22Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateJP22NttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);

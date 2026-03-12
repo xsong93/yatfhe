@@ -135,6 +135,17 @@ void verifyBskMPLazyAlt(const BootstrappingKeyMPLazyPipeAlt& a, const Bootstrapp
     }
 }
 
+void verifyBskWWL24(const BootstrappingKeyWWL24& a, const BootstrappingKeyWWL24& b) {
+    ASSERT_EQ(a.n, b.n);
+    ASSERT_EQ(a.group, b.group);
+    verifyTrlevDft(a.s2Dft, b.s2Dft);
+    for (auto i = 0; i < a.n; i++) {
+        for (auto d = 0; d < a.bskDft[i].size(); d++) {
+            verifyTrgswMPDft(a.bskDft[i][d], b.bskDft[i][d]);
+        }
+    }
+}
+
 TEST(SERIALIZATION, POLYNOMIAL) {
     YatfheParameters param {};
     param.N = 128;
@@ -407,4 +418,33 @@ TEST(SERIALIZATION, BSKMPLAZY_ALT) {
     verifyBskMPLazyAlt(bskMPLazyPipeAlt, readBskMPLazyAlt);
 
     printBanner("SERIALIZATION.BSKMPLAZY_ALT");
+}
+
+TEST(SERIALIZATION, WWL24) {
+    YatfheParameters param{};
+    initYatfhe(param);
+
+    // client side
+    // key gen
+    TlweKey tlweKey{param.n, param.lweStdDev};
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    TlweKeySwitchingKey ksKey{param};
+    genTlweKey(tlweKey);
+    genTrlweKey(trlweKey);
+
+    TorusPolynomial v {param.N};
+    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+
+    BootstrappingKeyWWL24 bskWWL24{param, param.lApprox};
+    COUNT_TIME("genBootstrappingKeyWWL24", genBootstrappingKeyWWL24(bskWWL24, trgswKey, tlweKey, param);)
+
+    COUNT_TIME("serializeBskWWL24", serializeBskWWL24(bskWWL24, "SERIALIZATION_TEST_BSKWWL24.bin");)
+
+    BootstrappingKeyWWL24 readBskWWL24;
+    COUNT_TIME("deserializeBskWWL24", deserializeBskWWL24(readBskWWL24, "SERIALIZATION_TEST_BSKWWL24.bin", param.n);)
+
+    verifyBskWWL24(bskWWL24, readBskWWL24);
+
+    printBanner("SERIALIZATION.WWL24");
 }

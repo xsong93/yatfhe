@@ -187,6 +187,35 @@ void deserialize(TrgswMPDft& t, std::istream& is) {
     for (auto& trlwe : t.cPrime) deserialize(trlwe, is);
 }
 
+void serializeBskWWL24(const BootstrappingKeyWWL24& t, const std::string& filename) {
+    std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+    for (auto i = 0; i < t.n; i++) {
+        serialize(t.bskDft[i][0], os);
+    }
+    serialize(t.s2Dft, os);
+    writePOD(os, t.n);
+    writePOD(os, t.group);
+    os.close();
+}
+
+void deserializeBskWWL24(BootstrappingKeyWWL24& bsk, const std::string& filename, const int n) {
+    std::ifstream inFile(filename, std::ios::binary);
+    if (!inFile) throw std::runtime_error("Failed to open file");
+
+    bsk.bskDft.resize(n);  // Initialize outer vector (size = n)
+
+    for (int i = 0; i < n; i++) {
+        bsk.bskDft[i].resize(1);       // Initialize inner vector (size = 1)
+        deserialize(bsk.bskDft[i][0], inFile);  // Read TrgswMPDft in order
+    }
+    deserialize(bsk.s2Dft, inFile);
+
+    // Read remaining fields (n, group, isHalf) if they were serialized
+    readPOD(inFile, bsk.n);
+    readPOD(inFile, bsk.group);
+    inFile.close();
+}
+
 void serializeBskMP(const BootstrappingKeyMP& t, const std::string& filename) {
     std::ofstream os(filename, std::ios::binary | std::ios::trunc);
     for (auto i = 0; i < t.n; i++) {

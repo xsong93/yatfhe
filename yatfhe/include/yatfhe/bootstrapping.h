@@ -113,6 +113,28 @@ struct BootstrappingKeyMP {
     }
 };
 
+struct BootstrappingKeyWWL24 {
+    vector<vector<TrgswMPDft>> bskDft {};
+    TrlevDft s2Dft {};
+    int n {};
+    int group {};
+
+    explicit BootstrappingKeyWWL24() = default;
+
+    explicit BootstrappingKeyWWL24(const YatfheParameters& p, const int level) : group(p.group) {
+#ifdef TERNARY
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        bskDft = vector(n, vector(1, TrgswMPDft(p, level, true)));
+        s2Dft = TrlevDft{p, p.l};
+#endif
+    }
+};
+
 struct BootstrappingKeyMPOpt {
     vector<Trlwe> bskFirst{};
     vector<vector<TrgswMPDft>> bskDft {};
@@ -335,6 +357,8 @@ void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKe
                                   const YatfheParameters& param);
 
 void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
+
+void genBootstrappingKeyWWL24(BootstrappingKeyWWL24& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
                            const YatfheParameters& param);

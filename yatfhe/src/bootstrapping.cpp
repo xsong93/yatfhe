@@ -91,6 +91,16 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
     genBootstrappingKeyGroup(bsk, trgswKey, tlweKey, param);
 }
 
+void genBootstrappingKeyWWL24(BootstrappingKeyWWL24& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+    for (auto i = 0; i < bsk.n; i++) {
+#ifdef TERNARY
+#else
+        encryptTrgswMPNtt(bsk.bskDft[i][0], tlweKey.s[i], trgswKey, 0, param);
+        symEncTrlevWithKeyNtt(bsk.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
+#endif
+    }
+}
+
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
     for (auto i = 0; i < bsk.n; i++) {
 #ifdef TERNARY
