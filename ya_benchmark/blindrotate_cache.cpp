@@ -288,9 +288,79 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     }
 }
 
+void benchWWL24(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
+                const int cacheCap, bool isSave) {
+    cout << "bench WWL24" << endl;
+    // client side
+    // key gen
+    TlweKey tlweKey{param.n, param.lweStdDev};
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    TlweKeySwitchingKey ksKey{param};
+    genTlweKey(tlweKey);
+    genTrlweKey(trlweKey);
+    TlweKey tlweKsKey = tlweKey;
+    tlweKsKey.sigma = param.rlweStdDev;
+    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
+    TorusPolynomial v {param.N};
+    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+
+    // data gen
+    Integer pt = 3;
+    Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
+    Tlwe input{param.n};
+    symEncTlwe(input, mu, tlweKey);
+
+
+    // server side
+    ScaledTlwe sTlwe {param.N * 2, param.n};
+    Trlwe acc{param};
+    rescaleTlweToNewMod(sTlwe, input);
+    genNoiselessTrlweSample(acc, v, sTlwe);
+
+    // warm up
+    cout << "warm up" << endl;
+    for (auto i = 0; i < accessPattern.size()/2; i++) {
+        cache.getWWL24Key(accessPattern[i]);
+        steady_clock::now();
+    }
+    cache.resetStats();
+
+    cout << "normal run" << endl;
+    // normal run
+    std::vector<long> iterationTimesUs;
+    for (auto i = accessPattern.size()/2; i < 100 + accessPattern.size()/2; i++) {
+        clearFileCache();
+        auto id = accessPattern[i];
+        std::string file = DiskReader::generateWWL24KeyFilename(id);
+        auto start = steady_clock::now();
+        auto* bskServer = cache.getWWL24KeySimple(id);
+        if (bskServer != nullptr) {
+            blindRotateWWL24Ntt(acc, bskServer->bskDft, sTlwe, bskServer->s2Dft, param);
+        } else {
+            BootstrappingKeyWWL24 bsk;
+            deserializeBskWWL24(bsk, file, param.n);
+            blindRotateWWL24Ntt(acc, bsk.bskDft, sTlwe, bsk.s2Dft, param);
+            cache.putWWL24Key(id, std::move(bsk));
+        }
+        auto end = steady_clock::now();
+        auto elapsedUs = duration_cast<microseconds>(end - start).count();
+        iterationTimesUs.push_back(elapsedUs);
+    }
+    printArray(iterationTimesUs, "iterationTimesUs");
+    auto stats = cache.getStats();
+    std::cout << "Total requests: " << stats.wwl24Request << std::endl;
+    std::cout << "Hit rate: " << stats.wwl24HitRate() * 100 << "%" << std::endl;
+    string file = "wwl+24_benchmark_results_" + to_string(cacheCap) + ".json";
+    if (isSave) {
+        benchStat(iterationTimesUs, iterationTimesUs.size(), stats.wwl24HitRate(),
+                  "Benchmark/WWL+24", cacheCap, file);
+    }
+}
+
 int main(int argc, char **argv) {
     int sizeRatio = round(67156489.0/16919095.0); // ginx key size / lazy key size
-    int sizeRatio2 = round(33709652.0/16919095.0); // wwl+24 key size / lazy key size
+    int sizeRatio2 = round(67156489.0/33709652.0); // ginx key size / wwl+24 key size
 
     CommandLineParser parser(argc, argv);
 
@@ -334,13 +404,15 @@ int main(int argc, char **argv) {
     {
         cacheCapacity = 25;
         multiplier = 1;
+        multiplier2 = 1;
         printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
         // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
         CacheWorkloadGenerator workload(zipfParam);
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
+        benchWWL24(param, cache, accessPattern, cacheCapacity, false);
         benchLazy(param, cache, accessPattern, cacheCapacity, false);
         benchGinx(param, cache, accessPattern, cacheCapacity, false);
     }
@@ -349,13 +421,15 @@ int main(int argc, char **argv) {
     {
         cacheCapacity = 100;
         multiplier = 1;
+        multiplier2 = 1;
         printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
         // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
         CacheWorkloadGenerator workload(zipfParam);
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
+        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
         benchLazy(param, cache, accessPattern, cacheCapacity, true);
         benchGinx(param, cache, accessPattern, cacheCapacity, true);
     }
@@ -363,13 +437,15 @@ int main(int argc, char **argv) {
     {
         cacheCapacity = 25;
         multiplier = sizeRatio;
+        multiplier2 = sizeRatio2;
         printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
         // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
         CacheWorkloadGenerator workload(zipfParam);
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
+        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
         benchLazy(param, cache, accessPattern, cacheCapacity, true);
         benchGinx(param, cache, accessPattern, cacheCapacity, true);
     }
@@ -377,13 +453,15 @@ int main(int argc, char **argv) {
     {
         cacheCapacity = 10;
         multiplier = sizeRatio;
+        multiplier2 = sizeRatio2;
         printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
         // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
         CacheWorkloadGenerator workload(zipfParam);
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
+        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
         benchLazy(param, cache, accessPattern, cacheCapacity, true);
         benchGinx(param, cache, accessPattern, cacheCapacity, true);
     }
@@ -391,13 +469,15 @@ int main(int argc, char **argv) {
     {
         cacheCapacity = 5;
         multiplier = sizeRatio;
+        multiplier2 = sizeRatio2;
         printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
         // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
         CacheWorkloadGenerator workload(zipfParam);
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
+        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
         benchLazy(param, cache, accessPattern, cacheCapacity, true);
         benchGinx(param, cache, accessPattern, cacheCapacity, true);
     }
@@ -405,13 +485,15 @@ int main(int argc, char **argv) {
     {
         cacheCapacity = 1;
         multiplier = 1;
+        multiplier2 = 1;
         printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
         // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier);
+        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
         CacheWorkloadGenerator workload(zipfParam);
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
+        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
         benchLazy(param, cache, accessPattern, cacheCapacity, true);
         benchGinx(param, cache, accessPattern, cacheCapacity, true);
     }

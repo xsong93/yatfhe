@@ -31,12 +31,22 @@ public:
         deserializeBskLazyPipeAlt(bsk, filename, fixedN);
     }
 
+    void readWWL24(BootstrappingKeyWWL24&bsk, const int id) {
+        std::string filename = generateWWL24KeyFilename(id);
+        printMsg(filename, "Loading WWL+24 key from disk");
+
+        deserializeBskWWL24(bsk, filename, fixedN);
+    }
+
     static std::string generateGinxKeyFilename(const int id) {
         return "BSK_GINX_" + std::to_string(id) + ".bin";
     }
 
     static std::string generateLazyKeyFilename(const int id) {
         return "BSK_LAZY_" + std::to_string(id) + ".bin";
+    }
+    static std::string generateWWL24KeyFilename(const int id) {
+        return "BSK_WWL+24_" + std::to_string(id) + ".bin";
     }
 };
 
@@ -46,12 +56,15 @@ private:
 
     SimpleLRUCache<int, BootstrappingKeyMP> ginxCache;
     SimpleLRUCache<int, BootstrappingKeyMPLazyPipeAlt> lazyCache;
+    SimpleLRUCache<int, BootstrappingKeyWWL24> wwl24Cache;
     DiskReader diskReader;
 
     size_t ginxRequest{};
     size_t lazyRequest{};
+    size_t wwl24Request{};
     size_t ginxHits{};
     size_t lazyHits{};
+    size_t wwl24Hits{};
 
 public:
     explicit SimpleCacheManager(const int n, const size_t capacity = DEFAULT_CAPACITY)
@@ -61,14 +74,20 @@ public:
         , lazyCache(capacity, [this](BootstrappingKeyMPLazyPipeAlt& result, const int id) {
             diskReader.readLazy(result, id);
         })
+        , wwl24Cache(capacity, [this](BootstrappingKeyWWL24& result, const int id) {
+            diskReader.readWWL24(result, id);
+        })
         , diskReader(n) {}
 
-    SimpleCacheManager(const int n, const size_t ginxCapacity, const size_t lazyCapacity)
+    SimpleCacheManager(const int n, const size_t ginxCapacity, const size_t lazyCapacity, const size_t wwl24Capacity)
             : ginxCache(ginxCapacity, [this](BootstrappingKeyMP& result, const int id) {
-        diskReader.readGinx(result, id);
-    })
+                diskReader.readGinx(result, id);
+            })
             , lazyCache(lazyCapacity, [this](BootstrappingKeyMPLazyPipeAlt& result, const int id) {
                 diskReader.readLazy(result, id);
+            })
+            , wwl24Cache(wwl24Capacity, [this](BootstrappingKeyWWL24& result, const int id) {
+                diskReader.readWWL24(result, id);
             })
             , diskReader(n) {}
 
@@ -88,6 +107,26 @@ public:
         const auto* result = ginxCache.getSimple(id);
         if (result != nullptr) {
             ++ginxHits;
+        }
+        return result;
+    }
+
+    BootstrappingKeyWWL24& getWWL24Key(const int id) {
+        ++wwl24Request;
+
+        auto [fst, snd] = wwl24Cache.get(id);
+        if (snd) {
+            ++wwl24Hits;
+        }
+        return fst;
+    }
+
+    BootstrappingKeyWWL24* getWWL24KeySimple(const int id) {
+        ++wwl24Request;
+
+        auto* result = wwl24Cache.getSimple(id);
+        if (result != nullptr) {
+            ++wwl24Hits;
         }
         return result;
     }
@@ -132,6 +171,10 @@ public:
         ginxCache.put(id, std::move(key));
     }
 
+    void putWWL24Key(const int id, BootstrappingKeyWWL24&& key) {
+        wwl24Cache.put(id, std::move(key));
+    }
+
     void putLazyKey(const int id, BootstrappingKeyMPLazyPipeAlt&& key) {
         lazyCache.put(id, std::move(key));
     }
@@ -139,15 +182,23 @@ public:
     struct Stats {
         size_t ginxHits;
         size_t ginxRequest;
+        size_t wwl24Hits;
+        size_t wwl24Request;
         size_t lazyHits;
         size_t lazyRequest;
         size_t ginxCacheSize;
+        size_t wwl24CacheSize;
         size_t lazyCacheSize;
         size_t mpCacheCapacity;
+        size_t wwl24CacheCapacity;
         size_t lazyCacheCapacity;
 
         double ginxHitRate() const {
             return ginxHits > 0 ? static_cast<double>(ginxHits) / ginxRequest : 0.0;
+        }
+
+        double wwl24HitRate() const {
+            return wwl24Hits > 0 ? static_cast<double>(wwl24Hits) / wwl24Request : 0.0;
         }
 
         double lazyHitRate() const {
@@ -159,17 +210,25 @@ public:
         return Stats{
                 ginxHits,
                 ginxRequest,
+                wwl24Hits,
+                wwl24Request,
                 lazyHits,
                 lazyRequest,
                 ginxCache.size(),
+                wwl24Cache.size(),
                 lazyCache.size(),
                 ginxCache.capacity(),
+                wwl24Cache.capacity(),
                 lazyCache.capacity()
         };
     }
 
     std::vector<int> getGinxCachedKeys() const {
         return ginxCache.get_keys();
+    }
+
+    std::vector<int> getWWL24CachedKeys() const {
+        return wwl24Cache.get_keys();
     }
 
     std::vector<int> getLazyCachedKeys() const {
@@ -180,15 +239,20 @@ public:
     void resetStats() {
         ginxHits = 0;
         ginxRequest = 0;
+        wwl24Hits = 0;
+        wwl24Request = 0;
         lazyHits = 0;
         lazyRequest = 0;
     }
 
     void clearAll() {
         ginxCache.clear();
+        wwl24Cache.clear();
         lazyCache.clear();
         ginxHits = 0;
         ginxRequest = 0;
+        wwl24Hits = 0;
+        wwl24Request = 0;
         lazyHits = 0;
         lazyRequest = 0;
     }
@@ -197,11 +261,15 @@ public:
         ginxCache = SimpleLRUCache<int, BootstrappingKeyMP>(
             new_capacity, [this](BootstrappingKeyMP& bsk, const int id) {
                 diskReader.readGinx(bsk, id);
-            });
+        });
+        wwl24Cache = SimpleLRUCache<int, BootstrappingKeyWWL24>(
+            new_capacity, [this](BootstrappingKeyWWL24& bsk, const int id) {
+                diskReader.readWWL24(bsk, id);
+        });
         lazyCache = SimpleLRUCache<int, BootstrappingKeyMPLazyPipeAlt>(
             new_capacity, [this](BootstrappingKeyMPLazyPipeAlt& bsk, const int id) {
                 diskReader.readLazy(bsk, id);
-            });
+        });
     }
 };
 

@@ -1194,12 +1194,12 @@ void blindRotateWWL24Ntt(Trlwe& accum, vector<vector<TrgswMPDft>>& bskDft, const
         if (input.a[i] == 0) {
             continue;
         }
+        bskDft[i][0].c.resize(level, vector(param.k, TrlweDft(param.k, param.N)));
         auto& pool = ThreadPool::instance();
         vector<future<void>> futures;
         futures.reserve(level);
         for (auto l = 0; l < level; l++) {
-            futures.emplace_back(pool.enqueue([&bskDft, &s2, &param, l, level, i] {
-                bskDft[i][0].c.resize(level, vector(param.k, TrlweDft(param.k, param.N)));
+            futures.emplace_back(pool.enqueue([&bskDft, &s2, &param, l, i] {
                 switchTrlweToSecretEmbeddingNtt(bskDft[i][0].c[l], bskDft[i][0].cPrime[l], s2, param);
             }));
         }
