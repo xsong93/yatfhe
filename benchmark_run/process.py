@@ -22,7 +22,7 @@ def analyze_data(data, method_name):
     }
 
 
-def plot_analysis(json_file_paths, output_filename="fig_avg_analysis.png"):
+def plot_analysis(json_file_paths, output_filename="fig_avg_analysis"):
     """Plot benchmark analysis chart"""
 
     # Check if files exist
@@ -40,9 +40,6 @@ def plot_analysis(json_file_paths, output_filename="fig_avg_analysis.png"):
 
             # Get method name
             method_name = data.get('benchmark_name', 'Unknown').split('/')[-1]
-
-            if method_name == 'LAZY':
-                method_name = 'OURS'
 
             # Use fixed version analysis
             analysis = analyze_data(data, method_name)
@@ -78,7 +75,7 @@ def plot_analysis(json_file_paths, output_filename="fig_avg_analysis.png"):
 
     fig, ax = plt.subplots(figsize=(6, 4))
 
-    colors = ['#1f77b4', '#ff7f0e']  # Blue and orange
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
 
     for i, (method, data) in enumerate(data_by_method.items()):
         pressure_ratios = data['pressure_ratios']
@@ -104,7 +101,7 @@ def plot_analysis(json_file_paths, output_filename="fig_avg_analysis.png"):
     #               fontsize=8, fontweight='bold', pad=20)
     ax.set_xlabel('Pressure Ratio', fontsize=12)
     ax.set_ylabel('Average Execution Time (milliseconds)', fontsize=12)
-    ax.grid(True, alpha=0.3, linestyle='--')
+    # ax.grid(True, alpha=0.3, linestyle='--')
 
     # Set x-axis ticks
     unique_pressure_ratios = sorted(set([ratio for data in data_by_method.values()
@@ -121,8 +118,12 @@ def plot_analysis(json_file_paths, output_filename="fig_avg_analysis.png"):
     ax.legend(loc='best', fontsize=8, frameon=True, fancybox=True, framealpha=0.8)
 
     plt.tight_layout()
-    plt.savefig(output_filename, dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.savefig(output_filename + '.png', dpi=300, bbox_inches='tight')
+    # plt.show()
+
+    # Save as PDF (vector format) with tight bounding box and no padding
+    plt.savefig(output_filename + '.pdf', format='pdf', dpi=300,
+                bbox_inches='tight', pad_inches=0)
 
     return analyses
 
@@ -135,7 +136,8 @@ if __name__ == "__main__":
 
     json_files = []
     for ratio in pressure_ratios:
-        json_files.append(f'server/ginx_benchmark_results_{ratio}.json')
-        json_files.append(f'server/lazy_benchmark_results_{ratio}.json')
+        json_files.append(f'server/tfhe_benchmark_results_{ratio}.json')
+        json_files.append(f'server/wwl+24_benchmark_results_{ratio}.json')
+        json_files.append(f'server/ours_benchmark_results_{ratio}.json')
 
-    plot_analysis(json_files)
+    plot_analysis(json_files, 'fig_avg_analysis')

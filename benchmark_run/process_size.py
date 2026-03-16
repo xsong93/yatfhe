@@ -62,9 +62,9 @@ def get_best_unit(size_bytes):
         return size_bytes / (1024**3), 'GB'
 
 
-def plot_file_size_comparison(file_paths, output_filename="file_size_comparison.png"):
+def plot_file_size_comparison(file_paths, output_filename):
     """
-    Plot bar chart comparing file sizes
+    Plot bar chart comparing file sizes, with multiplier labels relative to 'WWL+24'.
 
     Parameters:
     -----------
@@ -89,15 +89,29 @@ def plot_file_size_comparison(file_paths, output_filename="file_size_comparison.
     for file_path in file_paths:
         # Get file name
         file_name = os.path.basename(file_path).split('_')[1]
+        if file_name == 'LAZY':
+            file_name = 'OURS'
         file_names.append(file_name)
 
         # Get file size in bytes
         size_bytes = os.path.getsize(file_path)
         file_sizes_bytes.append(size_bytes)
 
-        # Convert to best unit
+        # Convert to best unit for display
         size_value, unit = get_best_unit(size_bytes)
         file_sizes_display.append(f"{size_value:.2f} {unit}")
+
+    # --- New: calculate multiplier relative to baseline (WWL+24) ---
+    base_label = 'WWL+24'
+    try:
+        base_idx = file_names.index(base_label)
+    except ValueError:
+        print(f"Warning: Baseline label '{base_label}' not found. Using the first file as baseline (multipliers may be meaningless).")
+        base_idx = 0
+
+    base_size = file_sizes_bytes[base_idx]
+    multipliers = [size / base_size for size in file_sizes_bytes]
+    # ----------------------------------------------------------------
 
     # Create figure
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -111,26 +125,35 @@ def plot_file_size_comparison(file_paths, output_filename="file_size_comparison.
                   edgecolor='black', linewidth=1.5,
                   alpha=0.8)
 
-    # Add value labels on bars
-    for bar, size_display in zip(bars, file_sizes_display):
+    # Add value labels on bars (size and multiplier)
+    for bar, size_display, mult in zip(bars, file_sizes_display, multipliers):
         height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
+        # Show file size (original label)
+        ax.text(bar.get_x() + bar.get_width()/2., height + 14.17,
                 size_display, ha='center', va='bottom',
                 fontsize=10, fontweight='bold')
+        # Show multiplier (new, gray small text)
+        ax.text(bar.get_x() + bar.get_width()/2., height*0.5,
+                f"({mult:.2f}x)", ha='center', va='bottom',
+                fontsize=9, color='black', fontweight='bold')
+
+    # Adjust y-axis upper limit to reserve space for multiplier labels
+    max_height = max(file_sizes_bytes)
+    ax.set_ylim(0, max_height * 1.15)
 
     # Set title and labels
     ax.set_title('Key Size Comparison', fontsize=16, fontweight='bold', pad=20)
-    ax.set_xlabel('Key Name', fontsize=12)
+    ax.set_xlabel('Method', fontsize=12)
     ax.set_ylabel('Key Size (Bytes)', fontsize=12)
 
     # Set y-axis format
     def format_bytes(x, pos):
         if x >= 1e9:  # GB
-            return f'{x/1e9:.1f}G'
+            return f'{x/1e9:.2f}G'
         elif x >= 1e6:  # MB
-            return f'{x/1e6:.1f}M'
+            return f'{x/1e6:.2f}M'
         elif x >= 1e3:  # KB
-            return f'{x/1e3:.1f}K'
+            return f'{x/1e3:.2f}K'
         else:
             return f'{x:.0f}'
 
@@ -147,19 +170,24 @@ def plot_file_size_comparison(file_paths, output_filename="file_size_comparison.
     plt.tight_layout()
 
     # Save figure
-    plt.savefig(output_filename, dpi=300, bbox_inches='tight')
+    plt.savefig(output_filename + '.png', dpi=300, bbox_inches='tight')
     print(f"Chart saved as: {output_filename}")
 
-    plt.show()
+    # plt.show()
+
+    plt.savefig(output_filename + '.pdf', format='pdf', dpi=300,
+                bbox_inches='tight', pad_inches=0)
 
     return file_names, file_sizes_bytes, file_sizes_display
 
+
 # Usage example
 if __name__ == "__main__":
-    file1 = "server/BSK_GINX_size.bin"
-    file2 = "server/BSK_OURS_size.bin"
+    file1 = "server/BSK_GINX_1.bin"
+    file3 = "server/BSK_LAZY_1.bin"
+    file2 = "server/BSK_WWL+24_1.bin"
 
-    file_paths = [file1, file2]
+    file_paths = [file1, file2, file3]
 
     try:
         # Create basic comparison chart
@@ -169,13 +197,8 @@ if __name__ == "__main__":
 
         names, sizes_bytes, sizes_display = plot_file_size_comparison(
             file_paths,
-            "fig_key_size_comparison.png"
+            "fig_key_size_comparison"
         )
-
-        # Print detailed information
-        print("\nFile Size Details:")
-        for name, size_bytes, size_display in zip(names, sizes_bytes, sizes_display):
-            print(f"  {name}: {size_display} ({size_bytes:,} bytes)")
 
     except FileNotFoundError as e:
         print(f"Error: {e}")

@@ -87,7 +87,7 @@ def analyze_high_low_values_fixed(data, method_name, target_low_avg=500):
     }
 
 
-def plot_combined_analysis(json_file_paths, output_filename="combined_analysis.png"):
+def plot_combined_analysis(json_file_paths, output_filename):
     """Plot combined analysis with 3 charts on first row and 1 table on second row"""
 
     # Check if files exist
@@ -124,7 +124,7 @@ def plot_combined_analysis(json_file_paths, output_filename="combined_analysis.p
     # Create figure with 2 rows: 3 charts on first row, 1 table on second row
     fig, ax1 = plt.subplots(figsize=(3, 4))
 
-    colors = ['#1f77b4', '#ff7f0e']  # Blue and orange
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
 
     # 1. Main CDF Plot
     f_size = 8
@@ -159,7 +159,7 @@ def plot_combined_analysis(json_file_paths, output_filename="combined_analysis.p
     ax1.set_xlabel('Latency (ms)', fontsize=f_size)
     ax1.set_ylabel('Percentage (%)', fontsize=f_size)
     ax1.set_title('CDF - Latency Distribution', fontsize=f_size, fontweight='bold')
-    ax1.grid(True, alpha=0.3)
+    # ax1.grid(True, alpha=0.3)
     ax1.legend(fontsize=f_size)
     ax1.set_ylim(0, 100)
     ax1.tick_params(labelsize=f_size)
@@ -168,8 +168,12 @@ def plot_combined_analysis(json_file_paths, output_filename="combined_analysis.p
     plt.subplots_adjust(hspace=0.4, wspace=0.4)  # Adjust spacing between subplots
 
     # Save figure
-    plt.savefig(output_filename, dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.savefig(output_filename + '.png', dpi=300, bbox_inches='tight')
+    # plt.show()
+
+    # Save as PDF (vector format) with tight bounding box and no padding
+    plt.savefig(output_filename + '.pdf', format='pdf', dpi=300,
+                bbox_inches='tight', pad_inches=0)
 
     return analyses
 
@@ -180,11 +184,13 @@ if __name__ == "__main__":
     pressure_ratios = ['1', '5', '10', '25', '100']
 
     for idx in pressure_ratios:
-        path1 = 'server/ginx_benchmark_results_' + idx + '.json'
-        path2 = 'server/lazy_benchmark_results_' + idx + '.json'
+        path1 = 'server/tfhe_benchmark_results_' + idx + '.json'
+        path2 = 'server/wwl+24_benchmark_results_' + idx + '.json'
+        path3 = 'server/ours_benchmark_results_' + idx + '.json'
         json_files = [
             path1,
-            path2
+            path2,
+            path3
         ]
 
-        plot_combined_analysis(json_files, 'fig_cdf_' + idx + '.png')
+        plot_combined_analysis(json_files, 'fig_cdf_' + idx)

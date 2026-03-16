@@ -120,7 +120,7 @@ def create_performance_table(json_file_paths, output_filename="performance_table
         for method in all_methods:
             if method in data_by_pressure_ratio[pressure_ratio]:
                 data = data_by_pressure_ratio[pressure_ratio][method]
-                std_ratio = data['std'] / data_by_pressure_ratio[pressure_ratio]['LAZY']['std']
+                std_ratio = data['std'] / data_by_pressure_ratio[pressure_ratio]['OURS']['std']
                 row = [
                     f"{pressure_ratio}",
                     method,
@@ -164,11 +164,12 @@ def create_performance_table(json_file_paths, output_filename="performance_table
             cell = table[(row_idx, j)]
             cell.set_height(0.12)
 
-            # Highlight GINX and LAZY differently if needed
-            if table_data[i][1] == 'GINX':
-                cell.set_facecolor('#E6F3FF')  # Light blue for GINX
-            elif table_data[i][1] == 'LAZY':
-                cell.set_facecolor('#FFF2E6')  # Light orange for LAZY
+            if table_data[i][1] == 'TFHE':
+                cell.set_facecolor('#E6F3FF')  # Light blue for TFHE
+            elif table_data[i][1] == 'WWL+24':
+                cell.set_facecolor('#FFF2E6')  # Light orange for WWL+24
+            elif table_data[i][1] == 'OURS':
+                cell.set_facecolor('#98FB98')  # Light green for OURS
             else:
                 # Alternate row colors for other methods
                 row_color = '#FFFFFF' if i % 2 == 0 else '#F2F2F2'
@@ -213,12 +214,13 @@ def create_performance_table(json_file_paths, output_filename="performance_table
 if __name__ == "__main__":
 
     pressure_ratios = [1, 5, 10, 25, 100]
-    methods = ['GINX', 'LAZY']
+    methods = ['TFHE', 'WWL+24', 'OURS']
 
     json_files = []
     for ratio in pressure_ratios:
-        json_files.append(f'server/ginx_benchmark_results_{ratio}.json')
-        json_files.append(f'server/lazy_benchmark_results_{ratio}.json')
+        json_files.append(f'server/tfhe_benchmark_results_{ratio}.json')
+        json_files.append(f'server/wwl+24_benchmark_results_{ratio}.json')
+        json_files.append(f'server/ours_benchmark_results_{ratio}.json')
 
     existing_files = [f for f in json_files if os.path.exists(f)]
 
@@ -230,8 +232,4 @@ if __name__ == "__main__":
             "fig_performance_summary.pdf"
         )
     else:
-        print("No data files found. Looking for files like:")
-        print("  - ginx_benchmark_results_0.5.json")
-        print("  - ours_benchmark_results_0.5.json")
-        print("  - ginx_benchmark_results_2.json")
-        print("  - etc...")
+        print("No data files found.")
