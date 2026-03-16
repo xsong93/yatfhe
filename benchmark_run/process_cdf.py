@@ -181,7 +181,7 @@ def plot_combined_analysis(json_file_paths, output_filename):
 # Usage example
 if __name__ == "__main__":
 
-    pressure_ratios = ['1', '5', '10', '25', '100']
+    pressure_ratios = ['1', '5', '10', '25', '50']
 
     for idx in pressure_ratios:
         path1 = 'server/tfhe_benchmark_results_' + idx + '.json'

@@ -402,7 +402,7 @@ int main(int argc, char **argv) {
 
     // warm up cycle
     {
-        cacheCapacity = 25;
+        cacheCapacity = 100;
         multiplier = 1;
         multiplier2 = 1;
         printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
@@ -412,14 +412,14 @@ int main(int argc, char **argv) {
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
-        benchWWL24(param, cache, accessPattern, cacheCapacity, false);
-        benchLazy(param, cache, accessPattern, cacheCapacity, false);
-        benchGinx(param, cache, accessPattern, cacheCapacity, false);
+        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
+        benchLazy(param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(param, cache, accessPattern, cacheCapacity, true);
     }
 
     // benchmarking
     {
-        cacheCapacity = 100;
+        cacheCapacity = 50;
         multiplier = 1;
         multiplier2 = 1;
         printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
