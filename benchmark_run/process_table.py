@@ -213,7 +213,7 @@ def create_performance_table(json_file_paths, output_filename="performance_table
 # Usage example
 if __name__ == "__main__":
 
-    pressure_ratios = [1, 5, 10, 25, 50]
+    pressure_ratios = [1, 5, 10, 20, 50]
     methods = ['TFHE', 'WWL+24', 'OURS']
 
     json_files = []

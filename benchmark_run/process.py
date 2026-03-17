@@ -132,7 +132,7 @@ def plot_analysis(json_file_paths, output_filename="fig_avg_analysis"):
 if __name__ == "__main__":
 
     # Define files for all pressure ratios
-    pressure_ratios = [1, 5, 10, 25, 50]
+    pressure_ratios = [1, 5, 10, 20, 50]
 
     json_files = []
     for ratio in pressure_ratios:
