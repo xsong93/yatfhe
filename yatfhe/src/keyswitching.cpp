@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/3/8.
+// Created for anonymous review.
 //
 #include "yatfhe/gadget_decomposition.h"
 #include "yatfhe/tlwe.h"

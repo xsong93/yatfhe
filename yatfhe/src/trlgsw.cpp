@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/5/9.
+// Created for anonymous review.
 //
 #include "yatfhe/trgsw.h"
 #include "yatfhe/trlgsw.h"

@@ -1,5 +1,5 @@
 //
-// Created by xsong on 12/19/25.
+// Created for anonymous review.
 //
 
 #include "yatfhe/bootstrapping.h"

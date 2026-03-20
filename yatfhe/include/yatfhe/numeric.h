@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2023/12/11.
+// Created for anonymous review.
 //
 
 #ifndef HLS_YATFHE_NUMERIC_FUNCTIONS_H

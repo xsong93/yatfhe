@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2023/12/25.
+// Created for anonymous review.
 //
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"

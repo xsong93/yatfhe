@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/9/13.
+// Created for anonymous review.
 //
 
 #include "yatfhe/ntt.h"

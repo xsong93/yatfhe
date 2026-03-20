@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/2/20.
+// Created for anonymous review.
 //
 
 #include "yatfhe/trlwe.h"

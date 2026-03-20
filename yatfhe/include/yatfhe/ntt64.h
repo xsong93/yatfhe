@@ -1,5 +1,5 @@
 //
-// Created by ic on 24-4-29.
+// Created for anonymous review.
 //
 
 #ifndef HLS_YATFHE_NTT64_H

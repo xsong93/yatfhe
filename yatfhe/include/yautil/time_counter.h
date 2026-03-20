@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2023/12/7.
+// Created for anonymous review.
 //
 #ifndef HLS_YATFHE_TIME_COUNTER_H
 #define HLS_YATFHE_TIME_COUNTER_H

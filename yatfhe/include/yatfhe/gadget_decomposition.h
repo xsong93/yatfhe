@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/3/15.
+// Created for anonymous review.
 //
 
 #ifndef HLS_YATFHE_GADGET_DECOMPOSITION_H

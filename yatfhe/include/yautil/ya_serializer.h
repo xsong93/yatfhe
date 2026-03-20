@@ -1,5 +1,5 @@
 //
-// Created by xintong on 10/27/25.
+// Created for anonymous review.
 //
 
 #ifndef BASE_YA_SERIALIZER_H
