@@ -91,6 +91,8 @@ def plot_file_size_comparison(file_paths, output_filename):
         file_name = os.path.basename(file_path).split('_')[1]
         if file_name == 'LAZY':
             file_name = 'OURS'
+        if file_name == 'GINX':
+            file_name = 'TFHE'
         file_names.append(file_name)
 
         # Get file size in bytes
