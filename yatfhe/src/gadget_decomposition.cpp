@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/3/15.
+// Created for anonymous review.
 //
 #include <vector>
 #include "yatfhe/yatfhe_parameters.h"

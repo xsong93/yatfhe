@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/1/15.
+// Created for anonymous review.
 //
 
 #include "yautil/ntt_constants.h"

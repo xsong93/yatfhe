@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/3/8.
+// Created for anonymous review.
 //
 
 #ifndef HLS_YATFHE_KEYSWITCHING_H

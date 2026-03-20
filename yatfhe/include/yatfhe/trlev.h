@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/4/22.
+// Created for anonymous review.
 //
 
 #ifndef HLS_YATFHE_TRGLEV_H

@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/10/17.
+// Created for anonymous review.
 //
 
 #include "yatfhe/numeric.h"
