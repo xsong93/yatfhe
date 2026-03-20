@@ -30,8 +30,7 @@ yatfhe/
 ├── build_bench_blindrotate.sh # Script to build benchmarks
 ├── clean_install.sh # Clean install script
 ├── cmake_run.sh # CMake configuration wrapper
-├── cp_bench.sh # Utility to copy benchmarks
-└── param.py # Parameter generation script
+└── cp_bench.sh # Utility to copy benchmarks
 ```
 
 ## Dependencies
