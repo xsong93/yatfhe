@@ -1,0 +1,116 @@
+//
+// Created by Xintong Song on 2024/3/15.
+//
+#include <vector>
+#include "yatfhe/yatfhe_parameters.h"
+#include "yatfhe/gadget_decomposition.h"
+
+using namespace std;
+
+// offset = B/2 * (2^(torusBits - radixBits) + 2^(torusBits - 2 * radixBits) + ... + 2^(torusBits - l * radixBits))
+int genOffset(const int radixBits, const int bHalf, const int l, const int torusBits) {
+    int res = 0;
+    for (auto i = 1; i <= l; ++i) {
+        res += 1 << (torusBits - i * radixBits);
+    }
+    return res * bHalf;
+}
+
+// g = (1/B, ..., 1/B^l), B = 2^radixBits
+std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int torusBits) {
+    std::vector<Torus> g(l);
+    for (auto i = 0; i < l; i++) {
+        g[i] = 1 << (torusBits - (i + 1) * radixBits); // 1/(B^(i) as Torus: 2^torusBits * 2^(-radixBits*i)
+    }
+    return g;
+}
+
+void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParameters& param) {
+    out.sign = (in < 0) ? -1 : 1;
+    UnsignedInteger tmp = (out.sign == 1) ? in : -in;
+    UnsignedInteger mask = ((1 << param.radixBits) - 1) << (param.torusBits - param.radixBits);
+    for (auto i = 0; i < out.l; i++) {
+        out.value[i] = (mask & tmp) >> (param.torusBits - (i + 1) * param.radixBits);
+        mask >>= param.radixBits;
+    }
+}
+
+void gadgetDecomposeNtt(DecomposedDataDft& out, const NttType in, const YatfheParameters& param) {
+    NttType mask = ((1 << param.radixBits) - 1) << (param.dftBits - param.radixBits);
+    for (auto i = 0; i < out.l; i++) {
+        out.value[i] = (mask & in) >> (param.dftBits - (i + 1) * param.radixBits);
+        mask >>= param.radixBits;
+    }
+}
+
+Integer recomposeSelf(const DecomposedData& digits, const YatfheParameters& param) {
+    Integer res {0};
+    for (auto i = 0; i < digits.value.size(); ++i) {
+        res += digits.value[i] << (param.torusBits - (i + 1) * param.radixBits);
+    }
+    return res * digits.sign;
+}
+
+void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const std::vector<DecomposedData>& mid) {
+    for (auto j = 0; j < lhs.l; j++) {
+        for (auto l = 0; l < mid[0].l; l++) {
+            output.value[j] += (lhs.value[l] * lhs.sign) * (mid[j].value[l] * mid[j].sign);
+        }
+    }
+}
+
+Integer recomposeTwoParts(const DecomposedData& lhs, const std::vector<Integer>& rhs) {
+    int out {0};
+    for (auto i = 0; i < rhs.size(); i++) {
+        out += lhs.value[i] * rhs[i] * lhs.sign;
+    }
+    return out;
+}
+
+/**
+ * Calculate in * B^-j.
+ * @param in The input to decompose. Bit length should be less than (maxIntegerBitLength - (torusBits - radixBits)).
+ * i.e. (32 - (32 - 4)) = 4. Therefore, max in should be less than 2^3.
+ * @param param
+ * @return
+ */
+void decomposeOverB(std::vector<Integer>& output, const Integer in, const YatfheParameters& param) {
+    for (int i = 0; i < output.size(); ++i) {
+        output[i] = in << (param.torusBits - (i + 1) * param.radixBits);
+    }
+}
+
+/**
+ * Calculate signed decomposition g^-1(x).
+ * @param res Resulting g^-1(x).
+ * @param input The input to decompose.
+ * @param param
+ */
+void signedGadgetDecomposition(DecomposedData& out, const Integer in, const YatfheParameters& param) {
+    out.sign = (in < 0) ? -1 : 1;
+    UnsignedInteger unsignedIn = (out.sign == 1) ? in : -in;
+    vector<UnsignedInteger> tmp(param.torusBits / param.radixBits);
+    UnsignedInteger carry = 0;
+    for (auto i = 0; i < tmp.size(); i++) {
+        auto unsignedDigit = ((unsignedIn >> (i * param.radixBits)) & param.digitMask) + carry;
+        auto carryMask = unsignedDigit & param.baseOverTwo;
+        auto signedDigit = unsignedDigit - (carryMask << 1);
+        carry = carryMask >> (param.radixBits - 1);
+        tmp[tmp.size() - i - 1] = signedDigit;
+    }
+    copy(tmp.begin(), tmp.begin() + out.l, out.value.begin());
+}
+
+// todo: incorrect, need fix
+void signedGadgetDecompositionNtt(DecomposedDataDft& out, const NttType in, const YatfheParameters& param) {
+    vector<NttType> tmp(param.dftBits / param.radixBits);
+    UnsignedInteger carry = 0;
+    for (auto i = 0; i < tmp.size(); i++) {
+        auto unsignedDigit = ((in >> (i * param.radixBits)) & param.digitMask) + carry;
+        auto carryMask = unsignedDigit & param.baseOverTwo;
+        auto signedDigit = unsignedDigit - (carryMask << 1);
+        carry = carryMask >> (param.radixBits - 1);
+        tmp[tmp.size() - i - 1] = signedDigit;
+    }
+    copy(tmp.begin(), tmp.begin() + out.l, out.value.begin());
+}

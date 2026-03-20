@@ -1,17 +1,10 @@
-cmake_minimum_required(VERSION 3.25)
-project(hls-yatfhe)
-
-file(GLOB SOURCES
-        *.cpp
-        src/*.cpp
-        )
+cmake_minimum_required(VERSION 3.10)
+message(STATUS "Building base...")
+project(base)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(hls-yatfhe ${SOURCES})
-
-include_directories(
-        .
-        ./util
-        ./include
-        )
+add_subdirectory(yatfhe)
+add_subdirectory(ya_benchmark)
+add_subdirectory(google_tests)
+add_subdirectory(google_benchmark)

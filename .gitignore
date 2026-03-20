@@ -1,3 +1,6 @@
 cmake-build-debug/
 .idea
 
+/ntl/
+/CMAKE_BUILD/
+/bench*
