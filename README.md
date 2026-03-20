@@ -17,6 +17,7 @@ This project implements a **pipelined TFHE bootstrapping framework** that hides 
 - Google Benchmark and Google Test suites for performance and correctness.
 
 ## Repository Structure
+```
 yatfhe/
 ├── benchmark_run/ # Benchmarking scripts and configuration
 ├── google_benchmark/ # Google Benchmark integration
@@ -31,6 +32,7 @@ yatfhe/
 ├── cmake_run.sh # CMake configuration wrapper
 ├── cp_bench.sh # Utility to copy benchmarks
 └── param.py # Parameter generation script
+```
 
 ## Dependencies
 
