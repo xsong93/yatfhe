@@ -47,14 +47,14 @@ yatfhe/
    git clone https://anonymous.4open.science/r/yatfhe-FEDF/
    cd yatfhe-FEDF
    ```
-2**Configure and build**
+2. **Configure and build**
     ```
     mkdir benchmark\server
     chmod +x build_bench_blindrotate.sh
     ./build_bench_blindrotate.sh
     ```
 
-3**Running Benchmarks**
+3. **Running Benchmarks**
 ```
    cd benchmark\server
    sudo ./gen_benkeys (only run this command for the first time)
