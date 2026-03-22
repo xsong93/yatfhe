@@ -14,6 +14,8 @@ This project implements a **pipelined TFHE bootstrapping framework** that hides 
 - A restructured bootstrapping key format (replacing the first RGSW with an RLWE).
 - A three-stage pipeline (NS', SS', EP) with ping-pong buffers to resolve hazards.
 - A multi‑tenant key‑cache simulator to evaluate performance under pressure.
+- A fully functional TFHE scheme with multiple optimization options (key grouping, crt ,etc.).
+- A comprehensive testing suite (will be made public upon acceptance of the paper).
 
 ## Repository Structure
 ```
