@@ -14,7 +14,6 @@ This project implements a **pipelined TFHE bootstrapping framework** that hides 
 - A restructured bootstrapping key format (replacing the first RGSW with an RLWE).
 - A three-stage pipeline (NS', SS', EP) with ping-pong buffers to resolve hazards.
 - A multi‑tenant key‑cache simulator to evaluate performance under pressure.
-- Google Benchmark and Google Test suites for performance and correctness.
 
 ## Repository Structure
 ```
@@ -39,7 +38,6 @@ yatfhe/
   - Please refer to https://gmplib.org/ for the installation instructions on your system.
 - **Intel HEXL** (Homomorphic Encryption Acceleration Library)
   - You can install it manually from https://github.com/intel/hexl.
-- Optional: **Python 3** with `numpy` for running `param.py`
 
 ## Build Instructions
 
