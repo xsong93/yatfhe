@@ -35,8 +35,10 @@ yatfhe/
 
 - **CMake** (>= 3.10)
 - **C++17** compatible compiler (GCC 7+, Clang 6+, or MSVC 2019+)
-- **Google Test** (automatically fetched by CMake)
-- **Google Benchmark** (automatically fetched by CMake)
+- **GMP** (GNU Multiple Precision Arithmetic Library)
+  - Please refer to https://gmplib.org/ for the installation instructions on your system.
+- **Intel HEXL** (Homomorphic Encryption Acceleration Library)
+  - You can install it manually from https://github.com/intel/hexl.
 - Optional: **Python 3** with `numpy` for running `param.py`
 
 ## Build Instructions
