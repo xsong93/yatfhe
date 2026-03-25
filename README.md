@@ -3,9 +3,9 @@
 This repository contains the source code for the paper:
 
 > **Mitigating I/O Jitter in Multi-Tenant FHE with a Co-Designed Pipelined Architecture**  
-> *Anonymous submission to IEEE Transactions on Computers (under review).*
+> *Submission to IEEE Transactions on Computers (under review).*
 
-The code is provided for **anonymous review purposes only**. It will be made public with the final paper upon acceptance.
+The code is provided for **review purposes only**. It will be made public with the final paper upon acceptance.
 
 ## Overview
 
@@ -21,9 +21,8 @@ This project implements a **pipelined TFHE bootstrapping framework** that hides 
 ```
 yatfhe/
 ├── benchmark_run/ # Benchmarking scripts and configuration
-├── google_benchmark/ # Google Benchmark integration
 ├── google_tests/ # Unit tests
-├── ya_benchmark/ # Additional benchmarking helpers
+├── ya_benchmark/ # Benchmarking helpers
 ├── yatfhe/ # Core library source code
 ├── .gitignore
 ├── CMakeLists.txt # Main CMake build configuration
@@ -53,16 +52,16 @@ yatfhe/
    ```
 2. **Configure and build**
     ```
-    mkdir benchmark\server
+    mkdir benchmark_run/server
     chmod +x build_bench_blindrotate.sh
     ./build_bench_blindrotate.sh
     ```
 
 3. **Running Benchmarks**
 ```
-   cd benchmark\server
-   sudo ./gen_benkeys (only run this command for the first time)
-   sudo ./blindrotate_cache
+   cd benchmark_run/server
+   sudo ./gen_benkeys (this binary will generate required key files; only run for the first time)
+   sudo ./blindrotate_cache (multiple json data files will be generated upon finish)
 ```
 
 ## License
