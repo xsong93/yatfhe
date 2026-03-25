@@ -20,7 +20,6 @@ This project implements a **pipelined TFHE bootstrapping framework** that hides 
 ## Repository Structure
 ```
 yatfhe/
-├── benchmark_run/ # Benchmarking scripts and configuration
 ├── google_tests/ # Unit tests
 ├── ya_benchmark/ # Benchmarking helpers
 ├── yatfhe/ # Core library source code
