@@ -51,7 +51,7 @@ yatfhe/
    ```
 2. **Configure and build**
     ```
-    mkdir benchmark_run/server
+    mkdir -p benchmark_run/server
     chmod +x build_bench_blindrotate.sh
     ./build_bench_blindrotate.sh
     ```
