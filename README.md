@@ -14,15 +14,11 @@ This project implements a **pipelined TFHE bootstrapping framework** that hides 
 - A restructured bootstrapping key format (replacing the first RGSW with an RLWE).
 - A three-stage pipeline (NS', SS', EP) with ping-pong buffers to resolve hazards.
 - A multi‑tenant key‑cache simulator to evaluate performance under pressure.
-- A fully functional TFHE scheme with multiple optimization options (key grouping, crt ,etc.).
-- Google Benchmark and Google Test suites for performance and correctness.
 
 ## Repository Structure
 ```
 yatfhe/
 ├── benchmark_run/ # Benchmarking scripts and configuration
-├── google_benchmark/ # Google Benchmark integration
-├── google_tests/ # Unit tests
 ├── ya_benchmark/ # Additional benchmarking helpers
 ├── yatfhe/ # Core library source code
 ├── .gitignore
@@ -42,7 +38,6 @@ yatfhe/
   - Please refer to https://gmplib.org/ for the installation instructions on your system.
 - **Intel HEXL** (Homomorphic Encryption Acceleration Library)
   - You can install it manually from https://github.com/intel/hexl.
-- **Google Test** (Embedded in the project.)
 
 ## Build Instructions
 
@@ -53,16 +48,16 @@ yatfhe/
    ```
 2. **Configure and build**
     ```
-    mkdir benchmark\server
+    mkdir benchmark_run/server
     chmod +x build_bench_blindrotate.sh
     ./build_bench_blindrotate.sh
     ```
 
 3. **Running Benchmarks**
 ```
-   cd benchmark\server
+   cd benchmark_run/server
    sudo ./gen_benkeys (only run this command for the first time)
-   sudo ./blindrotate_cache
+   sudo ./blindrotate_cache (will create multiple json data files upon finish)
 ```
 
 ## License

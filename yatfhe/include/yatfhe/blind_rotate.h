@@ -1,5 +1,5 @@
 //
-// Created by xintong on 4/21/25.
+// Created for anonymous review.
 //
 
 #ifndef HLS_YATFHE_BLIND_ROTATE_H

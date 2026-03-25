@@ -1,5 +1,5 @@
 //
-// Created by Xintong on 25-4-16.
+// Created for anonymous review.
 //
 
 #ifndef HLS_YATFHE_NTT_HEXL_H

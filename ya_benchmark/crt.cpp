@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/8/27.
+// Created for anonymous review.
 //
 #include "yatfhe/crt.h"
 #include "yautil/tool.h"

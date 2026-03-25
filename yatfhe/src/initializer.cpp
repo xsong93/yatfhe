@@ -1,5 +1,5 @@
 //
-// Created by Xintong Song on 2024/5/23.
+// Created for anonymous review.
 //
 #include "yautil/initializer.h"
 #include "yatfhe/ntt14.h"
