@@ -3,9 +3,9 @@
 This repository contains the source code for the paper:
 
 > **Mitigating I/O Jitter in Multi-Tenant FHE with a Co-Designed Pipelined Architecture**  
-> *Anonymous submission to IEEE Transactions on Computers (under review).*
+> *Submission to IEEE Transactions on Computers (under review).*
 
-The code is provided for **anonymous review purposes only**. It will be made public with the final paper upon acceptance.
+The code is provided for **review purposes only**. It will be made public with the final paper upon acceptance.
 
 ## Overview
 
@@ -14,6 +14,7 @@ This project implements a **pipelined TFHE bootstrapping framework** that hides 
 - A restructured bootstrapping key format (replacing the first RGSW with an RLWE).
 - A three-stage pipeline (NS', SS', EP) with ping-pong buffers to resolve hazards.
 - A multi‑tenant key‑cache simulator to evaluate performance under pressure.
+- A fully functional TFHE scheme with multiple optimization options (key grouping, crt ,etc.).
 - Google Benchmark and Google Test suites for performance and correctness.
 
 ## Repository Structure
@@ -37,9 +38,11 @@ yatfhe/
 
 - **CMake** (>= 3.10)
 - **C++17** compatible compiler (GCC 7+, Clang 6+, or MSVC 2019+)
-- **Google Test** (automatically fetched by CMake)
-- **Google Benchmark** (automatically fetched by CMake)
-- Optional: **Python 3** with `numpy` for running `param.py`
+- **GMP** (GNU Multiple Precision Arithmetic Library)
+  - Please refer to https://gmplib.org/ for the installation instructions on your system.
+- **Intel HEXL** (Homomorphic Encryption Acceleration Library)
+  - You can install it manually from https://github.com/intel/hexl.
+- **Google Test** (Embedded in the project.)
 
 ## Build Instructions
 
