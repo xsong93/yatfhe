@@ -3,9 +3,9 @@
 This repository contains the source code for the paper:
 
 > **Mitigating I/O Jitter in Multi-Tenant FHE with a Co-Designed Pipelined Architecture**  
-> *Anonymous submission to IEEE Transactions on Computers (under review).*
+> *Submission to IEEE Transactions on Computers (under review).*
 
-The code is provided for **anonymous review purposes only**. It will be made public with the final paper upon acceptance.
+The code is provided for **review purposes only**. It will be made public with the final paper upon acceptance.
 
 ## Overview
 
