@@ -20,7 +20,6 @@ This project implements a **pipelined TFHE bootstrapping framework** that hides 
 ## Repository Structure
 ```
 yatfhe/
-├── google_tests/ # Unit tests
 ├── ya_benchmark/ # Benchmarking helpers
 ├── yatfhe/ # Core library source code
 ├── .gitignore
@@ -40,7 +39,6 @@ yatfhe/
   - Please refer to https://gmplib.org/ for the installation instructions on your system.
 - **Intel HEXL** (Homomorphic Encryption Acceleration Library)
    - You can install it manually from https://github.com/intel/hexl.
-- **Google Test** (embedded in project)
 
 ## Build Instructions
 
