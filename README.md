@@ -1,19 +1,4 @@
-# yatfhe: A Pipelined TFHE Framework for Multi-Tenant FHE
-
-This repository contains the source code for the paper:
-
-> **Mitigating I/O Jitter in Multi-Tenant FHE with a Co-Designed Pipelined Architecture**  
-> *Submission to IEEE Transactions on Computers (under review).*
-
-The code is provided for **review purposes only**. It will be made public with the final paper upon acceptance.
-
-## Overview
-
-This project implements a **pipelined TFHE bootstrapping framework** that hides I/O latency by overlapping key loading, scheme switching, and external product operations. It includes:
-
-- A restructured bootstrapping key format (replacing the first RGSW with an RLWE).
-- A three-stage pipeline (NS', SS', EP) with ping-pong buffers to resolve hazards.
-- A multi‑tenant key‑cache simulator to evaluate performance under pressure.
+# yatfhe: Yet another TFHE library
 
 ## Repository Structure
 ```
