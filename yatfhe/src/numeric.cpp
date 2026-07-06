@@ -3,6 +3,7 @@
 //
 #include <random>
 #include <iostream>
+#include <cmath>
 #include "yatfhe/numeric.h"
 #include "yatfhe/torus.h"
 
@@ -45,7 +46,7 @@ uint64_t genUInt64UniformDist(const uint64_t lowerBound, const uint64_t upperBou
 Torus addGaussianNoise(Torus message, const double sigma, const int64_t torusQ) {
     normal_distribution normalDistribution(0.0, sigma);
     double e = normalDistribution(rng) * static_cast<double>(torusQ);
-    auto err = static_cast<Torus>(e);
+    auto err = static_cast<Torus>(std::llround(e)); // round to nearest, not truncate towards zero
     Torus tmp = addTorus(torusQ, message, err);
     if ((message > 0 && tmp < 0) || (message < 0 && tmp > 0)) { // handle overflow
         return subTorus(torusQ, message, err);

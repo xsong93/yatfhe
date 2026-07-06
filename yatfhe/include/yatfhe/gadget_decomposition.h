@@ -29,8 +29,6 @@ std::vector<Torus> genGadgetVector(int radixBits, int l, int torusBits);
 
 void gadgetDecompose(DecomposedData& out, Integer in, const YatfheParameters& param);
 
-void gadgetDecomposeNtt(DecomposedDataDft& out, NttType in, const YatfheParameters& param);
-
 Integer recomposeSelf(const DecomposedData& digits, const YatfheParameters& param);
 
 void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const std::vector<DecomposedData>& mid);

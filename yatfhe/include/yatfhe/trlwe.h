@@ -525,17 +525,14 @@ void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const Yat
 
 void gadgetDecomposeTrlweA(vector<vector<DecompPolynomial>>& output, const vector<TorusPolynomial>& a, const YatfheParameters& param);
 
-void gadgetDecomposeTrlweNtt(DecomposedTrlweDft& output, const TrlweDft& input, const YatfheParameters& param);
-
 void recomposeTrlwe(Trlwe& output, const DecomposedTrlwe& input, const YatfheParameters& param);
-
-void recomposeTrlweNtt(TrlweDft& output, const DecomposedTrlweDft& input, const YatfheParameters& param);
 
 void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);
 
 void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey);
 
 void rotateTrlwe(Trlwe& res, const Trlwe& input, int a);
+
 void rotateAccumulateTrlwe(Trlwe& accum, const Trlwe& input, int aTrue, int isWrap);
 
 void rotateTrlweNtt(TrlweDft& res, const TrlweDft& input, const int r);

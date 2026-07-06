@@ -100,10 +100,20 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
 }
 
 void genBootstrappingKeyWWL24(BootstrappingKeyWWL24& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+    TorusPolynomial muPoly{param.N};
+    Trlwe scratch{param.k, param.N};
     for (auto i = 0; i < bsk.n; i++) {
 #ifdef TERNARY
 #else
-        encryptTrgswMPNtt(bsk.bskDft[i][0], tlweKey.s[i], trgswKey, 0, param);
+        // cPrime must hold a genuinely bounded (Torus-domain) "a", forward-transformed into NTT
+        // domain, since switchTrlweToSecretEmbeddingNtt later INTTs it and gadget-decomposes the
+        // result at torusBits precision. encryptTrgswMPNtt's usual "Simple" path samples "a"
+        // natively/uniformly over the wider qNtt domain, which is fine for a plain external
+        // product but not decomposable this way.
+        for (auto lvl = 0; lvl < bsk.bskDft[i][0].l; lvl++) {
+            muPoly.coeffs[0] = tlweKey.s[i] << (param.torusBits - (lvl + 1) * param.radixBits);
+            symEncTrlweMultiSampleNtt(scratch, bsk.bskDft[i][0].cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+        }
         symEncTrlevWithKeyNtt(bsk.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
 #endif
     }

@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
     Trlwe out5{param};
     Trlwe out6{param};
     Trlwe out7{param};
+    genNoiselessTrlweSample(out7, v, sTlwe);
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
     TrgswMPDft one{param};
@@ -178,49 +179,49 @@ int main(int argc, char **argv) {
     switchKeyForTlwe(output, ksKey, tmp, param);
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(GINX): "<< decAft << endl;
-    cout << "err(GINX):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "err(GINX):" << calTlweError(output, tlweKey, pt) << endl;
 
     extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(GINX_OPT): "<< decAft << endl;
-    cout << "err(GINX_OPT):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "err(GINX_OPT):" << calTlweError(output, tlweKey, pt) << endl;
 
     extractTlweFromTrlwe(tmp, out2, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(LAZY_SERIA): "<< decAft << endl;
-    cout << "err(LAZY_SERIA):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "err(LAZY_SERIA):" << calTlweError(output, tlweKey, pt) << endl;
 
     extractTlweFromTrlwe(tmp, out3, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(LAZY_Pipe): "<< decAft << endl;
-    cout << "err(LAZY_Pipe):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "err(LAZY_Pipe):" << calTlweError(output, tlweKey, pt) << endl;
 
     extractTlweFromTrlwe(tmp, out4, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(LAZY_MT): "<< decAft << endl;
-    cout << "err(LAZY_MT):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "err(LAZY_MT):" << calTlweError(output, tlweKey, pt) << endl;
 
     extractTlweFromTrlwe(tmp, out5, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(LAZY_PIPE_ALT): "<< decAft << endl;
-    cout << "err(LAZY_PIPE_ALT):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "err(LAZY_PIPE_ALT):" << calTlweError(output, tlweKey, pt) << endl;
 
     extractTlweFromTrlwe(tmp, out6, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(PIPE_LAZY_ALT_INIT): "<< decAft << endl;
-    cout << "err(PIPE_LAZY_ALT_INIT):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "err(PIPE_LAZY_ALT_INIT):" << calTlweError(output, tlweKey, pt) << endl;
 
     extractTlweFromTrlwe(tmp, out7, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(WWL24): "<< decAft << endl;
-    cout << "err(WWL24):" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "err(WWL24):" << calTlweError(output, tlweKey, pt) << endl;
 
     return 0;
 }
