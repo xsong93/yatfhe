@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by xintong on 4/21/25.
 //
 
 #include "yatfhe/cmux.h"
@@ -18,6 +18,14 @@ void controlMuxNtt(Trlwe& res, const Trlwe& input, const int aBarI, const TrgswD
     rotateTrlweMinusOne(tmp, input, aBarI); // res = c1 - c0 = X^aBarI * input - input
     externalProductTrgswNtt(res, bskI, tmp, param.lApprox, param); // res *= bskI
     accumulateTrlwe(res, input); // res += input
+}
+
+// res = bsk * (c1 - c0) + c0
+void controlMuxNttMP21(Trlwe& res, const Trlwe& in0, const Trlwe& in1, const TrgswMPDft& sel, const YatfheParameters& param) {
+    Trlwe tmp {param.k, param.N};
+    subTrlwe(tmp, in1, in0);
+    externalProductTrgswMPNttInPlace(tmp, sel, sel.l, param);
+    addTrlwe(res, in0, tmp);
 }
 
 void controlMuxApproxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, const int aBarI, const std::vector<Trgsw8>& bskCRT, const YatfheParameters& param) {

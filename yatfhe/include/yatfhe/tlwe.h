@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/8.
 //
 
 #ifndef HLS_YATFHE_TLWE_H
@@ -15,6 +15,8 @@ struct Tlwe {
     Torus b {};
     int n {};
     size_t bytes {};
+
+    Tlwe() = default;
 
     explicit Tlwe(int n) : a(n), b(0), n(n), bytes(sizeof(Torus) * (n+1)) {};
 };
@@ -54,7 +56,7 @@ Torus symDecTlweToTorus(Tlwe& in, const TlweKey& key, int torusBase);
 
 Integer symDecTlweToInt(Tlwe& in, const TlweKey& key, int torusBase);
 
-Torus calTlweError(Tlwe& in, const TlweKey& key, Torus mu);
+Torus calTlweError(Tlwe& in, const TlweKey& key, Integer mu);
 
 void addTlwe(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
 
@@ -62,8 +64,12 @@ void subTlwe(Tlwe& output, const Tlwe& input1, const Tlwe& input2);
 
 void subTlweInPlace(Tlwe& output, const Tlwe& input);
 
+void multTlwe(Tlwe& output, int scalar);
+
 void copyTlwe(Tlwe& output, const Tlwe& input);
 
 void resetTlweToZero(Tlwe& tlwe);
+
+void inverseTlwe(Tlwe& tlwe);
 
 #endif //HLS_YATFHE_TLWE_H

@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/8.
 //
 
 #ifndef HLS_YATFHE_TORUS_H
@@ -33,6 +33,7 @@ const int64_t Q_27 = INT64_C(1) << 27;
 const int64_t Q_26 = INT64_C(1) << 26;
 const int64_t Q_25 = INT64_C(1) << 25;
 const int64_t Q_20 = INT64_C(1) << 20;
+const int64_t Q_12 = INT64_C(1) << 12;
 const uint32_t Q_32P = 16760833;
 const uint64_t Q_50P = 1125899906826241;
 const uint64_t Q_64P = 0xffffffff00000001;
@@ -48,6 +49,8 @@ extern Integer TORUS_MAX;
 extern Integer TORUS_MIN;
 extern Integer LWE_MAX;
 extern Integer LWE_MIN;
+extern NttType NTT_MAX;
+extern NttType NTT_MIN;
 
 #else
 using Torus = int64_t;

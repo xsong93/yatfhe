@@ -1,10 +1,9 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/25.
 //
 
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric.h"
-//#include "yatfhe/ntt.h"
 #include "yatfhe/ntt24.h"
 #include "yatfhe/ntt_hexl.h"
 #include "yatfhe/trgsw.h"
@@ -13,7 +12,6 @@
 #include "yatfhe/crt.h"
 #include "yatfhe/trlev.h"
 #include "yautil/multi_threading.h"
-#include "yautil/tool.h"
 
 using namespace NttHexl;
 
@@ -25,8 +23,26 @@ void encryptTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
         if (!trgswMP.isHalf) {
             for (size_t k = 0; k < param.k; k++) {
-                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0, 0);
                 addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
+            }
+        }
+    }
+}
+
+void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
+    TrgswMP trgswMP{param, trgswMPDft.l, trgswMPDft.isHalf};
+    TorusPolynomial muPoly{param.N};
+    NttPolynomial myPolyNtt{param.N};
+    for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
+        auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
+        muPoly.coeffs[pos] = decomposedMu;
+        applyNtt(myPolyNtt, muPoly);
+        symEncTrlweMultiSampleSimple(trgswMPDft.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+        if (!trgswMPDft.isHalf) {
+            for (size_t k = 0; k < param.k; k++) {
+                symEncTrlweSingleSampleNttSimple(trgswMPDft.c[lvl][k], trgswKey.trlweKey, 0, 0);
+                addNttPolynomial(trgswMPDft.c[lvl][k].a[k], trgswMPDft.c[lvl][k].a[k], myPolyNtt);
             }
         }
     }
@@ -41,44 +57,8 @@ void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const Trg
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
         if (!trgswMP.isHalf) {
             for (auto k = 0; k < param.k; k++) {
-                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
+                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0, 0);
                 addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
-            }
-        }
-    }
-}
-
-void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
-    TrgswMP trgswMP{param, trgswMPDft.l, trgswMPDft.isHalf};
-    TorusPolynomial muPoly{param.N};
-    for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
-        auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
-        muPoly.coeffs[pos] = decomposedMu;
-        symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
-        applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
-        if (!trgswMPDft.isHalf) {
-            for (size_t k = 0; k < param.k; k++) {
-                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
-                addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
-                applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
-            }
-        }
-    }
-}
-
-void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const Torus noise, const YatfheParameters& param) {
-    TrgswMP trgswMP{param, trgswMPDft.l, trgswMPDft.isHalf};
-    TorusPolynomial muPoly{param.N};
-    for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
-        auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
-        muPoly.coeffs[pos] = decomposedMu;
-        symEncTrlweMultiSampleFixedNoise(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs, noise);
-        applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
-        if (!trgswMPDft.isHalf) {
-            for (size_t k = 0; k < param.k; k++) {
-                symEncTrlweSingleSampleFixedNoise(trgswMP.c[lvl][k], trgswKey.trlweKey, 0, noise);
-                addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
-                applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
             }
         }
     }
@@ -87,93 +67,18 @@ void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, const Integer mu, const
 void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param) {
     TrgswMP trgswMP{param, trgswMPDft.l, trgswMPDft.isHalf};
     TorusPolynomial muPoly{param.N};
+    NttPolynomial myPolyNtt{param.N};
     for (auto lvl = 0; lvl < trgswMPDft.l; lvl++) {
         for (int j = 0; j < mus.size(); j++) {
             muPoly.coeffs[j] = mus[j] << (param.torusBits - (lvl + 1) * param.radixBits);
         }
-        symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
-        applyNttForAB(trgswMPDft.cPrime[lvl], trgswMP.cPrime[lvl]);
+        applyNtt(myPolyNtt, muPoly);
+        symEncTrlweMultiSampleSimple(trgswMPDft.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
         if (!trgswMPDft.isHalf) {
             for (auto k = 0; k < param.k; k++) {
-                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0);
-                addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
-                applyNttForAB(trgswMPDft.c[lvl][k], trgswMP.c[lvl][k]);
+                symEncTrlweSingleSampleNttSimple(trgswMPDft.c[lvl][k], trgswKey.trlweKey, 0, 0);
+                addNttPolynomial(trgswMPDft.c[lvl][k].a[k], trgswMPDft.c[lvl][k].a[k], myPolyNtt);
             }
-        }
-    }
-}
-
-void encryptLowTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param) {
-    TorusPolynomial muPoly{param.N};
-    int pos = 0;
-    muPoly.coeffs[pos] = mu;
-    symEncTrlweMultiSample(trgswMP.cPrime[0], trgswKey.trlweKey, muPoly.coeffs);
-    for (size_t k = 0; k < param.k; k++) {
-        symEncTrlweSingleSample(trgswMP.c[0][k], trgswKey.trlweKey, 0);
-        for (size_t i = 0; i < param.k; i++) {
-            if (i == k) {
-                addTorusPolynomial(trgswMP.c[0][k].a[i], trgswMP.c[0][k].a[i], muPoly);
-            }
-        }
-    }
-}
-
-void encryptLowTrgswMPNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param) {
-    TorusPolynomial muPoly{param.N};
-    int pos = 0;
-    muPoly.coeffs[pos] = mu;
-    symEncTrlweMultiSample(trgswMP.cPrime[0], trgswKey.trlweKey, muPoly.coeffs);
-    applyNttForAB(trgswMPDft.cPrime[0], trgswMP.cPrime[0]);
-    for (size_t k = 0; k < param.k; k++) {
-        symEncTrlweSingleSample(trgswMP.c[0][k], trgswKey.trlweKey, 0);
-        for (size_t i = 0; i < param.k; i++) {
-            if (i == k) {
-                addTorusPolynomial(trgswMP.c[0][k].a[i], trgswMP.c[0][k].a[i], muPoly);
-            }
-        }
-        applyNttForAB(trgswMPDft.c[0][k], trgswMP.c[0][k]);
-    }
-}
-
-// trgsw(0): [trlwe(0)]  (k+1)l rows
-void encZeroTrgsw(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
-    for (auto lvl = 0; lvl < trgsw.l; lvl++) {
-        for (auto row = 0; row < param.k + 1; row++) {
-            symEncTrlweSingleSample(trgsw.trlweSamples[lvl][row], trgswKey.trlweKey, 0);
-        }
-    }
-}
-
-// output += mu * G^T
-void addIntegerToTrgsw(Trgsw& trgsw, const Integer mu, const int pos, const YatfheParameters& param) {
-/*    // add the diagonal matrix (mu * G^T)_ijk to the output
-    //       ( 1/B^l                         )
-    //      .                              . .
-    //    .                              .   .
-    //  ( 1/B^2                        )     .
-    // ( 1/B                         )       .
-    // (     1/B                     )       .
-    // (          .                  )       .
-    // (              .              )     .
-    // (                  .          )   .
-    // (                      .      ) .
-    // (                         1/B )
-    // ( a_0  a_1          a_k-1  b  )*/
-
-    for (auto lvl = 0; lvl < trgsw.l; lvl++) {
-        auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
-        for (auto row = 0; row < param.k + 1; row++) {
-
-            // add to a_lii
-            if (row < param.k) {
-//                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
-                trgsw.trlweSamples[lvl][row].a[row].coeffs[pos] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].a[row].coeffs[pos], decomposedMu);
-                continue;
-            }
-
-            // add to b_lk
-//            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
-            trgsw.trlweSamples[lvl][row].b.coeffs[pos] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].b.coeffs[pos], decomposedMu);
         }
     }
 }
@@ -245,15 +150,56 @@ void rotateTrgswMPMinusOneNtt(TrgswMPDft& out, const TrgswMPDft& in, const int r
 }
 
 // trgsw(0): [trlwe(0)]  (k+1)l rows
+void encZeroTrgsw(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
+    for (auto lvl = 0; lvl < trgsw.l; lvl++) {
+        for (auto row = 0; row < param.k + 1; row++) {
+            symEncTrlweSingleSample(trgsw.trlweSamples[lvl][row], trgswKey.trlweKey, 0, 0);
+        }
+    }
+}
+
 void encZeroTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
     for (auto lvl = 0; lvl < trgsw.l; lvl++) {
         for (auto row = 0; row < param.k + 1; row++) {
-            symEncTrlweSingleSampleNtt(trgsw.trlweSamples[lvl][row], trgswDft.trlweDftSamples[lvl][row], trgswKey.trlweKey, 0);
+            symEncTrlweSingleSampleNtt(trgsw.trlweSamples[lvl][row], trgswDft.trlweDftSamples[lvl][row], trgswKey.trlweKey, 0, 0);
         }
     }
 }
 
 // output += mu * G^T
+void addIntegerToTrgsw(Trgsw& trgsw, const Integer mu, const int pos, const YatfheParameters& param) {
+/*    // add the diagonal matrix (mu * G^T)_ijk to the output
+    //       ( 1/B^l                         )
+    //      .                              . .
+    //    .                              .   .
+    //  ( 1/B^2                        )     .
+    // ( 1/B                         )       .
+    // (     1/B                     )       .
+    // (          .                  )       .
+    // (              .              )     .
+    // (                  .          )   .
+    // (                      .      ) .
+    // (                         1/B )
+    // ( a_0  a_1          a_k-1  b  )*/
+
+    for (auto lvl = 0; lvl < trgsw.l; lvl++) {
+        auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
+        for (auto row = 0; row < param.k + 1; row++) {
+
+            // add to a_lii
+            if (row < param.k) {
+//                trgsw.trlweSamples[lvl][row].a[row].coeffs[0] += decomposedMu; // coeffs[0]: add mu to the constant polynomial term
+                trgsw.trlweSamples[lvl][row].a[row].coeffs[pos] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].a[row].coeffs[pos], decomposedMu);
+                continue;
+            }
+
+            // add to b_lk
+//            trgsw.trlweSamples[lvl][row].b.coeffs[0] += decomposedMu;
+            trgsw.trlweSamples[lvl][row].b.coeffs[pos] = addTorus(TORUS_Q, trgsw.trlweSamples[lvl][row].b.coeffs[pos], decomposedMu);
+        }
+    }
+}
+
 void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, const int pos, const YatfheParameters& param) {
     for (auto lvl = 0; lvl < trgswDft.l; lvl++) {
         auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
@@ -445,6 +391,117 @@ void recompTrgswCrt(Trgsw& out, const std::vector<Trgsw8>& in, const YatfheParam
     }
 }
 
+void multTrgswMPWithConst(TrgswMP& trgsw, const TrgswMP& in, const int num) {
+    const auto l = trgsw.l;
+    const auto k = trgsw.k;
+    const auto N = trgsw.cPrime[0].b.N;
+    for (auto i = 0; i < l; i++) {
+        for (auto j = 0; j < k; j++) {
+            for (auto z = 0; z < N; z++) {
+                trgsw.cPrime[i].a[j].coeffs[z] = multTorus(TORUS_Q, in.cPrime[i].a[j].coeffs[z], num);
+            }
+        }
+        for (auto z = 0; z < N; z++) {
+            trgsw.cPrime[i].b.coeffs[z] = multTorus(TORUS_Q, in.cPrime[i].b.coeffs[z], num);
+        }
+        for (auto j1 = 0; j1 < k; j1++) {
+            for (auto j2 = 0; j2 < k; j2++) {
+                for (auto z = 0; z < N; z++) {
+                    trgsw.c[i][j1].a[j2].coeffs[z] = multTorus(TORUS_Q, in.c[i][j1].a[j2].coeffs[z], num);
+                }
+            }
+            for (auto z = 0; z < N; z++) {
+                trgsw.c[i][j1].b.coeffs[z] = multTorus(TORUS_Q, in.c[i][j1].b.coeffs[z], num);
+            }
+        }
+    }
+}
+
+void multTrgswMPWithConstNtt(TrgswMPDft& trgsw, const TrgswMPDft& in, const int num) {
+    const auto l = trgsw.l;
+    const auto k = trgsw.k;
+    const auto N = trgsw.cPrime[0].b.N;
+    const auto q = getNttHexl().GetModulus();
+    // NTT of the constant polynomial [num, 0, ..., 0] evaluates to num at every
+    // negacyclic root of unity, so the result is a uniform vector — no NTT needed.
+    const uint64_t numMod = num >= 0 ? (uint64_t)num % q : q - (uint64_t)(-(int64_t)num) % q;
+    NttPolynomial tmp{N};
+    std::fill(tmp.coeffs.begin(), tmp.coeffs.end(), numMod);
+    for (auto i = 0; i < l; i++) {
+        for (auto j = 0; j < k; j++) {
+            EltwiseMultMod(trgsw.cPrime[i].a[j].coeffs.data(), in.cPrime[i].a[j].coeffs.data(), tmp.coeffs.data(), N, q, 1);
+        }
+        EltwiseMultMod(trgsw.cPrime[i].b.coeffs.data(), in.cPrime[i].b.coeffs.data(), tmp.coeffs.data(), N, q, 1);
+        for (auto j1 = 0; j1 < k; j1++) {
+            for (auto j2 = 0; j2 < k; j2++) {
+                EltwiseMultMod(trgsw.c[i][j1].a[j2].coeffs.data(), in.c[i][j1].a[j2].coeffs.data(), tmp.coeffs.data(), N, q, 1);
+            }
+            EltwiseMultMod(trgsw.c[i][j1].b.coeffs.data(), in.c[i][j1].b.coeffs.data(), tmp.coeffs.data(), N, q, 1);
+        }
+    }
+}
+
+// out = (in1 - in2) * scalar
+void subMulTrgswMPNtt(TrgswMPDft& out, const TrgswMPDft& in1, const TrgswMPDft& in2, const int scalar) {
+    const auto l = out.l;
+    const auto k = out.k;
+    const auto N = out.cPrime[0].b.N;
+    const auto q = getNttHexl().GetModulus();
+    const uint64_t scalarMod = scalar >= 0 ? (uint64_t)scalar % q : q - (uint64_t)(-(int64_t)scalar) % q;
+    // Reuse a single scalar vector across all polynomials in the RGSW structure.
+    vector<uint64_t> scalarVec(N, scalarMod);
+
+    auto applySubMul = [&](NttPolynomial& o, const NttPolynomial& a, const NttPolynomial& b) {
+        EltwiseSubMod(o.coeffs.data(), a.coeffs.data(), b.coeffs.data(), N, q);
+        EltwiseMultMod(o.coeffs.data(), o.coeffs.data(), scalarVec.data(), N, q, 1);
+    };
+    for (auto i = 0; i < l; i++) {
+        for (auto j = 0; j < k; j++) applySubMul(out.cPrime[i].a[j], in1.cPrime[i].a[j], in2.cPrime[i].a[j]);
+        applySubMul(out.cPrime[i].b, in1.cPrime[i].b, in2.cPrime[i].b);
+        for (auto j1 = 0; j1 < k; j1++) {
+            for (auto j2 = 0; j2 < k; j2++) applySubMul(out.c[i][j1].a[j2], in1.c[i][j1].a[j2], in2.c[i][j1].a[j2]);
+            applySubMul(out.c[i][j1].b, in1.c[i][j1].b, in2.c[i][j1].b);
+        }
+    }
+}
+
+// out = in * scalar1 + scalar2
+// scalar2 is treated as a noise-free TRGSW: all a's zero, b and diagonal a's set to
+// scalar2 * gadget[lvl] (uniform NTT vector) for each level.
+void addMulTrgswMPWithConstNtt(TrgswMPDft& out, const TrgswMPDft& in, const int scalar1, const int scalar2) {
+    const auto l = out.l;
+    const auto k = out.k;
+    const auto N = out.cPrime[0].b.N;
+    const auto q = getNttHexl().GetModulus();
+
+    const uint64_t s1Mod = scalar1 >= 0 ? (uint64_t)scalar1 % q : q - (uint64_t)(-(int64_t)scalar1) % q;
+    NttPolynomial s1Vec{N};
+    std::fill(s1Vec.coeffs.begin(), s1Vec.coeffs.end(), s1Mod);
+
+    const uint64_t s2Mod = scalar2 >= 0 ? (uint64_t)scalar2 % q : q - (uint64_t)(-(int64_t)scalar2) % q;
+    NttPolynomial addendVec{N};
+
+    for (auto i = 0; i < l; i++) {
+        const uint64_t gadgetVal = getNttGadgetRecomper(i).coeffs[0];
+        const uint64_t addend = static_cast<uint64_t>((__uint128_t)s2Mod * gadgetVal % q);
+        std::fill(addendVec.coeffs.begin(), addendVec.coeffs.end(), addend);
+
+        for (auto j = 0; j < k; j++) {
+            EltwiseMultMod(out.cPrime[i].a[j].coeffs.data(), in.cPrime[i].a[j].coeffs.data(), s1Vec.coeffs.data(), N, q, 1);
+        }
+        EltwiseMultMod(out.cPrime[i].b.coeffs.data(), in.cPrime[i].b.coeffs.data(), s1Vec.coeffs.data(), N, q, 1);
+        EltwiseAddMod(out.cPrime[i].b.coeffs.data(), out.cPrime[i].b.coeffs.data(), addendVec.coeffs.data(), N, q);
+
+        for (auto j1 = 0; j1 < k; j1++) {
+            for (auto j2 = 0; j2 < k; j2++) {
+                EltwiseMultMod(out.c[i][j1].a[j2].coeffs.data(), in.c[i][j1].a[j2].coeffs.data(), s1Vec.coeffs.data(), N, q, 1);
+            }
+            EltwiseMultMod(out.c[i][j1].b.coeffs.data(), in.c[i][j1].b.coeffs.data(), s1Vec.coeffs.data(), N, q, 1);
+            EltwiseAddMod(out.c[i][j1].a[j1].coeffs.data(), out.c[i][j1].a[j1].coeffs.data(), addendVec.coeffs.data(), N, q);
+        }
+    }
+}
+
 void externalProductTrgsw(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param) {
     const auto k = trlweInput.k;
     const auto level = trgswInput.l;
@@ -612,46 +669,38 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
     const auto k = param.k;
     const auto N = param.N;
     DecomposedTrlwe decomposedTrlwe{param};
-    DecomposedTrlweDft decomposedTrlweDft{param, level};
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(level);
-    for (auto i = 0; i < level; i++) {
-        futures.emplace_back(pool.enqueue([&decomposedTrlweDft, &decomposedTrlwe, i] {
-            applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+    vector<TrlweDft> partials(level, TrlweDft{k, N});
+
+    for (int lvl = 0; lvl < level; lvl++) {
+        futures.emplace_back(pool.enqueue([k, N, lvl, &trgswMPInput, &decomposedTrlwe, &partials]() {
+            TrlweDft inDft{k, N};
+            applyNttForAB(inDft, decomposedTrlwe.trlwes[lvl]);
+            const auto& c      = trgswMPInput.c[lvl];
+            const auto& cPrime = trgswMPInput.cPrime[lvl];
+            const auto& inA    = inDft.a;
+            const auto& inB    = inDft.b;
+            auto& partial      = partials[lvl];
+            for (size_t i = 0; i < k; i++) {
+                for (size_t i2 = 0; i2 < k; i2++) {
+                    calModularInnerProductNtt(partial.a[i2], inA[i], c[i].a[i2]);
+                }
+                calModularInnerProductNtt(partial.b,    inA[i], c[i].b);
+                calModularInnerProductNtt(partial.a[i], inB,    cPrime.a[i]);
+            }
+            calModularInnerProductNtt(partial.b, inB, cPrime.b);
         }));
     }
-    for (auto& f : futures) {
-        f.get();
-    }
-//
-//    for (auto i = 0; i < level; i++) {
-//        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
-//    }
+    for (auto& f : futures) f.get();
 
-    TrlweDft resA{k, N};
-    TrlweDft resB{k, N};
-    for (size_t lvl = 0; lvl < level; lvl++) {
-        auto& c = trgswMPInput.c[lvl];
-        auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
-        auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
-        auto& inA = decomposedTrlweDft.rlweDfts[lvl].a;
-        auto& inB = decomposedTrlweDft.rlweDfts[lvl].b;
-        for(size_t i = 0; i < k; i++) {
-            auto& ciA = c[i].a;
-            auto& ciB = c[i].b;
-            for (size_t i2 = 0; i2 < k; i2++) {
-                calModularInnerProductNtt(resA.a[i2], inA[i], ciA[i2]);
-            }
-            calModularInnerProductNtt(resA.b, inA[i], ciB);
-            calModularInnerProductNtt(resB.a[i], inB, cPrimeA[i]);
-        }
-        calModularInnerProductNtt(resB.b, inB, cPrimeB);
-    }
     TrlweDft tmp{k, N};
-    addTrlweNtt(tmp, resB, resA);
+    for (int lvl = 0; lvl < level; lvl++) {
+        addTrlweNtt(tmp, tmp, partials[lvl]);
+    }
     applyInttForAB(output, tmp);
 }
 
@@ -659,162 +708,39 @@ void externalProductTrgswMPNttInPlace(Trlwe& acc, const TrgswMPDft& trgswMPInput
     const auto k = param.k;
     const auto N = param.N;
     DecomposedTrlwe decomposedTrlwe{param};
-    DecomposedTrlweDft decomposedTrlweDft{param, level};
     gadgetDecomposeTrlwe(decomposedTrlwe, acc, param);
 
-    // ntt
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(level);
-    for (auto i = 0; i < level; i++) {
-        futures.emplace_back(pool.enqueue([&decomposedTrlweDft, &decomposedTrlwe, i] {
-            applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
-        }));
-    }
-    for (auto& f : futures) {
-        f.get();
-    }
-//
-//    for (auto i = 0; i < level; i++) {
-//        applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
-//    }
+    vector<TrlweDft> partials(level, TrlweDft{k, N});
 
-    TrlweDft resA{k, N};
-    TrlweDft resB{k, N};
-    for (size_t lvl = 0; lvl < level; lvl++) {
-        auto& c = trgswMPInput.c[lvl];
-        auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
-        auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
-        auto& inA = decomposedTrlweDft.rlweDfts[lvl].a;
-        auto& inB = decomposedTrlweDft.rlweDfts[lvl].b;
-        for(size_t i = 0; i < k; i++) {
-            auto& ciA = c[i].a;
-            auto& ciB = c[i].b;
-            for (size_t i2 = 0; i2 < k; i2++) {
-                calModularInnerProductNtt(resA.a[i2], inA[i], ciA[i2]);
-            }
-            calModularInnerProductNtt(resA.b, inA[i], ciB);
-            calModularInnerProductNtt(resB.a[i], inB, cPrimeA[i]);
-        }
-        calModularInnerProductNtt(resB.b, inB, cPrimeB);
-    }
-    TrlweDft tmp{k, N};
-    addTrlweNtt(tmp, resB, resA);
-    applyInttForAB(acc, tmp);
-}
-
-
-void externalProductTrgswMPNttMT(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const int level, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto N = param.N;
-    DecomposedTrlwe decomposedTrlwe{param};
-    DecomposedTrlweDft decomposedTrlweDft{param, level};
-    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
-
-    auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(level);
-    vector resAV(level, TrlweDft{k, N});
-    vector resBV(level, TrlweDft{k, N});
-
-    for (auto lvl = 0; lvl < level; lvl++) {
-        auto& c = trgswMPInput.c[lvl];
-        auto& cPrimeA = trgswMPInput.cPrime[lvl].a;
-        auto& cPrimeB = trgswMPInput.cPrime[lvl].b;
-        auto& in = decomposedTrlwe.trlwes[lvl];
-        auto& resA = resAV[lvl];
-        auto& resB = resBV[lvl];
-        futures.emplace_back(pool.enqueue([k, N, &c, &cPrimeA, &cPrimeB, &in, &resA, &resB] {
+    for (int lvl = 0; lvl < level; lvl++) {
+        futures.emplace_back(pool.enqueue([k, N, lvl, &trgswMPInput, &decomposedTrlwe, &partials]() {
             TrlweDft inDft{k, N};
-            applyNttForAB(inDft, in);
-            auto& inA = inDft.a;
-            auto& inB = inDft.b;
-            for(size_t i = 0; i < k; i++) {
-                auto& ciA = c[i].a;
-                auto& ciB = c[i].b;
+            applyNttForAB(inDft, decomposedTrlwe.trlwes[lvl]);
+            const auto& c      = trgswMPInput.c[lvl];
+            const auto& cPrime = trgswMPInput.cPrime[lvl];
+            const auto& inA    = inDft.a;
+            const auto& inB    = inDft.b;
+            auto& partial      = partials[lvl];
+            for (size_t i = 0; i < k; i++) {
                 for (size_t i2 = 0; i2 < k; i2++) {
-                    calModularInnerProductNtt(resA.a[i2], inA[i], ciA[i2]);
+                    calModularInnerProductNtt(partial.a[i2], inA[i], c[i].a[i2]);
                 }
-                calModularInnerProductNtt(resA.b, inA[i], ciB);
-                calModularInnerProductNtt(resB.a[i], inB, cPrimeA[i]);
+                calModularInnerProductNtt(partial.b,    inA[i], c[i].b);
+                calModularInnerProductNtt(partial.a[i], inB,    cPrime.a[i]);
             }
-            calModularInnerProductNtt(resB.b, inB, cPrimeB);
+            calModularInnerProductNtt(partial.b, inB, cPrime.b);
         }));
     }
-    for (auto& f : futures) {
-        f.wait();
-    }
+    for (auto& f : futures) f.get();
+
     TrlweDft tmp{k, N};
-    for (size_t lvl = 0; lvl < level; lvl++) {
-        addTrlweNtt(tmp, tmp, resAV[lvl]);
-        addTrlweNtt(tmp, tmp, resBV[lvl]);
+    for (int lvl = 0; lvl < level; lvl++) {
+        addTrlweNtt(tmp, tmp, partials[lvl]);
     }
-    applyInttForAB(output, tmp);
-}
-
-void externalProductTrgswMPDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto level = param.l;
-
-    DecomposedTrlwe resA{param};
-    DecomposedTrlwe resB{param};
-    for (size_t lvl = 0; lvl < level; lvl++) {
-        auto& c = trgswMPInput.c[0];
-        auto& cPrimeA = trgswMPInput.cPrime[0].a;
-        auto& cPrimeB = trgswMPInput.cPrime[0].b;
-        auto& inA = trlweInput.trlwes[lvl].a;
-        auto& inB = trlweInput.trlwes[lvl].b;
-        for(size_t i = 0; i < k; i++) {
-            auto& ciA = c[i].a;
-            auto& ciB = c[i].b;
-            for (size_t i2 = 0; i2 < k; i2++) {
-                multTorusPolynomialAcc(resA.trlwes[lvl].a[i2], inA[i], ciA[i2]);
-            }
-            multTorusPolynomialAcc(resA.trlwes[lvl].b, inA[i], ciB);
-            multTorusPolynomialAcc(resB.trlwes[lvl].a[i], inB, cPrimeA[i]);
-        }
-        multTorusPolynomialAcc(resB.trlwes[lvl].b, inB, cPrimeB);
-    }
-    for (size_t lvl = 0; lvl < level; lvl++) {
-        auto& out = output.trlwes[lvl];
-        auto& a = resA.trlwes[lvl];
-        auto& b = resB.trlwes[lvl];
-        for (auto i = 0; i < param.k; i++) {
-            addTorusPolynomial(out.a[i], a.a[i], b.a[i]);
-        }
-        addTorusPolynomial(out.b, a.b, b.b);
-    }
-}
-
-void externalProductTrgswMPDecompNtt(DecomposedTrlweDft& output, const TrgswMPDft& trgswMPInput, const DecomposedTrlweDft& trlweInput, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto level = param.l;
-
-    DecomposedTrlweDft resA{param, level};
-    DecomposedTrlweDft resB{param, level};
-    for (size_t lvl = 0; lvl < level; lvl++) {
-        auto& c = trgswMPInput.c[0];
-        auto& cPrimeA = trgswMPInput.cPrime[0].a;
-        auto& cPrimeB = trgswMPInput.cPrime[0].b;
-        auto& inA = trlweInput.rlweDfts[lvl].a;
-        auto& inB = trlweInput.rlweDfts[lvl].b;
-        for(size_t i = 0; i < k; i++) {
-            auto& ciA = c[i].a;
-            auto& ciB = c[i].b;
-            for (size_t i2 = 0; i2 < k; i2++) {
-                calModularInnerProductNtt(resA.rlweDfts[lvl].a[i2], inA[i], ciA[i2]);
-            }
-            calModularInnerProductNtt(resA.rlweDfts[lvl].b, inA[i], ciB);
-            calModularInnerProductNtt(resB.rlweDfts[lvl].a[i], inB, cPrimeA[i]);
-        }
-        calModularInnerProductNtt(resB.rlweDfts[lvl].b, inB, cPrimeB);
-    }
-    for (size_t lvl = 0; lvl < level; lvl++) {
-        auto& out = output.rlweDfts[lvl];
-        auto& a = resA.rlweDfts[lvl];
-        auto& b = resB.rlweDfts[lvl];
-        addTrlweNtt(out, a, b);
-    }
+    applyInttForAB(acc, tmp);
 }
 
 void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, const int level, const YatfheParameters& param) {

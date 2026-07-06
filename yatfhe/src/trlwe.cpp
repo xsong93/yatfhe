@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/25.
 //
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
@@ -9,25 +9,24 @@
 #include "yatfhe/ntt_hexl.h"
 #include "yatfhe/gadget_decomposition.h"
 #include "yautil/control_helper.h"
+#include "yautil/multi_threading.h"
 
 using namespace std;
 using namespace NttHexl;
 
-void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, double sigma) {
-    initCoeffsWithGaussianNoiseSingleSample(trlwe.b.coeffs, mu, sigma, TORUS_Q);
+void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, const int pos, double sigma) {
+    initCoeffsWithGaussianNoiseSingleSample(trlwe.b.coeffs, mu, pos, sigma, TORUS_Q);
     for (auto i = 0 ; i < trlwe.k; i++) {
         initCoeffsViaUniformDistribution(trlwe.a[i].coeffs, TORUS_MIN, TORUS_MAX);
     }
 }
 
-void initTrlweSingleSampleFixedNoise(Trlwe& trlwe, const Torus mu, const Torus noise) {
-    for (auto i = 0 ; i < trlwe.N; i++) {
-        trlwe.b.coeffs[i] = longModP(mu + noise, TORUS_Q);
-    }
-    for (auto i = 0 ; i < trlwe.k; i++) {
-        for (auto j = 0 ; j < trlwe.N; j++) {
-            trlwe.a[i].coeffs[j] = 0;
-        }
+void initTrlweSingleSampleSimple(TrlweDft& trlweDft, const Torus mu, const int pos, double sigma) {
+    TorusPolynomial bTmp{trlweDft.b.N};
+    initCoeffsWithGaussianNoiseSingleSample(bTmp.coeffs, mu, pos, sigma, TORUS_Q);
+    applyNtt(trlweDft.b, bTmp);
+    for (auto i = 0 ; i < trlweDft.k; i++) {
+        initNttCoeffsViaUniformDistribution(trlweDft.a[i].coeffs, NTT_MIN, NTT_MAX);
     }
 }
 
@@ -38,16 +37,15 @@ void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
     }
 }
 
-void initTrlweMultiSampleFixedNoise(Trlwe& trlwe, const vector<Torus>& mu, const Torus noise) {
-    for (auto i = 0 ; i < trlwe.N; i++) {
-        trlwe.b.coeffs[i] = longModP(mu[i] + noise, TORUS_Q);
-    }
-    for (auto i = 0 ; i < trlwe.k; i++) {
-        for (auto j = 0 ; j < trlwe.N; j++) {
-            trlwe.a[i].coeffs[j] = 0;
-        }
+void initTrlweMultiSampleSimple(TrlweDft& trlweDft, const vector<Torus>& mu, double sigma) {
+    TorusPolynomial bTmp{trlweDft.b.N};
+    initCoeffsWithGaussianNoiseMultiSample(bTmp.coeffs, mu, sigma, TORUS_Q);
+    applyNtt(trlweDft.b, bTmp);
+    for (auto i = 0 ; i < trlweDft.k; i++) {
+        initNttCoeffsViaUniformDistribution(trlweDft.a[i].coeffs, NTT_MIN, NTT_MAX);
     }
 }
+
 
 void symEncTrlwe(Trlwe& trlwe, const TrlweKey& key) {
     for (auto i = 0; i < trlwe.k; i++) {
@@ -59,6 +57,10 @@ void symEncTrlweNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key) {
     applyNttForAB(trlweDft, trlwe);
     calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
     applyIntt(trlwe.b, trlweDft.b);
+}
+
+void symEncTrlweNttSimple(TrlweDft& trlweDft, const TrlweKey& key) {
+    calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
 }
 
 void genTrlweKey(TrlweKey& key) {
@@ -74,14 +76,19 @@ void genTrlweKey(TrlweKey& key) {
     }
 }
 
-void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, const Torus mu) {
-    initTrlweSingleSample(trlwe, mu, key.sigma);
+void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, const Torus mu, const int pos) {
+    initTrlweSingleSample(trlwe, mu, pos, key.sigma);
     symEncTrlwe(trlwe, key);
 }
 
-void symEncTrlweSingleSampleFixedNoise(Trlwe& trlwe, const TrlweKey& key, const Torus mu, const Torus noise) {
-    initTrlweSingleSampleFixedNoise(trlwe, mu, noise);
-    symEncTrlwe(trlwe, key);
+void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const Torus mu, const int pos) {
+    initTrlweSingleSample(trlwe, mu, pos, key.sigma);
+    symEncTrlweNtt(trlwe, trlweDft, key);
+}
+
+void symEncTrlweSingleSampleNttSimple(TrlweDft& trlweDft, const TrlweKey& key, const Torus mu, const int pos) {
+    initTrlweSingleSampleSimple(trlweDft, mu, pos, key.sigma);
+    symEncTrlweNttSimple(trlweDft, key);
 }
 
 void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu) {
@@ -89,19 +96,14 @@ void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const vector<Toru
     symEncTrlwe(trlwe, key);
 }
 
-void symEncTrlweMultiSampleFixedNoise(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu, const Torus noise) {
-    initTrlweMultiSampleFixedNoise(trlwe, mu, noise);
-    symEncTrlwe(trlwe, key);
-}
-
-void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const Torus mu) {
-    initTrlweSingleSample(trlwe, mu, key.sigma);
-    symEncTrlweNtt(trlwe, trlweDft, key);
-}
-
 void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu) {
     initTrlweMultiSample(trlwe, mu, key.sigma);
     symEncTrlweNtt(trlwe, trlweDft, key);
+}
+
+void symEncTrlweMultiSampleSimple(TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu) {
+    initTrlweMultiSampleSimple(trlweDft, mu, key.sigma);
+    symEncTrlweNttSimple(trlweDft, key);
 }
 
 void symDecTrlweToDouble(DoublePolynomial& output, const Trlwe& trlwe, const TrlweKey& key, const int torusBase) {
@@ -118,7 +120,7 @@ void symDecTrlweToDouble(DoublePolynomial& output, const Trlwe& trlwe, const Trl
 void symDecTrlweToTorus(TorusPolynomial& output, const Trlwe& trlwe, const TrlweKey& key, const int torusBase) {
     symDecTrlweWoRounding(output, trlwe, key);
     for (auto i = 0 ; i < output.N; i++) {
-        output.coeffs[i] = roundTorusError(output.coeffs[i], torusBase);
+        output.coeffs[i] = roundTorus32Error(output.coeffs[i], torusBase);
     }
 }
 
@@ -126,7 +128,7 @@ void symDecTrlweToInt(IntPolynomial& output, const Trlwe& trlwe, const TrlweKey&
     TorusPolynomial tmp {output.N};
     symDecTrlweWoRounding(tmp, trlwe, key);
     for (auto i = 0 ; i < tmp.N; i++) {
-        tmp.coeffs[i] = roundTorusError(tmp.coeffs[i], torusBase);
+        tmp.coeffs[i] = roundTorus32Error(tmp.coeffs[i], torusBase);
         output.coeffs[i] = modSwitchFromTorus32(tmp.coeffs[i], torusBase);
     }
 }
@@ -135,7 +137,7 @@ void symDecTrlweToIntNtt(IntPolynomial& output, const TrlweDft& trlweDft, const 
     TorusPolynomial tmp {output.N};
     symDecTrlweWoRoundingNtt(tmp, trlweDft, key);
     for (auto i = 0; i < tmp.N; i++) {
-        tmp.coeffs[i] = roundTorusError(tmp.coeffs[i], torusBase);
+        tmp.coeffs[i] = roundTorus32Error(tmp.coeffs[i], torusBase);
         output.coeffs[i] = modSwitchFromTorus32(tmp.coeffs[i], torusBase);
     }
 }
@@ -283,10 +285,18 @@ void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey) {
 }
 
 void rotateTrlwe(Trlwe& res, const Trlwe& input, const int a) {
+    if (a % (input.b.N * 2) == 0) return;
     for (auto i = 0; i < input.a.size(); i++) {
         rotateTorusPolynomial(res.a[i], a, input.a[i]);
     }
     rotateTorusPolynomial(res.b, a, input.b);
+}
+
+void rotateAccumulateTrlwe(Trlwe& accum, const Trlwe& input, const int aTrue, const int isWrap) {
+    for (auto i = 0; i < static_cast<int>(input.a.size()); i++) {
+        rotateAccumulateTorusPolynomial(accum.a[i], aTrue, isWrap, input.a[i]);
+    }
+    rotateAccumulateTorusPolynomial(accum.b, aTrue, isWrap, input.b);
 }
 
 void rotateTrlweNtt(TrlweDft& res, const TrlweDft& input, const int r) {
@@ -352,4 +362,82 @@ void rescaleTrlweToNewMod(Trlwe& output, const Trlwe& in, const int64_t newMod, 
     for (auto j = 0; j < in.b.N; j++) {
         output.b.coeffs[j] = modSwitchFromTorusGeneral(in.b.coeffs[j], newMod, currMod);
     }
+}
+
+void multTrlweWithConst(Trlwe& output, const Trlwe& input1, const int scalar) {
+    if (scalar == 0) {
+        clearTrlwe(output);
+        return;
+    }
+
+    // // decompose the scalar on base 2
+    // std::vector<int> mults;
+    // auto cop = scalar;
+    // while (cop >= 2) {
+    //     mults.emplace_back(2);
+    //     cop = cop % 2;
+    // }
+    // if (cop == 1) {
+    //     mults.emplace_back(1);
+    // }
+
+    // decompose the scalar on base 1
+    for (auto i = 0; i < scalar; i++) {
+        accumulateTrlwe(output, input1);
+    }
+    //
+    // Trlwe tmp{input1.k, input1.N};
+    // for (const auto m : mults) {
+    //     for (auto i = 0; i < output.k; i++) {
+    //         for (int j = 0; j < output.N; j++) {
+    //             tmp.a[i].coeffs[j] = multTorus(TORUS_Q, input1.a[i].coeffs[j], m);
+    //         }
+    //     }
+    //     for (int j = 0; j < output.N; j++) {
+    //         tmp.b.coeffs[j] = multTorus(TORUS_Q, input1.b.coeffs[j], m);
+    //     }
+    //     accumulateTrlwe(output, tmp);
+    // }
+}
+
+void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const int level, const YatfheParameters& param) {
+    const auto K = param.k;
+    DecomposedTrlwe decomposedTrlwe{param};
+    DecomposedTrlweDft decomposedTrlweDft{param, level};
+    vector<TorusPolynomial> indicatorDecomp(level, TorusPolynomial{param.N});
+    vector<NttPolynomial> indicatorDecompDft(level, NttPolynomial{param.N});
+    TrlweDft resDft{param};
+
+    inverseGadgetDecomposePolynomial(indicatorDecomp, poly, param);
+    gadgetDecomposeTrlwe(decomposedTrlwe, in, param);
+
+    // ntt
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(level);
+    for (auto i = 0; i < level; i++) {
+        futures.emplace_back(pool.enqueue([&decomposedTrlweDft, &decomposedTrlwe, &indicatorDecompDft, &indicatorDecomp, i] {
+            applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
+            applyNtt(indicatorDecompDft[i], indicatorDecomp[i]);
+        }));
+    }
+    for (auto& f : futures) {
+        f.get();
+    }
+
+    // mult
+    for (auto i = 0; i < level; i++) {
+        auto& a = decomposedTrlweDft.rlweDfts[i].a;
+        auto& aResDft = resDft.a;
+        auto& b = decomposedTrlweDft.rlweDfts[i].b;
+        auto& bResDft = resDft.b;
+        auto& currIndicatorDecompDft = indicatorDecompDft[i];
+        for (auto k = 0; k < K; k++) {
+            calModularInnerProductNtt(aResDft[k], a[k], currIndicatorDecompDft);
+        }
+        calModularInnerProductNtt(bResDft, b, currIndicatorDecompDft);
+    }
+
+    //intt
+    applyInttForAB(output, resDft);
 }

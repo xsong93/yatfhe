@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2024/8/27.
 //
 #include "yatfhe/crt.h"
 #include "yatfhe/numeric.h"

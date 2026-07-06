@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/25.
 //
 
 #ifndef HLS_YATFHE_POLYNOMIAL_H
@@ -7,7 +7,9 @@
 
 #include <vector>
 #include <cstdint>
+#include <algorithm>
 #include "yatfhe/torus.h"
+#include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric.h"
 
 constexpr uint8_t POLY_MAX8 = 1 << 7;
@@ -25,6 +27,16 @@ struct TorusPolynomial {
     TorusPolynomial(int N, Torus value) :
             coeffs(N, value),
             N(N) {};
+
+    int minIndex() const {
+        const auto it = std::min_element(coeffs.begin(), coeffs.end());
+        return static_cast<int>(std::distance(coeffs.begin(), it));
+    }
+
+    int maxIndex() const {
+        const auto it = std::max_element(coeffs.begin(), coeffs.end());
+        return static_cast<int>(std::distance(coeffs.begin(), it));
+    }
 };
 
 struct Int8Polynomial {
@@ -211,9 +223,19 @@ void roundErrorDoublePoly(DoublePolynomial& target, int torusBase);
 
 void generateTestPolynomial(TorusPolynomial& v, int modP, int modQ);
 
-void rotateTorusPolynomial(TorusPolynomial& out, int a, const TorusPolynomial& input);
+void generateTestPolynomialLt1(TorusPolynomial& v, int t);
 
-void rotateTorusPolynomialInplace(TorusPolynomial& input, int a);
+void generateTestPolynomialCompLeq0(TorusPolynomial& v, const int t);
+
+void generateTestPolynomialCompWithValue(TorusPolynomial& tv, int t, Integer v);
+
+void generateTestPolynomialOne(TorusPolynomial& v);
+
+void generateTestPolynomialValue(TorusPolynomial& tv, Integer v);
+
+void validateRotator(int& aTrue, int& isWrap, int a, int N);
+void rotateTorusPolynomial(TorusPolynomial& out, int a, const TorusPolynomial& input);
+void rotateAccumulateTorusPolynomial(TorusPolynomial& accum, int aTrue, int isWrap, const TorusPolynomial& input);
 
 void rotateTorusPolynomialMinusOne(TorusPolynomial& out, int a, const TorusPolynomial& input);
 
@@ -256,5 +278,7 @@ void accumulateNttPolynomial(NttPolynomial& accum, NttPolynomial& poly);
 // void addNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2);
 
 void subNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2);
+
+void inverseGadgetDecomposePolynomial(vector<TorusPolynomial>& output, const IntPolynomial& input, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_POLYNOMIAL_H

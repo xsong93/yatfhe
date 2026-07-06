@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2024/3/15.
 //
 #include <vector>
 #include "yatfhe/yatfhe_parameters.h"
@@ -27,7 +27,9 @@ std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int t
 
 void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParameters& param) {
     out.sign = (in < 0) ? -1 : 1;
-    UnsignedInteger tmp = (out.sign == 1) ? in : -in;
+    const int64_t in64 = static_cast<int64_t>(in);
+    const uint64_t absIn = (in64 < 0) ? static_cast<uint64_t>(-in64) : static_cast<uint64_t>(in64);
+    UnsignedInteger tmp = static_cast<UnsignedInteger>(absIn);
     UnsignedInteger mask = ((1 << param.radixBits) - 1) << (param.torusBits - param.radixBits);
     for (auto i = 0; i < out.l; i++) {
         out.value[i] = (mask & tmp) >> (param.torusBits - (i + 1) * param.radixBits);
@@ -88,7 +90,9 @@ void decomposeOverB(std::vector<Integer>& output, const Integer in, const Yatfhe
  */
 void signedGadgetDecomposition(DecomposedData& out, const Integer in, const YatfheParameters& param) {
     out.sign = (in < 0) ? -1 : 1;
-    UnsignedInteger unsignedIn = (out.sign == 1) ? in : -in;
+    const int64_t in64 = static_cast<int64_t>(in);
+    const uint64_t absIn = (in64 < 0) ? static_cast<uint64_t>(-in64) : static_cast<uint64_t>(in64);
+    UnsignedInteger unsignedIn = static_cast<UnsignedInteger>(absIn);
     vector<UnsignedInteger> tmp(param.torusBits / param.radixBits);
     UnsignedInteger carry = 0;
     for (auto i = 0; i < tmp.size(); i++) {

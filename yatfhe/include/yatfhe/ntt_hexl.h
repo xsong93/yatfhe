@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong on 25-4-16.
 //
 
 #ifndef HLS_YATFHE_NTT_HEXL_H
@@ -57,7 +57,11 @@ namespace NttHexl {
         const int N = output.N;
         for (int i = 0; i < N; i++) {
             uint64_t tmp = (inputs.coeffs[i] + ...);
-            output.coeffs[i] = tmp % q;
+            if constexpr (sizeof...(NttPolyArgs) == 2) {
+                output.coeffs[i] = tmp >= q ? tmp - q : tmp;
+            } else {
+                output.coeffs[i] = tmp % q;
+            }
         }
     }
 

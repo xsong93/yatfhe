@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2024/5/23.
 //
 #include "yautil/initializer.h"
 #include "yatfhe/ntt14.h"
@@ -20,6 +20,8 @@ Integer TORUS_MAX;
 Integer TORUS_MIN;
 Integer LWE_MAX;
 Integer LWE_MIN;
+NttType NTT_MAX;
+NttType NTT_MIN;
 
 void calGadgetVectorW(YatfheParameters& param) {
     auto qCRT = param.qCRT;
@@ -50,6 +52,8 @@ void initYatfhe(YatfheParameters& param) {
     TORUS_MIN = INT_MIN_VALUE;
     LWE_MAX = static_cast<Integer>((LWE_Q - 1) >> 1);
     LWE_MIN = static_cast<Integer>(-(LWE_Q >> 1));
+    NTT_MAX = param.qNtt - 1;
+    NTT_MIN = 0;
     NttHexl::initNttHexl(param.N, param.qNtt);
     NttHexl::initNttRotMap(param.N);
     NttHexl::initNttRotMinusOneMap(param.N);

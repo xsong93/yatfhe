@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2024/1/11.
 //
 #include "yatfhe/ntt.h"
 #include "yatfhe/torus.h"

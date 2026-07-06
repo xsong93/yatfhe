@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/8.
 //
 #include <iostream>
 #include "yautil/control_helper.h"
@@ -53,7 +53,7 @@ Integer symDecTlweToInt(Tlwe& in, const TlweKey& key, const int torusBase) {
     return modSwitchFromTorusGeneral(roundTorusGeneralError(subTorus(LWE_Q, in.b, aXs), torusBase, LWE_Q), torusBase, LWE_Q);
 }
 
-Torus calTlweError(Tlwe& in, const TlweKey& key, Torus mu) {
+Torus calTlweError(Tlwe& in, const TlweKey& key, const Integer mu) {
     int64_t tmp = 0;
     for (auto i = 0; i < key.n; i++) {
         if (key.s[i] != 0) {
@@ -61,7 +61,7 @@ Torus calTlweError(Tlwe& in, const TlweKey& key, Torus mu) {
         }
     }
     auto aXs = static_cast<Torus>(longModP(tmp, LWE_Q));
-    return subTorus(LWE_Q, in.b, aXs) - mu;
+    return subTorus(LWE_Q, in.b, aXs) - modSwitchToTorusGeneral(mu, MESSAGE_P, LWE_Q);
 }
 
 void rescaleTlweFromTorus(Tlwe& output, const Tlwe& input) {
@@ -101,6 +101,13 @@ void subTlweInPlace(Tlwe& output, const Tlwe& input) {
     output.b = subTorus(LWE_Q, output.b, input.b);
 }
 
+void multTlwe(Tlwe& output, const int scalar) {
+    for (auto i = 0; i < output.n; i++) {
+        output.a[i] = multTorus(LWE_Q, output.a[i], scalar);
+    }
+    output.b = multTorus(LWE_Q, output.b, scalar);
+}
+
 void copyTlwe(Tlwe& output, const Tlwe& input) {
     for (auto i = 0; i < output.n; i++) {
         output.a[i] = input.a[i];
@@ -112,5 +119,12 @@ void resetTlweToZero(Tlwe& tlwe) {
     tlwe.b = 0;
     for (auto& ai : tlwe.a) {
         ai = 0;
+    }
+}
+
+void inverseTlwe(Tlwe& tlwe) {
+    tlwe.b = modMulQ(tlwe.b, -1, LWE_Q);
+    for (auto i = 0; i < tlwe.n; i++) {
+        tlwe.a[i] = modMulQ(tlwe.a[i], -1, LWE_Q);
     }
 }

@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by xintong on 4/21/25.
 //
 #include <mutex>
 #include "yatfhe/blind_rotate.h"

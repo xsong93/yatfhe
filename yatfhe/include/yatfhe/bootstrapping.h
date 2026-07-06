@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/25.
 //
 
 #ifndef HLS_YATFHE_BOOTSTRAPPING_H
@@ -350,6 +350,9 @@ void functionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKe
 void functionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk,
                                 const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
 
+void functionalBootstrappingMPNtt(Tlwe& out, const Tlwe& input, const BootstrappingKeyMP& bsk,
+                                  const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
+
 void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const BootstrappingKeyCRT& bskCRT,
                                 const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param);
 
@@ -375,15 +378,13 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& tr
 void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                       const TorusPolynomial& v, const YatfheParameters& param);
 
-void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, Torus noise,
-                                     const YatfheParameters& param);
-
 void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                  const TorusPolynomial& v, int batchSize, const YatfheParameters& param);
 
-void genBootstrappingKeyMPPreRotTernaryFixedNoise(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-                                                  const TorusPolynomial& v, int batchSize, Torus noise, const YatfheParameters& param);
-
 void decompBootstrappingKeyMcrt(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param);
+
+void transferValueToIndex(Trlwe& output, Tlwe& input, const BootstrappingKeyMP& bskMP, const YatfheParameters& param);
+
+void transferValueToIndexRange(Trlwe& output, Tlwe& input, const Integer v, const BootstrappingKeyMP& bskMP, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_BOOTSTRAPPING_H

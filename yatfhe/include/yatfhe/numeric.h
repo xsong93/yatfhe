@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/11.
 //
 
 #ifndef HLS_YATFHE_NUMERIC_FUNCTIONS_H
@@ -18,6 +18,8 @@ extern uniform_int_distribution<Binary> binaryDistrib;
 extern uniform_int_distribution<Integer> ternaryDistrib;
 
 uniform_int_distribution<Torus>& uniformTorusDistrib(Torus min, Torus max);
+
+uniform_int_distribution<NttType>& uniformNttDistrib(NttType min, NttType max);
 
 int calLogBase2(int N);
 
@@ -41,7 +43,7 @@ double roundError(double in, int torusBase);
 
 Torus roundTorusGeneralError(const Torus in, const int torusBase, const int64_t q);
 
-Torus roundTorusError(Torus in, int torusBase);
+Torus roundTorus32Error(const Torus in, const int torusBase);
 
 Integer roundErrorForShiftedTorus(Torus in, double sigma, int shift);
 
@@ -65,7 +67,9 @@ double torus32ToDouble(Torus in);
 
 void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, Torus min, Torus max);
 
-void initCoeffsWithGaussianNoiseSingleSample(vector<Torus>& coeffs, Torus msg, double sigma, const int64_t torusQ);
+void initNttCoeffsViaUniformDistribution(std::vector<NttType>& coeffs, NttType min, NttType max);
+
+void initCoeffsWithGaussianNoiseSingleSample(vector<Torus>& coeffs, Torus msg, int pos, double sigma, const int64_t torusQ);
 
 void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, double sigma
                                             , const int64_t torusQ);

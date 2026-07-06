@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/25.
 //
 
 #ifndef HLS_YATFHE_TRLWE_H
@@ -11,6 +11,7 @@
 #include "yatfhe/tlwe.h"
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/torus.h"
+#include "yatfhe/numeric.h"
 #include "yatfhe/polynomial.h"
 #include "yatfhe/gadget_decomposition.h"
 
@@ -233,6 +234,22 @@ void subTrlwe(TrlweType& output, const TrlweType& input1, const TrlweType& input
     subTorusPolynomial(output.b, input1.b, input2.b);
 }
 
+// Computes output = scalar - input without requiring a pre-built rlweOne ciphertext.
+// Uses subTorus for correct modular reduction under any TORUS_Q.
+template<typename TrlweType>
+void subTrlweFromConst(TrlweType& output, const TrlweType& input, const Torus scalar) {
+    const auto N = output.b.N;
+    for (auto j = 0; j < (int)output.a.size(); j++) {
+        for (auto i = 0; i < N; i++) {
+            output.a[j].coeffs[i] = subTorus(TORUS_Q, Torus(0), input.a[j].coeffs[i]);
+        }
+    }
+    output.b.coeffs[0] = subTorus(TORUS_Q, scalar, input.b.coeffs[0]);
+    for (auto i = 1; i < N; i++) {
+        output.b.coeffs[i] = subTorus(TORUS_Q, Torus(0), input.b.coeffs[i]);
+    }
+}
+
 // template<typename TrlweDftType>
 // void addTrlweNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
 //     for (auto i = 0; i < output.a.size(); i++) {
@@ -263,19 +280,19 @@ void resetTrlweToZero(std::vector<T>& a, T& b) {
 }
 
 template<typename TrlweType>
-void accumulateTrlwe(TrlweType& accum, const TrlweType& tlwe) {
+void accumulateTrlwe(TrlweType& accum, const TrlweType& trlwe) {
     for (auto i = 0; i < accum.a.size(); i++) {
-        accumulateTorusPolynomial(accum.a[i], tlwe.a[i]);
+        accumulateTorusPolynomial(accum.a[i], trlwe.a[i]);
     }
-    accumulateTorusPolynomial(accum.b, tlwe.b);
+    accumulateTorusPolynomial(accum.b, trlwe.b);
 }
 
 template<typename TrlweType, typename U>
-void accumulateTrlweModP(TrlweType& accum, const TrlweType& tlwe, const U p) {
+void accumulateTrlweModP(TrlweType& accum, const TrlweType& trlwe, const U p) {
     for (auto i = 0; i < accum.a.size(); i++) {
-        accumulatePolynomialModP(accum.a[i], tlwe.a[i], p);
+        accumulatePolynomialModP(accum.a[i], trlwe.a[i], p);
     }
-    accumulatePolynomialModP(accum.b, tlwe.b, p);
+    accumulatePolynomialModP(accum.b, trlwe.b, p);
 }
 
 template<typename TrlweTypeA, typename TrlweTypeB>
@@ -460,19 +477,35 @@ void clearTrlwe(TrlweType& obj) {
     std::fill(obj.b.coeffs.begin(), obj.b.coeffs.end(), 0);
 }
 
+// CKKS-style mod-down: divide every coefficient by 2^shift with round-to-nearest.
+// Reduces per-ciphertext noise by ~2^shift at the cost of scaling the message down
+// by the same factor; callers must decode with torusBase << shift afterwards.
+inline void modDownTrlwe(Trlwe& trlwe, const int shift) {
+    if (shift <= 0) return;
+    const int64_t half = static_cast<int64_t>(1) << (shift - 1);
+    for (auto& poly : trlwe.a) {
+        for (Torus& c : poly.coeffs) {
+            c = static_cast<Torus>(c >> shift);
+        }
+    }
+    for (Torus& c : trlwe.b.coeffs) {
+        c = static_cast<Torus>(c >> shift);
+    }
+}
+
 void genTrlweKey(TrlweKey& key);
 
-void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu);
+void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, Torus mu, int pos);
 
-void symEncTrlweSingleSampleFixedNoise(Trlwe& trlwe, const TrlweKey& key, Torus mu, Torus noise);
+void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, Torus mu, int pos);
+
+void symEncTrlweSingleSampleNttSimple(TrlweDft& trlweDft, const TrlweKey& key, Torus mu, int pos);
 
 void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const std::vector<Torus>& mu);
 
-void symEncTrlweMultiSampleFixedNoise(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu, Torus noise);
-
-void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, Torus mu);
-
 void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const std::vector<Torus>& mu);
+
+void symEncTrlweMultiSampleSimple(TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu);
 
 void symDecTrlweToDouble(DoublePolynomial& output, const Trlwe& trlwe, const TrlweKey& key, int torusBase);
 
@@ -503,6 +536,7 @@ void extractTlweFromTrlwe(Tlwe& out, const Trlwe& in, int index);
 void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey);
 
 void rotateTrlwe(Trlwe& res, const Trlwe& input, int a);
+void rotateAccumulateTrlwe(Trlwe& accum, const Trlwe& input, int aTrue, int isWrap);
 
 void rotateTrlweNtt(TrlweDft& res, const TrlweDft& input, const int r);
 
@@ -519,5 +553,9 @@ void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);
 void rescaleTrlweToNewMod(Trlwe& output, const Trlwe& in, int64_t newMod, int64_t currMod);
 
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput);
+
+void multTrlweWithConst(Trlwe& output, const Trlwe& input1, const int scalar);
+
+void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, int level, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRLWE_H

@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/7.
 //
 #ifndef HLS_YATFHE_YATFHE_PARAMETERS_H
 #define HLS_YATFHE_YATFHE_PARAMETERS_H
@@ -28,13 +28,15 @@ struct YatfheParameters {
 #else // binary secret, 128-bit
     // LWE params
     int n {512};
-    double lweStdDev {9.5367431640625e-07}; // 2^-20
+//    double lweStdDev {9.5367431640625e-07}; // 2^-20
+    double lweStdDev {0.001953125}; // 2^-9
     int64_t qLwe{Q_20};
 
     // RLWE params, 128-bit
     int k {1};
     int N {2048};
-    double rlweStdDev {7.275957614183426e-12}; // 2^-37
+    // double rlweStdDev {7.275957614183426e-12}; // 2^-37
+    double rlweStdDev {4.656612873077393e-10}; // 2^-31
     int64_t q {Q_32};
     int torusBits {32};
     int torusBase {8}; // p|q
@@ -47,7 +49,7 @@ struct YatfheParameters {
     int tasksPerThread{8};
     uint64_t qNtt {Q_50P};
     int dftBits {64};
-    int driftPhase {N / torusBase / 2};
+    int driftPhase {2*N/n};
 
     // RGSW params
     int l2 {4}; // todo

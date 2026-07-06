@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/25.
 //
 
 #ifndef HLS_YATFHE_TRGSW_H
@@ -284,23 +284,17 @@ void rotateTrgswMPMinusOneNtt(TrgswMPDft& out, const TrgswMPDft& in, int rot, co
 
 void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);
 
-void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param);
-
 void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);
 
-void encryptTrgswMPFixedNoiseNtt(TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, int pos, Torus noise, const YatfheParameters& param);
+void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param);
 
 void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param);
 
-void encryptLowTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
-
-void encryptLowTrgswMPNtt(TrgswMP& trgswMP, TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, const YatfheParameters& param);
-
 void encZeroTrgsw(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey);
 
-void addIntegerToTrgsw(Trgsw& trgsw, Integer mu, int pos, const YatfheParameters& param);
-
 void encZeroTrgswNtt(Trgsw& trgsw, TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey);
+
+void addIntegerToTrgsw(Trgsw& trgsw, Integer mu, int pos, const YatfheParameters& param);
 
 void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, Integer mu, int pos, const YatfheParameters& param);
 
@@ -324,6 +318,14 @@ void trgswMcrtToCrt(std::vector<Trgsw8>& trgsw, const YatfheParameters& param);
 
 void recompTrgswCrt(Trgsw& out, const std::vector<Trgsw8>& in, const YatfheParameters& param);
 
+void multTrgswMPWithConst(TrgswMP& trgsw, const TrgswMP& in, int num);
+
+void multTrgswMPWithConstNtt(TrgswMPDft& trgsw, const TrgswMPDft& in, int num);
+
+void subMulTrgswMPNtt(TrgswMPDft& out, const TrgswMPDft& in1, const TrgswMPDft& in2, int scalar);
+
+void addMulTrgswMPWithConstNtt(TrgswMPDft& out, const TrgswMPDft& in, int scalar1, int scalar2);
+
 void externalProductTrgsw(Trlwe& output, const Trgsw& trgswInput, const Trlwe& trlweInput, const YatfheParameters& param);
 
 void externalProductTrgswNtt(Trlwe& output, const TrgswDft& trgswInput, const Trlwe& trlweInput, int level, const YatfheParameters& param);
@@ -337,12 +339,6 @@ void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Tr
 void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, int level, const YatfheParameters& param);
 
 void externalProductTrgswMPNttInPlace(Trlwe& acc, const TrgswMPDft& trgswMPInput, const int level, const YatfheParameters& param);
-
-void externalProductTrgswMPNttMT(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, int level, const YatfheParameters& param);
-
-void externalProductTrgswMPDecomp(DecomposedTrlwe& output, const TrgswMP& trgswMPInput, const DecomposedTrlwe& trlweInput, const YatfheParameters& param);
-
-void externalProductTrgswMPDecompNtt(DecomposedTrlweDft& output, const TrgswMPDft& trgswMPInput, const DecomposedTrlweDft& trlweInput, const YatfheParameters& param);
 
 void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, int level, const YatfheParameters& param);
 

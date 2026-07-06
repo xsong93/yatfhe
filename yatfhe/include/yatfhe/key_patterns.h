@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong on 4/18/25.
 //
 
 #ifndef HLS_YATFHE_KEY_PATTERNS_H

@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong on 25-4-16.
 //
 
 #include <unordered_map>
@@ -142,8 +142,8 @@ namespace NttHexl {
         auto N = in2.N;
         auto q = getNttHexl().GetModulus();
         NttPolynomial tmp{N};
-        NttPolynomial tmp1 = acc;
         EltwiseMultMod(tmp.coeffs.data(), in1.coeffs.data(), in2.coeffs.data(), N, q, 1);
-        EltwiseAddMod(acc.coeffs.data(), tmp.coeffs.data(), tmp1.coeffs.data(), N, q);
+        // EltwiseAddMod supports output == input1, so acc can be updated in-place
+        EltwiseAddMod(acc.coeffs.data(), acc.coeffs.data(), tmp.coeffs.data(), N, q);
     }
 }

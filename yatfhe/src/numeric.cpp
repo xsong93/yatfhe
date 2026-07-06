@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/25.
 //
 #include <random>
 #include <iostream>
@@ -23,6 +23,11 @@ int calLogBase2(int N) {
 
 uniform_int_distribution<Torus>& uniformTorusDistrib(Torus min, Torus max) {
     static uniform_int_distribution<Torus> instance(min, max);
+    return instance;
+}
+
+uniform_int_distribution<NttType>& uniformNttDistrib(NttType min, NttType max) {
+    static uniform_int_distribution<NttType> instance(min, max);
     return instance;
 }
 
@@ -78,7 +83,7 @@ Torus roundTorusGeneralError(const Torus in, const int torusBase, const int64_t 
     return modSwitchToTorusGeneral(t, torusBase, q);
 }
 
-Torus roundTorusError(const Torus in, const int torusBase) {
+Torus roundTorus32Error(const Torus in, const int torusBase) {
     auto t = modSwitchFromTorus32(in, torusBase);
     return modSwitchToTorus32(t, torusBase);
 }
@@ -195,10 +200,25 @@ Torus modSwitchToTorusGeneral(const int32_t mu, const uint32_t mSize, const int6
 }
 
 int64_t modSwitchFromTorusGeneral(const Torus in, const int64_t newMod, const int64_t torusQ) {
-    auto scale = static_cast<int32_t>(torusQ / newMod);
-    double div = static_cast<double>(in) / scale;
-    auto real = static_cast<int32_t>(round(div));
-    return longModP(real, newMod);
+    // Convert torus element from modulus `torusQ` to modulus `newMod`.
+    // For upscaling (torusQ < newMod) that integer division becomes 0, so we must handle it separately.
+    if (torusQ >= newMod) {
+        const int64_t scale = torusQ / newMod;
+        // Round-to-nearest without floating point.
+        const int64_t num = static_cast<int64_t>(in);
+        const int64_t real = (num >= 0) ? (num + scale / 2) / scale : (num - scale / 2) / scale;
+        return longModP(real, newMod);
+    }
+
+    // Upscaling: exact ratio is usually a power of two in this project.
+    const int64_t scaleUp = newMod / torusQ;
+    if (scaleUp * torusQ == newMod) {
+        return longModP(static_cast<int64_t>(in) * scaleUp, newMod);
+    }
+    // Fallback for non-integer ratios (should be rare).
+    double div = static_cast<double>(in) * static_cast<double>(newMod) / static_cast<double>(torusQ);
+    const auto real = static_cast<int32_t>(round(div));
+    return longModP(static_cast<int64_t>(real), newMod);
 }
 
 Torus modSwitchToTorus32(const int32_t mu, const uint32_t mSize) {
@@ -220,10 +240,20 @@ void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, const Torus mi
     }
 }
 
-void initCoeffsWithGaussianNoiseSingleSample(std::vector<Torus>& coeffs, const Torus msg, const double sigma,
-                                             const int64_t torusQ) {
+void initNttCoeffsViaUniformDistribution(std::vector<NttType>& coeffs, const NttType min, const NttType max) {
     for (auto& coeff : coeffs) {
-        coeff = addGaussianNoise(msg, sigma, torusQ);
+        coeff = uniformNttDistrib(min, max)(rng);
+    }
+}
+
+void initCoeffsWithGaussianNoiseSingleSample(std::vector<Torus>& coeffs, const Torus msg, const int pos,
+                                             const double sigma, const int64_t torusQ) {
+    for (auto i = 0; i < coeffs.size(); i++) {
+        if (i == pos) {
+            coeffs[i] = addGaussianNoise(msg, sigma, torusQ);
+            continue;
+        }
+        coeffs[i] = addGaussianNoise(0, sigma, torusQ);
     }
 }
 

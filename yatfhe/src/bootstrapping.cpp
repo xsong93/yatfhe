@@ -1,5 +1,5 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/25.
 //
 #include "yatfhe/trlwe.h"
 #include "yatfhe/bootstrapping.h"
@@ -25,13 +25,22 @@ void functionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKe
 void functionalBootstrappingNtt(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
     Trlwe accum {param.k, param.N};
-    Trlwe accumScaled {param.k, param.N};
     Tlwe tmp {ksk.nCurrKey};
     rescaleTlweToNewMod(inputModN2, input); // rescale to mod 2N
     genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
     blindRotateNtt(accum, bsk.bskDft, inputModN2, param);
-    rescaleTrlweToNewMod(accumScaled, accum, LWE_Q, TORUS_Q);
-    extractTlweFromTrlwe(tmp, accumScaled, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    extractTlweFromTrlwe(tmp, accum, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
+    switchKeyForTlwe(out, ksk, tmp, param);
+}
+
+void functionalBootstrappingMPNtt(Tlwe& out, const Tlwe& input, const BootstrappingKeyMP& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
+    ScaledTlwe inputModN2 {param.N * 2, param.n};
+    Trlwe accum {param.k, param.N};
+    Tlwe tmp {ksk.nCurrKey};
+    rescaleTlweToNewMod(inputModN2, input); // rescale to mod 2N
+    genNoiselessTrlweSample(accum, v, inputModN2); // accum = (X^-b) * (0,...,0,v)
+    blindRotateMP21Ntt(accum, bsk.bskDft, inputModN2, param);
+    extractTlweFromTrlwe(tmp, accum, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     switchKeyForTlwe(out, ksk, tmp, param);
 }
 
@@ -48,7 +57,6 @@ void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const Bootstrappin
     blindRotateApproxCRTNtt(accCRT, bskCRT.bskCRT, inputModN2, param);
     trlweMcrtToCrt(accCRT, param);
     recompTrlweCrt(acc, accCRT, param);
-    rescaleTrlweToNewMod(accumScaled, acc, LWE_Q, TORUS_Q);
     extractTlweFromTrlwe(tmp, acc, param.driftPhase); // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
     switchKeyForTlwe(out, ksk, tmp, param);
 }
@@ -138,7 +146,7 @@ void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, co
         if (tlweKey.s[0] == 1) {
             symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
         } else {
-            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
         }
 #endif
     }
@@ -171,7 +179,7 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
         if (tlweKey.s[0] == 1) {
             symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
         } else {
-            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
         }
 #endif
     }
@@ -209,7 +217,7 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& tr
         if (tlweKey.s[0] == 1) {
             symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
         } else {
-            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
         }
         encryptTrgswMPNtt(bsk.bskDft[0][0], tlweKey.s[1], trgswKey, 0, param);
         encryptTrgswMPNtt(bsk.bskDft[1][0], tlweKey.s[2], trgswKey, 0, param);
@@ -249,7 +257,7 @@ void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const 
         if (tlweKey.s[0] == 1) {
             symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
         } else {
-            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
         }
         // encryptTrgswMPNtt(bsk.bskSecond[0], tlweKey.s[1], trgswKey, 0, param);
 #endif
@@ -260,26 +268,6 @@ void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const 
 #ifdef TERNARY
 #else
         encryptTrgswMP(bsk.bskPrime[i][0], tlweKey.s[i + 1], trgswKey, 0, param);
-#endif
-    }
-}
-
-void genBootstrappingKeyMPFixedNoise(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const Torus noise, const YatfheParameters& param) {
-    for (auto i = 0; i < bsk.n; i++) {
-#ifdef TERNARY
-        const auto si = tlweKey.s[i];
-        if(si == 0) {
-            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][0], 0, trgswKey, 0, noise, param);
-            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][1], 0, trgswKey, 0, noise, param);
-        } else if (si == 1) {
-            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][0], 1, trgswKey, 0, noise, param);
-            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][1], 0, trgswKey, 0, noise, param);
-        } else {
-            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][0], 0, trgswKey, 0,noise, param);
-            encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][1], 1, trgswKey, 0, noise, param);
-        }
-#else
-        encryptTrgswMPFixedNoiseNtt(bsk.bskDft[i][0], tlweKey.s[i], trgswKey, 0, noise, param);
 #endif
     }
 }
@@ -341,9 +329,9 @@ void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& 
             if (i == 0) {
                 if (tlweKey.s[i] == 1) {
                     symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
-                    symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0);
+                    symEncTrlweSingleSample(bsk.bskFirst[1], trgswKey.trlweKey, 0, 0);
                 } else {
-                    symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
+                    symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
                     symEncTrlweMultiSample(bsk.bskFirst[1], trgswKey.trlweKey, v.coeffs);
                 }
                 continue;
@@ -367,55 +355,6 @@ void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& 
 #endif
 }
 
-void genBootstrappingKeyMPPreRotTernaryFixedNoise(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-                                                  const TorusPolynomial& v, const int batchSize, const Torus noise, const YatfheParameters& param) {
-    const auto n = param.n;
-    auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(batchSize);
-    for (int start = 0; start < n; start += batchSize) {
-        futures.clear();
-        const auto minVal = min(start + batchSize, n);
-        for (int i = start; i < minVal; i++) {
-            if (i == 0) {
-                if (tlweKey.s[i] == 1) {
-                    symEncTrlweMultiSampleFixedNoise(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs, noise);
-                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[1], trgswKey.trlweKey, 0, noise);
-                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[2], trgswKey.trlweKey, 0, noise);
-                } else if (tlweKey.s[i] == 0) {
-                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[0], trgswKey.trlweKey, 0, noise);
-                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[1], trgswKey.trlweKey, 0, noise);
-                    symEncTrlweMultiSampleFixedNoise(bsk.bskFirst[2], trgswKey.trlweKey, v.coeffs, noise);
-                } else {
-                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[0], trgswKey.trlweKey, 0, noise);
-                    symEncTrlweMultiSampleFixedNoise(bsk.bskFirst[1], trgswKey.trlweKey, v.coeffs, noise);
-                    symEncTrlweSingleSampleFixedNoise(bsk.bskFirst[2], trgswKey.trlweKey, 0, noise);
-                }
-                continue;
-            }
-            futures.emplace_back(pool.enqueue([i, noise, &tlweKey, &bsk, &trgswKey, &param] {
-                auto j = i-1;
-                if (tlweKey.s[i] == 1) {
-                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][0],1, trgswKey, 0, noise, param);
-                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][1],0, trgswKey, 0, noise, param);
-                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][2],0, trgswKey, 0, noise, param);
-                } else if (tlweKey.s[i] == 0) {
-                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][0],0, trgswKey, 0, noise, param);
-                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][1],0, trgswKey, 0, noise, param);
-                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][2],1, trgswKey, 0, noise, param);
-                } else {
-                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][0],0, trgswKey, 0, noise, param);
-                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][1],1, trgswKey, 0, noise, param);
-                    encryptTrgswMPFixedNoiseNtt(bsk.bskDft[j][2],0, trgswKey, 0, noise, param);
-                }
-            }
-            ));
-        }
-        for (auto& f : futures) {
-            f.wait();
-        }
-    }
-}
 
 void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
     BootstrappingKey bsk{param};
@@ -436,4 +375,24 @@ void decompBootstrappingKeyMcrt(BootstrappingKeyCRT& bskCRT, const Bootstrapping
             NttNative24::applyNttForRgsw(bskNtt, bsk8);
         }
     }
+}
+
+void transferValueToIndex(Trlwe& output, Tlwe& input, const BootstrappingKeyMP& bskMP, const YatfheParameters& param) {
+    TorusPolynomial v{param.N};
+    generateTestPolynomialOne(v);
+    ScaledTlwe inputModN2{param.N * 2, param.n};
+    inverseTlwe(input);
+    rescaleTlweToNewMod(inputModN2, input);
+    genNoiselessTrlweSample(output, v, inputModN2);
+    blindRotateMP21Ntt(output, bskMP.bskDft, inputModN2, param);
+}
+
+void transferValueToIndexRange(Trlwe& output, Tlwe& input, const Integer v, const BootstrappingKeyMP& bskMP, const YatfheParameters& param) {
+    TorusPolynomial tv{param.N};
+    generateTestPolynomialValue(tv, v);
+    ScaledTlwe inputModN2{param.N * 2, param.n};
+    // inverseTlwe(input);
+    rescaleTlweToNewMod(inputModN2, input);
+    genNoiselessTrlweSample(output, tv, inputModN2);
+    blindRotateMP21Ntt(output, bskMP.bskDft, inputModN2, param);
 }

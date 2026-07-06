@@ -1,17 +1,41 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2024/4/22.
 //
 #include <vector>
 #include "yatfhe/trlev.h"
 #include "yatfhe/ntt_hexl.h"
+#include "yatfhe/numeric.h"
 
 using namespace std;
 
-void encTrlevSingleSample(Trlev& output, const TrlweKey& trlweKey, const Torus input, const YatfheParameters& param) {
+void encTrlevSingleSample(Trlev& output, const TrlweKey& trlweKey, const Torus input, const int pos, const YatfheParameters& param) {
     const auto l = output.l;
     for (auto i = 0; i < l; i++) {
         auto inOverR = input << (param.torusBits - (i + 1) * param.radixBits);
-        symEncTrlweSingleSample(output.trlwes[i], trlweKey, inOverR);
+        symEncTrlweSingleSample(output.trlwes[i], trlweKey, inOverR, pos);
+    }
+}
+
+void encTrlevSingleSampleMonomial(Trlev& output, const TrlweKey& trlweKey, const Torus input, const int monomialIndex,
+                                   const YatfheParameters& param) {
+    const auto l = output.l;
+    const auto N = param.N;
+    for (auto lvl = 0; lvl < l; lvl++) {
+        const Torus inOverR = input << (param.torusBits - (lvl + 1) * param.radixBits);
+        Trlwe& ct = output.trlwes[lvl];
+
+        // Initialize b as the RLWE plaintext polynomial v = inOverR * X^{monomialIndex} (+ noise),
+        // and initialize a uniformly. Then apply symEncTrlwe to add the a*s term.
+        for (auto j = 0; j < N; j++) {
+            const Torus msg = (j == monomialIndex) ? inOverR : 0;
+            ct.b.coeffs[j] = addGaussianNoise(msg, trlweKey.sigma, TORUS_Q);
+        }
+        for (auto k = 0; k < ct.k; k++) {
+            initCoeffsViaUniformDistribution(ct.a[k].coeffs, TORUS_MIN, TORUS_MAX);
+        }
+        for (auto k = 0; k < ct.k; k++) {
+            multTorusPolynomialAcc(ct.b, ct.a[k], trlweKey.s[k]);
+        }
     }
 }
 
@@ -30,7 +54,7 @@ void encTrlevMultiSample(Trlev& output, const TrlweKey& trlweKey, const TorusPol
 // (a-x, as+e)
 void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs, const bool isPos,
                         const YatfheParameters& param) {
-    encTrlevSingleSample(output, trlweKey, 0, param);
+    encTrlevSingleSample(output, trlweKey, 0, 0, param);
     for (auto i = 0; i < param.l; i++) {
         for (auto j = 0; j < param.k; j++) {
             TorusPolynomial sXm{param.N};
@@ -51,7 +75,7 @@ void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const vector<To
 void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs,
                            const bool isPos, const YatfheParameters& param) {
     Trlev s2(param);
-    encTrlevSingleSample(s2, trlweKey, 0, param);
+    encTrlevSingleSample(s2, trlweKey, 0, 0, param);
     for (auto i = 0; i < param.l; i++) {
         NttHexl::applyNtt(output.trlweDfts[i].b, s2.trlwes[i].b);
         for (auto j = 0; j < param.k; j++) {

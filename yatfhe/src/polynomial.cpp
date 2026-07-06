@@ -1,10 +1,12 @@
 //
-// Created for anonymous review.
+// Created by Xintong Song on 2023/12/25.
 //
 #include <iostream>
 #include "yatfhe/polynomial.h"
+#include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/numeric.h"
 #include "yatfhe/ntt_hexl.h"
+#include "yatfhe/gadget_decomposition.h"
 
 /**
  * For a random rotator input, this method converts the rotator to a value within the range of polynomial length.
@@ -58,7 +60,7 @@ void intPolyToTorusPoly(TorusPolynomial& output, const IntPolynomial& input, con
 
 void roundErrorTorusPoly(TorusPolynomial& target, const int torusBase) {
     for (auto i = 0 ; i < target.N; i++) {
-        target.coeffs[i] = roundTorusError(target.coeffs[i], torusBase);
+        target.coeffs[i] = roundTorus32Error(target.coeffs[i], torusBase);
     }
 }
 
@@ -76,6 +78,62 @@ void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) 
     }
 }
 
+// 1: l
+void generateTestPolynomialLt1(TorusPolynomial& v, const int t) {
+    const int modP = MESSAGE_P;
+    const int modQ = 2 * v.N;
+    const int threshold = intModP(t, modP);
+
+    for (auto i = 0; i < v.N; i++) {
+        // Value in message space corresponding to coefficient index i.
+        int msg = intModP(static_cast<int>(std::round(static_cast<double>(modP) * i / modQ)), modP);
+        int tmp = msg < threshold ? 1 : 0;
+        v.coeffs[i] = modSwitchToTorus32(tmp, MESSAGE_P);
+    }
+}
+
+// 0: leq
+void generateTestPolynomialCompLeq0(TorusPolynomial& v, const int t) {
+    const int modP = MESSAGE_P;
+    const int modQ = 2 * v.N;
+    const int threshold = intModP(t, modP);
+
+    for (auto i = 0; i < v.N; i++) {
+        // Value in message space corresponding to coefficient index i.
+        int msg = intModP(static_cast<int>(std::round(static_cast<double>(modP) * i / modQ)), modP);
+        int tmp = msg <= threshold ? 0 : 1;
+        v.coeffs[i] = modSwitchToTorus32(tmp, MESSAGE_P);
+    }
+}
+
+void generateTestPolynomialCompWithValue(TorusPolynomial& tv, const int t, const Integer v) {
+    const int modP = MESSAGE_P;
+    const int modQ = 2 * tv.N;
+    const int threshold = intModP(t, modP);
+
+    for (auto i = 0; i < tv.N; i++) {
+        auto msg = intModP(static_cast<int>(std::round(static_cast<double>(modP) * i / modQ)), modP);
+        auto tmp = msg == threshold ? v : 0;
+        tv.coeffs[i] = modSwitchToTorus32(tmp, MESSAGE_P);
+    }
+}
+
+void generateTestPolynomialOne(TorusPolynomial& v) {
+    const int modP = MESSAGE_P;
+    v.coeffs[0] = modSwitchToTorus32(1, modP);
+}
+
+void generateTestPolynomialValue(TorusPolynomial& tv, const Integer v) {
+    const int modP = MESSAGE_P;
+    const int modQ = 2 * tv.N;
+    const int boundary = modQ / modP / 2;
+
+    for (auto i = 0; i < tv.N; i++) {
+        const auto tmp = i < boundary ? v : i >= tv.N - boundary ? -v : 0;
+        tv.coeffs[i] = modSwitchToTorus32(tmp, MESSAGE_P);
+    }
+}
+
 // output = (X^{a}) * input
 void rotateTorusPolynomial(TorusPolynomial& out, const int a, const TorusPolynomial& input) {
     const auto N = input.N;
@@ -85,6 +143,23 @@ void rotateTorusPolynomial(TorusPolynomial& out, const int a, const TorusPolynom
     for (auto i = 0; i < N; i++) {
         tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
         out.coeffs[i] = static_cast<Torus>(longModP(tmp, TORUS_Q));
+    }
+}
+
+// Fused: accum += X^a * input, no temporary buffer needed.
+// Split into two contiguous loops to enable auto-vectorization (no branch on i).
+void rotateAccumulateTorusPolynomial(TorusPolynomial& accum, const int aTrue, const int isWrap,
+                                      const TorusPolynomial& input) {
+    const int N = input.N;
+    // i in [0, aTrue): rotated[i] = -input[i - aTrue + N] * isWrap
+    for (int i = 0; i < aTrue; i++) {
+        const int64_t rotated = -static_cast<int64_t>(input.coeffs[i - aTrue + N]) * isWrap;
+        accum.coeffs[i] = static_cast<Torus>(longModP(accum.coeffs[i] + rotated, TORUS_Q));
+    }
+    // i in [aTrue, N): rotated[i] = input[i - aTrue] * isWrap
+    for (int i = aTrue; i < N; i++) {
+        const int64_t rotated = static_cast<int64_t>(input.coeffs[i - aTrue]) * isWrap;
+        accum.coeffs[i] = static_cast<Torus>(longModP(accum.coeffs[i] + rotated, TORUS_Q));
     }
 }
 
@@ -305,5 +380,16 @@ void subNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const 
     const auto q = NttHexl::getNttHexl().GetModulus();
     for (auto i = 0; i < input1.N; i++) {
         output.coeffs[i] = SubUIntMod(input1.coeffs[i], input2.coeffs[i], q);
+    }
+}
+
+void inverseGadgetDecomposePolynomial(vector<TorusPolynomial>& output, const IntPolynomial& input, const YatfheParameters& param) {
+    const auto N = input.N;
+    const int l = output.size();
+
+    for (auto lvl = 0; lvl < l; lvl++) {
+        for (auto j = 0; j < N; j++) {
+            output[lvl].coeffs[j] = (input.coeffs[j]) << (param.torusBits - (lvl + 1) * param.radixBits);
+        }
     }
 }
