@@ -27,10 +27,6 @@ yatfhe/
 ## Build Instructions
 
 1. **Clone the repository**
-   ```bash
-   git clone https://anonymous.4open.science/r/yatfhe-FEDF/
-   cd yatfhe-FEDF
-   ```
 2. **Configure and build**
     ```
     mkdir benchmark_run/server
