@@ -1,6 +1,3 @@
-//
-// Created for anonymous review.
-//
 
 #include <nlohmann/json.hpp>
 

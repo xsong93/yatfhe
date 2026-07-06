@@ -1,6 +1,3 @@
-//
-// Created for anonymous review.
-//
 
 #include "yatfhe/bootstrapping.h"
 #include "yatfhe/tlwe.h"
