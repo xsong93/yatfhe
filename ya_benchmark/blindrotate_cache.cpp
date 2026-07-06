@@ -418,7 +418,7 @@ int main(int argc, char **argv) {
     }
 
     // benchmarking
-/*    {
+    {
         cacheCapacity = 50;
         multiplier = 1;
         multiplier2 = 1;
@@ -432,7 +432,7 @@ int main(int argc, char **argv) {
         benchWWL24(param, cache, accessPattern, cacheCapacity, true);
         benchLazy(param, cache, accessPattern, cacheCapacity, true);
         benchGinx(param, cache, accessPattern, cacheCapacity, true);
-    }*/
+    }
 
     {
         cacheCapacity = 20;
@@ -449,7 +449,7 @@ int main(int argc, char **argv) {
         benchLazy(param, cache, accessPattern, cacheCapacity, true);
         benchGinx(param, cache, accessPattern, cacheCapacity, true);
     }
-/*
+
     {
         cacheCapacity = 10;
         multiplier = sizeRatio;
@@ -496,7 +496,7 @@ int main(int argc, char **argv) {
         benchWWL24(param, cache, accessPattern, cacheCapacity, true);
         benchLazy(param, cache, accessPattern, cacheCapacity, true);
         benchGinx(param, cache, accessPattern, cacheCapacity, true);
-    }*/
+    }
 
     return 0;
 }
