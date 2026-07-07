@@ -59,11 +59,7 @@ static Torus genTUniformNoise(const int b) {
 // (converted internally to the TUniform bound) so existing parameter sets carry over.
 Torus addTUniformNoise(Torus message, const int b, const int64_t torusQ) {
     Torus err = genTUniformNoise(b);
-    Torus tmp = addTorus(torusQ, message, err);
-    if ((message > 0 && tmp < 0) || (message < 0 && tmp > 0)) { // handle overflow
-        return subTorus(torusQ, message, err);
-    }
-    return tmp;
+    return addTorus(torusQ, message, err);
 }
 
 /*

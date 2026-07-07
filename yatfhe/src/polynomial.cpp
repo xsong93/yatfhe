@@ -70,12 +70,24 @@ void roundErrorDoublePoly(DoublePolynomial& target, const int torusBase) {
     }
 }
 
-// vj = ((pj / q) mod p) / p
+// vj = ((pj / q) mod p) / p, with every slot (including slot 0) centered on
+// its sample point rather than starting there. Slot 0's left half wraps
+// around to the end of the array, negated, since it represents the
+// negacyclic reflection of the small-negative-index side of index 0.
 void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) {
-    for (auto i = 0; i < v.N; i++) {
-        int tmp = intModP((int)std::round(modP * i / modQ), modP);
+    const int N = v.N;
+    const int boxSize = modQ / modP;
+    const int halfBoxSize = boxSize / 2;
+
+    for (auto i = 0; i < N; i++) {
+        int tmp = intModP(i / boxSize, modP);
         v.coeffs[i] = modSwitchToTorus32(tmp, modP);
     }
+
+    for (auto i = 0; i < halfBoxSize; i++) {
+        v.coeffs[i] = -v.coeffs[i];
+    }
+    std::rotate(v.coeffs.begin(), v.coeffs.begin() + halfBoxSize, v.coeffs.begin() + N);
 }
 
 // 1: l
@@ -83,13 +95,19 @@ void generateTestPolynomialLt1(TorusPolynomial& v, const int t) {
     const int modP = MESSAGE_P;
     const int modQ = 2 * v.N;
     const int threshold = intModP(t, modP);
+    const int boxSize = modQ / modP;
+    const int halfBoxSize = boxSize / 2;
 
     for (auto i = 0; i < v.N; i++) {
         // Value in message space corresponding to coefficient index i.
-        int msg = intModP(static_cast<int>(std::round(static_cast<double>(modP) * i / modQ)), modP);
+        int msg = intModP(i / boxSize, modP);
         int tmp = msg < threshold ? 1 : 0;
         v.coeffs[i] = modSwitchToTorus32(tmp, MESSAGE_P);
     }
+    for (auto i = 0; i < halfBoxSize; i++) {
+        v.coeffs[i] = -v.coeffs[i];
+    }
+    std::rotate(v.coeffs.begin(), v.coeffs.begin() + halfBoxSize, v.coeffs.begin() + v.N);
 }
 
 // 0: leq
@@ -97,25 +115,37 @@ void generateTestPolynomialCompLeq0(TorusPolynomial& v, const int t) {
     const int modP = MESSAGE_P;
     const int modQ = 2 * v.N;
     const int threshold = intModP(t, modP);
+    const int boxSize = modQ / modP;
+    const int halfBoxSize = boxSize / 2;
 
     for (auto i = 0; i < v.N; i++) {
         // Value in message space corresponding to coefficient index i.
-        int msg = intModP(static_cast<int>(std::round(static_cast<double>(modP) * i / modQ)), modP);
+        int msg = intModP(i / boxSize, modP);
         int tmp = msg <= threshold ? 0 : 1;
         v.coeffs[i] = modSwitchToTorus32(tmp, MESSAGE_P);
     }
+    for (auto i = 0; i < halfBoxSize; i++) {
+        v.coeffs[i] = -v.coeffs[i];
+    }
+    std::rotate(v.coeffs.begin(), v.coeffs.begin() + halfBoxSize, v.coeffs.begin() + v.N);
 }
 
 void generateTestPolynomialCompWithValue(TorusPolynomial& tv, const int t, const Integer v) {
     const int modP = MESSAGE_P;
     const int modQ = 2 * tv.N;
     const int threshold = intModP(t, modP);
+    const int boxSize = modQ / modP;
+    const int halfBoxSize = boxSize / 2;
 
     for (auto i = 0; i < tv.N; i++) {
-        auto msg = intModP(static_cast<int>(std::round(static_cast<double>(modP) * i / modQ)), modP);
+        auto msg = intModP(i / boxSize, modP);
         auto tmp = msg == threshold ? v : 0;
         tv.coeffs[i] = modSwitchToTorus32(tmp, MESSAGE_P);
     }
+    for (auto i = 0; i < halfBoxSize; i++) {
+        tv.coeffs[i] = -tv.coeffs[i];
+    }
+    std::rotate(tv.coeffs.begin(), tv.coeffs.begin() + halfBoxSize, tv.coeffs.begin() + tv.N);
 }
 
 void generateTestPolynomialOne(TorusPolynomial& v) {

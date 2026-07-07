@@ -234,7 +234,9 @@ void generateTestPolynomialOne(TorusPolynomial& v);
 void generateTestPolynomialValue(TorusPolynomial& tv, Integer v);
 
 void validateRotator(int& aTrue, int& isWrap, int a, int N);
+
 void rotateTorusPolynomial(TorusPolynomial& out, int a, const TorusPolynomial& input);
+
 void rotateAccumulateTorusPolynomial(TorusPolynomial& accum, int aTrue, int isWrap, const TorusPolynomial& input);
 
 void rotateTorusPolynomialMinusOne(TorusPolynomial& out, int a, const TorusPolynomial& input);

@@ -58,7 +58,7 @@ struct YatfheParameters {
     int tasksPerThread{8};
     uint64_t qNtt {Q_50P};
     int dftBits {64};
-    int driftPhase {2*N/n};
+    int driftPhase {0};
 
     // RGSW params
     int l2 {4}; // todo
