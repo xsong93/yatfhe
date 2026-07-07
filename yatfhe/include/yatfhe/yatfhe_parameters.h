@@ -48,7 +48,7 @@ struct YatfheParameters {
     int radixBits {8}; // b
 #if defined(TORUS40)
     int l {5};
-    int lApprox {4};
+    int lApprox {3};
 #else
     int l {4};
     int lApprox {2};
