@@ -1103,6 +1103,120 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
 #endif
 }
 
+//todo
+void blindRotateLazyPipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
+                               const TrlevDft& s2, const TrgswMPDft& one,
+                               const ScaledTlwe& input, const TorusPolynomial& v,
+                               const string& fileName, const YatfheParameters& param) {
+    const auto level = param.lApprox;
+    const auto n = param.n;
+    TrgswMPDft rotated0{param, level};
+    TrgswMPDft rotated1{param, level};
+    vector<vector<vector<vector<DecompPolynomial>>>> decompA_buf(2);
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(2);
+    std::ifstream inFile(fileName, std::ios::binary);
+    if (!inFile) throw std::runtime_error("Failed to open file");
+
+#ifdef TERNARY
+#else
+    // Read initial keys: bskFirst[0], bsk[0][0] (full), bsk[1][0] (full), bskDecompA[0][0]
+    bskFirst.resize(1);
+    bsk.resize(2);
+    bsk[0].resize(1);
+    bsk[1].resize(1);
+    deserialize(bskFirst[0], inFile);
+    deserialize(bsk[0][0], inFile);
+    deserialize(bsk[1][0], inFile);
+    if (n > 3) {
+        deserializeNestedVector(decompA_buf[0], inFile);
+    }
+
+    // handle first two key components in parallel
+    {
+        futures.emplace_back(pool.enqueue([&accum, &bskFirst, &input, &v, &param]{
+            Trlwe tmp{param};
+            rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
+            addTorusPolynomial(tmp.b, tmp.b, v);
+            rotateTrlwe(accum, tmp, -input.b);
+        }));
+
+        if (input.a[1] != 0) {
+            futures.emplace_back(pool.enqueue([&rotated0, &bsk, &one, &input, &param]{
+                rotateTrgswMPMinusOneNtt(rotated0, bsk[0][0], input.a[1], param);
+                addTrgswMPNtt(rotated0, rotated0, one);
+            }));
+        }
+
+        for (auto& f : futures) f.get();
+        futures.clear();
+    }
+
+    // accumulate on the n - 1 key components
+    for (auto i = 0; i < n - 1; i++) {
+        auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
+        auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
+        // bsk_curr = bsk[i+1][0] (already loaded), bsk_next = bsk[i+2][0] (ping-pong target)
+        auto& bsk_curr = bsk[(i + 1) % 2][0];
+        auto& bsk_next = bsk[i % 2][0];
+        auto& decompA_curr = decompA_buf[i % 2];
+        auto& decompA_next = decompA_buf[(i + 1) % 2];
+
+        if (i < n - 2) {
+            const auto aNext = input.a[i + 2];
+            futures.emplace_back(pool.enqueue([
+                &inFile, &bsk_next, &decompA_next,
+                &bsk_curr, &nextRotated, &one,
+                &decompA_curr, &s2,
+                aNext, i, n, level, &param, &pool
+            ] {
+                // sequential IO: read bsk[i+2][0] and bskDecompA[i+1][0] for next iteration
+                if (i < n - 3) {
+                    deserialize(bsk_next, inFile);
+                    if (i + 1 < n - 3) {
+                        deserializeNestedVector(decompA_next, inFile);
+                    }
+                }
+
+                vector<future<void>> subFutures;
+
+                // automorphism: rotate bsk_curr → nextRotated
+                if (aNext != 0) {
+                    subFutures.emplace_back(pool.enqueue([&nextRotated, &bsk_curr, aNext, &one, &param] {
+                        rotateTrgswMPMinusOneNtt(nextRotated, bsk_curr, aNext, param);
+                        addTrgswMPNtt(nextRotated, nextRotated, one);
+                    }));
+                }
+
+                // scheme switching: decompA_curr → bsk_next.c (computes NTT representation)
+                if (i < n - 3) {
+                    bsk_next.c.resize(level);
+                    for (auto l = 0; l < level; l++) {
+                        subFutures.emplace_back(pool.enqueue([&bsk_next, &decompA_curr, &s2, &param, l] {
+                            bsk_next.c[l].resize(param.k, TrlweDft{param.k, param.N});
+                            bsk_next.cPrime[l].a.resize(param.k, NttPolynomial{param.N});
+                            switchTrlweToSecretEmbeddingNttOpt(bsk_next.c[l], bsk_next.cPrime[l],
+                                                               decompA_curr[l], s2, param);
+                        }));
+                    }
+                }
+
+                for (auto& sf : subFutures) sf.get();
+            }));
+        }
+
+        // accumulation
+        if (input.a[i + 1] != 0) {
+            externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
+        }
+
+        for (auto& f : futures) f.get();
+        futures.clear();
+    }
+#endif
+}
+
 void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
                             const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
                             const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,

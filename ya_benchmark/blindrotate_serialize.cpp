@@ -63,6 +63,7 @@ int main(int argc, char **argv) {
     Trlwe out{param};
     Trlwe out2{param};
     Trlwe out3{param};
+    Trlwe out31{param};
     Trlwe out4{param};
     Trlwe out5{param};
     Trlwe out6{param};
@@ -126,6 +127,17 @@ int main(int argc, char **argv) {
              blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
          }
      }
+    //
+    // // pipelined lazy key initialization server procedure
+    // {
+    //     BootstrappingKeyMPLazyPipe bskMPLazyServer;
+    //     clearFileCache();
+    //     COUNT_TIME("PIPE_LAZY_INIT blindRotate",
+    //                blindRotateLazyPipeInitNtt(out31, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+    //                                           bskMPLazyPipeAlt.s2Dft, one, sTlwe, v, "BSK_PIPE.bin", param);)
+    //     bskMPLazyServer.initialized = true;
+    //     bskMPLazyServer.bskDecompA.clear();
+    // }
 
 
     // parallel lazy key initialization server procedure
@@ -198,6 +210,12 @@ int main(int argc, char **argv) {
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(LAZY_Pipe): "<< decAft << endl;
     cout << "err(LAZY_Pipe):" << calTlweError(output, tlweKey, pt) << endl;
+    //
+    // extractTlweFromTrlwe(tmp, out31, param.driftPhase);
+    // switchKeyForTlwe(output, ksKey, tmp, param);
+    // decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    // cout << "decAft(LAZY_Pipe_INIT): "<< decAft << endl;
+    // cout << "err(LAZY_Pipe_INIT):" << calTlweError(output, tlweKey, pt) << endl;
 
     extractTlweFromTrlwe(tmp, out4, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
