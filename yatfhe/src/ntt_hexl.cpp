@@ -108,7 +108,7 @@ namespace NttHexl {
         for (auto l = 0; l < level; l++) {
             TorusPolynomial tmp{degree};
             NttPolynomial ntt{degree};
-            tmp.coeffs[0] = 1 << (bitLength - (l + 1) * radixBit);
+            tmp.coeffs[0] = static_cast<Torus>(1) << (bitLength - (l + 1) * radixBit);
             applyNtt(ntt, tmp);
             getNttGadgetRecompMap().insert({l, ntt});
         }

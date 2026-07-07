@@ -18,7 +18,7 @@ using namespace NttHexl;
 void encryptTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
     TorusPolynomial muPoly{param.N};
     for (size_t lvl = 0; lvl < trgswMP.l; lvl++) {
-        auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
+        auto decomposedMu = static_cast<Torus>(mu) << (param.torusBits - (lvl + 1) * param.radixBits);
         muPoly.coeffs[pos] = decomposedMu;
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
         if (!trgswMP.isHalf) {
@@ -35,7 +35,7 @@ void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey&
     TorusPolynomial muPoly{param.N};
     NttPolynomial myPolyNtt{param.N};
     for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
-        auto decomposedMu = mu << (param.torusBits - (lvl + 1) * param.radixBits);
+        auto decomposedMu = static_cast<Torus>(mu) << (param.torusBits - (lvl + 1) * param.radixBits);
         muPoly.coeffs[pos] = decomposedMu;
         applyNtt(myPolyNtt, muPoly);
         symEncTrlweMultiSampleSimple(trgswMPDft.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
@@ -52,7 +52,7 @@ void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const Trg
     TorusPolynomial muPoly{param.N};
     for (auto lvl = 0; lvl < trgswMP.l; lvl++) {
         for (int j = 0; j < mus.size(); j++) {
-            muPoly.coeffs[j] = mus[j] << (param.torusBits - (lvl + 1) * param.radixBits);
+            muPoly.coeffs[j] = static_cast<Torus>(mus[j]) << (param.torusBits - (lvl + 1) * param.radixBits);
         }
         symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
         if (!trgswMP.isHalf) {
@@ -70,7 +70,7 @@ void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, 
     NttPolynomial myPolyNtt{param.N};
     for (auto lvl = 0; lvl < trgswMPDft.l; lvl++) {
         for (int j = 0; j < mus.size(); j++) {
-            muPoly.coeffs[j] = mus[j] << (param.torusBits - (lvl + 1) * param.radixBits);
+            muPoly.coeffs[j] = static_cast<Torus>(mus[j]) << (param.torusBits - (lvl + 1) * param.radixBits);
         }
         applyNtt(myPolyNtt, muPoly);
         symEncTrlweMultiSampleSimple(trgswMPDft.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
@@ -183,7 +183,7 @@ void addIntegerToTrgsw(Trgsw& trgsw, const Integer mu, const int pos, const Yatf
     // ( a_0  a_1          a_k-1  b  )*/
 
     for (auto lvl = 0; lvl < trgsw.l; lvl++) {
-        auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
+        auto decomposedMu = static_cast<Torus>(mu) << (param.torusBits -  (lvl + 1) * param.radixBits);
         for (auto row = 0; row < param.k + 1; row++) {
 
             // add to a_lii
@@ -202,7 +202,7 @@ void addIntegerToTrgsw(Trgsw& trgsw, const Integer mu, const int pos, const Yatf
 
 void addIntegerToTrgswNtt(TrgswDft& trgswDft, Trgsw& trgsw, const Integer mu, const int pos, const YatfheParameters& param) {
     for (auto lvl = 0; lvl < trgswDft.l; lvl++) {
-        auto decomposedMu = mu << (param.torusBits -  (lvl + 1) * param.radixBits);
+        auto decomposedMu = static_cast<Torus>(mu) << (param.torusBits -  (lvl + 1) * param.radixBits);
         for (auto row = 0; row < param.k + 1; row++) {
 
             // add to a_lii

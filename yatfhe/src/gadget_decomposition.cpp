@@ -25,20 +25,20 @@ std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int t
     return g;
 }
 
-void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParameters& param) {
+void gadgetDecompose(DecomposedData& out, const Torus in, const YatfheParameters& param) {
     out.sign = (in < 0) ? -1 : 1;
     const int64_t in64 = static_cast<int64_t>(in);
     const uint64_t absIn = (in64 < 0) ? static_cast<uint64_t>(-in64) : static_cast<uint64_t>(in64);
     UnsignedInteger tmp = static_cast<UnsignedInteger>(absIn);
     UnsignedInteger mask = ((static_cast<UnsignedInteger>(1) << param.radixBits) - 1) << (param.torusBits - param.radixBits);
     for (auto i = 0; i < out.l; i++) {
-        out.value[i] = (mask & tmp) >> (param.torusBits - (i + 1) * param.radixBits);
+        out.value[i] = static_cast<Torus>((mask & tmp) >> (param.torusBits - (i + 1) * param.radixBits));
         mask >>= param.radixBits;
     }
 }
 
-Integer recomposeSelf(const DecomposedData& digits, const YatfheParameters& param) {
-    Integer res {0};
+Torus recomposeSelf(const DecomposedData& digits, const YatfheParameters& param) {
+    Torus res {0};
     for (auto i = 0; i < digits.value.size(); ++i) {
         res += digits.value[i] << (param.torusBits - (i + 1) * param.radixBits);
     }
@@ -53,8 +53,8 @@ void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const
     }
 }
 
-Integer recomposeTwoParts(const DecomposedData& lhs, const std::vector<Integer>& rhs) {
-    int out {0};
+Torus recomposeTwoParts(const DecomposedData& lhs, const std::vector<Integer>& rhs) {
+    Torus out {0};
     for (auto i = 0; i < rhs.size(); i++) {
         out += lhs.value[i] * rhs[i] * lhs.sign;
     }
@@ -68,9 +68,9 @@ Integer recomposeTwoParts(const DecomposedData& lhs, const std::vector<Integer>&
  * @param param
  * @return
  */
-void decomposeOverB(std::vector<Integer>& output, const Integer in, const YatfheParameters& param) {
+void decomposeOverB(std::vector<Torus>& output, const Integer in, const YatfheParameters& param) {
     for (int i = 0; i < output.size(); ++i) {
-        output[i] = in << (param.torusBits - (i + 1) * param.radixBits);
+        output[i] = static_cast<Torus>(in) << (param.torusBits - (i + 1) * param.radixBits);
     }
 }
 
@@ -81,7 +81,7 @@ void decomposeOverB(std::vector<Integer>& output, const Integer in, const Yatfhe
  * @param param
  * //todo: need test
  */
-void signedGadgetDecomposition(DecomposedData& out, const Integer in, const YatfheParameters& param) {
+void signedGadgetDecomposition(DecomposedData& out, const Torus in, const YatfheParameters& param) {
     out.sign = (in < 0) ? -1 : 1;
     const int64_t in64 = static_cast<int64_t>(in);
     const uint64_t absIn = (in64 < 0) ? static_cast<uint64_t>(-in64) : static_cast<uint64_t>(in64);

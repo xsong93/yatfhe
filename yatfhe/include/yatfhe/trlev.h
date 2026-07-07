@@ -64,9 +64,9 @@ void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vec
 
 void decTrlev(TorusPolynomial& output, const Trlev& input, const TrlweKey& trlweKey, const YatfheParameters& param);
 
-void multTrlevWithConst(Trlwe& output, const Trlev& input, Integer num, const YatfheParameters& param);
+void multTrlevWithConst(Trlwe& output, const Trlev& input, Torus num, const YatfheParameters& param);
 
-void multDecomposedTrlevWithConst(Trlwe& output, const Trlev& input, Integer num, const YatfheParameters& param);
+void multDecomposedTrlevWithConst(Trlwe& output, const Trlev& input, Torus num, const YatfheParameters& param);
 
 void rotateTrlev(Trlev& trglev, const int rot, const YatfheParameters& param);
 

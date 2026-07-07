@@ -30,7 +30,7 @@ using Ntt24 = uint32_t;
 using Ntt32 = uint32_t;
 using Ntt64 = uint64_t;
 using NttType = uint64_t;
-using Integer = Torus;
+using Integer = int32_t; // small "message-space" values (plaintext digits, secret-key bits, CRT primes) — independent of torus width
 using Binary = Integer;
 const int32_t NUM_PRIMES{4};
 const int32_t NUM_HIGH_PRIMES{2};
@@ -55,10 +55,10 @@ extern int64_t LWE_Q;
 extern Integer MESSAGE_P;
 extern Integer INT_MAX_VALUE;
 extern Integer INT_MIN_VALUE;
-extern Integer TORUS_MAX;
-extern Integer TORUS_MIN;
-extern Integer LWE_MAX;
-extern Integer LWE_MIN;
+extern Torus TORUS_MAX;
+extern Torus TORUS_MIN;
+extern Torus LWE_MAX;
+extern Torus LWE_MIN;
 extern NttType NTT_MAX;
 extern NttType NTT_MIN;
 

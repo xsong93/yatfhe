@@ -19,7 +19,7 @@ struct Tlev {
 
 void encTglev(Tlev& output, const TlweKey& tlweKey, Torus input, const YatfheParameters& param);
 
-void multTglevWithConst(Tlwe& output, const Tlev& input, Integer num, const YatfheParameters& param);
+void multTglevWithConst(Tlwe& output, const Tlev& input, Torus num, const YatfheParameters& param);
 
 // void multDecomposedTglevWithConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
 

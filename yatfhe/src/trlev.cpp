@@ -102,7 +102,7 @@ void decTrlev(TorusPolynomial& output, const Trlev& input, const TrlweKey& trlwe
     }
 }
 
-void multTrlevWithConst(Trlwe& output, const Trlev& input, const Integer num, const YatfheParameters& param) {
+void multTrlevWithConst(Trlwe& output, const Trlev& input, const Torus num, const YatfheParameters& param) {
     auto N = output.b.N;
     auto k = output.k;
     DecomposedData d {input.l};
@@ -119,7 +119,7 @@ void multTrlevWithConst(Trlwe& output, const Trlev& input, const Integer num, co
     }
 }
 
-void multDecomposedTrlevWithConst(Trlwe& output, const Trlev& input, const Integer num, const YatfheParameters& param) {
+void multDecomposedTrlevWithConst(Trlwe& output, const Trlev& input, const Torus num, const YatfheParameters& param) {
     const auto N = output.b.N;
     const auto k = output.k;
     const auto lvl0 = input.l;
