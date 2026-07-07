@@ -270,7 +270,7 @@ Integer decryptTrgsw(const Trgsw& trgsw, const YatfheParameters& param, const Tr
     const auto lastRow = param.k;
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRounding(tmp, trgsw.trlweSamples[firstLevel][lastRow], trgswKey.trlweKey);
-    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweNoiseB, param.torusBits - param.radixBits);
 }
 
 Integer decryptTrgswNtt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
@@ -278,7 +278,7 @@ Integer decryptTrgswNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
     const auto lastRow = param.k;
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRoundingNtt(tmp, trgswDft.trlweDftSamples[firstLevel][lastRow], trgswKey.trlweKey);
-    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweStdDev, param.torusBits - param.radixBits);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweNoiseB, param.torusBits - param.radixBits);
 }
 
 void decryptTrgswMP(IntPolynomial& res, const TrgswMP& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const bool isDecC) {
@@ -290,7 +290,7 @@ void decryptTrgswMP(IntPolynomial& res, const TrgswMP& trgsw, const YatfheParame
         symDecTrlweWoRounding(tmp, trgsw.c[firstLevel][0], trgswKey.trlweKey);
     }
     for (auto i = 0; i < param.N; i++) {
-        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweStdDev, param.torusBits - param.radixBits);
+        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweNoiseB, param.torusBits - param.radixBits);
     }
 }
 
@@ -303,7 +303,7 @@ void decryptTrgswMPNtt(IntPolynomial& res, const TrgswMPDft& trgswDft, const Yat
         symDecTrlweWoRoundingNtt(tmp, trgswDft.c[firstLevel][0], trgswKey.trlweKey);
     }
     for (auto i = 0; i < param.N; i++) {
-        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweStdDev, param.torusBits - param.radixBits);
+        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweNoiseB, param.torusBits - param.radixBits);
     }
 }
 

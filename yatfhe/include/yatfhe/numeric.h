@@ -8,11 +8,12 @@
 #include <cstdlib>
 #include <random>
 #include "yatfhe/torus.h"
+#include "yatfhe/csprng.h"
 
 using namespace std;
 
-extern random_device rd;
-extern mt19937 rng;
+extern ChaCha20Rng rng;
+
 extern uniform_int_distribution<Binary> binaryDistrib;
 
 extern uniform_int_distribution<Integer> ternaryDistrib;
@@ -27,7 +28,7 @@ Integer genIntUniformDist(Integer lowerBound, Integer upperBound);
 
 uint64_t genUInt64UniformDist(uint64_t lowerBound, uint64_t upperBound);
 
-Torus addGaussianNoise(Torus message, double sigma, const int64_t torusQ);
+Torus addTUniformNoise(Torus message, int b, const int64_t torusQ);
 
 Torus modSwitchToTorusGeneral(int32_t mu, uint32_t mSize, int64_t torusQ);
 
@@ -69,9 +70,9 @@ void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, Torus min, Tor
 
 void initNttCoeffsViaUniformDistribution(std::vector<NttType>& coeffs, NttType min, NttType max);
 
-void initCoeffsWithGaussianNoiseSingleSample(vector<Torus>& coeffs, Torus msg, int pos, double sigma, const int64_t torusQ);
+void initCoeffsWithTUniformNoiseSingleSample(vector<Torus>& coeffs, Torus msg, int pos, double sigma, const int64_t torusQ);
 
-void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, double sigma
+void initCoeffsWithTUniformNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, double sigma
                                             , const int64_t torusQ);
 
 Integer modPow(Integer x, Integer y, Integer mod);

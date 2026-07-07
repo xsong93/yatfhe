@@ -15,7 +15,7 @@ using namespace std;
 using namespace NttHexl;
 
 void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, const int pos, double sigma) {
-    initCoeffsWithGaussianNoiseSingleSample(trlwe.b.coeffs, mu, pos, sigma, TORUS_Q);
+    initCoeffsWithTUniformNoiseSingleSample(trlwe.b.coeffs, mu, pos, sigma, TORUS_Q);
     for (auto i = 0 ; i < trlwe.k; i++) {
         initCoeffsViaUniformDistribution(trlwe.a[i].coeffs, TORUS_MIN, TORUS_MAX);
     }
@@ -23,7 +23,7 @@ void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, const int pos, double s
 
 void initTrlweSingleSampleSimple(TrlweDft& trlweDft, const Torus mu, const int pos, double sigma) {
     TorusPolynomial bTmp{trlweDft.b.N};
-    initCoeffsWithGaussianNoiseSingleSample(bTmp.coeffs, mu, pos, sigma, TORUS_Q);
+    initCoeffsWithTUniformNoiseSingleSample(bTmp.coeffs, mu, pos, sigma, TORUS_Q);
     applyNtt(trlweDft.b, bTmp);
     for (auto i = 0 ; i < trlweDft.k; i++) {
         initNttCoeffsViaUniformDistribution(trlweDft.a[i].coeffs, NTT_MIN, NTT_MAX);
@@ -31,7 +31,7 @@ void initTrlweSingleSampleSimple(TrlweDft& trlweDft, const Torus mu, const int p
 }
 
 void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
-    initCoeffsWithGaussianNoiseMultiSample(trlwe.b.coeffs, mu, sigma, TORUS_Q);
+    initCoeffsWithTUniformNoiseMultiSample(trlwe.b.coeffs, mu, sigma, TORUS_Q);
     for (auto i = 0 ; i < trlwe.k; i++) {
         initCoeffsViaUniformDistribution(trlwe.a[i].coeffs, TORUS_MIN, TORUS_MAX);
     }
@@ -39,7 +39,7 @@ void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
 
 void initTrlweMultiSampleSimple(TrlweDft& trlweDft, const vector<Torus>& mu, double sigma) {
     TorusPolynomial bTmp{trlweDft.b.N};
-    initCoeffsWithGaussianNoiseMultiSample(bTmp.coeffs, mu, sigma, TORUS_Q);
+    initCoeffsWithTUniformNoiseMultiSample(bTmp.coeffs, mu, sigma, TORUS_Q);
     applyNtt(trlweDft.b, bTmp);
     for (auto i = 0 ; i < trlweDft.k; i++) {
         initNttCoeffsViaUniformDistribution(trlweDft.a[i].coeffs, NTT_MIN, NTT_MAX);

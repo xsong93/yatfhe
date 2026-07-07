@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
-    TlweKey tlweKey {param.n, param.lweStdDev};
+    TlweKey tlweKey {param.n, param.lweNoiseB};
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKey bsKey {param};
@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     COUNT_TIME("genTrlweKey", genTrlweKey(trlweKey);)
     COUNT_TIME("genBootstrappingKey", genBootstrappingKey(bsKey, trgswKey, tlweKey, param);)
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.sigma = param.rlweStdDev;
+    tlweKsKey.errorB = param.rlweNoiseB;
     COUNT_TIME("genTlweKeySwitchingKey", genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);)
 
     Integer plain = 3;

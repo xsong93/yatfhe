@@ -34,14 +34,14 @@ struct ScaledTlwe {
 
 struct TlweKey {
     int n {};
-    double sigma {};
+    int errorB {};
     std::vector<Binary> s {}; // n
 
-    TlweKey(int n, double sigma) : n(n), sigma(sigma), s(n) {};
+    TlweKey(int n, int errorB) : n(n), errorB(errorB), s(n) {};
 
-    explicit TlweKey(int n) : n(n), sigma(0), s(n) {};
+    explicit TlweKey(int n) : n(n), errorB(0), s(n) {};
 
-    explicit TlweKey(const YatfheParameters& p) : n(p.n), sigma(p.lweStdDev), s(p.n) {};
+    explicit TlweKey(const YatfheParameters& p) : n(p.n), errorB(p.lweNoiseB), s(p.n) {};
 };
 
 void genTlweKey(TlweKey& key);

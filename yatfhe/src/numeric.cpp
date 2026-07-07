@@ -9,8 +9,7 @@
 
 using namespace std;
 
-random_device rd;
-mt19937 rng(rd());
+ChaCha20Rng rng;
 uniform_int_distribution<Binary> binaryDistrib(0, 1);
 uniform_int_distribution<Integer> ternaryDistrib(-1, 1);
 
@@ -42,11 +41,24 @@ uint64_t genUInt64UniformDist(const uint64_t lowerBound, const uint64_t upperBou
     return uniformIntDistrib(rng);
 }
 
-// Gaussian sample centered in message, with standard deviation sigma
-Torus addGaussianNoise(Torus message, const double sigma, const int64_t torusQ) {
-    normal_distribution normalDistribution(0.0, sigma);
-    double e = normalDistribution(rng) * static_cast<double>(torusQ);
-    auto err = static_cast<Torus>(std::llround(e)); // round to nearest, not truncate towards zero
+// Draws a TUniform(b) sample: uniform over [-2^b, 2^b], with the two
+// endpoints occurring at half the probability of interior values. Matches TFHE-rs's sampling
+// algorithm: draw (b + 2) uniform bits, fold the low bit back in after a right shift
+// (this is what gives the endpoints their lower probability), then re-center around zero.
+static Torus genTUniformNoise(const int b) {
+    int requiredBits = b + 2;
+    uint64_t mask = (requiredBits >= 64) ? UINT64_MAX : ((uint64_t{1} << requiredBits) - 1);
+    uint64_t candidate = genUInt64UniformDist(0, mask);
+    uint64_t lowBit = candidate & 1ULL;
+    candidate = (candidate >> 1) + lowBit;
+    int64_t signedCandidate = static_cast<int64_t>(candidate) - (int64_t{1} << b);
+    return static_cast<Torus>(signedCandidate);
+}
+
+// TUniform sample centered in message; sigma/torusQ are kept as the calibration inputs
+// (converted internally to the TUniform bound) so existing parameter sets carry over.
+Torus addTUniformNoise(Torus message, const int b, const int64_t torusQ) {
+    Torus err = genTUniformNoise(b);
     Torus tmp = addTorus(torusQ, message, err);
     if ((message > 0 && tmp < 0) || (message < 0 && tmp > 0)) { // handle overflow
         return subTorus(torusQ, message, err);
@@ -247,20 +259,20 @@ void initNttCoeffsViaUniformDistribution(std::vector<NttType>& coeffs, const Ntt
     }
 }
 
-void initCoeffsWithGaussianNoiseSingleSample(std::vector<Torus>& coeffs, const Torus msg, const int pos,
+void initCoeffsWithTUniformNoiseSingleSample(std::vector<Torus>& coeffs, const Torus msg, const int pos,
                                              const double sigma, const int64_t torusQ) {
     for (auto i = 0; i < coeffs.size(); i++) {
         if (i == pos) {
-            coeffs[i] = addGaussianNoise(msg, sigma, torusQ);
+            coeffs[i] = addTUniformNoise(msg, sigma, torusQ);
             continue;
         }
-        coeffs[i] = addGaussianNoise(0, sigma, torusQ);
+        coeffs[i] = addTUniformNoise(0, sigma, torusQ);
     }
 }
 
-void initCoeffsWithGaussianNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg,
+void initCoeffsWithTUniformNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg,
                                             const double sigma, const int64_t torusQ) {
     for (auto i = 0; i < coeffs.size(); i++) {
-        coeffs[i] = addGaussianNoise(msg[i], sigma, torusQ);
+        coeffs[i] = addTUniformNoise(msg[i], sigma, torusQ);
     }
 }

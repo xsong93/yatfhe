@@ -150,14 +150,14 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
     cout << "bench lazy" << endl;
     // client side
     // key gen
-    TlweKey tlweKey{param.n, param.lweStdDev};
+    TlweKey tlweKey{param.n, param.lweNoiseB};
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     TlweKeySwitchingKey ksKey{param};
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.sigma = param.rlweStdDev;
+    tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
@@ -218,14 +218,14 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     cout << "bench ginx" << endl;
     // client side
     // key gen
-    TlweKey tlweKey{param.n, param.lweStdDev};
+    TlweKey tlweKey{param.n, param.lweNoiseB};
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     TlweKeySwitchingKey ksKey{param};
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.sigma = param.rlweStdDev;
+    tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
@@ -290,14 +290,14 @@ void benchWWL24(const YatfheParameters& param, SimpleCacheManager& cache, const 
     cout << "bench WWL24" << endl;
     // client side
     // key gen
-    TlweKey tlweKey{param.n, param.lweStdDev};
+    TlweKey tlweKey{param.n, param.lweNoiseB};
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     TlweKeySwitchingKey ksKey{param};
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.sigma = param.rlweStdDev;
+    tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);

@@ -200,7 +200,7 @@ struct TrlweKey {
             sDft(param.k, NttPolynomial(param.N)),
             k(param.k),
             N(param.N),
-            sigma(param.rlweStdDev) {};
+            sigma(param.rlweNoiseB) {};
 
     TrlweKey(int k, int N, double sigma):
         s(k, BinPolynomial(N)),

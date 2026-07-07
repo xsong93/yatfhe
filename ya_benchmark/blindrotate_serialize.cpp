@@ -20,14 +20,14 @@ int main(int argc, char **argv) {
 
     // client side
     // key gen
-    TlweKey tlweKey{param.n, param.lweStdDev};
+    TlweKey tlweKey{param.n, param.lweNoiseB};
     TrgswKey trgswKey{param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     TlweKeySwitchingKey ksKey{param};
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.sigma = param.rlweStdDev;
+    tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);

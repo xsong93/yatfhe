@@ -28,7 +28,7 @@ void encTrlevSingleSampleMonomial(Trlev& output, const TrlweKey& trlweKey, const
         // and initialize a uniformly. Then apply symEncTrlwe to add the a*s term.
         for (auto j = 0; j < N; j++) {
             const Torus msg = (j == monomialIndex) ? inOverR : 0;
-            ct.b.coeffs[j] = addGaussianNoise(msg, trlweKey.sigma, TORUS_Q);
+            ct.b.coeffs[j] = addTUniformNoise(msg, trlweKey.sigma, TORUS_Q);
         }
         for (auto k = 0; k < ct.k; k++) {
             initCoeffsViaUniformDistribution(ct.a[k].coeffs, TORUS_MIN, TORUS_MAX);
@@ -98,7 +98,7 @@ void decTrlev(TorusPolynomial& output, const Trlev& input, const TrlweKey& trlwe
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRounding(tmp, input.trlwes[firstLevel], trlweKey);
     for (auto i = 0; i < param.N; i++) {
-        output.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweStdDev, param.torusBits - param.radixBits);
+        output.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweNoiseB, param.torusBits - param.radixBits);
     }
 }
 

@@ -12,7 +12,7 @@ int main(){
     initYatfhe(param);
 
     TrgswKey trgswKey{param};
-    TlweKey tlweKey{param.n, param.lweStdDev};
+    TlweKey tlweKey{param.n, param.lweNoiseB};
     TorusPolynomial v{param.N};
 
     // key gen
@@ -21,7 +21,7 @@ int main(){
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.sigma = param.rlweStdDev;
+    tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 

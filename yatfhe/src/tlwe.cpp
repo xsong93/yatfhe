@@ -27,7 +27,7 @@ void symEncTlwe(Tlwe& tlweSample, const Torus message, const TlweKey& key) {
             tmp += static_cast<int64_t>(tlweSample.a[i]) * key.s[i];
         }
     }
-    Torus muE = addGaussianNoise(message, key.sigma, LWE_Q);
+    Torus muE = addTUniformNoise(message, key.errorB, LWE_Q);
     tlweSample.b = addTorus(LWE_Q, muE, static_cast<Torus>(longModP(tmp, LWE_Q)));
 }
 
