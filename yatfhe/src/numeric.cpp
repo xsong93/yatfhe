@@ -195,9 +195,9 @@ int64_t modInverse(int64_t a, int64_t mod) {
 }
 
 Torus modSwitchToTorusGeneral(const int32_t mu, const uint32_t mSize, const int64_t torusQ) {
-    auto scale = static_cast<int32_t>(torusQ / mSize);
-    int32_t mod = intModP(mu, static_cast<int32_t>(mSize));
-    return mod * scale;
+    const int64_t scale = torusQ / mSize;
+    const int64_t mod = intModP(mu, static_cast<int32_t>(mSize));
+    return static_cast<Torus>(mod * scale);
 }
 
 int64_t modSwitchFromTorusGeneral(const Torus in, const int64_t newMod, const int64_t torusQ) {
@@ -223,14 +223,14 @@ int64_t modSwitchFromTorusGeneral(const Torus in, const int64_t newMod, const in
 }
 
 Torus modSwitchToTorus32(const int32_t mu, const uint32_t mSize) {
-    auto scale = static_cast<int32_t>(TORUS_Q / mSize);
-    int32_t mod = intModP(mu, static_cast<int32_t>(mSize));
-    return mod * scale;
+    const int64_t scale = TORUS_Q / mSize;
+    const int64_t mod = intModP(mu, static_cast<int32_t>(mSize));
+    return static_cast<Torus>(mod * scale);
 }
 
 int32_t modSwitchFromTorus32(const Torus in, const uint32_t newMod) {
-    auto scale = static_cast<int32_t>(TORUS_Q / newMod);
-    double div = static_cast<double>(in) / scale;
+    const int64_t scale = TORUS_Q / newMod;
+    double div = static_cast<double>(in) / static_cast<double>(scale);
     auto real = static_cast<int32_t>(round(div));
     return intModP(real, static_cast<int32_t>(newMod));
 }

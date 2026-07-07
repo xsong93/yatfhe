@@ -39,8 +39,6 @@ void decomposeOverB(std::vector<Integer>& output, Integer in, const YatfheParame
 
 void signedGadgetDecomposition(DecomposedData& res, Integer in, const YatfheParameters& param);
 
-void signedGadgetDecompositionNtt(DecomposedDataDft& out, NttType in, const YatfheParameters& param);
-
 int genOffset(int radixBits, int bHalf, int l, int torusBits);
 
 #endif //HLS_YATFHE_GADGET_DECOMPOSITION_H

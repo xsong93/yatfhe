@@ -885,7 +885,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, cons
                 Trlwe tmp{param};
                 for (auto l = 0; l < level; l++) {
                     rotateTrlweMinusOneBPlusOne(tmp, b0[l], bsk.cPrime[l], a2,
-                                            1 << (param.torusBits - (l + 1) * param.radixBits));
+                                            static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
                     gadgetDecomposeTrlweA(decompA0[l], tmp.a, param);
                 }
             }));
@@ -899,7 +899,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, cons
             auto& bsk = bskPrime[0][0];
             for (auto l = 0; l < level; l++) {
                 rotateTrlweMinusOneBPlusOne(tmp, tmpB, bsk.cPrime[l], a1,
-                                        1 << (param.torusBits - (l + 1) * param.radixBits));
+                                        static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
                 gadgetDecomposeTrlweA(tmpDecompA, tmp.a, param);
                 switchTrlweToSecretEmbeddingNttMix(expanded0.c[l], expanded0.cPrime[l], tmpDecompA, tmpB, s2, param);
             }
@@ -928,7 +928,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, cons
                 Trlwe tmp{param};
                 for (auto l = 0; l < level; l++) {
                     rotateTrlweMinusOneBPlusOne(tmp, nextB[l], nextBsk.cPrime[l], aNext,
-                                            1 << (param.torusBits - (l + 1) * param.radixBits));
+                                            static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
                     gadgetDecomposeTrlweA(nextDecompA[l], tmp.a, param);
                 }
             }));
@@ -1014,7 +1014,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
                 Trlwe tmp{param};
                 for (auto l = 0; l < level; l++) {
                     rotateTrlweMinusOneBPlusOne(tmp, b0[l], bsk.cPrime[l], a2,
-                                            1 << (param.torusBits - (l + 1) * param.radixBits));
+                                            static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
                     gadgetDecomposeTrlweA(decompA0[l], tmp.a, param);
                 }
             }));
@@ -1028,7 +1028,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
             auto& bsk = bskPrime[0][0];
             for (auto l = 0; l < level; l++) {
                 rotateTrlweMinusOneBPlusOne(tmp, tmpB, bsk.cPrime[l], a1,
-                                        1 << (param.torusBits - (l + 1) * param.radixBits));
+                                        static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
                 gadgetDecomposeTrlweA(tmpDecompA, tmp.a, param);
                 switchTrlweToSecretEmbeddingNttMix(expanded0.c[l], expanded0.cPrime[l], tmpDecompA, tmpB, s2, param);
             }
@@ -1059,7 +1059,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
                 Trlwe tmp{param};
                 for (auto l = 0; l < level; l++) {
                     rotateTrlweMinusOneBPlusOne(tmp, nextB[l], nextBsk.cPrime[l], aNext,
-                                            1 << (param.torusBits - (l + 1) * param.radixBits));
+                                            static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
                     gadgetDecomposeTrlweA(nextDecompA[l], tmp.a, param);
                 }
             }));

@@ -7,19 +7,28 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include "yautil/control_helper.h"
 
-#define TORUS32
-//#define USE_CRT
+#if defined(TORUS32) && defined(TORUS40)
+#error "torus.h: define only one of TORUS32 or TORUS40"
+#endif
 
-#ifdef TORUS32
+#if defined(TORUS32)
 using Torus = int32_t; // use 32-bit int as torus to handle modular arithmetic naturally
+using UnsignedInteger = uint32_t;
+#elif defined(TORUS40)
+using Torus = int64_t; // 40-bit torus values live in the low 40 bits of an int64_t
+using UnsignedInteger = uint64_t;
+#else
+#error "torus.h: define TORUS32 or TORUS40"
+#endif
+
 using Decomp = int16_t;
 using Ntt14 = uint16_t;
 using Ntt16 = uint32_t;
 using Ntt24 = uint32_t;
 using Ntt32 = uint32_t;
 using Ntt64 = uint64_t;
-using UnsignedInteger = uint32_t;
 using NttType = uint64_t;
 using Integer = Torus;
 using Binary = Integer;
@@ -28,6 +37,7 @@ const int32_t NUM_HIGH_PRIMES{2};
 const int32_t NUM_LOW_PRIMES{2};
 //const Integer QD_CRT[NUM_PRIMES] {251, 19, 17, 13};
 const Integer QD_CRT[NUM_PRIMES] {251, 241, 239, 233};
+const int64_t Q_40 = INT64_C(1) << 40;
 const int64_t Q_32 = INT64_C(1) << 32;
 const int64_t Q_27 = INT64_C(1) << 27;
 const int64_t Q_26 = INT64_C(1) << 26;
@@ -51,12 +61,5 @@ extern Integer LWE_MAX;
 extern Integer LWE_MIN;
 extern NttType NTT_MAX;
 extern NttType NTT_MIN;
-
-#else
-using Torus = int64_t;
-using UnsignedInteger = uint64_t;
-using Integer = int64_t;
-using Binary = Integer;
-#endif
 
 #endif //HLS_YATFHE_TORUS_H

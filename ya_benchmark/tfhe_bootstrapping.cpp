@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft: "<< decAft << endl;
-    cout << "err:" << calTlweError(output, tlweKey, mu) << endl;
+    cout << "err:" << calTlweError(output, tlweKey, 3) << endl;
 
     return 0;
 }

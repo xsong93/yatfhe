@@ -10,6 +10,11 @@
 //#define DEBUG_MODE
  // #define TERNARY
 
+// #define TORUS32
+#define TORUS40
+
+//#define USE_CRT
+
 // #define BLINDROT_GROUP_NAIVE
 
 #endif //HLS_YATFHE_CONTROL_HELPER_H

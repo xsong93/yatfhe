@@ -9,18 +9,18 @@ using namespace std;
 
 // offset = B/2 * (2^(torusBits - radixBits) + 2^(torusBits - 2 * radixBits) + ... + 2^(torusBits - l * radixBits))
 int genOffset(const int radixBits, const int bHalf, const int l, const int torusBits) {
-    int res = 0;
+    int64_t res = 0;
     for (auto i = 1; i <= l; ++i) {
-        res += 1 << (torusBits - i * radixBits);
+        res += static_cast<int64_t>(1) << (torusBits - i * radixBits);
     }
-    return res * bHalf;
+    return static_cast<int>(res * bHalf);
 }
 
 // g = (1/B, ..., 1/B^l), B = 2^radixBits
 std::vector<Torus> genGadgetVector(const int radixBits, const int l, const int torusBits) {
     std::vector<Torus> g(l);
     for (auto i = 0; i < l; i++) {
-        g[i] = 1 << (torusBits - (i + 1) * radixBits); // 1/(B^(i) as Torus: 2^torusBits * 2^(-radixBits*i)
+        g[i] = static_cast<Torus>(1) << (torusBits - (i + 1) * radixBits); // 1/(B^(i) as Torus: 2^torusBits * 2^(-radixBits*i)
     }
     return g;
 }
@@ -30,7 +30,7 @@ void gadgetDecompose(DecomposedData& out, const Integer in, const YatfheParamete
     const int64_t in64 = static_cast<int64_t>(in);
     const uint64_t absIn = (in64 < 0) ? static_cast<uint64_t>(-in64) : static_cast<uint64_t>(in64);
     UnsignedInteger tmp = static_cast<UnsignedInteger>(absIn);
-    UnsignedInteger mask = ((1 << param.radixBits) - 1) << (param.torusBits - param.radixBits);
+    UnsignedInteger mask = ((static_cast<UnsignedInteger>(1) << param.radixBits) - 1) << (param.torusBits - param.radixBits);
     for (auto i = 0; i < out.l; i++) {
         out.value[i] = (mask & tmp) >> (param.torusBits - (i + 1) * param.radixBits);
         mask >>= param.radixBits;
@@ -79,6 +79,7 @@ void decomposeOverB(std::vector<Integer>& output, const Integer in, const Yatfhe
  * @param res Resulting g^-1(x).
  * @param input The input to decompose.
  * @param param
+ * //todo: need test
  */
 void signedGadgetDecomposition(DecomposedData& out, const Integer in, const YatfheParameters& param) {
     out.sign = (in < 0) ? -1 : 1;
@@ -89,20 +90,6 @@ void signedGadgetDecomposition(DecomposedData& out, const Integer in, const Yatf
     UnsignedInteger carry = 0;
     for (auto i = 0; i < tmp.size(); i++) {
         auto unsignedDigit = ((unsignedIn >> (i * param.radixBits)) & param.digitMask) + carry;
-        auto carryMask = unsignedDigit & param.baseOverTwo;
-        auto signedDigit = unsignedDigit - (carryMask << 1);
-        carry = carryMask >> (param.radixBits - 1);
-        tmp[tmp.size() - i - 1] = signedDigit;
-    }
-    copy(tmp.begin(), tmp.begin() + out.l, out.value.begin());
-}
-
-// todo: incorrect, need fix
-void signedGadgetDecompositionNtt(DecomposedDataDft& out, const NttType in, const YatfheParameters& param) {
-    vector<NttType> tmp(param.dftBits / param.radixBits);
-    UnsignedInteger carry = 0;
-    for (auto i = 0; i < tmp.size(); i++) {
-        auto unsignedDigit = ((in >> (i * param.radixBits)) & param.digitMask) + carry;
         auto carryMask = unsignedDigit & param.baseOverTwo;
         auto signedDigit = unsignedDigit - (carryMask << 1);
         carry = carryMask >> (param.radixBits - 1);

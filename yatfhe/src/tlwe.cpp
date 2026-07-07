@@ -123,8 +123,8 @@ void resetTlweToZero(Tlwe& tlwe) {
 }
 
 void inverseTlwe(Tlwe& tlwe) {
-    tlwe.b = modMulQ(tlwe.b, -1, LWE_Q);
+    tlwe.b = modMulQ(tlwe.b, static_cast<Torus>(-1), LWE_Q);
     for (auto i = 0; i < tlwe.n; i++) {
-        tlwe.a[i] = modMulQ(tlwe.a[i], -1, LWE_Q);
+        tlwe.a[i] = modMulQ(tlwe.a[i], static_cast<Torus>(-1), LWE_Q);
     }
 }

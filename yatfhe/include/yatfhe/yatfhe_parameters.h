@@ -28,22 +28,33 @@ struct YatfheParameters {
 #else // binary secret, 128-bit
     // LWE params
     int n {512};
-//    double lweStdDev {9.5367431640625e-07}; // 2^-20
     double lweStdDev {0.001953125}; // 2^-9
-    int64_t qLwe{Q_20};
+    int64_t qLwe{Q_32};
 
     // RLWE params, 128-bit
     int k {1};
     int N {2048};
+#if defined(TORUS40)
+    double rlweStdDev {1.8189894035458565e-12}; // 2^-39
+    int64_t q {Q_40};
+    int torusBits {40};
+#else
     // double rlweStdDev {7.275957614183426e-12}; // 2^-37
+    // double rlweStdDev {2.32830644e-10}; // 2^-32
     double rlweStdDev {4.656612873077393e-10}; // 2^-31
     int64_t q {Q_32};
     int torusBits {32};
+#endif
     int torusBase {8}; // p|q
 
     int radixBits {8}; // b
+#if defined(TORUS40)
+    int l {5};
+    int lApprox {4};
+#else
     int l {4};
     int lApprox {2};
+#endif
 #endif
     int batchSize{8};
     int tasksPerThread{8};
