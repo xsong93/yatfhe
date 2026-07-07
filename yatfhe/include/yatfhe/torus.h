@@ -9,20 +9,28 @@
 #include <cstdint>
 #include "yautil/control_helper.h"
 
-#if defined(TORUS32) && defined(TORUS40)
-#error "torus.h: define only one of TORUS32 or TORUS40"
-#endif
-
 #if defined(TORUS32)
 using Torus = int32_t; // use 32-bit int as torus to handle modular arithmetic naturally
 using UnsignedInteger = uint32_t;
 using Decomp = int16_t;
+#elif defined(TORUS33)
+using Torus = int64_t;
+using UnsignedInteger = uint64_t;
+using Decomp = int16_t;
+#elif defined(TORUS35)
+using Torus = int64_t;
+using UnsignedInteger = uint64_t;
+using Decomp = int8_t;
 #elif defined(TORUS40)
-using Torus = int64_t; // 40-bit torus values live in the low 40 bits of an int64_t
+using Torus = int64_t;
+using UnsignedInteger = uint64_t;
+using Decomp = int16_t;
+#elif defined(TORUS42)
+using Torus = int64_t;
 using UnsignedInteger = uint64_t;
 using Decomp = int8_t;
 #else
-#error "torus.h: define TORUS32 or TORUS40"
+#error "torus.h: TORUS undefined"
 #endif
 
 using Ntt14 = uint16_t;
@@ -41,6 +49,8 @@ const Integer QD_CRT[NUM_PRIMES] {251, 241, 239, 233};
 const int64_t Q_42 = INT64_C(1) << 42;
 const int64_t Q_40 = INT64_C(1) << 40;
 const int64_t Q_32 = INT64_C(1) << 32;
+const int64_t Q_33 = INT64_C(1) << 33;
+const int64_t Q_35 = INT64_C(1) << 35;
 const int64_t Q_27 = INT64_C(1) << 27;
 const int64_t Q_26 = INT64_C(1) << 26;
 const int64_t Q_25 = INT64_C(1) << 25;
