@@ -10,8 +10,8 @@
 //#define DEBUG_MODE
  // #define TERNARY
 
-#define TORUS32
-// #define TORUS40
+// #define TORUS32
+#define TORUS40
 
 //#define USE_CRT
 

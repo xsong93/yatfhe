@@ -36,20 +36,21 @@ struct YatfheParameters {
     int N {2048};
 #if defined(TORUS40)
     int rlweNoiseB {1};
-    int64_t q {Q_40};
-    int torusBits {40};
+    int64_t q {Q_42};
+    int torusBits {42};
 #else
-    int rlweNoiseB {1};
+    int rlweNoiseB {-1};
     int64_t q {Q_32};
     int torusBits {32};
 #endif
     int torusBase {8}; // p|q
 
-    int radixBits {8}; // b
 #if defined(TORUS40)
-    int l {5};
+    int radixBits {7}; // b
+    int l {6};
     int lApprox {3};
 #else
+    int radixBits {8}; // b
     int l {4};
     int lApprox {2};
 #endif
