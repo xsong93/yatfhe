@@ -543,6 +543,8 @@ void rotateTrlweMinusOneBPlusOne(Trlwe& res, TorusPolynomial& b, const Trlwe& in
 
 void rotateTrlweMinusOneNtt(TrlweDft& res, const TrlweDft& input, const int r);
 
+void rotateTrlweMinusOneBPlusOneNtt(TrlweDft& res, const TrlweDft& input, const int r);
+
 void rotateTrlwe8MinusOne(Trlwe8& res, const Trlwe8& input, int a, int modP);
 
 void copyTrlwe(Trlwe& target, const Trlwe& source, bool copyA, bool copyB);

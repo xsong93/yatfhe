@@ -346,6 +346,7 @@ void serializeBskLazyPipe(const BootstrappingKeyMPLazyPipe& t, const std::string
     // Step 1: Write bskFirst[0] and bskDft[0][0] (written outside loop)
     serialize(t.bskFirst[0], os);
     serialize(t.bskDft[0][0], os);
+    serialize(t.s2Dft, os);
 
     // Step 2: Write alternating pattern: bskDft[i+1][0], bskDecompA[i][*]
     for (int i = 0; i < t.n - 2; ++i) {
@@ -374,6 +375,7 @@ void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::stri
     deserialize(bskLazy.bskFirst[0], inFile);
     bskLazy.bskDft[0].resize(1);
     deserialize(bskLazy.bskDft[0][0], inFile);
+    deserialize(bskLazy.s2Dft, inFile);
 
     // level/group aren't stored separately in this format, but each TrgswMPDft already
     // carries its own level count, and group is always 1 in this (non-TERNARY) format,

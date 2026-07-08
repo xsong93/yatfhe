@@ -60,7 +60,9 @@ Torus calTlweError(Tlwe& in, const TlweKey& key, const Integer mu) {
         }
     }
     auto aXs = static_cast<Torus>(longModP(tmp, LWE_Q));
-    return subTorus(LWE_Q, in.b, aXs) - modSwitchToTorusGeneral(mu, MESSAGE_P, LWE_Q);
+    auto phase = subTorus(LWE_Q, in.b, aXs);
+    auto expected = modSwitchToTorusGeneral(mu, MESSAGE_P, LWE_Q);
+    return static_cast<Torus>(longModP(static_cast<int64_t>(phase) - static_cast<int64_t>(expected), LWE_Q));
 }
 
 void rescaleTlweFromTorus(Tlwe& output, const Tlwe& input) {

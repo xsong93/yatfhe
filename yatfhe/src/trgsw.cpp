@@ -149,6 +149,29 @@ void rotateTrgswMPMinusOneNtt(TrgswMPDft& out, const TrgswMPDft& in, const int r
     }
 }
 
+void rotateTrgswMPMinusOneBPlusOneNtt(TrgswMPDft& out, const TrgswMPDft& in, const int rot, const YatfheParameters& param) {
+  if (rot % (param.N * 2) == 0) {
+      return;
+  }
+  const auto q = NttHexl::getNttHexl().GetModulus();
+  for (auto lvl = 0; lvl < out.l; lvl++) {
+      const auto g_l = static_cast<uint64_t>(
+          static_cast<Torus>(1) << (param.torusBits - (lvl + 1) * param.radixBits));
+      rotateTrlweMinusOneNtt(out.cPrime[lvl], in.cPrime[lvl], rot);
+      for (auto& coeff : out.cPrime[lvl].b.coeffs) {
+          coeff += g_l;
+          if (coeff >= q) coeff -= q;
+      }
+      for (auto row = 0; row < param.k; row++) {
+          rotateTrlweMinusOneNtt(out.c[lvl][row], in.c[lvl][row], rot);
+          for (auto& coeff : out.c[lvl][row].a[row].coeffs) {
+              coeff += g_l;
+              if (coeff >= q) coeff -= q;
+          }
+      }
+  }
+}
+
 // trgsw(0): [trlwe(0)]  (k+1)l rows
 void encZeroTrgsw(Trgsw& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey) {
     for (auto lvl = 0; lvl < trgsw.l; lvl++) {

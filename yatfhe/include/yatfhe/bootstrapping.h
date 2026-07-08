@@ -228,9 +228,8 @@ struct BootstrappingKeyMPLazy {
 struct BootstrappingKeyMPLazyPipe {
     vector<Trlwe> bskFirst{};
     vector<vector<TrgswMPDft>> bskDft{};
-    // Flat storage for the [n][group][level] grid of [l][k] DecompPolynomial cells:
-    // one allocation for the outer grid instead of a separate vector per (i, group) pair.
-    vector<vector<vector<DecompPolynomial>>> bskDecompA{};
+    vector<vector<vector<DecompPolynomial>>> bskDecompA{}; // Flat storage for the [n][group][level] grid of [l][k] DecompPolynomial cells
+    TrlevDft s2Dft;
     int n{};
     int level{};
     int group{};
@@ -240,15 +239,6 @@ struct BootstrappingKeyMPLazyPipe {
 
     BootstrappingKeyMPLazyPipe(const YatfheParameters& p, const int level, const bool isHalf, const bool isOnlyB) : level(level), group(p.group) {
 #ifdef TERNARY
-        if (group == 1) {
-            n = p.n;
-        } else {
-            n = p.n / group * (1 << group);
-        }
-        bskFirst = vector(2, Trlwe{p.k, p.N});
-        bskFull = vector(2, vector(2, TrgswMPDft{p, level}));
-        bskTrim = vector(n - 3, vector(2, TrgswMPDft{p, level, isHalf, isOnlyB}));
-        bskDecompA = vector(static_cast<size_t>(n - 3) * group * level, vector(p.l, vector(p.k, DecompPolynomial{p.N})));
 #else
         if (group == 1) {
             n = p.n;
@@ -262,6 +252,7 @@ struct BootstrappingKeyMPLazyPipe {
         bskDft.insert(bskDft.end(), bskFull.begin(), bskFull.end());
         bskDft.insert(bskDft.end(), bskTrim.begin(), bskTrim.end());
         bskDecompA = vector(static_cast<size_t>(n - 3) * group * level, vector(p.l, vector(p.k, DecompPolynomial{p.N})));
+        s2Dft = TrlevDft{p, p.l};
 #endif
     }
 

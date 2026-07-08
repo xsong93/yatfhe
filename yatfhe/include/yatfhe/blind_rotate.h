@@ -48,7 +48,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
                                    const string& fileName, const YatfheParameters& param);
 
 void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
-                                   const TrlevDft& s2, const TrgswMPDft& one, const ScaledTlwe& input, const TorusPolynomial& v,
+                                   TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
                                    const string& fileName, const YatfheParameters& param);
 
 void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,

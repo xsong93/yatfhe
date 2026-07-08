@@ -282,6 +282,8 @@ void rotateTrgswMPNtt(TrgswMPDft& out, const TrgswMPDft& in, int rot, const Yatf
 
 void rotateTrgswMPMinusOneNtt(TrgswMPDft& out, const TrgswMPDft& in, int rot, const YatfheParameters& param);
 
+void rotateTrgswMPMinusOneBPlusOneNtt(TrgswMPDft& out, const TrgswMPDft& in, const int rot, const YatfheParameters& param);
+
 void encryptTrgswMP(TrgswMP& trgswMP, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);
 
 void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, Integer mu, const TrgswKey& trgswKey, int pos, const YatfheParameters& param);

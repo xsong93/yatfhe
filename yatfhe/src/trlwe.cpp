@@ -292,6 +292,18 @@ void rotateTrlweMinusOneNtt(TrlweDft& res, const TrlweDft& input, const int r) {
     rotateNttPolynomialMinusOne(res.b, input.b, r);
 }
 
+void rotateTrlweMinusOneBPlusOneNtt(TrlweDft& res, const TrlweDft& input, const int r) {
+    for (auto i = 0; i < input.a.size(); i++) {
+        rotateNttPolynomialMinusOne(res.a[i], input.a[i], r);
+    }
+    rotateNttPolynomialMinusOne(res.b, input.b, r);
+    const auto q = NttHexl::getNttHexl().GetModulus();
+    for (auto& coeff : res.b.coeffs) {
+        coeff += 1;
+        if (coeff >= q) coeff -= q;
+    }
+}
+
 void rotateTrlwe8MinusOne(Trlwe8& res, const Trlwe8& input, const int a, int modP) {
     for (auto i = 0; i < input.a.size(); i++) {
         rotateInt8PolynomialMinusOne(res.a[i], a, input.a[i], modP);
