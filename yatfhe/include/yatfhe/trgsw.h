@@ -359,6 +359,14 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
                                         const TorusPolynomial& cPrimeB, const TrlevDft& sSquare,
                                         const YatfheParameters& param);
 
+// Same computation as switchTrlweToSecretEmbeddingNttOpt, but takes a of the decomposition
+// that the caller has already transformed to NTT domain (and, typically, already rotated via
+// rotateNttPolynomialMinusOne) instead of a coefficient-domain decompA it would have to NTT
+// itself. cPrimeDft.b must likewise already hold the (rotated) b the caller wants embedded.
+void switchTrlweToSecretEmbeddingNttFromDft(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft,
+                                            const vector<vector<NttPolynomial>>& aDft,
+                                            const TrlevDft& sSquare, const YatfheParameters& param);
+
 void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

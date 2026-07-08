@@ -202,7 +202,7 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
         encryptTrgswMP(tmp, tlweKey.s[i + 1], trgswKey, 0, param);
         for (auto l0 = 0; l0 < bsk.level; l0++) {
             auto& a = tmp.cPrime[l0].a;
-            auto& dA = bsk.bskDecompA[i][0][l0];
+            auto& dA = bsk.bskDecompA[bsk.decompIndex(i, l0)];
             for (auto k = 0; k < param.k; k++) {
                 for (auto j = 0; j < param.N; j++) {
                     DecomposedData d{param.l};
@@ -242,7 +242,7 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& tr
         encryptTrgswMP(tmp, tlweKey.s[i + 3], trgswKey, 0, param);
         for (auto l0 = 0; l0 < bsk.level; l0++) {
             auto& a = tmp.cPrime[l0].a;
-            auto& dA = bsk.bskDecompA[i][0][l0];
+            auto& dA = bsk.bskDecompA[bsk.decompIndex(i, l0)];
             for (auto k = 0; k < param.k; k++) {
                 for (auto j = 0; j < param.N; j++) {
                     DecomposedData d{param.l};

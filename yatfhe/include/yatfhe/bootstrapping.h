@@ -187,7 +187,9 @@ struct BootstrappingKeyMPOpt {
 struct BootstrappingKeyMPLazy {
     vector<Trlwe> bskFirst{};
     vector<vector<TrgswMPDft>> bskTrim{};
-    vector<vector<vector<vector<vector<DecompPolynomial>>>>> bskDecompA{};
+    // Flat storage for the [n][group][level] grid of [l][k] DecompPolynomial cells:
+    // one allocation for the outer grid instead of a separate vector per (i, group) pair.
+    vector<vector<vector<DecompPolynomial>>> bskDecompA{};
     int n{};
     int level{};
     int group{};
@@ -204,7 +206,7 @@ struct BootstrappingKeyMPLazy {
         }
         bskFirst = vector(2, Trlwe{p.k, p.N});
         bskTrim = vector(n - 1, vector(2, TrgswMPDft{p, level, isHalf, isOnlyB}));
-        bskDecompA = vector(n - 1, vector(2, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
+        bskDecompA = vector(static_cast<size_t>(n - 1) * group * level, vector(p.l, vector(p.k, DecompPolynomial{p.N})));
 #else
         if (group == 1) {
             n = p.n;
@@ -213,15 +215,22 @@ struct BootstrappingKeyMPLazy {
         }
         bskFirst = vector(1, Trlwe{p.k, p.N});
         bskTrim = vector(n - 1, vector(1, TrgswMPDft{p, level, isHalf, isOnlyB}));
-        bskDecompA = vector(n - 1, vector(1, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
+        bskDecompA = vector(static_cast<size_t>(n - 1) * group * level, vector(p.l, vector(p.k, DecompPolynomial{p.N})));
 #endif
+    }
+
+    // (i, lvl) -> flat index into bskDecompA; group is always accessed at index 0.
+    [[nodiscard]] size_t decompIndex(int i, int lvl) const {
+        return static_cast<size_t>(i) * group * level + lvl;
     }
 };
 
 struct BootstrappingKeyMPLazyPipe {
     vector<Trlwe> bskFirst{};
     vector<vector<TrgswMPDft>> bskDft{};
-    vector<vector<vector<vector<vector<DecompPolynomial>>>>> bskDecompA{};
+    // Flat storage for the [n][group][level] grid of [l][k] DecompPolynomial cells:
+    // one allocation for the outer grid instead of a separate vector per (i, group) pair.
+    vector<vector<vector<DecompPolynomial>>> bskDecompA{};
     int n{};
     int level{};
     int group{};
@@ -239,7 +248,7 @@ struct BootstrappingKeyMPLazyPipe {
         bskFirst = vector(2, Trlwe{p.k, p.N});
         bskFull = vector(2, vector(2, TrgswMPDft{p, level}));
         bskTrim = vector(n - 3, vector(2, TrgswMPDft{p, level, isHalf, isOnlyB}));
-        bskDecompA = vector(n - 3, vector(2, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
+        bskDecompA = vector(static_cast<size_t>(n - 3) * group * level, vector(p.l, vector(p.k, DecompPolynomial{p.N})));
 #else
         if (group == 1) {
             n = p.n;
@@ -252,8 +261,13 @@ struct BootstrappingKeyMPLazyPipe {
         bskDft.reserve(bskFull.size() + bskTrim.size());
         bskDft.insert(bskDft.end(), bskFull.begin(), bskFull.end());
         bskDft.insert(bskDft.end(), bskTrim.begin(), bskTrim.end());
-        bskDecompA = vector(n - 3, vector(1, vector(level, vector(p.l, vector(p.k, DecompPolynomial{p.N})))));
+        bskDecompA = vector(static_cast<size_t>(n - 3) * group * level, vector(p.l, vector(p.k, DecompPolynomial{p.N})));
 #endif
+    }
+
+    // (i, lvl) -> flat index into bskDecompA; group is always accessed at index 0.
+    [[nodiscard]] size_t decompIndex(int i, int lvl) const {
+        return static_cast<size_t>(i) * group * level + lvl;
     }
 };
 

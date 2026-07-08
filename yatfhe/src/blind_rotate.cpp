@@ -144,7 +144,7 @@ void switchSchemeInBatchBinary(vector<vector<TrgswMPDft>>& bsk, const TrlevDft& 
 
 void switchSchemeInBatchBinaryOpt(vector<vector<TrgswMPDft>>& bsk, const TrlevDft& s2, const ScaledTlwe& input,
                                const YatfheParameters& param,
-                               const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA) {
+                               const vector<vector<vector<DecompPolynomial>>>& bskDecompA) {
     const auto n = param.n;
     const auto batchSize = param.batchSize;
     const auto tasksPerThread = param.tasksPerThread;
@@ -171,7 +171,7 @@ void switchSchemeInBatchBinaryOpt(vector<vector<TrgswMPDft>>& bsk, const TrlevDf
                     for (auto l = 0; l < level; l++) {
                         auto& c = bsk[i][0].c[l];
                         auto& cPrime = bsk[i][0].cPrime[l];
-                        auto& decompA = bskDecompA[i][0][l];
+                        auto& decompA = bskDecompA[i * level + l];
                         c.resize(param.k, TrlweDft(param.k, param.N));
                         cPrime.a.resize(param.k, NttPolynomial(param.N));
                         switchTrlweToSecretEmbeddingNttOpt(bsk[i][0].c[l], bsk[i][0].cPrime[l],
@@ -740,7 +740,7 @@ void blindRotateLazyNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vect
 }
 
 void blindRotateLazyMTNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
-                           const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
+                           const vector<vector<vector<DecompPolynomial>>>& bskDecompA,
                            const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
                            const YatfheParameters& param) {
     const auto level = bsk[0][0].l;
@@ -774,7 +774,7 @@ void blindRotateLazyMTNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<ve
 }
 
 void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
-                           const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
+                           const vector<vector<vector<DecompPolynomial>>>& bskDecompA,
                            const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
                            const TrgswMPDft& one, const YatfheParameters& param) {
     const auto level = bsk[0][0].l;
@@ -826,7 +826,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
                 for (auto l = 0; l < level; l++) {
                     auto& c = bsk[i + 2][0].c[l];
                     auto& cPrime = bsk[i + 2][0].cPrime[l];
-                    auto& decompA = bskDecompA[i][0][l];
+                    auto& decompA = bskDecompA[i * level + l];
                     c.resize(param.k, TrlweDft(param.k, param.N));
                     cPrime.a.resize(param.k, NttPolynomial(param.N));
                     switchTrlweToSecretEmbeddingNttOpt(c, cPrime, decompA, s2, param);
@@ -1104,15 +1104,18 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
 }
 
 //todo
-void blindRotateLazyPipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
-                               const TrlevDft& s2, const TrgswMPDft& one,
-                               const ScaledTlwe& input, const TorusPolynomial& v,
-                               const string& fileName, const YatfheParameters& param) {
+void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
+                                   const TrlevDft& s2, const TrgswMPDft& one, const ScaledTlwe& input, const TorusPolynomial& v,
+                                   const string& fileName, const YatfheParameters& param) {
     const auto level = param.lApprox;
     const auto n = param.n;
     TrgswMPDft rotated0{param, level};
     TrgswMPDft rotated1{param, level};
-    vector<vector<vector<vector<DecompPolynomial>>>> decompA_buf(2);
+    vector decompA(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
+    vector rotatedADft0(level, vector(param.l, vector(param.k, NttPolynomial{param.N})));
+    vector rotatedADft1(level, vector(param.l, vector(param.k, NttPolynomial{param.N})));
+    vector rotatedB0(level, NttPolynomial{param.N});
+    vector rotatedB1(level, NttPolynomial{param.N});
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(2);
@@ -1121,104 +1124,108 @@ void blindRotateLazyPipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<ve
 
 #ifdef TERNARY
 #else
-    // Read initial keys: bskFirst[0], bsk[0][0] (full), bsk[1][0] (full), bskDecompA[0][0]
+    // handle first two key components
+    // R(v) + (X^a0 - 1)R(v*s0)
+    // G(1) + (X^a1 - 1)G(s1)
+
+    // read keys
     bskFirst.resize(1);
-    bsk.resize(2);
-    bsk[0].resize(1);
-    bsk[1].resize(1);
+    bsk.resize(n - 1);
     deserialize(bskFirst[0], inFile);
+    bsk[0].resize(1);
     deserialize(bsk[0][0], inFile);
+    bsk[1].resize(1);
     deserialize(bsk[1][0], inFile);
-    if (n > 3) {
-        deserializeNestedVector(decompA_buf[0], inFile);
-    }
 
-    // handle first two key components in parallel
     {
-        futures.emplace_back(pool.enqueue([&accum, &bskFirst, &input, &v, &param]{
-            Trlwe tmp{param};
-            rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
-            addTorusPolynomial(tmp.b, tmp.b, v);
-            rotateTrlwe(accum, tmp, -input.b);
-        }));
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
 
+        // components 1 and 2 (bsk[0][0], bsk[1][0]) are both fully-encrypted (non-trim)
+        // entries, so -- unlike the trim entries below -- they can be rotated as complete
+        // objects directly, with no scheme switching involved at all.
         if (input.a[1] != 0) {
-            futures.emplace_back(pool.enqueue([&rotated0, &bsk, &one, &input, &param]{
-                rotateTrgswMPMinusOneNtt(rotated0, bsk[0][0], input.a[1], param);
-                addTrgswMPNtt(rotated0, rotated0, one);
-            }));
+            rotateTrgswMPMinusOneNtt(rotated0, bsk[0][0], input.a[1], param);
+            addTrgswMPNtt(rotated0, rotated0, one);
         }
-
-        for (auto& f : futures) f.get();
-        futures.clear();
+        if (input.a[2] != 0) {
+            rotateTrgswMPMinusOneNtt(rotated1, bsk[1][0], input.a[2], param);
+            addTrgswMPNtt(rotated1, rotated1, one);
+        }
     }
 
-    // accumulate on the n - 1 key components
     for (auto i = 0; i < n - 1; i++) {
         auto& currRotated = i % 2 == 0 ? rotated0 : rotated1;
         auto& nextRotated = i % 2 == 0 ? rotated1 : rotated0;
-        // bsk_curr = bsk[i+1][0] (already loaded), bsk_next = bsk[i+2][0] (ping-pong target)
-        auto& bsk_curr = bsk[(i + 1) % 2][0];
-        auto& bsk_next = bsk[i % 2][0];
-        auto& decompA_curr = decompA_buf[i % 2];
-        auto& decompA_next = decompA_buf[(i + 1) % 2];
+        auto& currRotatedADft = i % 2 == 0 ? rotatedADft0 : rotatedADft1;
+        auto& nextRotatedADft = i % 2 == 0 ? rotatedADft1 : rotatedADft0;
+        auto& currRotatedB = i % 2 == 0 ? rotatedB0 : rotatedB1;
+        auto& nextRotatedB = i % 2 == 0 ? rotatedB1 : rotatedB0;
 
-        if (i < n - 2) {
-            const auto aNext = input.a[i + 2];
-            futures.emplace_back(pool.enqueue([
-                &inFile, &bsk_next, &decompA_next,
-                &bsk_curr, &nextRotated, &one,
-                &decompA_curr, &s2,
-                aNext, i, n, level, &param, &pool
-            ] {
-                // sequential IO: read bsk[i+2][0] and bskDecompA[i+1][0] for next iteration
-                if (i < n - 3) {
-                    deserialize(bsk_next, inFile);
-                    if (i + 1 < n - 3) {
-                        deserializeNestedVector(decompA_next, inFile);
+        // sequential file reads, in on-disk order: the bskDecompA block for component
+        // (i+3), immediately followed by that component's own (cPrime-only) raw entry,
+        // read straight into its permanent slot in the bsk out-parameter.
+        if (i < n - 3) {
+            for (auto l = 0; l < level; l++) {
+                deserializeNestedVector(decompA[l], inFile);
+            }
+            bsk[i + 2].resize(1);
+            deserialize(bsk[i + 2][0], inFile);
+        }
+
+        // operator 1 (automorphism): NTT the just-loaded decompA and rotate it, along with
+        // the already-NTT b, by aNext -- cheap, since this data is still pre-expansion size.
+        if (i < n - 3) {
+            const auto aNext = input.a[i + 3];
+            auto& rawNext = bsk[i + 2][0];
+            futures.emplace_back(pool.enqueue([&rawNext, &decompA, &nextRotatedADft, &nextRotatedB, aNext, level, &param] {
+                for (auto lvl = 0; lvl < level; lvl++) {
+                    for (auto dl = 0; dl < param.l; dl++) {
+                        for (auto k1 = 0; k1 < param.k; k1++) {
+                            NttPolynomial aDft{param.N};
+                            NttHexl::applyNtt(aDft, decompA[lvl][dl][k1]);
+                            rotateNttPolynomialMinusOne(nextRotatedADft[lvl][dl][k1], aDft, aNext);
+                        }
                     }
+                    rotateNttPolynomialMinusOne(nextRotatedB[lvl], rawNext.cPrime[lvl].b, aNext);
                 }
-
-                vector<future<void>> subFutures;
-
-                // automorphism: rotate bsk_curr → nextRotated
-                if (aNext != 0) {
-                    subFutures.emplace_back(pool.enqueue([&nextRotated, &bsk_curr, aNext, &one, &param] {
-                        rotateTrgswMPMinusOneNtt(nextRotated, bsk_curr, aNext, param);
-                        addTrgswMPNtt(nextRotated, nextRotated, one);
-                    }));
-                }
-
-                // scheme switching: decompA_curr → bsk_next.c (computes NTT representation)
-                if (i < n - 3) {
-                    bsk_next.c.resize(level);
-                    for (auto l = 0; l < level; l++) {
-                        subFutures.emplace_back(pool.enqueue([&bsk_next, &decompA_curr, &s2, &param, l] {
-                            bsk_next.c[l].resize(param.k, TrlweDft{param.k, param.N});
-                            bsk_next.cPrime[l].a.resize(param.k, NttPolynomial{param.N});
-                            switchTrlweToSecretEmbeddingNttOpt(bsk_next.c[l], bsk_next.cPrime[l],
-                                                               decompA_curr[l], s2, param);
-                        }));
-                    }
-                }
-
-                for (auto& sf : subFutures) sf.get();
             }));
         }
 
-        // accumulation
+        // operator 2 (scheme switching): consume the rotated decompA/b prepared on the
+        // previous iteration to produce the final, already-rotated TRGSW for component
+        // (i+2) directly into nextRotated.
+        if (i >= 1 && i <= n - 3) {
+            futures.emplace_back(pool.enqueue([&nextRotated, &currRotatedADft, &currRotatedB, &s2, &one, level, &param] {
+                for (auto l = 0; l < level; l++) {
+                    clearTrlwe(nextRotated.cPrime[l]);
+                    for (auto& item : nextRotated.c[l]) {
+                        clearTrlwe(item);
+                    }
+                    nextRotated.cPrime[l].b = currRotatedB[l];
+                    switchTrlweToSecretEmbeddingNttFromDft(nextRotated.c[l], nextRotated.cPrime[l], currRotatedADft[l], s2, param);
+                }
+                addTrgswMPNtt(nextRotated, nextRotated, one);
+            }));
+        }
+
+        // main thread: accumulation
         if (input.a[i + 1] != 0) {
             externalProductTrgswMPNttInPlace(accum, currRotated, level, param);
         }
 
-        for (auto& f : futures) f.get();
+        for (auto& f : futures) {
+            f.get();
+        }
         futures.clear();
     }
 #endif
 }
 
 void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
-                            const vector<vector<vector<vector<vector<DecompPolynomial>>>>>& bskDecompA,
+                            const vector<vector<vector<DecompPolynomial>>>& bskDecompA,
                             const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
                             const TrgswMPDft& one, const string& filename, const bool isTrunc, const YatfheParameters& param) {
     const auto level = bsk[0][0].l;
@@ -1265,11 +1272,13 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
             const auto aNext = input.a[nextKeyIdx + 1]; // input.a[i+2]
             auto& nextBsk = bsk[nextKeyIdx][0];
 
-            futures.emplace_back(pool.enqueue([i, &nextBsk, &nextRotated, &one, aNext, &outFile, &oss, &bskDecompA, param] {
+            futures.emplace_back(pool.enqueue([i, &nextBsk, &nextRotated, &one, aNext, &outFile, &oss, &bskDecompA, param, level] {
                 // serialization
                 serialize(nextBsk, oss);
                 if (i < param.n - 3) {
-                    serializeNestedVector(bskDecompA[i][0], oss);
+                    for (auto lvl = 0; lvl < level; lvl++) {
+                        serializeNestedVector(bskDecompA[i * level + lvl], oss);
+                    }
                 }
                 outFile << oss.str();
                 oss.str("");
@@ -1289,7 +1298,7 @@ void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskF
                 for (auto l = 0; l < level; l++) {
                     auto& c = bsk[i + 2][0].c[l];
                     auto& cPrime = bsk[i + 2][0].cPrime[l];
-                    auto& decompA = bskDecompA[i][0][l];
+                    auto& decompA = bskDecompA[i * level + l];
                     c.resize(param.k, TrlweDft(param.k, param.N));
                     cPrime.a.resize(param.k, NttPolynomial(param.N));
                     switchTrlweToSecretEmbeddingNttOpt(c, cPrime, decompA, s2, param);
