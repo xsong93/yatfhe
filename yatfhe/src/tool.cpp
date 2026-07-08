@@ -17,13 +17,13 @@ void printRlweAB(const Rlwe& in, const string& msg) {
     for (int i = 0; i < in.k; i++) {
         cout << "[";
         for (int j = 0; j < in.b.N; j++) {
-            printf("%d,%d:%s%ld%s  " , i, j, ANSI_COLOR_YELLOW, in.a[i].coeffs[j], ANSI_COLOR_RESET);
+            printf("%d,%d:%s%ld%s  " , i, j, ANSI_COLOR_YELLOW, (int64_t)in.a[i].coeffs[j], ANSI_COLOR_RESET);
         }
         cout <<"] ";
     }
     cout << endl << "b: [";
     for (int j = 0; j < in.b.N; j++) {
-        printf("%d:%s%ld%s  ", j, ANSI_COLOR_YELLOW, in.b.coeffs[j], ANSI_COLOR_RESET);
+        printf("%d:%s%ld%s  ", j, ANSI_COLOR_YELLOW, (int64_t)in.b.coeffs[j], ANSI_COLOR_RESET);
     }
     cout <<"]" << endl << endl;
 #endif
@@ -55,13 +55,13 @@ void printDecomposedTrlweAB(const DecomposedTrlwe& in, const string& msg) {
         for (int i = 0; i < in.trlwes[l].k; i++) {
             cout << "[";
             for (int j = 0; j < in.trlwes[l].b.N; j++) {
-                printf("%d,%d:%s%ld%s  ", i, j, ANSI_COLOR_YELLOW, in.trlwes[l].a[i].coeffs[j], ANSI_COLOR_RESET);
+                printf("%d,%d:%s%ld%s  ", i, j, ANSI_COLOR_YELLOW, (int64_t)in.trlwes[l].a[i].coeffs[j], ANSI_COLOR_RESET);
             }
             cout << "] ";
         }
         cout << endl << "b: [";
         for (int j = 0; j < in.trlwes[l].b.N; j++) {
-            printf("%d:%s%ld%s  ", j, ANSI_COLOR_YELLOW, in.trlwes[l].b.coeffs[j], ANSI_COLOR_RESET);
+            printf("%d:%s%ld%s  ", j, ANSI_COLOR_YELLOW, (int64_t)in.trlwes[l].b.coeffs[j], ANSI_COLOR_RESET);
 
         }
         cout << "]" << endl << endl;

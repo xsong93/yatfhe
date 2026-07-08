@@ -7,7 +7,6 @@
 
 #include <cstdlib>
 #include <cstdint>
-#include "yautil/control_helper.h"
 
 #if defined(TORUS32)
 using Torus = int32_t; // use 32-bit int as torus to handle modular arithmetic naturally

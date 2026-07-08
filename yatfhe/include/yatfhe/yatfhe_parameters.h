@@ -5,7 +5,6 @@
 #define HLS_YATFHE_YATFHE_PARAMETERS_H
 
 #include "yatfhe/torus.h"
-#include "yautil/control_helper.h"
 
 struct YatfheParameters {
 #ifdef TERNARY // ternary secret, 128-bit
@@ -28,42 +27,42 @@ struct YatfheParameters {
 #else // binary secret, 128-bit
     // LWE params
     int n {512};
-    int lweNoiseB {22};
+    int lweNoiseB {23};
     int64_t qLwe{Q_32};
 
     // RLWE params, 128-bit
     int k {1};
     int N {2048};
 #if defined(TORUS32)
-    int rlweNoiseB {1};
+    int rlweNoiseB {3};
     int64_t q {Q_32};
     int torusBits {32};
     int radixBits {8};
     int l {4};
     int lApprox {2};
 #elif defined(TORUS33)
-    int rlweNoiseB {1};
+    int rlweNoiseB {3};
     int64_t q {Q_33};
     int torusBits {33};
     int radixBits {11};
     int l {3};
     int lApprox {2};
 #elif defined(TORUS35)
-    int rlweNoiseB {1};
+    int rlweNoiseB {3};
     int64_t q {Q_35};
     int torusBits {35};
     int radixBits {7};
     int l {5};
-    int lApprox {2};
+    int lApprox {3};
 #elif defined(TORUS40)
-    int rlweNoiseB {1};
+    int rlweNoiseB {3};
     int64_t q {Q_40};
     int torusBits {40};
     int radixBits {8};
     int l {5};
     int lApprox {3};
 #elif defined(TORUS42)
-    int rlweNoiseB {1};
+    int rlweNoiseB {3};
     int64_t q {Q_42};
     int torusBits {42};
     int radixBits {7};

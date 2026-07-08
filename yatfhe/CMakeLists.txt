@@ -3,6 +3,15 @@ project(yatfhe)
 
 set(HEXL_REQUIRED TRUE)
 
+option(ENABLE_TIMER "Enable execution timers" OFF)
+option(PRINTER_ON "Enable debug printing" OFF)
+option(DEBUG_MODE "Enable debug mode" OFF)
+option(TERNARY "Use ternary secret instead of binary" OFF)
+option(USE_CRT "Use CRT" OFF)
+
+set(TORUS_TYPE "32" CACHE STRING "Torus width: 32, 33, 35, 40, 42")
+set_property(CACHE TORUS_TYPE PROPERTY STRINGS 32 33 35 40 42)
+
 file(GLOB SOURCES
         ./*.cpp
         ./src/*.cpp
@@ -16,6 +25,15 @@ add_library(yatfhe_lib STATIC ${SOURCE_FILES})
 #        include/yatfhe
 #)
 target_include_directories(yatfhe_lib PUBLIC include)
+
+target_compile_definitions(yatfhe_lib PUBLIC
+        TORUS${TORUS_TYPE}
+        $<$<BOOL:${ENABLE_TIMER}>:ENABLE_TIMER>
+        $<$<BOOL:${PRINTER_ON}>:PRINTER_ON>
+        $<$<BOOL:${DEBUG_MODE}>:DEBUG_MODE>
+        $<$<BOOL:${TERNARY}>:TERNARY>
+        $<$<BOOL:${USE_CRT}>:USE_CRT>
+)
 
 # Build GMP
 message(STATUS "Linking GMP...")

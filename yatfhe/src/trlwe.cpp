@@ -8,7 +8,6 @@
 #include "yatfhe/numeric.h"
 #include "yatfhe/ntt_hexl.h"
 #include "yatfhe/gadget_decomposition.h"
-#include "yautil/control_helper.h"
 #include "yautil/multi_threading.h"
 
 using namespace std;

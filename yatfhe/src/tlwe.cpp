@@ -2,7 +2,6 @@
 // Created by Xintong Song on 2023/12/8.
 //
 #include <iostream>
-#include "yautil/control_helper.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/numeric.h"
 

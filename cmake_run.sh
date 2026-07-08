@@ -2,5 +2,5 @@
 
 rm -rf CMAKE_BUILD
 mkdir CMAKE_BUILD && cd CMAKE_BUILD
-cmake .. -DINSTALL=$1
+cmake .. -DINSTALL="$1" -DTORUS_TYPE="$2" -DPRINTER_ON=""
 sudo make install -j32

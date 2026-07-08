@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include "yautil/time_counter.h"
-#include "yautil/control_helper.h"
 #include "yautil/tool.h"
 
 time_point<steady_clock> TimeCounter::timeGlobal = steady_clock::now();

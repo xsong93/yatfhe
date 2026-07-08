@@ -55,8 +55,6 @@ static Torus genTUniformNoise(const int b) {
     return static_cast<Torus>(signedCandidate);
 }
 
-// TUniform sample centered in message; sigma/torusQ are kept as the calibration inputs
-// (converted internally to the TUniform bound) so existing parameter sets carry over.
 Torus addTUniformNoise(Torus message, const int b, const int64_t torusQ) {
     Torus err = genTUniformNoise(b);
     return addTorus(torusQ, message, err);
