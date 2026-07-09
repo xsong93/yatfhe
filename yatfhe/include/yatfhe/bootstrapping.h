@@ -229,6 +229,7 @@ struct BootstrappingKeyMPLazyPipe {
     vector<Trlwe> bskFirst{};
     vector<vector<vector<DecompPolynomial>>> bskDecompA{};
     vector<NttPolynomial> bskB{};
+    vector<vector<DecompPolynomial>> bskDecompB{};
     TrlevDft s2Dft;
     int n{};
     int level{};
@@ -248,6 +249,7 @@ struct BootstrappingKeyMPLazyPipe {
         bskFirst = vector(1, Trlwe{p.k, p.N});
         bskDecompA = vector(static_cast<size_t>(n - 1) * level, vector(p.l, vector(p.k, DecompPolynomial{p.N})));
         bskB = vector(static_cast<size_t>(n - 1) * level, NttPolynomial{p.N});
+        bskDecompB = vector(static_cast<size_t>(n - 1) * level, vector(p.l, DecompPolynomial{p.N}));
         s2Dft = TrlevDft{p, p.l};
 #endif
     }

@@ -247,6 +247,8 @@ void rotateInt8Polynomial(Int8Polynomial& out, int a, const Int8Polynomial& inpu
 
 void rotateInt8PolynomialMinusOne(Int8Polynomial& out, int a, const Int8Polynomial& input, int modP);
 
+void rotateDecompPolynomialMinusOne(DecompPolynomial& out, int a, const DecompPolynomial& input);
+
 void multTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
 
 void multIntPolynomialModQ(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2, int64_t q);

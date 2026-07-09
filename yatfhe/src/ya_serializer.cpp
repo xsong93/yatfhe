@@ -355,7 +355,8 @@ void serializeBskLazyPipe(const BootstrappingKeyMPLazyPipe& t, const std::string
         // Write bsk
         for (auto lvl = 0; lvl < t.level; lvl++) {
             serializeNestedVector(t.bskDecompA[t.decompIndex(i, lvl)], os);
-            serialize(t.bskB[t.decompIndex(i, lvl)], os);
+            // serialize(t.bskB[t.decompIndex(i, lvl)], os);
+            serializeNestedVector(t.bskDecompB[t.decompIndex(i, lvl)], os);
         }
     }
     os.close();
@@ -376,7 +377,8 @@ void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::stri
 
     bskLazy.group = 1;
     bskLazy.bskDecompA.resize(static_cast<size_t>(n - 1) * bskLazy.level);
-    bskLazy.bskB.resize(static_cast<size_t>(n - 1) * bskLazy.level);
+    // bskLazy.bskB.resize(static_cast<size_t>(n - 1) * bskLazy.level);
+    bskLazy.bskDecompB.resize(static_cast<size_t>(n - 1) * bskLazy.level);
 
     // Step 2: Read alternating pattern
     for (int i = 0; i < n - 1; ++i) {
@@ -384,7 +386,8 @@ void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::stri
         // Read bsk
         for (auto lvl = 0; lvl < bskLazy.level; lvl++) {
             deserializeNestedVector(bskLazy.bskDecompA[bskLazy.decompIndex(i, lvl)], inFile);
-            deserialize(bskLazy.bskB[bskLazy.decompIndex(i, lvl)], inFile);
+            // deserialize(bskLazy.bskB[bskLazy.decompIndex(i, lvl)], inFile);
+            deserializeNestedVector(bskLazy.bskDecompB[bskLazy.decompIndex(i, lvl)], inFile);
         }
     }
 

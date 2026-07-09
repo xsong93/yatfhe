@@ -238,6 +238,17 @@ void rotateInt8PolynomialMinusOne(Int8Polynomial& out, const int a, const Int8Po
     }
 }
 
+void rotateDecompPolynomialMinusOne(DecompPolynomial& out, const int a, const DecompPolynomial& input) {
+    const auto N = input.N;
+    int aTrue, isWrap;
+    validateRotator(aTrue, isWrap, a, N);
+    int tmp = 0;
+    for (size_t i = 0; i < N; i++) {
+        tmp = ((i < aTrue) ? (-input.coeffs[i - aTrue + N]) : (input.coeffs[i - aTrue])) * isWrap;
+        out.coeffs[i] = static_cast<Decomp>(tmp - input.coeffs[i]);
+    }
+}
+
 void multTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
     const int N = res.N;
     for (auto i = 0; i < N; i++) {

@@ -37,42 +37,35 @@ struct YatfheParameters {
     int rlweNoiseB {3};
     int64_t q {Q_32};
     int torusBits {32};
-    int radixBits {8};
-    int l {4};
-    int lApprox {2};
-#elif defined(TORUS33)
-    int rlweNoiseB {3};
-    int64_t q {Q_33};
-    int torusBits {33};
-    int radixBits {11};
-    int l {3};
-    int lApprox {2};
-#elif defined(TORUS35)
-    int rlweNoiseB {3};
-    int64_t q {Q_35};
-    int torusBits {35};
-    int radixBits {7};
-    int l {5};
-    int lApprox {3};
+    int radixBits {4};
+    int l {8};
+    int lApprox {4};
+#elif defined(TORUS36)
+    int rlweNoiseB {1};
+    int64_t q {Q_36};
+    int torusBits {36};
+    int radixBits {6};
+    int l {6};
+    int lApprox {4};
 #elif defined(TORUS40)
-    int rlweNoiseB {3};
+    int rlweNoiseB {1};
     int64_t q {Q_40};
     int torusBits {40};
-    int radixBits {8};
-    int l {5};
+    int radixBits {10};
+    int l {4};
     int lApprox {3};
 #elif defined(TORUS42)
     int rlweNoiseB {3};
     int64_t q {Q_42};
     int torusBits {42};
-    int radixBits {7};
-    int l {6};
-    int lApprox {3};
+    int radixBits {6};
+    int l {7};
+    int lApprox {5};
 #else
 #error "torus.h: TORUS undefined"
 #endif
 #endif
-    int torusBase {8}; // p|q
+    int torusBase {4}; // p|q
     int batchSize{8};
     int tasksPerThread{8};
     uint64_t qNtt {Q_50P};

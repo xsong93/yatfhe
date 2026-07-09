@@ -988,6 +988,46 @@ void switchTrlweToSecretEmbeddingNttFromDft(vector<TrlweDft>& cDft, TrlweDft& cP
     }
 }
 
+void switchDecompTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft,
+                                           const vector<vector<DecompPolynomial>>& aDecomp,
+                                           const vector<DecompPolynomial>& bDecomp,
+                                           const TrlevDft& sSquare, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l; // must use full decomp length
+    const auto N = param.N;
+
+    // calculate a * S^2, using the already-NTT'd (and typically already rotated) aDft
+    // supplied by the caller instead of computing NTT(decompA) here.
+    for (auto l = 0; l < L; l++) {
+        auto& s2 = sSquare.trlweDfts[l];
+        auto& aL = aDecomp[l];
+        auto& bL = bDecomp[l];
+        NttPolynomial bDft{N};
+        applyNtt(bDft, bL);
+        calModularInnerProductNtt(cPrimeDft.b, bDft, getNttGadgetRecomper(l));
+        for (auto k1 = 0; k1 < K; k1++) {
+            auto& cA = cDft[k1].a;
+            auto& cB = cDft[k1].b;
+            auto& sA = s2.a;
+            auto& a = aL[k1];
+            NttPolynomial aDft{N};
+            applyNtt(aDft, a);
+            calModularInnerProductNtt(cPrimeDft.a[k1], aDft, getNttGadgetRecomper(l)); // calculate recomposed cPrimes'a in ntt domain
+            for (auto k2 = 0; k2 < K; k2++) {
+                calModularInnerProductNtt(cA[k2], aDft, sA[k2]);
+            }
+            calModularInnerProductNtt(cB, aDft, s2.b);
+        }
+    }
+
+    // adding b
+    for (auto k1 = 0; k1 < K; k1++) {
+        for (auto k2 = 0; k2 < K; k2++) {
+            addNttPolynomial(cDft[k1].a[k2], cDft[k1].a[k2], cPrimeDft.b);
+        }
+    }
+}
+
 void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,
                                         const TorusPolynomial& cPrimeB, const TrlevDft& sSquare,
                                         const YatfheParameters& param) {

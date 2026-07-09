@@ -12,11 +12,7 @@
 using Torus = int32_t; // use 32-bit int as torus to handle modular arithmetic naturally
 using UnsignedInteger = uint32_t;
 using Decomp = int16_t;
-#elif defined(TORUS33)
-using Torus = int64_t;
-using UnsignedInteger = uint64_t;
-using Decomp = int16_t;
-#elif defined(TORUS35)
+#elif defined(TORUS36)
 using Torus = int64_t;
 using UnsignedInteger = uint64_t;
 using Decomp = int8_t;
@@ -50,6 +46,7 @@ const int64_t Q_40 = INT64_C(1) << 40;
 const int64_t Q_32 = INT64_C(1) << 32;
 const int64_t Q_33 = INT64_C(1) << 33;
 const int64_t Q_35 = INT64_C(1) << 35;
+const int64_t Q_36 = INT64_C(1) << 36;
 const int64_t Q_27 = INT64_C(1) << 27;
 const int64_t Q_26 = INT64_C(1) << 26;
 const int64_t Q_25 = INT64_C(1) << 25;

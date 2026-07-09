@@ -369,6 +369,10 @@ void switchTrlweToSecretEmbeddingNttFromDft(vector<TrlweDft>& cDft, TrlweDft& cP
                                             const vector<vector<NttPolynomial>>& aDft,
                                             const TrlevDft& sSquare, const YatfheParameters& param);
 
+void switchDecompTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft,
+                                        const vector<vector<DecompPolynomial>>& aDecomp, const vector<DecompPolynomial>& bDecomp,
+                                            const TrlevDft& sSquare, const YatfheParameters& param);
+
 void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRGSW_H

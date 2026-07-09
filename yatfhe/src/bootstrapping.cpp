@@ -250,8 +250,16 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswK
                     }
                 }
             }
-            // NttHexl::applyNtt(bsk.bskDft[i][0].cPrime[l0].b, tmp.cPrime[l0].b);
             NttHexl::applyNtt(bsk.bskB[bsk.decompIndex(i, l0)], tmp.cPrime[l0].b);
+            auto& b = tmp.cPrime[l0].b;
+            auto& dB = bsk.bskDecompB[bsk.decompIndex(i, l0)];
+            for (auto j = 0; j < param.N; j++) {
+                DecomposedData d{param.l};
+                gadgetDecompose(d, b.coeffs[j], param);
+                for (auto l = 0; l < param.l; l++) {
+                    dB[l].coeffs[j] = d.value[l] * d.sign;
+                }
+            }
         }
 #endif
     }
