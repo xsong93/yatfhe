@@ -6,6 +6,7 @@
 #define HLS_YATFHE_BLIND_ROTATE_H
 
 #include "yatfhe/trgsw.h"
+#include "yatfhe/bootstrapping.h"
 
 void blindRotate(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param);
 
@@ -39,8 +40,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
                            const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
                            const TrgswMPDft& one, const YatfheParameters& param);
 
-void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk, vector<vector<vector<DecompPolynomial>>>& bskDecompA,
-                                   TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
+void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
                                    const string& fileName, const YatfheParameters& param);
 
 void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, const vector<vector<TrgswMP>>& bskPrime,

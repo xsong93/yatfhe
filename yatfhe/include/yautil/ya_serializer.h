@@ -102,6 +102,15 @@ inline void serializeNestedVector<DecompPolynomial>(const std::vector<DecompPoly
     }
 }
 
+template <>
+inline void serializeNestedVector<NttPolynomial>(const std::vector<NttPolynomial>& vec, std::ostream& os) {
+    size_t size = vec.size();
+    os.write(reinterpret_cast<const char*>(&size), sizeof(size_t));
+    for (const auto& poly : vec) {
+        serialize(poly, os);  // Calls Step 1
+    }
+}
+
 template <typename T>
 void deserializeNestedVector(std::vector<T>& vec, std::istream& is) {
     // Read size of current dimension
@@ -118,6 +127,16 @@ void deserializeNestedVector(std::vector<T>& vec, std::istream& is) {
 // Template specialization for DecompPolynomial (base case)
 template <>
 inline void deserializeNestedVector<DecompPolynomial>(std::vector<DecompPolynomial>& vec, std::istream& is) {
+    size_t size;
+    is.read(reinterpret_cast<char*>(&size), sizeof(size_t));
+    vec.resize(size);
+    for (auto& poly : vec) {
+        deserialize(poly, is);
+    }
+}
+
+template <>
+inline void deserializeNestedVector<NttPolynomial>(std::vector<NttPolynomial>& vec, std::istream& is) {
     size_t size;
     is.read(reinterpret_cast<char*>(&size), sizeof(size_t));
     vec.resize(size);

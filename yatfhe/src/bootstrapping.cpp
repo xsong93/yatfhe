@@ -250,7 +250,8 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswK
                     }
                 }
             }
-            NttHexl::applyNtt(bsk.bskDft[i][0].cPrime[l0].b, tmp.cPrime[l0].b);
+            // NttHexl::applyNtt(bsk.bskDft[i][0].cPrime[l0].b, tmp.cPrime[l0].b);
+            NttHexl::applyNtt(bsk.bskB[bsk.decompIndex(i, l0)], tmp.cPrime[l0].b);
         }
 #endif
     }

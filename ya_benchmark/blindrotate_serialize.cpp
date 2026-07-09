@@ -106,8 +106,7 @@ int main(int argc, char **argv) {
         BootstrappingKeyMPLazyPipe bskMPLazyServer;
         clearFileCache();
         COUNT_TIME("PIPE_LAZY_INIT blindRotate",
-                   blindRotatePipeInitNtt(out31, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyServer.bskDecompA,
-                                              bskMPLazyServer.s2Dft, sTlwe, v, "BSK_PIPE_INIT.bin", param);)
+                   blindRotatePipeInitNtt(out31, bskMPLazyServer, sTlwe, v, "BSK_PIPE_INIT.bin", param);)
         // bskMPLazyServer.initialized = true;
         // bskMPLazyServer.bskDecompA.clear();
     }

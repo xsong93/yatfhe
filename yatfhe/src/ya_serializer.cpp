@@ -345,18 +345,17 @@ void serializeBskLazyPipe(const BootstrappingKeyMPLazyPipe& t, const std::string
 
     writePOD(os, t.level);
 
-    // Step 1: Write bskFirst[0] and bskDft[0][0] (written outside loop)
+    // Step 1: Write bskFirst[0] and s2 (written outside loop)
     serialize(t.bskFirst[0], os);
     serialize(t.s2Dft, os);
 
     // Step 2: Write alternating pattern
     for (int i = 0; i < t.n - 1; ++i) {
-        // Write bskDft[i][0]
-        serialize(t.bskDft[i][0], os);
 
-        // Write bskDecompA[i][*]
+        // Write bsk
         for (auto lvl = 0; lvl < t.level; lvl++) {
             serializeNestedVector(t.bskDecompA[t.decompIndex(i, lvl)], os);
+            serialize(t.bskB[t.decompIndex(i, lvl)], os);
         }
     }
     os.close();
@@ -370,24 +369,22 @@ void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::stri
 
     // Resize vectors to match serialization structure
     bskLazy.bskFirst.resize(1);
-    bskLazy.bskDft.resize(n - 1);      // bsk[0] to bsk[n-2]
 
-    // Step 1: Read bskFirst[0] and bskDft[0][0] (written outside loop)
+    // Step 1: Read bskFirst[0] and s2 (written outside loop)
     deserialize(bskLazy.bskFirst[0], inFile);
     deserialize(bskLazy.s2Dft, inFile);
 
     bskLazy.group = 1;
     bskLazy.bskDecompA.resize(static_cast<size_t>(n - 1) * bskLazy.level);
+    bskLazy.bskB.resize(static_cast<size_t>(n - 1) * bskLazy.level);
 
     // Step 2: Read alternating pattern
     for (int i = 0; i < n - 1; ++i) {
-        // Read bskDft[i][0]
-        bskLazy.bskDft[i].resize(1);
-        deserialize(bskLazy.bskDft[i][0], inFile);
 
-        // Read bskDecompA[i][*]
+        // Read bsk
         for (auto lvl = 0; lvl < bskLazy.level; lvl++) {
             deserializeNestedVector(bskLazy.bskDecompA[bskLazy.decompIndex(i, lvl)], inFile);
+            deserialize(bskLazy.bskB[bskLazy.decompIndex(i, lvl)], inFile);
         }
     }
 
