@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         COUNT_TIME("serializeBskLazyPipe", serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE.bin");)
         BootstrappingKeyMPLazyPipe bskMPLazyServer;
         COUNT_TIME("PIPE_LAZY_INIT blindRotate",
-                   blindRotatePipeInitNtt(out31, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+                   blindRotatePipeInitNtt(out31, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, bskMPLazyServer.bskDecompA,
                                               bskMPLazyServer.s2Dft, sTlwe, v, "BSK_PIPE.bin", param);)
     }
 

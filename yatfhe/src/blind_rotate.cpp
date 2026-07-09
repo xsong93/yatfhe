@@ -775,15 +775,16 @@ void blindRotateLazyMTNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<ve
 
 namespace {
 
-    void rotateBskComponent(const TrgswMPDft& rawNext, const vector<vector<vector<DecompPolynomial>>>& decompA,
+    void rotateBskComponent(const TrgswMPDft& rawNext, const vector<vector<vector<DecompPolynomial>>>& bskDecompA,
                             vector<vector<vector<NttPolynomial>>>& rotatedADft, vector<NttPolynomial>& rotatedB,
-                            const int32_t a, const int level, const YatfheParameters& param) {
+                            const int32_t a, const int keyIndex, const int level, const YatfheParameters& param) {
         const auto q = NttHexl::getNttHexl().GetModulus();
         NttPolynomial aDft{param.N};
         for (auto lvl = 0; lvl < level; lvl++) {
+            const auto& decompA = bskDecompA[keyIndex * level + lvl];
             for (auto dl = 0; dl < param.l; dl++) {
                 for (auto k1 = 0; k1 < param.k; k1++) {
-                    NttHexl::applyNtt(aDft, decompA[lvl][dl][k1]);
+                    NttHexl::applyNtt(aDft, decompA[dl][k1]);
                     rotateNttPolynomialMinusOne(rotatedADft[lvl][dl][k1], aDft, a);
                 }
             }
@@ -798,21 +799,22 @@ namespace {
         }
     }
 
-    void deserializeAndRotateBskComponent(TrgswMPDft& rawNext, vector<vector<vector<DecompPolynomial>>>& decompA,
+    void deserializeAndRotateBskComponent(TrgswMPDft& rawNext, vector<vector<vector<DecompPolynomial>>>& bskDecompA,
                                            vector<vector<vector<NttPolynomial>>>& rotatedADft, vector<NttPolynomial>& rotatedB,
-                                           const int32_t a, const int level, std::ifstream& inFile,
+                                           const int32_t a, const int keyIndex, const int level, std::ifstream& inFile,
                                            const YatfheParameters& param) {
         deserialize(rawNext, inFile);
         for (auto l = 0; l < level; l++) {
-            deserializeNestedVector(decompA[l], inFile);
+            deserializeNestedVector(bskDecompA[keyIndex * level + l], inFile);
         }
 
         const auto q = NttHexl::getNttHexl().GetModulus();
         NttPolynomial aDft{param.N};
         for (auto lvl = 0; lvl < level; lvl++) {
+            const auto& decompA = bskDecompA[keyIndex * level + lvl];
             for (auto dl = 0; dl < param.l; dl++) {
                 for (auto k1 = 0; k1 < param.k; k1++) {
-                    NttHexl::applyNtt(aDft, decompA[lvl][dl][k1]);
+                    NttHexl::applyNtt(aDft, decompA[dl][k1]);
                     rotateNttPolynomialMinusOne(rotatedADft[lvl][dl][k1], aDft, a);
                 }
             }
@@ -852,7 +854,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
         bsk[0].resize(1);
         auto& rawNext = bsk[0][0];
         futures.emplace_back(pool.enqueue([&rawNext, &bskDecompA, &rotatedADft0, &rotatedB0, a1, level, &param] {
-            rotateBskComponent(rawNext, bskDecompA, rotatedADft0, rotatedB0, a1, level, param);
+            rotateBskComponent(rawNext, bskDecompA, rotatedADft0, rotatedB0, a1, 0, level, param);
         }));
 
         // prep
@@ -880,8 +882,8 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
             const auto aNext = input.a[i + 2];
             bsk[i + 1].resize(1);
             auto& rawNext = bsk[i + 1][0];
-            futures.emplace_back(pool.enqueue([&rawNext, &bskDecompA, &nextRotatedADft, &nextRotatedB, aNext, level, &param] {
-                rotateBskComponent(rawNext, bskDecompA, nextRotatedADft, nextRotatedB, aNext, level, param);
+            futures.emplace_back(pool.enqueue([&rawNext, &bskDecompA, &nextRotatedADft, &nextRotatedB, aNext, level, i, &param] {
+                rotateBskComponent(rawNext, bskDecompA, nextRotatedADft, nextRotatedB, aNext, i + 1, level, param);
             }));
         }
 
@@ -915,7 +917,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
 
 
 
-void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
+void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk, vector<vector<vector<DecompPolynomial>>>& bskDecompA,
                                    TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
                                    const string& fileName, const YatfheParameters& param) {
     int level;
@@ -925,7 +927,6 @@ void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector
     const auto n = param.n;
     TrgswMPDft rotated0{param, level};
     TrgswMPDft rotated1{param, level};
-    vector decompA(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
     vector rotatedADft0(level, vector(param.l, vector(param.k, NttPolynomial{param.N})));
     vector rotatedADft1(level, vector(param.l, vector(param.k, NttPolynomial{param.N})));
     vector rotatedB0(level, NttPolynomial{param.N});
@@ -941,6 +942,7 @@ void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector
     // read keys
     bskFirst.resize(1);
     bsk.resize(n - 1);
+    bskDecompA.resize((n - 1) * level);
     deserialize(bskFirst[0], inFile);
     deserialize(s2, inFile);
 
@@ -949,8 +951,8 @@ void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector
         const auto a1 = input.a[1];
         bsk[0].resize(1);
         auto& rawNext = bsk[0][0];
-        futures.emplace_back(pool.enqueue([&rawNext, &decompA, &rotatedADft0, &rotatedB0, a1, level, &inFile, &param] {
-            deserializeAndRotateBskComponent(rawNext, decompA, rotatedADft0, rotatedB0, a1, level, inFile, param);
+        futures.emplace_back(pool.enqueue([&rawNext, &bskDecompA, &rotatedADft0, &rotatedB0, a1, level, &inFile, &param] {
+            deserializeAndRotateBskComponent(rawNext, bskDecompA, rotatedADft0, rotatedB0, a1, 0, level, inFile, param);
         }));
 
         // prep
@@ -978,8 +980,8 @@ void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector
             const auto aNext = input.a[i + 2];
             bsk[i + 1].resize(1);
             auto& rawNext = bsk[i + 1][0];
-            futures.emplace_back(pool.enqueue([&rawNext, &decompA, &nextRotatedADft, &nextRotatedB, aNext, level, &inFile, &param] {
-                deserializeAndRotateBskComponent(rawNext, decompA, nextRotatedADft, nextRotatedB, aNext, level, inFile, param);
+            futures.emplace_back(pool.enqueue([&rawNext, &bskDecompA, &nextRotatedADft, &nextRotatedB, aNext, level, i, &inFile, &param] {
+                deserializeAndRotateBskComponent(rawNext, bskDecompA, nextRotatedADft, nextRotatedB, aNext, i + 1, level, inFile, param);
             }));
         }
 
