@@ -246,19 +246,17 @@ struct BootstrappingKeyMPLazyPipe {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(1, Trlwe{p.k, p.N});
-        auto bskFull = vector(2, vector(1, TrgswMPDft{p, level}));
-        auto bskTrim = vector(n - 3, vector(1, TrgswMPDft{p, level, isHalf, isOnlyB}));
-        bskDft.reserve(bskFull.size() + bskTrim.size());
-        bskDft.insert(bskDft.end(), bskFull.begin(), bskFull.end());
+        auto bskTrim = vector(n - 1, vector(1, TrgswMPDft{p, level, isHalf, isOnlyB}));
+        bskDft.reserve(bskTrim.size());
         bskDft.insert(bskDft.end(), bskTrim.begin(), bskTrim.end());
-        bskDecompA = vector(static_cast<size_t>(n - 3) * group * level, vector(p.l, vector(p.k, DecompPolynomial{p.N})));
+        bskDecompA = vector(static_cast<size_t>(n - 1) * level, vector(p.l, vector(p.k, DecompPolynomial{p.N})));
         s2Dft = TrlevDft{p, p.l};
 #endif
     }
 
     // (i, lvl) -> flat index into bskDecompA; group is always accessed at index 0.
     [[nodiscard]] size_t decompIndex(int i, int lvl) const {
-        return static_cast<size_t>(i) * group * level + lvl;
+        return static_cast<size_t>(i) * level + lvl;
     }
 };
 
@@ -377,7 +375,7 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
 void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
                               const TorusPolynomial& v, const YatfheParameters& param);
 
-void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
+void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                    const TorusPolynomial& v, const YatfheParameters& param);
 
 void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,

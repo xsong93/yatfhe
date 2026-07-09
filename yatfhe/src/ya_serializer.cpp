@@ -343,21 +343,20 @@ void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& fi
 void serializeBskLazyPipe(const BootstrappingKeyMPLazyPipe& t, const std::string& filename) {
     std::ofstream os(filename, std::ios::binary | std::ios::trunc);
 
+    writePOD(os, t.level);
+
     // Step 1: Write bskFirst[0] and bskDft[0][0] (written outside loop)
     serialize(t.bskFirst[0], os);
-    serialize(t.bskDft[0][0], os);
     serialize(t.s2Dft, os);
 
-    // Step 2: Write alternating pattern: bskDft[i+1][0], bskDecompA[i][*]
-    for (int i = 0; i < t.n - 2; ++i) {
-        // Write bskDft[i+1][0]
-        serialize(t.bskDft[i + 1][0], os);
+    // Step 2: Write alternating pattern
+    for (int i = 0; i < t.n - 1; ++i) {
+        // Write bskDft[i][0]
+        serialize(t.bskDft[i][0], os);
 
-        // Write bskDecompA[i][*] (if applicable)
-        if (i < t.n - 3) {
-            for (auto lvl = 0; lvl < t.level; lvl++) {
-                serializeNestedVector(t.bskDecompA[t.decompIndex(i, lvl)], os);
-            }
+        // Write bskDecompA[i][*]
+        for (auto lvl = 0; lvl < t.level; lvl++) {
+            serializeNestedVector(t.bskDecompA[t.decompIndex(i, lvl)], os);
         }
     }
     os.close();
@@ -367,34 +366,28 @@ void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::stri
     std::ifstream inFile(filename, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
+    readPOD(inFile, bskLazy.level);
+
     // Resize vectors to match serialization structure
     bskLazy.bskFirst.resize(1);
     bskLazy.bskDft.resize(n - 1);      // bsk[0] to bsk[n-2]
 
     // Step 1: Read bskFirst[0] and bskDft[0][0] (written outside loop)
     deserialize(bskLazy.bskFirst[0], inFile);
-    bskLazy.bskDft[0].resize(1);
-    deserialize(bskLazy.bskDft[0][0], inFile);
     deserialize(bskLazy.s2Dft, inFile);
 
-    // level/group aren't stored separately in this format, but each TrgswMPDft already
-    // carries its own level count, and group is always 1 in this (non-TERNARY) format,
-    // so we can recover what decompIndex() needs here.
-    bskLazy.level = bskLazy.bskDft[0][0].l;
     bskLazy.group = 1;
-    bskLazy.bskDecompA.resize(static_cast<size_t>(n - 3) * bskLazy.level); // bskDecompA[0] to bskDecompA[n-4], * level
+    bskLazy.bskDecompA.resize(static_cast<size_t>(n - 1) * bskLazy.level);
 
-    // Step 2: Read alternating pattern: bskDft[i+1][0], bskDecompA[i][*]
-    for (int i = 0; i < n - 2; ++i) {
-        // Read bskDft[i+1][0]
-        bskLazy.bskDft[i + 1].resize(1);
-        deserialize(bskLazy.bskDft[i + 1][0], inFile);
+    // Step 2: Read alternating pattern
+    for (int i = 0; i < n - 1; ++i) {
+        // Read bskDft[i][0]
+        bskLazy.bskDft[i].resize(1);
+        deserialize(bskLazy.bskDft[i][0], inFile);
 
-        // Read bskDecompA[i][*] (if applicable)
-        if (i < n - 3) {
-            for (auto lvl = 0; lvl < bskLazy.level; lvl++) {
-                deserializeNestedVector(bskLazy.bskDecompA[bskLazy.decompIndex(i, lvl)], inFile);
-            }
+        // Read bskDecompA[i][*]
+        for (auto lvl = 0; lvl < bskLazy.level; lvl++) {
+            deserializeNestedVector(bskLazy.bskDecompA[bskLazy.decompIndex(i, lvl)], inFile);
         }
     }
 

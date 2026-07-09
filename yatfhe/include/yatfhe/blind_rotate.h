@@ -39,6 +39,10 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<
                            const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
                            const TrgswMPDft& one, const YatfheParameters& param);
 
+void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
+                                   TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
+                                   const string& fileName, const YatfheParameters& param);
+
 void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, const vector<vector<TrgswMP>>& bskPrime,
                                const TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
                                const YatfheParameters& param);
@@ -46,15 +50,6 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, cons
 void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMP>>& bskPrime,
                                    TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
                                    const string& fileName, const YatfheParameters& param);
-
-void blindRotatePipeInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
-                                   TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
-                                   const string& fileName, const YatfheParameters& param);
-
-void blindRotateLazyPipeSerializationNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
-                                         const vector<vector<vector<DecompPolynomial>>>& bskDecompA,
-                                         const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
-                                         const TrgswMPDft& one, const string& filename, bool isTrunc, const YatfheParameters& param);
 
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 

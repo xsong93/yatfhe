@@ -218,9 +218,9 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
     }
 }
 
-void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
+void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                    const TorusPolynomial& v, const YatfheParameters& param) {
-    // process first two key components
+    // process first key component
     {
 #ifdef TERNARY
 #else
@@ -229,17 +229,15 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& tr
         } else {
             symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
         }
-        encryptTrgswMPNtt(bsk.bskDft[0][0], tlweKey.s[1], trgswKey, 0, param);
-        encryptTrgswMPNtt(bsk.bskDft[1][0], tlweKey.s[2], trgswKey, 0, param);
 #endif
     }
 
-    // process remaining n - 3 components
-    for (auto i = 0; i < bsk.n - 3; i++) {
+    // process remaining n - 1 components
+    for (auto i = 0; i < bsk.n - 1; i++) {
 #ifdef TERNARY
 #else
         TrgswMP tmp{param, bsk.level, true};
-        encryptTrgswMP(tmp, tlweKey.s[i + 3], trgswKey, 0, param);
+        encryptTrgswMP(tmp, tlweKey.s[i + 1], trgswKey, 0, param);
         for (auto l0 = 0; l0 < bsk.level; l0++) {
             auto& a = tmp.cPrime[l0].a;
             auto& dA = bsk.bskDecompA[bsk.decompIndex(i, l0)];
@@ -252,7 +250,7 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, TrgswKey& tr
                     }
                 }
             }
-            NttHexl::applyNtt(bsk.bskDft[i + 2][0].cPrime[l0].b, tmp.cPrime[l0].b);
+            NttHexl::applyNtt(bsk.bskDft[i][0].cPrime[l0].b, tmp.cPrime[l0].b);
         }
 #endif
     }

@@ -98,20 +98,6 @@ int main(int argc, char **argv) {
                                                           sTlwe, v, param);)
     }
 
-//    // pipelined lazy key initialization with serialization server procedure
-    // {
-    //     if (!bskMPLazyPipe.initialized) {
-    //         clearFileCache();
-    //         COUNT_TIME("PIPE_LAZY blindRotate + write key",
-    //                    blindRotateLazyPipeSerializationNtt(out2, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft,
-    //                                                        bskMPLazyPipe.bskDecompA, sTlwe, v, bskMPLazyPipeAlt.s2Dft, one,
-    //                                                        "BSK_PIPE.bin", true, param);)
-    //         // bskMPLazyPipe.initialized = true;
-    //         // bskMPLazyPipe.bskDecompA.clear();
-    //     } else {
-    //         blindRotateOptNtt(out2, bskMPLazyPipe.bskFirst, bskMPLazyPipe.bskDft, sTlwe, v, param);
-    //     }
-    // }
 
     // pipelined lazy key initialization server procedure
     {
@@ -126,21 +112,21 @@ int main(int argc, char **argv) {
         // bskMPLazyServer.bskDecompA.clear();
     }
 
-    // pipelined lazy key initialization server procedure
-     {
-         BootstrappingKeyMPLazyPipe bskMPLazyServer;
-         if (!bskMPLazyServer.initialized) {
-             clearFileCache();
-             COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE_INIT.bin", param.n);)
-             COUNT_TIME("PIPE_LAZY blindRotate",
-                        blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
-                                               bskMPLazyServer.bskDecompA, sTlwe, v, bskMPLazyServer.s2Dft, one, param);)
-             // bskMPLazyServer.initialized = true;
-             // bskMPLazyServer.bskDecompA.clear();
-         } else {
-             blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
-         }
-     }
+    // // pipelined lazy key initialization server procedure
+    //  {
+    //      BootstrappingKeyMPLazyPipe bskMPLazyServer;
+    //      if (!bskMPLazyServer.initialized) {
+    //          clearFileCache();
+    //          COUNT_TIME("PIPE_LAZY read key", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE_INIT.bin", param.n);)
+    //          COUNT_TIME("PIPE_LAZY blindRotate",
+    //                     blindRotateLazyPipeNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
+    //                                            bskMPLazyServer.bskDecompA, sTlwe, v, bskMPLazyServer.s2Dft, one, param);)
+    //          // bskMPLazyServer.initialized = true;
+    //          // bskMPLazyServer.bskDecompA.clear();
+    //      } else {
+    //          blindRotateOptNtt(out3, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft, sTlwe, v, param);
+    //      }
+    //  }
 
 
     // parallel lazy key initialization server procedure
@@ -202,17 +188,11 @@ int main(int argc, char **argv) {
     cout << "decAft(GINX_OPT): "<< decAft << endl;
     cout << "err(GINX_OPT):" << calTlweError(output, tlweKey, pt) << endl;
 
-    extractTlweFromTrlwe(tmp, out2, param.driftPhase);
-    switchKeyForTlwe(output, ksKey, tmp, param);
-    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-    cout << "decAft(LAZY_SERIA): "<< decAft << endl;
-    cout << "err(LAZY_SERIA):" << calTlweError(output, tlweKey, pt) << endl;
-
-    extractTlweFromTrlwe(tmp, out3, param.driftPhase);
-    switchKeyForTlwe(output, ksKey, tmp, param);
-    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-    cout << "decAft(LAZY_Pipe): "<< decAft << endl;
-    cout << "err(LAZY_Pipe):" << calTlweError(output, tlweKey, pt) << endl;
+    // extractTlweFromTrlwe(tmp, out3, param.driftPhase);
+    // switchKeyForTlwe(output, ksKey, tmp, param);
+    // decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    // cout << "decAft(LAZY_Pipe): "<< decAft << endl;
+    // cout << "err(LAZY_Pipe):" << calTlweError(output, tlweKey, pt) << endl;
 
     extractTlweFromTrlwe(tmp, out31, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);

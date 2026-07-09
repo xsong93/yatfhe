@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 
     // pipelined lazy key initialization server procedure
     {
-        serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE.bin");
+        COUNT_TIME("serializeBskLazyPipe", serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE.bin");)
         BootstrappingKeyMPLazyPipe bskMPLazyServer;
         COUNT_TIME("PIPE_LAZY_INIT blindRotate",
                    blindRotatePipeInitNtt(out31, bskMPLazyServer.bskFirst, bskMPLazyServer.bskDft,
