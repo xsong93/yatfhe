@@ -18,9 +18,9 @@ extern uniform_int_distribution<Binary> binaryDistrib;
 
 extern uniform_int_distribution<Integer> ternaryDistrib;
 
-uniform_int_distribution<Torus>& uniformTorusDistrib(Torus min, Torus max);
+uniform_int_distribution<Torus> uniformTorusDistrib(Torus min, Torus max);
 
-uniform_int_distribution<NttType>& uniformNttDistrib(NttType min, NttType max);
+uniform_int_distribution<NttType> uniformNttDistrib(NttType min, NttType max);
 
 int calLogBase2(int N);
 

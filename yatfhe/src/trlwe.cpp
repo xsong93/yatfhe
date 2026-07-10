@@ -9,6 +9,7 @@
 #include "yatfhe/ntt_hexl.h"
 #include "yatfhe/gadget_decomposition.h"
 #include "yautil/multi_threading.h"
+#include "yautil/tool.h"
 
 using namespace std;
 using namespace NttHexl;
@@ -377,7 +378,7 @@ void multTrlweWithConst(Trlwe& output, const Trlwe& input1, const int scalar) {
 
 void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const int level, const YatfheParameters& param) {
     const auto K = param.k;
-    DecomposedTrlwe decomposedTrlwe{param};
+    DecomposedTrlwe decomposedTrlwe{param, level};
     DecomposedTrlweDft decomposedTrlweDft{param, level};
     vector<TorusPolynomial> indicatorDecomp(level, TorusPolynomial{param.N});
     vector<NttPolynomial> indicatorDecompDft(level, NttPolynomial{param.N});

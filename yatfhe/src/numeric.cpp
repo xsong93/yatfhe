@@ -21,14 +21,12 @@ int calLogBase2(int N) {
     return res;
 }
 
-uniform_int_distribution<Torus>& uniformTorusDistrib(Torus min, Torus max) {
-    static uniform_int_distribution<Torus> instance(min, max);
-    return instance;
+uniform_int_distribution<Torus> uniformTorusDistrib(Torus min, Torus max) {
+    return uniform_int_distribution<Torus>(min, max);
 }
 
-uniform_int_distribution<NttType>& uniformNttDistrib(NttType min, NttType max) {
-    static uniform_int_distribution<NttType> instance(min, max);
-    return instance;
+uniform_int_distribution<NttType> uniformNttDistrib(NttType min, NttType max) {
+    return uniform_int_distribution<NttType>(min, max);
 }
 
 Integer genIntUniformDist(const Integer lowerBound, const Integer upperBound) {
