@@ -90,6 +90,15 @@ struct YatfheParameters {
     int taoUInv[NUM_PRIMES] {1, 1, 1, 1};
     long w[NUM_HIGH_PRIMES] {1, 1};
     long z[NUM_PRIMES] {1, 1, 1, 1};
+
+    void setRadixBits(const int b) {
+        radixBits = b;
+        lDft = dftBits / radixBits;
+        ksLevel = torusBits / radixBits;
+        radixBase = 1 << radixBits;
+        baseOverTwo = radixBase / 2;
+        digitMask = radixBase - 1;
+    }
 };
 
 #endif //HLS_YATFHE_YATFHE_PARAMETERS_H
