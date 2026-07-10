@@ -223,6 +223,8 @@ void roundErrorDoublePoly(DoublePolynomial& target, int torusBase);
 
 void generateTestPolynomial(TorusPolynomial& v, int modP, int modQ);
 
+void generateTestPolynomialFR(TorusPolynomial& v, const int modP, const int modQ);
+
 void generateTestPolynomialLt1(TorusPolynomial& v, int t);
 
 void generateTestPolynomialCompLeq0(TorusPolynomial& v, const int t);

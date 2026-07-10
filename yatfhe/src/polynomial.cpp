@@ -90,6 +90,24 @@ void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) 
     std::rotate(v.coeffs.begin(), v.coeffs.begin() + halfBoxSize, v.coeffs.begin() + N);
 }
 
+// LUT supporting full pt range on [-p/2, p/2-1)
+void generateTestPolynomialFR(TorusPolynomial& v, const int modP, const int modQ) {
+    const int N = v.N;
+    const int boxSize = modQ / modP;
+    const int halfBoxSize = boxSize / 2;
+    const int halfHalfBoxSize = halfBoxSize / 2;
+
+    for (auto i = 0; i < N; i++) {
+        int tmp = intModP(i / halfBoxSize, modP);
+        v.coeffs[i] = modSwitchToTorus32(tmp, modP);
+    }
+
+    for (auto i = 0; i < halfHalfBoxSize; i++) {
+        v.coeffs[i] = -v.coeffs[i];
+    }
+    std::rotate(v.coeffs.begin(), v.coeffs.begin() + halfHalfBoxSize, v.coeffs.begin() + N);
+}
+
 // 1: l
 void generateTestPolynomialLt1(TorusPolynomial& v, const int t) {
     const int modP = MESSAGE_P;

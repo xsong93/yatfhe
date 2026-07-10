@@ -9,8 +9,7 @@ option(DEBUG_MODE "Enable debug mode" OFF)
 option(TERNARY "Use ternary secret instead of binary" OFF)
 option(USE_CRT "Use CRT" OFF)
 
-set(TORUS_TYPE "32" CACHE STRING "Torus width: 32, 40, 42")
-set_property(CACHE TORUS_TYPE PROPERTY STRINGS 32 40 42)
+set(TORUS_TYPE "56")
 
 file(GLOB SOURCES
         ./*.cpp

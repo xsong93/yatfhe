@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 
 
     // data gen
-    Integer pt = 1;
+    Integer pt = 0;
     cout << "decPre: " << pt << endl;
     Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
     Tlwe input{param.n};
