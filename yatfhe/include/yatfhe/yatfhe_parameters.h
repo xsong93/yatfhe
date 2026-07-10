@@ -31,10 +31,10 @@ struct YatfheParameters {
     int64_t qLwe{Q_32};
 
     // RLWE params, 128-bit
-#if defined(TORUS32) // 212-bit
     int k {1};
     int N {2048};
     int torusBase {4}; // p|q
+#if defined(TORUS32) // 212-bit
     int rlweNoiseB {3};
     int64_t q {Q_32};
     int torusBits {32};
@@ -42,9 +42,6 @@ struct YatfheParameters {
     int l {8};
     int lApprox {4};
 #elif defined(TORUS36) // 178-bit
-    int k {1};
-    int N {2048};
-    int torusBase {4}; // p|q
     int rlweNoiseB {3};
     int64_t q {Q_36};
     int torusBits {36};
@@ -52,9 +49,6 @@ struct YatfheParameters {
     int l {6};
     int lApprox {3};
 #elif defined(TORUS56) // 132-bit
-    int k {1};
-    int N {2048};
-    int torusBase {4}; // p|q
     int rlweNoiseB {8};
     int64_t q {Q_56};
     int torusBits {56};
