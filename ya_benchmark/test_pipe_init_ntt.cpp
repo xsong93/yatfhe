@@ -13,7 +13,7 @@
 int main(int argc, char **argv) {
     YatfheParameters param{};
     initYatfhe(param);
-    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
+    printf("n:%d, k:%d, N:%d, T:%d, b:%d, l:%d, lA:%d\n", param.n, param.k, param.N, param.torusBits, param.radixBits, param.l, param.lApprox);
 
     // client side
     // key gen
@@ -29,6 +29,8 @@ int main(int argc, char **argv) {
     TorusPolynomial v {param.N};
     generateTestPolynomial(v, param.torusBase, 2 * param.N);
 
+    BootstrappingKeyMP bskMP{param, param.lApprox};
+    COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
 
     BootstrappingKeyMPLazyPipe bskMPLazyPipe{param, param.lApprox, true, true};
     COUNT_TIME("genBootstrappingKeyMPLazy", genBootstrappingKeyMPLazyPipe(bskMPLazyPipe, trgswKey, tlweKey, v, param);)
@@ -44,22 +46,24 @@ int main(int argc, char **argv) {
     ScaledTlwe sTlwe {param.N * 2, param.n};
     rescaleTlweToNewMod(sTlwe, input);
 
-
+    Trlwe out{param};
     Trlwe out1{param};
     Trlwe out2{param};
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
 
-
     {
-        COUNT_TIME("serializeBskLazyPipe", serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE.bin");)
+        COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(out, bskMP.bskDft, sTlwe, param);)
+    }
+    {
+        serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE.bin");
         BootstrappingKeyMPLazyPipe bskMPLazyServer;
         COUNT_TIME("PIPE_LAZY_INIT blindRotate",
                    blindRotatePipeInitNtt(out1, bskMPLazyServer, sTlwe, v, "BSK_PIPE.bin", param);)
     }
     {
         BootstrappingKeyMPLazyPipe bskMPLazyServer;
-        COUNT_TIME("deserializeBskLazyPipe", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
+        deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);
         COUNT_TIME("PIPE_LAZY blindRotate", blindRotateLazyPipeNtt(out2, bskMPLazyServer, sTlwe, v, param);)
     }
     //
@@ -69,9 +73,15 @@ int main(int argc, char **argv) {
 
 
     // client side
-    extractTlweFromTrlwe(tmp, out1, param.driftPhase);
+    extractTlweFromTrlwe(tmp, out, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(GINX): "<< decAft << endl;
+    cout << "err(GINX):" << calTlweError(output, tlweKey, pt) << endl;
+
+    extractTlweFromTrlwe(tmp, out1, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(LAZY_Pipe_INIT): "<< decAft << endl;
     cout << "err(LAZY_Pipe_INIT):" << calTlweError(output, tlweKey, pt) << endl;
 

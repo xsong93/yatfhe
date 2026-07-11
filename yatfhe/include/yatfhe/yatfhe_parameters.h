@@ -7,7 +7,7 @@
 #include "yatfhe/torus.h"
 
 struct YatfheParameters {
-#ifdef TERNARY // ternary secret, 128-bit
+#ifdef TERNARY // ternary secret
     // LWE params
     int n {430};
     int lweNoiseB {11};
@@ -24,32 +24,27 @@ struct YatfheParameters {
     int radixBits {8}; // b
     int l {4};
     int lApprox {2};
-#else // binary secret, 128-bit
-    // LWE params
+#else // binary secret
+    // LWE params, 135-bit
     int n {512};
-    int lweNoiseB {23};
+    int lweNoiseB {23}; // σ: 22.2
     int64_t qLwe{Q_32};
 
-    // RLWE params, 128-bit
+    // RLWE params
+    int torusBase {2}; // p|q
+#if defined(TORUS32) // 212-bit,
     int k {1};
     int N {2048};
-    int torusBase {4}; // p|q
-#if defined(TORUS32) // 212-bit
-    int rlweNoiseB {3};
+    int rlweNoiseB {3}; // σ: 2.21
     int64_t q {Q_32};
     int torusBits {32};
-    int radixBits {4};
-    int l {8};
-    int lApprox {4};
-#elif defined(TORUS36) // 178-bit
-    int rlweNoiseB {3};
-    int64_t q {Q_36};
-    int torusBits {36};
-    int radixBits {6};
+    int radixBits {5};
     int l {6};
     int lApprox {3};
 #elif defined(TORUS56) // 132-bit
-    int rlweNoiseB {8};
+    int k {1};
+    int N {2048};
+    int rlweNoiseB {8}; // σ: 7.21
     int64_t q {Q_56};
     int torusBits {56};
     int radixBits {6};

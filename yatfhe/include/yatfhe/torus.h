@@ -11,10 +11,6 @@
 #if defined(TORUS32)
 using Torus = int32_t; // use 32-bit int as torus to handle modular arithmetic naturally
 using UnsignedInteger = uint32_t;
-using Decomp = int16_t;
-#elif defined(TORUS36)
-using Torus = int64_t;
-using UnsignedInteger = uint64_t;
 using Decomp = int8_t;
 #elif defined(TORUS56)
 using Torus = int64_t;

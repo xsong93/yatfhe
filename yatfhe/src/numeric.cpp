@@ -39,10 +39,14 @@ uint64_t genUInt64UniformDist(const uint64_t lowerBound, const uint64_t upperBou
     return uniformIntDistrib(rng);
 }
 
-// Draws a TUniform(b) sample: uniform over [-2^b, 2^b], with the two
-// endpoints occurring at half the probability of interior values. Matches TFHE-rs's sampling
-// algorithm: draw (b + 2) uniform bits, fold the low bit back in after a right shift
-// (this is what gives the endpoints their lower probability), then re-center around zero.
+/**
+TUniform distribution ∈ ``ZZ ∩ [-2**b, 2**b]``, endpoints inclusive.
+This distribution samples the two end-points with probability 1/2**(b+2) and the
+intermediate points with probability 1/2**(b+1).
+
+As an example, with b=0 this distribution samples ±1 each with probability 1/4 and
+0 with probability 1/2.
+*/
 static Torus genTUniformNoise(const int b) {
     int requiredBits = b + 2;
     uint64_t mask = (requiredBits >= 64) ? UINT64_MAX : ((uint64_t{1} << requiredBits) - 1);

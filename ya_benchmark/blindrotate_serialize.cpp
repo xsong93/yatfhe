@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     param.batchSize = 3;
     param.tasksPerThread = 1;
     initYatfhe(param);
-    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
+    printf("n:%d, k:%d, N:%d, T:%d, b:%d, l:%d, lA:%d\n", param.n, param.k, param.N, param.torusBits, param.radixBits, param.l, param.lApprox);
 
     // client side
     // key gen
