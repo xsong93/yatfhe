@@ -52,9 +52,9 @@ struct YatfheParameters {
     int rlweNoiseB {8};
     int64_t q {Q_56};
     int torusBits {56};
-    int radixBits {14};
-    int l {3};
-    int lApprox {2};
+    int radixBits {6};
+    int l {6};
+    int lApprox {3};
 #else
 #error "torus.h: TORUS undefined"
 #endif

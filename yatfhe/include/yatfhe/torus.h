@@ -19,7 +19,7 @@ using Decomp = int8_t;
 #elif defined(TORUS56)
 using Torus = int64_t;
 using UnsignedInteger = uint64_t;
-using Decomp = int16_t;
+using Decomp = int8_t;
 #else
 #error "torus.h: TORUS undefined"
 #endif
