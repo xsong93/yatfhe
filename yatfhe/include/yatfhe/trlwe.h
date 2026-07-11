@@ -193,21 +193,21 @@ struct TrlweKey {
     std::vector<NttPolynomial> sDft; // k
     int k;
     int N;
-    double sigma {};
+    int errorB {};
 
     explicit TrlweKey(const YatfheParameters& param):
             s(param.k, BinPolynomial(param.N)),
             sDft(param.k, NttPolynomial(param.N)),
             k(param.k),
             N(param.N),
-            sigma(param.rlweNoiseB) {};
+            errorB(param.rlweNoiseB) {};
 
-    TrlweKey(int k, int N, double sigma):
+    TrlweKey(int k, int N, int sigma):
         s(k, BinPolynomial(N)),
         sDft(k, NttPolynomial(N)),
         k(k),
         N(N),
-        sigma(sigma) {};
+        errorB(sigma) {};
 };
 
 // template<typename TrlweType>

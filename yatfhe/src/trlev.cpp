@@ -28,7 +28,7 @@ void encTrlevSingleSampleMonomial(Trlev& output, const TrlweKey& trlweKey, const
         // and initialize a uniformly. Then apply symEncTrlwe to add the a*s term.
         for (auto j = 0; j < N; j++) {
             const Torus msg = (j == monomialIndex) ? inOverR : 0;
-            ct.b.coeffs[j] = addTUniformNoise(msg, trlweKey.sigma, TORUS_Q);
+            ct.b.coeffs[j] = addTUniformNoise(msg, trlweKey.errorB, TORUS_Q);
         }
         for (auto k = 0; k < ct.k; k++) {
             initCoeffsViaUniformDistribution(ct.a[k].coeffs, TORUS_MIN, TORUS_MAX);

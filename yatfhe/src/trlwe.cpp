@@ -77,32 +77,32 @@ void genTrlweKey(TrlweKey& key) {
 }
 
 void symEncTrlweSingleSample(Trlwe& trlwe, const TrlweKey& key, const Torus mu, const int pos) {
-    initTrlweSingleSample(trlwe, mu, pos, key.sigma);
+    initTrlweSingleSample(trlwe, mu, pos, key.errorB);
     symEncTrlwe(trlwe, key);
 }
 
 void symEncTrlweSingleSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const Torus mu, const int pos) {
-    initTrlweSingleSample(trlwe, mu, pos, key.sigma);
+    initTrlweSingleSample(trlwe, mu, pos, key.errorB);
     symEncTrlweNtt(trlwe, trlweDft, key);
 }
 
 void symEncTrlweSingleSampleNttSimple(TrlweDft& trlweDft, const TrlweKey& key, const Torus mu, const int pos) {
-    initTrlweSingleSampleSimple(trlweDft, mu, pos, key.sigma);
+    initTrlweSingleSampleSimple(trlweDft, mu, pos, key.errorB);
     symEncTrlweNttSimple(trlweDft, key);
 }
 
 void symEncTrlweMultiSample(Trlwe& trlwe, const TrlweKey& key, const vector<Torus>& mu) {
-    initTrlweMultiSample(trlwe, mu, key.sigma);
+    initTrlweMultiSample(trlwe, mu, key.errorB);
     symEncTrlwe(trlwe, key);
 }
 
 void symEncTrlweMultiSampleNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu) {
-    initTrlweMultiSample(trlwe, mu, key.sigma);
+    initTrlweMultiSample(trlwe, mu, key.errorB);
     symEncTrlweNtt(trlwe, trlweDft, key);
 }
 
 void symEncTrlweMultiSampleSimple(TrlweDft& trlweDft, const TrlweKey& key, const vector<Torus>& mu) {
-    initTrlweMultiSampleSimple(trlweDft, mu, key.sigma);
+    initTrlweMultiSampleSimple(trlweDft, mu, key.errorB);
     symEncTrlweNttSimple(trlweDft, key);
 }
 

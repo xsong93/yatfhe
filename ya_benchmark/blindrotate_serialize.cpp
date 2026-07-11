@@ -35,6 +35,7 @@ int main(int argc, char **argv) {
     BootstrappingKeyMP bskMP{param, param.lApprox};
     COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
     BootstrappingKeyWWL24 bskWWL24{param, param.lApprox};
+    // BootstrappingKeyWWL24 bskWWL24{param, param.lApprox + 1};
     COUNT_TIME("genBootstrappingKeyWWL24", genBootstrappingKeyWWL24(bskWWL24, trgswKey, tlweKey, param);)
     BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
     COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
