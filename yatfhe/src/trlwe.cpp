@@ -209,6 +209,18 @@ void gadgetDecomposeTrlweA(vector<vector<DecompPolynomial>>& output, const vecto
     }
 }
 
+void gadgetDecomposeTrlweB(vector<DecompPolynomial>& output, const TorusPolynomial& b, const YatfheParameters& param) {
+    const auto N = param.N;
+    const auto l = param.l;
+    for (auto j = 0; j < N; j++) {
+        DecomposedData d{l};
+        gadgetDecompose(d, b.coeffs[j], param);
+        for (auto lvl = 0; lvl < l; lvl++) {
+            output[lvl].coeffs[j] = d.value[lvl] * d.sign;
+        }
+    }
+}
+
 // Combine l decomposed Trlwe a & b into one.
 void recomposeTrlwe(Trlwe& output, const DecomposedTrlwe& input, const YatfheParameters& param) {
     const auto k = output.k;

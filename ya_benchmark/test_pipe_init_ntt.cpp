@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TorusPolynomial v {param.N};
-    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+    generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
 
     BootstrappingKeyMP bskMP{param, param.lApprox};
     COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
     Tlwe output {param.n};
 
     {
+        genNoiselessTrlweSample(out, v, sTlwe);
         COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(out, bskMP.bskDft, sTlwe, param);)
     }
     {
@@ -67,9 +68,9 @@ int main(int argc, char **argv) {
         COUNT_TIME("PIPE_LAZY blindRotate", blindRotateLazyPipeNtt(out2, bskMPLazyServer, sTlwe, v, param);)
     }
     //
-    // IntPolynomial p{param.N};
-    // symDecTrlweToInt(p, out2, trlweKey, param.torusBase);
-    // printArray(p.coeffs, "p");
+    IntPolynomial p{param.N};
+    symDecTrlweToInt(p, out, trlweKey, param.torusBase);
+    printArray(p.coeffs, "p");
 
 
     // client side

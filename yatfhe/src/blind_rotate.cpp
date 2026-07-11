@@ -1243,15 +1243,10 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
                 vector<future<void>> levelFutures;
                 levelFutures.reserve(level);
                 for (auto l = 0; l < level; l++) {
-                    levelFutures.emplace_back(pool.enqueue([&nextBsk, &nextDecompA, &nextB, aNext, l, &param] {
-                        Trlwe tmp{param};
-                        rotateTrlweMinusOneBPlusOne(tmp, nextB[l], nextBsk.cPrime[l], aNext,
-                                                static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                        gadgetDecomposeTrlweA(nextDecompA[l], tmp.a, param);
-                    }));
-                }
-                for (auto& lf : levelFutures) {
-                    lf.get();
+                    Trlwe tmp{param};
+                    rotateTrlweMinusOneBPlusOne(tmp, nextB[l], nextBsk.cPrime[l], aNext,
+                                            static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
+                    gadgetDecomposeTrlweA(nextDecompA[l], tmp.a, param);
                 }
             }));
         }
@@ -1280,6 +1275,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
         }
         futures.clear();
     }
+    inFile.close();
 #endif
 }
 

@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TorusPolynomial v {param.N};
-    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+    generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
 
     BootstrappingKeyMP bskMP{param, param.lApprox};
     COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
@@ -59,9 +59,8 @@ int main(int argc, char **argv) {
     symEncTlwe(input, mu, tlweKey);
     ScaledTlwe sTlwe {param.N * 2, param.n};
     rescaleTlweToNewMod(sTlwe, input);
-    Trlwe acc{param};
-    genNoiselessTrlweSample(acc, v, sTlwe);
 
+    Trlwe acc{param};
     Trlwe out{param};
     Trlwe out2{param};
     Trlwe out3{param};
@@ -70,11 +69,8 @@ int main(int argc, char **argv) {
     Trlwe out5{param};
     Trlwe out6{param};
     Trlwe out7{param};
-    genNoiselessTrlweSample(out7, v, sTlwe);
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
-    TrgswMPDft one{param};
-    encryptTrgswMPNtt(one, 1, trgswKey, 0, param);
 
 
     // server side
@@ -85,6 +81,7 @@ int main(int argc, char **argv) {
         COUNT_TIME("GINX write key", serializeBskMP(bskMP, "BSK_GINX.bin");)
         clearFileCache();
         COUNT_TIME("GINX read key", deserializeBskMP(bskMPServer, "BSK_GINX.bin", param.n);)
+        genNoiselessTrlweSample(acc, v, sTlwe);
         COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);)
     }
 
@@ -163,6 +160,7 @@ int main(int argc, char **argv) {
         COUNT_TIME("WWL24 write key", serializeBskWWL24(bskWWL24, "BSK_WWL.bin");)
         clearFileCache();
         COUNT_TIME("WWL24 read key", deserializeBskWWL24(bskWWL24Server, "BSK_WWL.bin", param.n);)
+        genNoiselessTrlweSample(out7, v, sTlwe);
         COUNT_TIME("WWL24 blindRotate", blindRotateWWL24Ntt(out7, bskWWL24Server.bskDft, sTlwe, bskWWL24Server.s2Dft, param);)
     }
 
