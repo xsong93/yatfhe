@@ -35,10 +35,8 @@ void blindRotateLazyMTNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<ve
                            const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
                            const YatfheParameters& param);
 
-void blindRotateLazyPipeNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<vector<TrgswMPDft>>& bsk,
-                           const vector<vector<vector<DecompPolynomial>>>& bskDecompA,
-                           const ScaledTlwe& input, const TorusPolynomial& v, const TrlevDft& s2,
-                           const TrgswMPDft& one, const YatfheParameters& param);
+void blindRotateLazyPipeNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipe& bsk, const ScaledTlwe& input,
+                            const TorusPolynomial& v, const YatfheParameters& param);
 
 void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
                                    const string& fileName, const YatfheParameters& param);

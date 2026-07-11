@@ -43,33 +43,43 @@ int main(int argc, char **argv) {
     symEncTlwe(input, mu, tlweKey);
     ScaledTlwe sTlwe {param.N * 2, param.n};
     rescaleTlweToNewMod(sTlwe, input);
-    Trlwe acc{param};
-    genNoiselessTrlweSample(acc, v, sTlwe);
 
 
-    Trlwe out31{param};
+    Trlwe out1{param};
+    Trlwe out2{param};
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
 
 
-    // pipelined lazy key initialization server procedure
     {
         COUNT_TIME("serializeBskLazyPipe", serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE.bin");)
         BootstrappingKeyMPLazyPipe bskMPLazyServer;
         COUNT_TIME("PIPE_LAZY_INIT blindRotate",
-                   blindRotatePipeInitNtt(out31, bskMPLazyServer, sTlwe, v, "BSK_PIPE.bin", param);)
+                   blindRotatePipeInitNtt(out1, bskMPLazyServer, sTlwe, v, "BSK_PIPE.bin", param);)
     }
-
-    IntPolynomial p{param.N};
-    symDecTrlweToInt(p, out31, trlweKey, param.torusBase);
-    printArray(p.coeffs, "p");
+    {
+        BootstrappingKeyMPLazyPipe bskMPLazyServer;
+        COUNT_TIME("deserializeBskLazyPipe", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE.bin", param.n);)
+        COUNT_TIME("PIPE_LAZY blindRotate", blindRotateLazyPipeNtt(out2, bskMPLazyServer, sTlwe, v, param);)
+    }
+    //
+    // IntPolynomial p{param.N};
+    // symDecTrlweToInt(p, out2, trlweKey, param.torusBase);
+    // printArray(p.coeffs, "p");
 
 
     // client side
-    extractTlweFromTrlwe(tmp, out31, param.driftPhase);
+    extractTlweFromTrlwe(tmp, out1, param.driftPhase);
     switchKeyForTlwe(output, ksKey, tmp, param);
     auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(LAZY_Pipe_INIT): "<< decAft << endl;
     cout << "err(LAZY_Pipe_INIT):" << calTlweError(output, tlweKey, pt) << endl;
+
+    extractTlweFromTrlwe(tmp, out2, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(LAZY_Pipe): "<< decAft << endl;
+    cout << "err(LAZY_Pipe):" << calTlweError(output, tlweKey, pt) << endl;
+
     return 0;
 }
