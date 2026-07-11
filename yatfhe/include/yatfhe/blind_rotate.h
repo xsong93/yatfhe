@@ -41,19 +41,17 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipe& bsk,
 void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
                                    const string& fileName, const YatfheParameters& param);
 
-void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, const vector<vector<TrgswMP>>& bskPrime,
-                               const TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
+void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
                                const YatfheParameters& param);
 
-void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMP>>& bskPrime,
-                                   TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
+void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
                                    const string& fileName, const YatfheParameters& param);
 
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 
-void blindRotateWWL24Ntt(Trlwe& accum, vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const TrlevDft& s2, const YatfheParameters& param);
+void blindRotateWWL24Ntt(Trlwe& accum, BootstrappingKeyWWL24& bsk, const ScaledTlwe& input, const TrlevDft& s2, const YatfheParameters& param);
 
-void blindRotateJP22Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
+void blindRotateJP22Ntt(Trlwe& accum, const BootstrappingKeyMP& bsk, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateJP22NttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
 

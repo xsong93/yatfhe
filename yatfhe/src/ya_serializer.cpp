@@ -196,7 +196,7 @@ void deserialize(TrgswMPDft& t, std::istream& is) {
 void serializeBskWWL24(const BootstrappingKeyWWL24& t, const std::string& filename) {
     std::ofstream os(filename, std::ios::binary | std::ios::trunc);
     for (auto i = 0; i < t.n; i++) {
-        serialize(t.bskDft[i][0], os);
+        serialize(t.bskDft[i], os);
     }
     serialize(t.s2Dft, os);
     writePOD(os, t.n);
@@ -211,8 +211,7 @@ void deserializeBskWWL24(BootstrappingKeyWWL24& bsk, const std::string& filename
     bsk.bskDft.resize(n);  // Initialize outer vector (size = n)
 
     for (int i = 0; i < n; i++) {
-        bsk.bskDft[i].resize(1);       // Initialize inner vector (size = 1)
-        deserialize(bsk.bskDft[i][0], inFile);  // Read TrgswMPDft in order
+        deserialize(bsk.bskDft[i], inFile);  // Read TrgswMPDft in order
     }
     deserialize(bsk.s2Dft, inFile);
 
@@ -403,13 +402,11 @@ void serializeBskLazyPipeAlt(const BootstrappingKeyMPLazyPipeAlt& t, const std::
 
     // Step 2: Write bskPrime[i][0]
     for (int i = 0; i < t.n - 1; ++i) {
-        serialize(t.bskPrime[i][0], os);
+        serialize(t.bskPrime[i], os);
     }
 
     // Step 3: Write meta data
-    writePOD(os, t.n);
     writePOD(os, t.level);
-    writePOD(os, t.group);
     os.close();
 }
 
@@ -425,15 +422,12 @@ void deserializeBskLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bskLazy, const std
     deserialize(bskLazy.bskFirst[0], inFile);
     deserialize(bskLazy.s2Dft, inFile);
 
-    // Step 2: Read bskPrime[i][0]
+    // Step 2: Read bskPrime[i]
     for (int i = 0; i < n - 1; ++i) {
-        bskLazy.bskPrime[i].resize(1);
-        deserialize(bskLazy.bskPrime[i][0], inFile);
+        deserialize(bskLazy.bskPrime[i], inFile);
     }
 
     // Step 3: Read meta data
-    readPOD(inFile, bskLazy.n);
     readPOD(inFile, bskLazy.level);
-    readPOD(inFile, bskLazy.group);
     inFile.close();
 }

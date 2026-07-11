@@ -1035,24 +1035,6 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
     const auto L = param.l; // must use full decomp length
     const auto N = param.N;
 
-    // // ntt
-    // auto& pool = ThreadPool::instance();
-    // vector<future<void>> futures;
-    // futures.reserve(L);
-    // vector nttAs(L, vector(K, NttPolynomial{N}));
-    // for (auto l = 0; l < L; l++) {
-    //     auto& decompL = decompA[l];
-    //     for (auto k = 0; k < K; k++) {
-    //         auto& a = decompL[k];
-    //         futures.emplace_back(pool.enqueue([&a, &nttAs, l, k] {
-    //             applyNtt(nttAs[l][k], a);
-    //         }));
-    //     }
-    // }
-    // for (auto& f : futures) {
-    //     f.get();
-    // }
-
     // calculate a * S^2
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];

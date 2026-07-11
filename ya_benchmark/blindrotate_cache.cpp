@@ -192,10 +192,10 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
         auto start = steady_clock::now();
         auto* bskServer = cache.getLazyKeySimple(id);
         if (bskServer != nullptr) {
-            blindRotateLazyPipeAltNtt(out, bskServer->bskFirst, bskServer->bskPrime,bskServer->s2Dft, sTlwe, v, param);
+            blindRotateLazyPipeAltNtt(out, *bskServer, sTlwe, v, param);
         } else {
             BootstrappingKeyMPLazyPipeAlt bsk;
-            blindRotateLazyPipeAltInitNtt(out, bsk.bskFirst, bsk.bskPrime,bsk.s2Dft, sTlwe, v, file, param);
+            blindRotateLazyPipeAltInitNtt(out, bsk, sTlwe, v, file, param);
             cache.putLazyKey(id, std::move(bsk));
         }
         auto end = steady_clock::now();
@@ -263,11 +263,11 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
         // blindRotateJP22Ntt(acc, bskServer.bskDft, sTlwe, param);
         auto* bskServer = cache.getGinxKeySimple(id);
         if (bskServer != nullptr) {
-            blindRotateJP22Ntt(acc, bskServer->bskDft, sTlwe, param);
+            blindRotateJP22Ntt(acc, *bskServer, sTlwe, param);
         } else {
             BootstrappingKeyMP bsk;
             deserializeBskMP(bsk, file, param.n);
-            blindRotateJP22Ntt(acc, bsk.bskDft, sTlwe, param);
+            blindRotateJP22Ntt(acc, bsk, sTlwe, param);
             cache.putMpKey(id, std::move(bsk));
         }
         auto end = steady_clock::now();
@@ -333,11 +333,11 @@ void benchWWL24(const YatfheParameters& param, SimpleCacheManager& cache, const 
         auto start = steady_clock::now();
         auto* bskServer = cache.getWWL24KeySimple(id);
         if (bskServer != nullptr) {
-            blindRotateWWL24Ntt(acc, bskServer->bskDft, sTlwe, bskServer->s2Dft, param);
+            blindRotateWWL24Ntt(acc, *bskServer, sTlwe, bskServer->s2Dft, param);
         } else {
             BootstrappingKeyWWL24 bsk;
             deserializeBskWWL24(bsk, file, param.n);
-            blindRotateWWL24Ntt(acc, bsk.bskDft, sTlwe, bsk.s2Dft, param);
+            blindRotateWWL24Ntt(acc, bsk, sTlwe, bsk.s2Dft, param);
             cache.putWWL24Key(id, std::move(bsk));
         }
         auto end = steady_clock::now();

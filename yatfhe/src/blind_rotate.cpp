@@ -1027,8 +1027,7 @@ void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const
 #endif
 }
 
-void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, const vector<vector<TrgswMP>>& bskPrime,
-                               const TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
+void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
                                const YatfheParameters& param) {
     const auto level = param.lApprox;
     const auto n = param.n;
@@ -1040,61 +1039,37 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, cons
     vector b1(level, TorusPolynomial{param.N});
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(1 + 2 * level);
+    futures.reserve(1 + level);
 
 #ifdef TERNARY
 #else
-    // handle first three key components
-    // R(v) + (X^a0 - 1)R(v*s0)
-    // G(1) + (X^a1 - 1)G(s1)
-    // R(1) + (X^a2 - 1)R(s2)
+    auto& s2 = bsk.s2Dft;
+    auto& bskPrime = bsk.bskPrime;
+    Trlwe holder{param};
+
+    // handle first two key components
     {
         {
-            futures.emplace_back(pool.enqueue([&accum, &bskFirst, &input, &v, &param]{
-               Trlwe tmp{param};
-               rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
-               addTorusPolynomial(tmp.b, tmp.b, v);
-               rotateTrlwe(accum, tmp, -input.b);
-           }));
-        }
-
-        {
-            const auto a2 = input.a[2]; // input.a[i+3]
-            auto& bsk = bskPrime[1][0];
-            for (auto l = 0; l < level; l++) {
-                futures.emplace_back(pool.enqueue([&b0, &bsk, a2, &decompA0, l, &param]{
-                    Trlwe tmp{param};
-                    rotateTrlweMinusOneBPlusOne(tmp, b0[l], bsk.cPrime[l], a2,
+            const auto a1 = input.a[1];
+            futures.emplace_back(pool.enqueue([&b0, &bskPrime, &holder, a1, &decompA0, level, &param]{
+                for (auto l = 0; l < level; l++) {
+                    rotateTrlweMinusOneBPlusOne(holder, b0[l], bskPrime[0].cPrime[l], a1,
                                             static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(decompA0[l], tmp.a, param);
-                }));
-            }
+                    gadgetDecomposeTrlweA(decompA0[l], holder.a, param);
+                }
+            }));
         }
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, bsk.bskFirst[0], input.a[0]);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
 
-        {
-            const auto a1 = input.a[1]; // input.a[i+3]
-            auto& bsk = bskPrime[0][0];
-            for (auto l = 0; l < level; l++) {
-                futures.emplace_back(pool.enqueue([&expanded0, &bsk, a1, l, &s2, &param]{
-                    Trlwe tmp{param};
-                    TorusPolynomial tmpB{param.N};
-                    vector tmpDecompA(param.l, vector(param.k, DecompPolynomial{param.N}));
-                    rotateTrlweMinusOneBPlusOne(tmp, tmpB, bsk.cPrime[l], a1,
-                                        static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(tmpDecompA, tmp.a, param);
-                    switchTrlweToSecretEmbeddingNttMix(expanded0.c[l], expanded0.cPrime[l], tmpDecompA, tmpB, s2, param);
-                }));
-            }
-        }
-
-        for (auto& f : futures) {
-            f.get();
-        }
+        for (auto& f : futures) f.get();
         futures.clear();
     }
 
     // accumulate on the n - 1 key components
-    for (auto i = 0; i < n - 1; i++) {
+    for (auto i = 0; i < n; i++) {
         auto& currExpanded = i % 2 == 0 ? expanded0 : expanded1;
         auto& nextExpanded = i % 2 == 0 ? expanded1 : expanded0;
         auto& currDecompA = i % 2 == 0 ? decompA0 : decompA1;
@@ -1103,21 +1078,19 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, cons
         auto& nextB = i % 2 == 0 ? b1 : b0;
 
         // automorphism
-        if (i < n - 3) {
-            const auto aNext = input.a[i + 3]; // input.a[i+3]
-            auto& nextBsk = bskPrime[i + 2][0];
-            for (auto l = 0; l < level; l++) {
-                futures.emplace_back(pool.enqueue([&nextBsk, &nextDecompA, &nextB, aNext, l, &param] {
-                    Trlwe tmp{param};
-                    rotateTrlweMinusOneBPlusOne(tmp, nextB[l], nextBsk.cPrime[l], aNext,
+        if (i < n - 2) {
+            const auto aNext = input.a[i + 2];
+            futures.emplace_back(pool.enqueue([&bskPrime, &holder, &nextDecompA, &nextB, aNext, level, i, &param] {
+                for (auto l = 0; l < level; l++) {
+                    rotateTrlweMinusOneBPlusOne(holder, nextB[l], bskPrime[i + 1].cPrime[l], aNext,
                                             static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(nextDecompA[l], tmp.a, param);
-                }));
-            }
+                    gadgetDecomposeTrlweA(nextDecompA[l], holder.a, param);
+                }
+            }));
         }
 
         // scheme switching
-        if (i < n - 2) {
+        if (i < n - 1) {
             for (auto l = 0; l < level; l++) {
                 futures.emplace_back(pool.enqueue([&nextExpanded, &currDecompA, &currB, &param, l, &s2] {
                     clearTrlwe(nextExpanded.cPrime[l]);
@@ -1131,20 +1104,19 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, cons
         }
 
         // accumulation
-        if (input.a[i + 1] != 0) {
+        if (i >= 1 && input.a[i + 1] != 0) {
             externalProductTrgswMPNttInPlace(accum, currExpanded, level, param);
         }
 
-        for (auto& f : futures) {
-            f.get();
+        if (i < n - 1) {
+            for (auto& f : futures) f.get();
+            futures.clear();
         }
-        futures.clear();
     }
 #endif
 }
 
-void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector<vector<TrgswMP>>& bskPrime,
-                                   TrlevDft& s2, const ScaledTlwe& input, const TorusPolynomial& v,
+void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
                                    const string& fileName, const YatfheParameters& param) {
     const auto level = param.lApprox;
     const auto n = param.n;
@@ -1156,76 +1128,45 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
     vector b1(level, TorusPolynomial{param.N});
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(1 + 2 * level);
+    futures.reserve(1 + level);
     std::ifstream inFile(fileName, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
 #ifdef TERNARY
 #else
-    // handle first three key components
-    // R(v) + (X^a0 - 1)R(v*s0)
-    // G(1) + (X^a1 - 1)G(s1)
-    // R(1) + (X^a2 - 1)R(s2)
-
     // read keys
-    {
-        bskFirst.resize(1);
-        bskPrime.resize(n - 1);
-        deserialize(bskFirst[0], inFile);
-        deserialize(s2, inFile);
-        bskPrime[0].resize(1);
-        bskPrime[1].resize(1);
-        deserialize(bskPrime[0][0], inFile);
-        deserialize(bskPrime[1][0], inFile);
-    }
+    bsk.bskFirst.resize(1);
+    bsk.bskPrime.resize(n - 1);
+    deserialize(bsk.bskFirst[0], inFile);
+    deserialize(bsk.s2Dft, inFile);
+    auto& s2 = bsk.s2Dft;
+    auto& bskPrime = bsk.bskPrime;
+    Trlwe holder{param};
 
+    // handle first two key components
     {
         {
-            futures.emplace_back(pool.enqueue([&accum, &bskFirst, &input, &v, &param]{
-               Trlwe tmp{param};
-               rotateTrlweMinusOne(tmp, bskFirst[0], input.a[0]);
-               addTorusPolynomial(tmp.b, tmp.b, v);
-               rotateTrlwe(accum, tmp, -input.b);
-           }));
-        }
-
-        {
-            const auto a2 = input.a[2]; // input.a[i+3]
-            auto& bsk = bskPrime[1][0];
-            for (auto l = 0; l < level; l++) {
-                futures.emplace_back(pool.enqueue([&b0, &bsk, a2, &decompA0, l, &param]{
-                    Trlwe tmp{param};
-                    rotateTrlweMinusOneBPlusOne(tmp, b0[l], bsk.cPrime[l], a2,
+            const auto a1 = input.a[1];
+            futures.emplace_back(pool.enqueue([&b0, &bskPrime, &holder, a1, &decompA0, &inFile, level, &param]{
+                deserialize(bskPrime[0], inFile);
+                for (auto l = 0; l < level; l++) {
+                    rotateTrlweMinusOneBPlusOne(holder, b0[l], bskPrime[0].cPrime[l], a1,
                                             static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(decompA0[l], tmp.a, param);
-                }));
-            }
+                    gadgetDecomposeTrlweA(decompA0[l], holder.a, param);
+                }
+            }));
         }
+        Trlwe tmp{param};
+        rotateTrlweMinusOne(tmp, bsk.bskFirst[0], input.a[0]);
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
 
-        {
-            const auto a1 = input.a[1]; // input.a[i+3]
-            auto& bsk = bskPrime[0][0];
-            for (auto l = 0; l < level; l++) {
-                futures.emplace_back(pool.enqueue([&expanded0, &bsk, a1, l, &s2, &param]{
-                    Trlwe tmp{param};
-                    TorusPolynomial tmpB{param.N};
-                    vector tmpDecompA(param.l, vector(param.k, DecompPolynomial{param.N}));
-                    rotateTrlweMinusOneBPlusOne(tmp, tmpB, bsk.cPrime[l], a1,
-                                        static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(tmpDecompA, tmp.a, param);
-                    switchTrlweToSecretEmbeddingNttMix(expanded0.c[l], expanded0.cPrime[l], tmpDecompA, tmpB, s2, param);
-                }));
-            }
-        }
-
-        for (auto& f : futures) {
-            f.get();
-        }
+        for (auto& f : futures) f.get();
         futures.clear();
     }
 
     // accumulate on the n - 1 key components
-    for (auto i = 0; i < n - 1; i++) {
+    for (auto i = 0; i < n; i++) {
         auto& currExpanded = i % 2 == 0 ? expanded0 : expanded1;
         auto& nextExpanded = i % 2 == 0 ? expanded1 : expanded0;
         auto& currDecompA = i % 2 == 0 ? decompA0 : decompA1;
@@ -1234,25 +1175,20 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
         auto& nextB = i % 2 == 0 ? b1 : b0;
 
         // automorphism
-        if (i < n - 3) {
-            const auto aNext = input.a[i + 3]; // input.a[i+3]
-            bskPrime[i + 2].resize(1);
-            auto& nextBsk = bskPrime[i + 2][0];
-            futures.emplace_back(pool.enqueue([&nextBsk, &nextDecompA, &nextB, &inFile, aNext, level, &param, &pool] {
-                deserialize(nextBsk, inFile); // read bskPrime[i + 2][0]
-                vector<future<void>> levelFutures;
-                levelFutures.reserve(level);
+        if (i < n - 2) {
+            const auto aNext = input.a[i + 2];
+            futures.emplace_back(pool.enqueue([&bskPrime, &holder, &nextDecompA, &nextB, &inFile, aNext, i, level, &param] {
+                deserialize(bskPrime[i + 1], inFile);
                 for (auto l = 0; l < level; l++) {
-                    Trlwe tmp{param};
-                    rotateTrlweMinusOneBPlusOne(tmp, nextB[l], nextBsk.cPrime[l], aNext,
+                    rotateTrlweMinusOneBPlusOne(holder, nextB[l], bskPrime[i + 1].cPrime[l], aNext,
                                             static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(nextDecompA[l], tmp.a, param);
+                    gadgetDecomposeTrlweA(nextDecompA[l], holder.a, param);
                 }
             }));
         }
 
         // scheme switching
-        if (i < n - 2) {
+        if (i < n - 1) {
             for (auto l = 0; l < level; l++) {
                 futures.emplace_back(pool.enqueue([&nextExpanded, &currDecompA, &currB, &param, l, &s2] {
                     clearTrlwe(nextExpanded.cPrime[l]);
@@ -1266,21 +1202,22 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, vector<Trlwe>& bskFirst, vector
         }
 
         // accumulation
-        if (input.a[i + 1] != 0) {
+        if (i >= 1 && input.a[i + 1] != 0) {
             externalProductTrgswMPNttInPlace(accum, currExpanded, level, param);
         }
 
-        for (auto& f : futures) {
-            f.get();
+        if (i < n - 1) {
+            for (auto& f : futures) f.get();
+            futures.clear();
         }
-        futures.clear();
     }
     inFile.close();
 #endif
 }
 
-void blindRotateWWL24Ntt(Trlwe& accum, vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const TrlevDft& s2, const YatfheParameters& param) {
-    const auto level = bskDft[0][0].l;
+void blindRotateWWL24Ntt(Trlwe& accum, BootstrappingKeyWWL24& bsk, const ScaledTlwe& input, const TrlevDft& s2, const YatfheParameters& param) {
+    auto& bskDft = bsk.bskDft;
+    const auto level = bskDft[0].l;
 #ifdef TERNARY
 #else
     auto& pool = ThreadPool::instance();
@@ -1290,24 +1227,25 @@ void blindRotateWWL24Ntt(Trlwe& accum, vector<vector<TrgswMPDft>>& bskDft, const
         if (input.a[i] == 0) {
             continue;
         }
-        bskDft[i][0].c.resize(level, vector(param.k, TrlweDft(param.k, param.N)));
+        bskDft[i].c.resize(level, vector(param.k, TrlweDft(param.k, param.N)));
         for (auto l = 0; l < level; l++) {
             futures.emplace_back(pool.enqueue([&bskDft, &s2, &param, l, i] {
-                switchTrlweToSecretEmbeddingNtt(bskDft[i][0].c[l], bskDft[i][0].cPrime[l], s2, param);
+                switchTrlweToSecretEmbeddingNtt(bskDft[i].c[l], bskDft[i].cPrime[l], s2, param);
             }));
         }
         for (auto& f : futures) f.get();
         futures.clear();
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, accum, input.a[i]);
-        externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], level, param);
+        externalProductTrgswMPNttInPlace(tmp, bskDft[i], level, param);
         accumulateTrlwe(accum, tmp);
     }
 #endif
 }
 
 
-void blindRotateJP22Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+void blindRotateJP22Ntt(Trlwe& accum, const BootstrappingKeyMP& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+    auto& bskDft = bsk.bskDft;
     const auto level = bskDft[0][0].l;
 #ifdef TERNARY
     const auto n = param.n;

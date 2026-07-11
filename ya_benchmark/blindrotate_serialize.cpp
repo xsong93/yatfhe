@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
         clearFileCache();
         COUNT_TIME("GINX read key", deserializeBskMP(bskMPServer, "BSK_GINX.bin", param.n);)
         genNoiselessTrlweSample(acc, v, sTlwe);
-        COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(acc, bskMPServer.bskDft, sTlwe, param);)
+        COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(acc, bskMPServer, sTlwe, param);)
     }
 
     // optimized GINX server procedure
@@ -140,8 +140,7 @@ int main(int argc, char **argv) {
     {
         clearFileCache();
         COUNT_TIME("PIPE_LAZY_ALT blindRotate",
-                   blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt.bskFirst, bskMPLazyPipeAlt.bskPrime,
-                       bskMPLazyPipeAlt.s2Dft, sTlwe, v, param);)
+                   blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt, sTlwe, v, param);)
         COUNT_TIME("PIPE_LAZY_ALT write key",serializeBskLazyPipeAlt(bskMPLazyPipeAlt, "BSK_PIPE_ALT.bin");)
     }
 
@@ -149,8 +148,7 @@ int main(int argc, char **argv) {
         BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAltServer;
         clearFileCache();
         COUNT_TIME("PIPE_LAZY_ALT_INIT blindRotate",
-                   blindRotateLazyPipeAltInitNtt(out6, bskMPLazyPipeAltServer.bskFirst, bskMPLazyPipeAltServer.bskPrime,
-                       bskMPLazyPipeAltServer.s2Dft, sTlwe, v, "BSK_PIPE_ALT.bin", param);)
+                   blindRotateLazyPipeAltInitNtt(out6, bskMPLazyPipeAltServer, sTlwe, v, "BSK_PIPE_ALT.bin", param);)
     }
 
     // WWL24 procedure
@@ -161,7 +159,7 @@ int main(int argc, char **argv) {
         clearFileCache();
         COUNT_TIME("WWL24 read key", deserializeBskWWL24(bskWWL24Server, "BSK_WWL.bin", param.n);)
         genNoiselessTrlweSample(out7, v, sTlwe);
-        COUNT_TIME("WWL24 blindRotate", blindRotateWWL24Ntt(out7, bskWWL24Server.bskDft, sTlwe, bskWWL24Server.s2Dft, param);)
+        COUNT_TIME("WWL24 blindRotate", blindRotateWWL24Ntt(out7, bskWWL24Server, sTlwe, bskWWL24Server.s2Dft, param);)
     }
 
     // client side

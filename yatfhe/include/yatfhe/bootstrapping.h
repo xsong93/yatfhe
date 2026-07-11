@@ -114,7 +114,7 @@ struct BootstrappingKeyMP {
 };
 
 struct BootstrappingKeyWWL24 {
-    vector<vector<TrgswMPDft>> bskDft {};
+    vector<TrgswMPDft> bskDft {};
     TrlevDft s2Dft {};
     int n {};
     int group {};
@@ -129,7 +129,7 @@ struct BootstrappingKeyWWL24 {
         } else {
             n = p.n / group * (1 << group);
         }
-        bskDft = vector(n, vector(1, TrgswMPDft(p, level, true)));
+        bskDft = vector(n, TrgswMPDft(p, level, true));
         s2Dft = TrlevDft{p, p.l};
 #endif
     }
@@ -261,7 +261,7 @@ struct BootstrappingKeyMPLazyPipe {
 
 struct BootstrappingKeyMPLazyPipeAlt {
     vector<Trlwe> bskFirst;
-    vector<vector<TrgswMP>> bskPrime;
+    vector<TrgswMP> bskPrime;
     TrlevDft s2Dft;
     int n{};
     int level{};
@@ -271,14 +271,6 @@ struct BootstrappingKeyMPLazyPipeAlt {
 
     BootstrappingKeyMPLazyPipeAlt(const YatfheParameters& p, const int level, const bool isHalf) : level(level), group(p.group) {
 #ifdef TERNARY
-        if (group == 1) {
-            n = p.n;
-        } else {
-            n = p.n / group * (1 << group);
-        }
-        bskFirst = vector(2, Trlwe{p.k, p.N});
-        bskPrime = vector(p.n - 1, vector(2, TrgswMP{p, level, isHalf}));
-        s2Dft = TrlevDft{p, p.l};
 #else
         if (group == 1) {
             n = p.n;
@@ -286,7 +278,7 @@ struct BootstrappingKeyMPLazyPipeAlt {
             n = p.n / group * (1 << group);
         }
         bskFirst = vector(1, Trlwe{p.k, p.N});
-        bskPrime = vector(p.n - 1, vector(1, TrgswMP{p, level, isHalf}));
+        bskPrime = vector(p.n - 1, TrgswMP{p, level, isHalf});
         s2Dft = TrlevDft{p, p.l};
 #endif
     }

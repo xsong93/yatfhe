@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 
     {
         genNoiselessTrlweSample(out, v, sTlwe);
-        COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(out, bskMP.bskDft, sTlwe, param);)
+        COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(out, bskMP, sTlwe, param);)
     }
     {
         serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE.bin");

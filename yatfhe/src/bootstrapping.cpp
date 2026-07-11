@@ -110,9 +110,9 @@ void genBootstrappingKeyWWL24(BootstrappingKeyWWL24& bsk, TrgswKey& trgswKey, co
         // result at torusBits precision. encryptTrgswMPNtt's usual "Simple" path samples "a"
         // natively/uniformly over the wider qNtt domain, which is fine for a plain external
         // product but not decomposable this way.
-        for (auto lvl = 0; lvl < bsk.bskDft[i][0].l; lvl++) {
+        for (auto lvl = 0; lvl < bsk.bskDft[i].l; lvl++) {
             muPoly.coeffs[0] = tlweKey.s[i] << (param.torusBits - (lvl + 1) * param.radixBits);
-            symEncTrlweMultiSampleNtt(scratch, bsk.bskDft[i][0].cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+            symEncTrlweMultiSampleNtt(scratch, bsk.bskDft[i].cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
         }
         symEncTrlevWithKeyNtt(bsk.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
 #endif
@@ -284,7 +284,7 @@ void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const 
     for (auto i = 0; i < bsk.n - 1; i++) {
 #ifdef TERNARY
 #else
-        encryptTrgswMP(bsk.bskPrime[i][0], tlweKey.s[i + 1], trgswKey, 0, param);
+        encryptTrgswMP(bsk.bskPrime[i], tlweKey.s[i + 1], trgswKey, 0, param);
 #endif
     }
 }
