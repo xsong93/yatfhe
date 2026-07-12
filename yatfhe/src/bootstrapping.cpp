@@ -48,7 +48,6 @@ void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const Bootstrappin
     ScaledTlwe inputModN2{param.N * 2, param.n};
     Trlwe tv{param.k, param.N};
     Trlwe acc{param.k, param.N};
-    Trlwe accumScaled {param.k, param.N};
     std::vector<Trlwe8> accCRT(param.d, Trlwe8{param.k, param.N});
     Tlwe tmp{ksk.nCurrKey};
     rescaleTlweToNewMod(inputModN2, input);// rescale to mod 2N
@@ -409,11 +408,20 @@ void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& 
 
 
 void genBootstrappingKeyApproxCrt(BootstrappingKeyCRT& bskCRT, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
-    BootstrappingKey bsk{param};
-    for (auto i = 0; i < bsk.n; i++) {
-        encryptTrgswApproxCRT(bsk.bsk[i], param, trgswKey, tlweKey.s[i]);
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(bskCRT.n);
+    for (auto i = 0; i < bskCRT.n; i++) {
+        futures.emplace_back(pool.enqueue([i, &bskCRT, &trgswKey, &tlweKey, &param] {
+            Trgsw tmp{param};
+            encryptTrgswApproxCRT(tmp, param, trgswKey, tlweKey.s[i]);
+            decompTrgswMcrt(bskCRT.bsk8[i], tmp, param);
+            for (size_t d = 0; d < param.d; d++) {
+                NttNative24::applyNttForRgsw(bskCRT.bskCRT[i][d], bskCRT.bsk8[i][d]);
+            }
+        }));
     }
-    decompBootstrappingKeyMcrt(bskCRT, bsk, param);
+    for (auto& f : futures) f.wait();
 }
 
 void decompBootstrappingKeyMcrt(BootstrappingKeyCRT& bskCRT, const BootstrappingKey& bsk, const YatfheParameters& param) {

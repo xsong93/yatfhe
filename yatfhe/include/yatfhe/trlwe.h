@@ -348,46 +348,78 @@ void decompTrlweCrtNO(TrlweTypeA& out, const TrlweTypeB& in, const YatfheParamet
 
 template<typename TrlweTypeA, typename TrlweTypeB>
 void decompTrlweMcrt(std::vector<TrlweTypeA>& out, const TrlweTypeB& in, const YatfheParameters& param) {
-    for (size_t d = 0; d < param.d; d++) {
-        int64_t taoU = param.taoU[d];
-        auto qd = param.qd[d];
-        auto& outA = out[d].a;
-        auto& outB = out[d].b;
-        auto& inA = in.a;
-        auto& inB = in.b;
-        for (size_t k = 0; k < param.k; k++) {
-            auto& coeffOutA = outA[k].coeffs;
-            auto& coeffInA = inA[k].coeffs;
-            for (size_t j = 0; j < param.N; j++) {
-                coeffOutA[j] = static_cast<int8_t>(longModP(taoU * coeffInA[j], qd));
+    const size_t d = param.d;
+    const size_t N = param.N;
+
+    int64_t taoU[NUM_PRIMES];
+    int     qd[NUM_PRIMES];
+    for (size_t di = 0; di < d; di++) {
+        taoU[di] = param.taoU[di];
+        qd[di]   = param.qd[di];
+    }
+
+    using ACoeffPtr = decltype(out[0].a[0].coeffs.data());
+    using BCoeffPtr = decltype(out[0].b.coeffs.data());
+
+    for (size_t ki = 0; ki < static_cast<size_t>(param.k); ki++) {
+        const auto* inA = in.a[ki].coeffs.data();
+        ACoeffPtr outA[NUM_PRIMES];
+        for (size_t di = 0; di < d; di++) outA[di] = out[di].a[ki].coeffs.data();
+
+        for (size_t j = 0; j < N; j++) {
+            const int64_t val = inA[j];
+            for (size_t di = 0; di < d; di++) {
+                outA[di][j] = static_cast<int8_t>(longModP(taoU[di] * val, qd[di]));
             }
         }
-        auto& coeffOutB = outB.coeffs;
-        auto& coeffInB = inB.coeffs;
-        for (size_t j = 0; j < param.N; j++) {
-            coeffOutB[j] = static_cast<int8_t>(longModP(taoU * coeffInB[j], qd));
+    }
+
+    const auto* inB = in.b.coeffs.data();
+    BCoeffPtr outB[NUM_PRIMES];
+    for (size_t di = 0; di < d; di++) outB[di] = out[di].b.coeffs.data();
+
+    for (size_t j = 0; j < N; j++) {
+        const int64_t val = inB[j];
+        for (size_t di = 0; di < d; di++) {
+            outB[di][j] = static_cast<int8_t>(longModP(taoU[di] * val, qd[di]));
         }
     }
 }
 
 template<typename TrlweType>
 void trlweMcrtToCrt(std::vector<TrlweType>& trlwe, const YatfheParameters& param) {
-    auto dh = param.dh;
-    for (size_t d = 0; d < param.dl; d++) {
-        auto ql = param.ql[d];
-        int64_t taoUInv = param.taoUInv[dh + d];
-        auto& accA = trlwe[dh + d].a;
-        auto& accB = trlwe[dh + d].b;
-        for (size_t k = 0; k < param.k; k++) {
-            auto& coeffA = accA[k].coeffs;
-            for (size_t j = 0; j < param.N; j++) {
-                auto aCopy = coeffA[j];
-                coeffA[j] = static_cast<int8_t>(longModP(taoUInv * aCopy, ql));
+    const auto dh = param.dh;
+    const size_t dl = param.dl;
+    const size_t N  = param.N;
+
+    // Hoist low-prime constants into stack arrays so all dl values are available
+    // simultaneously when the loop order is (k, j, d) rather than (d, k, j).
+    int64_t taoUInv[NUM_LOW_PRIMES];
+    int     ql[NUM_LOW_PRIMES];
+    for (size_t d = 0; d < dl; d++) {
+        taoUInv[d] = param.taoUInv[dh + d];
+        ql[d]      = param.ql[d];
+    }
+
+    using CoeffPtr = decltype(trlwe[0].a[0].coeffs.data());
+
+    for (size_t k = 0; k < static_cast<size_t>(param.k); k++) {
+        CoeffPtr pA[NUM_LOW_PRIMES];
+        for (size_t d = 0; d < dl; d++) pA[d] = trlwe[dh + d].a[k].coeffs.data();
+
+        for (size_t j = 0; j < N; j++) {
+            for (size_t d = 0; d < dl; d++) {
+                pA[d][j] = static_cast<int8_t>(longModP(taoUInv[d] * pA[d][j], ql[d]));
             }
         }
-        for (size_t j = 0; j < param.N; j++) {
-            auto bCopy = accB.coeffs[j];
-            accB.coeffs[j] = static_cast<int8_t>(longModP(taoUInv * bCopy, ql));
+    }
+
+    CoeffPtr pB[NUM_LOW_PRIMES];
+    for (size_t d = 0; d < dl; d++) pB[d] = trlwe[dh + d].b.coeffs.data();
+
+    for (size_t j = 0; j < N; j++) {
+        for (size_t d = 0; d < dl; d++) {
+            pB[d][j] = static_cast<int8_t>(longModP(taoUInv[d] * pB[d][j], ql[d]));
         }
     }
 }
@@ -418,25 +450,38 @@ void recompTrlweApproxCrt(TrlweTypeA& out, std::vector<TrlweTypeB>& inMCRT, cons
 
 template<typename TrlweTypeA, typename TrlweTypeB>
 void recompTrlweCrt(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const YatfheParameters& param) {
-    auto& outA = out.a;
-    auto qCRT = param.qCRT;
-    for (size_t k = 0; k < param.k; k++) {
-        auto& coeffA = outA[k].coeffs;
-        for (size_t j = 0; j < param.N; j++) {
-            long tmpA = 0;
-            for (size_t d = 0; d < param.d; d++) {
-                tmpA += inCRT[d].a[k].coeffs[j] * param.z[d];
-            }
-            coeffA[j] = static_cast<Torus>(longModP(tmpA, qCRT));
+    const size_t d   = param.d;
+    const size_t N   = param.N;
+    const auto   qCRT = param.qCRT;
+
+    // Hoist gadget vector to avoid param pointer chasing in the hot loop.
+    long z[NUM_PRIMES];
+    for (size_t di = 0; di < d; di++) z[di] = param.z[di];
+
+    // Cache one raw input pointer per prime outside the j loop to remove the
+    // inCRT[d].a[k].coeffs chain (three pointer dereferences) from the inner body.
+    using InCoeffPtr = decltype(inCRT[0].a[0].coeffs.data());
+
+    for (size_t k = 0; k < static_cast<size_t>(param.k); k++) {
+        auto* outA = out.a[k].coeffs.data();
+        InCoeffPtr inA[NUM_PRIMES];
+        for (size_t di = 0; di < d; di++) inA[di] = inCRT[di].a[k].coeffs.data();
+
+        for (size_t j = 0; j < N; j++) {
+            long tmp = 0;
+            for (size_t di = 0; di < d; di++) tmp += inA[di][j] * z[di];
+            outA[j] = static_cast<Torus>(longModP(tmp, qCRT));
         }
     }
-    auto& coeffB = out.b.coeffs;
-    for (size_t j = 0; j < param.N; j++) {
-        long tmpB = 0;
-        for (size_t d = 0; d < param.d; d++) {
-            tmpB += inCRT[d].b.coeffs[j] * param.z[d];
-        }
-        coeffB[j] = static_cast<Torus>(longModP(tmpB, qCRT));
+
+    auto* outB = out.b.coeffs.data();
+    InCoeffPtr inB[NUM_PRIMES];
+    for (size_t di = 0; di < d; di++) inB[di] = inCRT[di].b.coeffs.data();
+
+    for (size_t j = 0; j < N; j++) {
+        long tmp = 0;
+        for (size_t di = 0; di < d; di++) tmp += inB[di][j] * z[di];
+        outB[j] = static_cast<Torus>(longModP(tmp, qCRT));
     }
 }
 
