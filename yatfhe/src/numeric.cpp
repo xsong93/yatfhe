@@ -9,7 +9,7 @@
 
 using namespace std;
 
-ChaCha20Rng rng;
+thread_local ChaCha20Rng rng;
 uniform_int_distribution<Binary> binaryDistrib(0, 1);
 uniform_int_distribution<Integer> ternaryDistrib(-1, 1);
 

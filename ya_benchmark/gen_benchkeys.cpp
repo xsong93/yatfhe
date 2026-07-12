@@ -23,7 +23,7 @@ int main(){
     TlweKey tlweKsKey = tlweKey;
     tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
-    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+    generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
 
     for (int i = 1; i <= 50; i++) {
         BootstrappingKeyWWL24 bskWWL24{param, param.lApprox};
@@ -33,6 +33,7 @@ int main(){
                 .append(to_string(i))
                 .append(".bin");
         serializeBskWWL24(bskWWL24, file);
+        cout << file << " generated." << endl;
     }
     for (int i = 1; i <= 50; i++) {
         BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
@@ -43,6 +44,7 @@ int main(){
                 .append(to_string(i))
                 .append(".bin");
         serializeBskLazyPipeAlt(bskMPLazyPipeAlt, file);
+        cout << file << " generated." << endl;
     }
     for (int i = 1; i <= 50; i++) {
         BootstrappingKeyMP bskMP{param, param.lApprox};
@@ -52,5 +54,6 @@ int main(){
                 .append(to_string(i))
                 .append(".bin");
         serializeBskMP(bskMP, file);
+        cout << file << " generated." << endl;
     }
 }

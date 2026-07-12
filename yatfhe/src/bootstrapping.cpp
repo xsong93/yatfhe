@@ -100,47 +100,65 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
 }
 
 void genBootstrappingKeyWWL24(BootstrappingKeyWWL24& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
-    TorusPolynomial muPoly{param.N};
-    Trlwe scratch{param.k, param.N};
-    for (auto i = 0; i < bsk.n; i++) {
 #ifdef TERNARY
 #else
-        // cPrime must hold a genuinely bounded (Torus-domain) "a", forward-transformed into NTT
-        // domain, since switchTrlweToSecretEmbeddingNtt later INTTs it and gadget-decomposes the
-        // result at torusBits precision. encryptTrgswMPNtt's usual "Simple" path samples "a"
-        // natively/uniformly over the wider qNtt domain, which is fine for a plain external
-        // product but not decomposable this way.
-        for (auto lvl = 0; lvl < bsk.bskDft[i].l; lvl++) {
-            muPoly.coeffs[0] = tlweKey.s[i] << (param.torusBits - (lvl + 1) * param.radixBits);
-            symEncTrlweMultiSampleNtt(scratch, bsk.bskDft[i].cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
-        }
-        symEncTrlevWithKeyNtt(bsk.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
-#endif
+    // cPrime must hold a genuinely bounded (Torus-domain) "a", forward-transformed into NTT
+    // domain, since switchTrlweToSecretEmbeddingNtt later INTTs it and gadget-decomposes the
+    // result at torusBits precision. encryptTrgswMPNtt's usual "Simple" path samples "a"
+    // natively/uniformly over the wider qNtt domain, which is fine for a plain external
+    // product but not decomposable this way.
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(bsk.n);
+    for (auto i = 0; i < bsk.n; i++) {
+        futures.emplace_back(pool.enqueue([i, &bsk, &trgswKey, &tlweKey, &param] {
+            TorusPolynomial muPoly{param.N};
+            Trlwe scratch{param.k, param.N};
+            for (auto lvl = 0; lvl < bsk.bskDft[i].l; lvl++) {
+                muPoly.coeffs[0] = tlweKey.s[i] << (param.torusBits - (lvl + 1) * param.radixBits);
+                symEncTrlweMultiSampleNtt(scratch, bsk.bskDft[i].cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+            }
+        }));
     }
+    for (auto& f : futures) f.wait();
+    // s2Dft encrypts the TRLWE secret key itself; generated once.
+    symEncTrlevWithKeyNtt(bsk.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
+#endif
 }
 
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(bsk.n);
     for (auto i = 0; i < bsk.n; i++) {
+        futures.emplace_back(pool.enqueue([i, &bsk, &trgswKey, &tlweKey, &param] {
 #ifdef TERNARY
-        const auto si = tlweKey.s[i];
-        if(si == 0) {
-            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
-            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
-        } else if (si == 1) {
-            encryptTrgswMPNtt(bsk.bskDft[i][0], 1, trgswKey, 0, param);
-            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
-        } else {
-            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
-            encryptTrgswMPNtt(bsk.bskDft[i][1], 1, trgswKey, 0, param);
-        }
+            const auto si = tlweKey.s[i];
+            if (si == 0) {
+                encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+                encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+            } else if (si == 1) {
+                encryptTrgswMPNtt(bsk.bskDft[i][0], 1, trgswKey, 0, param);
+                encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+            } else {
+                encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+                encryptTrgswMPNtt(bsk.bskDft[i][1], 1, trgswKey, 0, param);
+            }
 #else
-        encryptTrgswMPNtt(bsk.bskDft[i][0], tlweKey.s[i], trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][0], tlweKey.s[i], trgswKey, 0, param);
 #endif
+        }));
     }
+    for (auto& f : futures) f.wait();
 }
 
 void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const TorusPolynomial& v, const YatfheParameters& param) {
-    {
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(bsk.n);  // 1 first-block task + (n-1) loop tasks
+
+    // process first key component
+    futures.emplace_back(pool.enqueue([&bsk, &trgswKey, &tlweKey, &v] {
 #ifdef TERNARY
         if (tlweKey.s[0] == 0) {
             symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0);
@@ -159,134 +177,151 @@ void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, co
             symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
         }
 #endif
-    }
+    }));
 
+    // process remaining n - 1 components concurrently with the first
     for (auto i = 0; i < bsk.n - 1; i++) {
+        futures.emplace_back(pool.enqueue([i, &bsk, &trgswKey, &tlweKey, &param] {
 #ifdef TERNARY
-        const auto si = tlweKey.s[i+1];
-        if(si == 0) {
-            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
-            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
-        } else if (si == 1) {
-            encryptTrgswMPNtt(bsk.bskDft[i][0], 1, trgswKey, 0, param);
-            encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
-        } else {
-            encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
-            encryptTrgswMPNtt(bsk.bskDft[i][1], 1, trgswKey, 0, param);
-        }
+            const auto si = tlweKey.s[i + 1];
+            if (si == 0) {
+                encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+                encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+            } else if (si == 1) {
+                encryptTrgswMPNtt(bsk.bskDft[i][0], 1, trgswKey, 0, param);
+                encryptTrgswMPNtt(bsk.bskDft[i][1], 0, trgswKey, 0, param);
+            } else {
+                encryptTrgswMPNtt(bsk.bskDft[i][0], 0, trgswKey, 0, param);
+                encryptTrgswMPNtt(bsk.bskDft[i][1], 1, trgswKey, 0, param);
+            }
 #else
-        encryptTrgswMPNtt(bsk.bskDft[i][0], tlweKey.s[i+1], trgswKey, 0, param);
+            encryptTrgswMPNtt(bsk.bskDft[i][0], tlweKey.s[i + 1], trgswKey, 0, param);
 #endif
+        }));
     }
+    for (auto& f : futures) f.wait();
 }
 
 void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
                                const TorusPolynomial& v, const YatfheParameters& param) {
-    // process first key components
-    {
 #ifdef TERNARY
 #else
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(bsk.n);  // 1 first-block task + (n-1) loop tasks
+
+    // process first key component
+    futures.emplace_back(pool.enqueue([&bsk, &trgswKey, &tlweKey, &v] {
         if (tlweKey.s[0] == 1) {
             symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
         } else {
             symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
         }
-#endif
-    }
+    }));
 
-    // process remaining n - 1 components
+    // process remaining n - 1 components concurrently with the first
     for (auto i = 0; i < bsk.n - 1; i++) {
-#ifdef TERNARY
-#else
-        TrgswMP tmp{param, bsk.level, true};
-        encryptTrgswMP(tmp, tlweKey.s[i + 1], trgswKey, 0, param);
-        for (auto l0 = 0; l0 < bsk.level; l0++) {
-            auto& a = tmp.cPrime[l0].a;
-            auto& dA = bsk.bskDecompA[bsk.decompIndex(i, l0)];
-            for (auto k = 0; k < param.k; k++) {
-                for (auto j = 0; j < param.N; j++) {
-                    DecomposedData d{param.l};
-                    gadgetDecompose(d, a[k].coeffs[j], param);
-                    for (auto l = 0; l < param.l; l++) {
-                        dA[l][k].coeffs[j] = d.value[l] * d.sign;
+        futures.emplace_back(pool.enqueue([i, &bsk, &trgswKey, &tlweKey, &param] {
+            TrgswMP tmp{param, bsk.level, true};
+            encryptTrgswMP(tmp, tlweKey.s[i + 1], trgswKey, 0, param);
+            for (auto l0 = 0; l0 < bsk.level; l0++) {
+                auto& a = tmp.cPrime[l0].a;
+                auto& dA = bsk.bskDecompA[bsk.decompIndex(i, l0)];
+                for (auto k = 0; k < param.k; k++) {
+                    for (auto j = 0; j < param.N; j++) {
+                        DecomposedData d{param.l};
+                        gadgetDecompose(d, a[k].coeffs[j], param);
+                        for (auto l = 0; l < param.l; l++) {
+                            dA[l][k].coeffs[j] = d.value[l] * d.sign;
+                        }
                     }
                 }
+                NttHexl::applyNtt(bsk.bskTrim[i][0].cPrime[l0].b, tmp.cPrime[l0].b);
             }
-            NttHexl::applyNtt(bsk.bskTrim[i][0].cPrime[l0].b, tmp.cPrime[l0].b);
-        }
-#endif
+        }));
     }
+    for (auto& f : futures) f.wait();
+#endif
 }
 
 void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                    const TorusPolynomial& v, const YatfheParameters& param) {
-    // process first key component
-    {
 #ifdef TERNARY
 #else
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(bsk.n);  // 1 first-block task + (n-1) loop tasks
+
+    // process first key component
+    futures.emplace_back(pool.enqueue([&bsk, &trgswKey, &tlweKey, &v] {
         if (tlweKey.s[0] == 1) {
             symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
         } else {
             symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
         }
-#endif
-    }
+    }));
 
-    // process remaining n - 1 components
+    // process remaining n - 1 components concurrently with the first
     for (auto i = 0; i < bsk.n - 1; i++) {
-#ifdef TERNARY
-#else
-        TrgswMP tmp{param, bsk.level, true};
-        encryptTrgswMP(tmp, tlweKey.s[i + 1], trgswKey, 0, param);
-        for (auto l0 = 0; l0 < bsk.level; l0++) {
-            auto& a = tmp.cPrime[l0].a;
-            auto& dA = bsk.bskDecompA[bsk.decompIndex(i, l0)];
-            for (auto k = 0; k < param.k; k++) {
+        futures.emplace_back(pool.enqueue([i, &bsk, &trgswKey, &tlweKey, &param] {
+            TrgswMP tmp{param, bsk.level, true};
+            encryptTrgswMP(tmp, tlweKey.s[i + 1], trgswKey, 0, param);
+            for (auto l0 = 0; l0 < bsk.level; l0++) {
+                auto& a = tmp.cPrime[l0].a;
+                auto& dA = bsk.bskDecompA[bsk.decompIndex(i, l0)];
+                for (auto k = 0; k < param.k; k++) {
+                    for (auto j = 0; j < param.N; j++) {
+                        DecomposedData d{param.l};
+                        gadgetDecompose(d, a[k].coeffs[j], param);
+                        for (auto l = 0; l < param.l; l++) {
+                            dA[l][k].coeffs[j] = d.value[l] * d.sign;
+                        }
+                    }
+                }
+                NttHexl::applyNtt(bsk.bskB[bsk.decompIndex(i, l0)], tmp.cPrime[l0].b);
+                auto& b = tmp.cPrime[l0].b;
+                auto& dB = bsk.bskDecompB[bsk.decompIndex(i, l0)];
                 for (auto j = 0; j < param.N; j++) {
                     DecomposedData d{param.l};
-                    gadgetDecompose(d, a[k].coeffs[j], param);
+                    gadgetDecompose(d, b.coeffs[j], param);
                     for (auto l = 0; l < param.l; l++) {
-                        dA[l][k].coeffs[j] = d.value[l] * d.sign;
+                        dB[l].coeffs[j] = d.value[l] * d.sign;
                     }
                 }
             }
-            NttHexl::applyNtt(bsk.bskB[bsk.decompIndex(i, l0)], tmp.cPrime[l0].b);
-            auto& b = tmp.cPrime[l0].b;
-            auto& dB = bsk.bskDecompB[bsk.decompIndex(i, l0)];
-            for (auto j = 0; j < param.N; j++) {
-                DecomposedData d{param.l};
-                gadgetDecompose(d, b.coeffs[j], param);
-                for (auto l = 0; l < param.l; l++) {
-                    dB[l].coeffs[j] = d.value[l] * d.sign;
-                }
-            }
-        }
-#endif
+        }));
     }
+    for (auto& f : futures) f.wait();
+    symEncTrlevWithKeyNtt(bsk.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
+#endif
 }
 
 void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                    const TorusPolynomial& v, const YatfheParameters& param) {
-    // process first two key components
-    {
 #ifdef TERNARY
 #else
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(bsk.n);  // 1 first-block task + (n-1) loop tasks
+
+    // process first key component
+    futures.emplace_back(pool.enqueue([&bsk, &trgswKey, &tlweKey, &v] {
         if (tlweKey.s[0] == 1) {
             symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
         } else {
             symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
         }
-        // encryptTrgswMPNtt(bsk.bskSecond[0], tlweKey.s[1], trgswKey, 0, param);
-#endif
-    }
+    }));
 
-    // process remaining n - 2 components
+    // process remaining n - 1 components concurrently with the first
     for (auto i = 0; i < bsk.n - 1; i++) {
-#ifdef TERNARY
-#else
-        encryptTrgswMP(bsk.bskPrime[i], tlweKey.s[i + 1], trgswKey, 0, param);
-#endif
+        futures.emplace_back(pool.enqueue([i, &bsk, &trgswKey, &tlweKey, &param] {
+            encryptTrgswMP(bsk.bskPrime[i], tlweKey.s[i + 1], trgswKey, 0, param);
+        }));
     }
+    for (auto& f : futures) f.wait();
+    symEncTrlevWithKeyNtt(bsk.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
+#endif
 }
 
 void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,

@@ -145,31 +145,13 @@ void benchStat(const std::vector<long>& iteration_times_us, const long request, 
     std::cout << "Average time: " << average_time << " μs" << std::endl;
 }
 
-void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
+void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
                const int cacheCap, bool isSave) {
     cout << "bench lazy" << endl;
-    // client side
-    // key gen
-    TlweKey tlweKey{param.n, param.lweNoiseB};
-    TrgswKey trgswKey{param};
-    TrlweKey& trlweKey = trgswKey.trlweKey;
-    TlweKeySwitchingKey ksKey{param};
-    genTlweKey(tlweKey);
-    genTrlweKey(trlweKey);
-    TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.errorB = param.rlweNoiseB;
-    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
-    TorusPolynomial v {param.N};
-    generateTestPolynomial(v, param.torusBase, 2 * param.N);
-
-    // data gen
-    Integer pt = 3;
-    Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
-    Tlwe input{param.n};
-    symEncTlwe(input, mu, tlweKey);
-
 
     // server
+    TorusPolynomial v {param.N};
+    generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
     ScaledTlwe sTlwe {param.N * 2, param.n};
     rescaleTlweToNewMod(sTlwe, input);
     Trlwe out{param};
@@ -213,34 +195,16 @@ void benchLazy(const YatfheParameters& param, SimpleCacheManager& cache, const v
     }
 }
 
-void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
+void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
                const int cacheCap, bool isSave) {
     cout << "bench ginx" << endl;
-    // client side
-    // key gen
-    TlweKey tlweKey{param.n, param.lweNoiseB};
-    TrgswKey trgswKey{param};
-    TrlweKey& trlweKey = trgswKey.trlweKey;
-    TlweKeySwitchingKey ksKey{param};
-    genTlweKey(tlweKey);
-    genTrlweKey(trlweKey);
-    TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.errorB = param.rlweNoiseB;
-    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
-    TorusPolynomial v {param.N};
-    generateTestPolynomial(v, param.torusBase, 2 * param.N);
-
-    // data gen
-    Integer pt = 3;
-    Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
-    Tlwe input{param.n};
-    symEncTlwe(input, mu, tlweKey);
-
 
     // server side
     ScaledTlwe sTlwe {param.N * 2, param.n};
     Trlwe acc{param};
     rescaleTlweToNewMod(sTlwe, input);
+    TorusPolynomial v {param.N};
+    generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
     genNoiselessTrlweSample(acc, v, sTlwe);
 
     // warm up
@@ -285,34 +249,16 @@ void benchGinx(const YatfheParameters& param, SimpleCacheManager& cache, const v
     }
 }
 
-void benchWWL24(const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
+void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
                 const int cacheCap, bool isSave) {
     cout << "bench WWL24" << endl;
-    // client side
-    // key gen
-    TlweKey tlweKey{param.n, param.lweNoiseB};
-    TrgswKey trgswKey{param};
-    TrlweKey& trlweKey = trgswKey.trlweKey;
-    TlweKeySwitchingKey ksKey{param};
-    genTlweKey(tlweKey);
-    genTrlweKey(trlweKey);
-    TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.errorB = param.rlweNoiseB;
-    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
-    TorusPolynomial v {param.N};
-    generateTestPolynomial(v, param.torusBase, 2 * param.N);
-
-    // data gen
-    Integer pt = 3;
-    Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
-    Tlwe input{param.n};
-    symEncTlwe(input, mu, tlweKey);
-
 
     // server side
     ScaledTlwe sTlwe {param.N * 2, param.n};
     Trlwe acc{param};
     rescaleTlweToNewMod(sTlwe, input);
+    TorusPolynomial v {param.N};
+    generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
     genNoiselessTrlweSample(acc, v, sTlwe);
 
     // warm up
@@ -396,7 +342,27 @@ int main(int argc, char **argv) {
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
+    // client side
+    // key gen
+    TlweKey tlweKey{param.n, param.lweNoiseB};
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    TlweKeySwitchingKey ksKey{param};
+    genTlweKey(tlweKey);
+    genTrlweKey(trlweKey);
+    TlweKey tlweKsKey = tlweKey;
+    tlweKsKey.errorB = param.rlweNoiseB;
+    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
+    // data gen
+    Integer pt = 1;
+    Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
+    Tlwe input{param.n};
+    symEncTlwe(input, mu, tlweKey);
+
+
+
+    // server side
     // warm up cycle
     {
         cacheCapacity = 100;
@@ -409,9 +375,9 @@ int main(int argc, char **argv) {
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
-        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
+        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
     }
 
     // benchmarking
@@ -426,9 +392,9 @@ int main(int argc, char **argv) {
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
-        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
+        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
     }
 
     {
@@ -442,9 +408,9 @@ int main(int argc, char **argv) {
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
-        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
+        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
     }
 
     {
@@ -458,9 +424,9 @@ int main(int argc, char **argv) {
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
-        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
+        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
     }
 
     {
@@ -474,9 +440,9 @@ int main(int argc, char **argv) {
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
-        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
+        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
     }
 
     {
@@ -490,9 +456,9 @@ int main(int argc, char **argv) {
         auto accessPattern = workload.generateAccessPattern(patternSize);
         printArray(accessPattern, "access pattern");
 
-        benchWWL24(param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(param, cache, accessPattern, cacheCapacity, true);
+        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
+        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
+        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
     }
 
     return 0;

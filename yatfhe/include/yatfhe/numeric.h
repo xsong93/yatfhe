@@ -12,7 +12,7 @@
 
 using namespace std;
 
-extern ChaCha20Rng rng;
+extern thread_local ChaCha20Rng rng;
 
 extern uniform_int_distribution<Binary> binaryDistrib;
 

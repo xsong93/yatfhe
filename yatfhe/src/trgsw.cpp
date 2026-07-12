@@ -16,14 +16,17 @@
 using namespace NttHexl;
 
 void encryptTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
+    TrgswMPDft trgswMPDft{param, trgswMP.l, trgswMP.isHalf};
     TorusPolynomial muPoly{param.N};
-    for (size_t lvl = 0; lvl < trgswMP.l; lvl++) {
+    NttPolynomial myPolyNtt{param.N};
+    for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
         auto decomposedMu = static_cast<Torus>(mu) << (param.torusBits - (lvl + 1) * param.radixBits);
         muPoly.coeffs[pos] = decomposedMu;
-        symEncTrlweMultiSample(trgswMP.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
-        if (!trgswMP.isHalf) {
+        applyNtt(myPolyNtt, muPoly);
+        symEncTrlweMultiSampleNtt(trgswMP.cPrime[lvl], trgswMPDft.cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+        if (!trgswMPDft.isHalf) {
             for (size_t k = 0; k < param.k; k++) {
-                symEncTrlweSingleSample(trgswMP.c[lvl][k], trgswKey.trlweKey, 0, 0);
+                symEncTrlweSingleSampleNtt(trgswMP.c[lvl][k], trgswMPDft.c[lvl][k], trgswKey.trlweKey, 0, 0);
                 addTorusPolynomial(trgswMP.c[lvl][k].a[k], trgswMP.c[lvl][k].a[k], muPoly);
             }
         }
@@ -31,7 +34,6 @@ void encryptTrgswMP(TrgswMP& trgswMP, const Integer mu, const TrgswKey& trgswKey
 }
 
 void encryptTrgswMPNtt(TrgswMPDft& trgswMPDft, const Integer mu, const TrgswKey& trgswKey, const int pos, const YatfheParameters& param) {
-    TrgswMP trgswMP{param, trgswMPDft.l, trgswMPDft.isHalf};
     TorusPolynomial muPoly{param.N};
     NttPolynomial myPolyNtt{param.N};
     for (size_t lvl = 0; lvl < trgswMPDft.l; lvl++) {
@@ -65,7 +67,6 @@ void encryptTrgswMPMulti(TrgswMP& trgswMP, const vector<Integer>& mus, const Trg
 }
 
 void encryptTrgswMPMultiNtt(TrgswMPDft& trgswMPDft, const vector<Integer>& mus, const TrgswKey& trgswKey, const YatfheParameters& param) {
-    TrgswMP trgswMP{param, trgswMPDft.l, trgswMPDft.isHalf};
     TorusPolynomial muPoly{param.N};
     NttPolynomial myPolyNtt{param.N};
     for (auto lvl = 0; lvl < trgswMPDft.l; lvl++) {
