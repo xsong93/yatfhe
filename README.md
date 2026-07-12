@@ -10,15 +10,13 @@ yatfhe/
 ├── CMakeLists.txt # Main CMake build configuration
 ├── LICENSE.txt # License file
 ├── build_bench_blindrotate.sh # Script to build benchmarks
-├── clean_install.sh # Clean install script
-├── cmake_run.sh # CMake configuration wrapper
 └── cp_bench.sh # Utility to copy benchmarks
 ```
 
 ## Dependencies
 
 - **CMake** (>= 3.10)
-- **C++17** compatible compiler (GCC 7+, Clang 6+, or MSVC 2019+)
+- **C++17** compatible compiler
 - **GMP** (GNU Multiple Precision Arithmetic Library)
   - Please refer to https://gmplib.org/ for the installation instructions on your system.
 - **Intel HEXL** (Homomorphic Encryption Acceleration Library)
@@ -32,6 +30,7 @@ yatfhe/
     mkdir benchmark_run/server
     chmod +x build_bench_blindrotate.sh
     ./build_bench_blindrotate.sh
+    sudo bash cp_bench.sh
     ```
 
 3. **Running Benchmarks**
