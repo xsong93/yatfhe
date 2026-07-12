@@ -160,14 +160,13 @@ void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     cout << "warm up" << endl;
     for (auto i = 0; i < accessPattern.size()/2; i++) {
         cache.getLazyKey(accessPattern[i]);
-        steady_clock::now();
     }
     cache.resetStats();
 
     cout << "normal run" << endl;
     // normal run
     std::vector<long> iterationTimesUs;
-    for (auto i = accessPattern.size()/2; i < 100 + accessPattern.size()/2; i++) {
+    for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
         clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateLazyKeyFilename(id);
@@ -211,14 +210,13 @@ void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     cout << "warm up" << endl;
     for (auto i = 0; i < accessPattern.size()/2; i++) {
         cache.getGinxKey(accessPattern[i]);
-        steady_clock::now();
     }
     cache.resetStats();
 
     cout << "normal run" << endl;
     // normal run
     std::vector<long> iterationTimesUs;
-    for (auto i = accessPattern.size()/2; i < 100 + accessPattern.size()/2; i++) {
+    for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
         clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateGinxKeyFilename(id);
@@ -265,14 +263,13 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
     cout << "warm up" << endl;
     for (auto i = 0; i < accessPattern.size()/2; i++) {
         cache.getWWL24Key(accessPattern[i]);
-        steady_clock::now();
     }
     cache.resetStats();
 
     cout << "normal run" << endl;
     // normal run
     std::vector<long> iterationTimesUs;
-    for (auto i = accessPattern.size()/2; i < 100 + accessPattern.size()/2; i++) {
+    for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
         clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateWWL24KeyFilename(id);
@@ -302,8 +299,8 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
 }
 
 int main(int argc, char **argv) {
-    int sizeRatio = round(67156489.0/16919095.0); // ginx key size / lazy key size
-    int sizeRatio2 = round(67156489.0/33709652.0); // ginx key size / wwl+24 key size
+    int sizeRatio = round(98376/24776); // ginx key size / lazy key size
+    int sizeRatio2 = round(98376/49380); // ginx key size / wwl+24 key size
 
     CommandLineParser parser(argc, argv);
 
@@ -335,12 +332,9 @@ int main(int argc, char **argv) {
         patternSize = 2000;
     }
 
-    // printf("User param: Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n",
-    //        cacheCapacity, zipfParam, patternSize);
 
     YatfheParameters param{};
     initYatfhe(param);
-    printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
 
     // client side
     // key gen
@@ -355,7 +349,7 @@ int main(int argc, char **argv) {
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
     // data gen
-    Integer pt = 1;
+    Integer pt = 0;
     Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
     Tlwe input{param.n};
     symEncTlwe(input, mu, tlweKey);

@@ -124,5 +124,5 @@ void printBanner(const string& msg) {
 void clearFileCache() {
     // Clear page cache, dentries, and inodes
     system("sync; echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null");
-    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Let it settle
+    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Let it settle
 }
