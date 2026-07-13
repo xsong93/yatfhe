@@ -113,7 +113,6 @@ private:
         auto last_node = node_list_.end();
         --last_node;
 
-        printMsg(last_node->key, "Evicting key");
         node_map_.erase(last_node->key);
         node_list_.pop_back();
     }
