@@ -147,7 +147,7 @@ void benchStat(const std::vector<long>& iteration_times_us, const long request, 
 
 void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
                const int cacheCap, bool isSave) {
-    cout << "bench lazy" << endl;
+    cout << "bench ours" << endl;
 
     // server
     TorusPolynomial v {param.N};
@@ -166,6 +166,7 @@ void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     cout << "normal run" << endl;
     // normal run
     std::vector<long> iterationTimesUs;
+    bool isLoadKey = false;
     for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
         clearFileCache();
         auto id = accessPattern[i];
@@ -175,6 +176,7 @@ void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
         if (bskServer != nullptr) {
             blindRotateLazyPipeAltNtt(out, *bskServer, sTlwe, v, param);
         } else {
+            isLoadKey = true;
             BootstrappingKeyMPLazyPipeAlt bsk;
             blindRotateLazyPipeAltInitNtt(out, bsk, sTlwe, v, file, param);
             cache.putLazyKey(id, std::move(bsk));
@@ -182,6 +184,7 @@ void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
         auto end = steady_clock::now();
         auto elapsedUs = duration_cast<microseconds>(end - start).count();
         iterationTimesUs.push_back(elapsedUs);
+        if (isLoadKey) printMsg(id, "Evict LRU key, load");
     }
     printArray(iterationTimesUs, "iterationTimesUs");
     auto stats = cache.getStats();
@@ -216,17 +219,17 @@ void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     cout << "normal run" << endl;
     // normal run
     std::vector<long> iterationTimesUs;
+    bool isLoadKey = false;
     for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
         clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateGinxKeyFilename(id);
         auto start = steady_clock::now();
-        // auto& bskServer = cache.getGinxKey(accessPattern[i]);
-        // blindRotateJP22Ntt(acc, bskServer.bskDft, sTlwe, param);
         auto* bskServer = cache.getGinxKeySimple(id);
         if (bskServer != nullptr) {
             blindRotateJP22Ntt(acc, *bskServer, sTlwe, param);
         } else {
+            isLoadKey = true;
             BootstrappingKeyMP bsk;
             deserializeBskMP(bsk, file, param.n);
             blindRotateJP22Ntt(acc, bsk, sTlwe, param);
@@ -235,6 +238,7 @@ void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
         auto end = steady_clock::now();
         auto elapsedUs = duration_cast<microseconds>(end - start).count();
         iterationTimesUs.push_back(elapsedUs);
+        if (isLoadKey) printMsg(id, "Evict LRU key, load");
     }
     printArray(iterationTimesUs, "iterationTimesUs");
     auto stats = cache.getStats();
@@ -269,6 +273,7 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
     cout << "normal run" << endl;
     // normal run
     std::vector<long> iterationTimesUs;
+    bool isLoadKey = false;
     for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
         clearFileCache();
         auto id = accessPattern[i];
@@ -278,6 +283,7 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
         if (bskServer != nullptr) {
             blindRotateWWL24Ntt(acc, *bskServer, sTlwe, bskServer->s2Dft, param);
         } else {
+            isLoadKey = true;
             BootstrappingKeyWWL24 bsk;
             deserializeBskWWL24(bsk, file, param.n);
             blindRotateWWL24Ntt(acc, bsk, sTlwe, bsk.s2Dft, param);
@@ -286,6 +292,7 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
         auto end = steady_clock::now();
         auto elapsedUs = duration_cast<microseconds>(end - start).count();
         iterationTimesUs.push_back(elapsedUs);
+        if (isLoadKey) printMsg(id, "Evict LRU key, load");
     }
     printArray(iterationTimesUs, "iterationTimesUs");
     auto stats = cache.getStats();
