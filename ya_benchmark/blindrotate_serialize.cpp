@@ -27,7 +27,6 @@ int main(int argc, char **argv) {
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);

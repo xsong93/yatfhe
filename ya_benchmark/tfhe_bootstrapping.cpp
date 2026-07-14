@@ -26,7 +26,6 @@ int main(int argc, char **argv) {
     COUNT_TIME("genTrlweKey", genTrlweKey(trlweKey);)
     COUNT_TIME("genBootstrappingKey", genBootstrappingKey(bsKey, trgswKey, tlweKey, param);)
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.errorB = param.rlweNoiseB;
     COUNT_TIME("genTlweKeySwitchingKey", genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);)
 
     Integer plain = 3;

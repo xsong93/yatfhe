@@ -110,7 +110,7 @@ void setCoeffsValue(vector<T> coeffs, T val) {
 
 template<typename... TorusArgs>
 std::common_type_t<TorusArgs...> addTorus(int64_t q, TorusArgs... inputs) {
-    if (q == Q_32) {
+    if (sizeof(Torus) == 4 && q == Q_32) {
         return (inputs + ...);
     }
     int64_t tmp = (static_cast<int64_t>(inputs) + ...);

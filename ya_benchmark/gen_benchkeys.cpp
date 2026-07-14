@@ -21,7 +21,6 @@ int main(){
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
 

@@ -165,7 +165,7 @@ int64_t montgomoryReduceT32(int64_t in) {
 }
 
 Torus subTorus(const int64_t q, const Torus in1, const Torus in2) {
-    if (q == Q_32) {
+    if (sizeof(Torus) == 4 && q == Q_32) {
         return in1 - in2;
     }
     auto tmp = static_cast<int64_t>(in1) - static_cast<int64_t>(in2);
@@ -174,7 +174,7 @@ Torus subTorus(const int64_t q, const Torus in1, const Torus in2) {
 }
 
 Torus multTorus(const int64_t q, const Torus in1, const Torus in2) {
-    if (q == Q_32) {
+    if (sizeof(Torus) == 4 && q == Q_32) {
         return in1 * in2;
     }
     return static_cast<Torus>(longModP(static_cast<int64_t>(in1) * static_cast<int64_t>(in2), q));
