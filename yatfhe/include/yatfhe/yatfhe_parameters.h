@@ -4,31 +4,35 @@
 #ifndef HLS_YATFHE_YATFHE_PARAMETERS_H
 #define HLS_YATFHE_YATFHE_PARAMETERS_H
 
+#include <algorithm>
 #include "yatfhe/torus.h"
 
 struct YatfheParameters {
 #ifdef TERNARY // ternary secret
-    // LWE params
-    int n {430};
-    int lweNoiseB {11};
-    int64_t qLwe{Q_20};
-
-    // RLWE params
-    int k {1};
-    int N {1024};
-    int rlweNoiseB {4};
-    int64_t q {Q_27};
-    int torusBits {27};
-    int torusBase {8}; // p|q
-
-    int radixBits {8}; // b
-    int l {4};
-    int lApprox {2};
+#error "TERNARY Not Implemented"
+    // // LWE params
+    // int n {430};
+    // int lweNoiseB {11};
+    // int64_t qLwe{Q_20};
+    // int qLweBits {20};
+    //
+    // // RLWE params
+    // int k {1};
+    // int N {1024};
+    // int rlweNoiseB {4};
+    // int64_t q {Q_27};
+    // int torusBits {27};
+    // int torusBase {8}; // p|q
+    //
+    // int radixBits {8}; // b
+    // int l {4};
+    // int lApprox {2};
 #else // binary secret
-    // LWE params, 135-bit
-    int n {512};
-    int lweNoiseB {23}; // σ: 22.2
+    // LWE params, 132-bit
+    int n {1024};
+    int lweNoiseB {10}; // σ: 9.21
     int64_t qLwe{Q_32};
+    int qLweBits {32};
 
     // RLWE params
     int torusBase {2}; // p|q
@@ -63,8 +67,19 @@ struct YatfheParameters {
     // RGSW params
     int l2 {4}; // todo
     int lDft {dftBits / radixBits};
-    // KS params
-    int ksLevel {torusBits / radixBits}; // ks decomposition length
+    // KS params: the KSK's own gadget base/level, independent of PBS's
+    // radixBits/l. KS is a scalar multiply-accumulate over k*N rows, far
+    // cheaper per level than a PBS external product over n iterations, so
+    // it can use a much smaller base (many more, tiny digits) for a large
+    // noise reduction at negligible extra cost. KSK entries are always
+    // LWE_Q-domain ciphertexts (qLwe, fixed regardless of TORUS_TYPE), so
+    // the usable decomposition width is capped at qLweBits, not torusBits
+    // -- decomposing further (e.g. torusBits=56 > qLweBits=32 under
+    // TORUS_TYPE=56) would produce digits that get silently lost when
+    // encrypted mod qLwe. Call setKsRadixBits() to change ksRadixBits.
+    int ksRadixBits {2}; // b_ks
+    int ksWidthBits {std::min(torusBits, qLweBits)}; // usable KS precision
+    int ksLevel {ksWidthBits / ksRadixBits}; // ks decomposition length
     int radixBase {1 << radixBits};  // 2^b
     int baseOverTwo {radixBase / 2}; // B / 2 threshold
     int digitMask {radixBase - 1};
@@ -89,10 +104,15 @@ struct YatfheParameters {
     void setRadixBits(const int b) {
         radixBits = b;
         lDft = dftBits / radixBits;
-        ksLevel = torusBits / radixBits;
         radixBase = 1 << radixBits;
         baseOverTwo = radixBase / 2;
         digitMask = radixBase - 1;
+    }
+
+    void setKsRadixBits(const int b) {
+        ksRadixBits = b;
+        ksWidthBits = std::min(torusBits, qLweBits);
+        ksLevel = ksWidthBits / ksRadixBits;
     }
 };
 

@@ -29,6 +29,10 @@ std::vector<Torus> genGadgetVector(int radixBits, int l, int torusBits);
 
 void gadgetDecompose(DecomposedData& out, Torus in, const YatfheParameters& param);
 
+// Same as gadgetDecompose but uses the KSK's own ksRadixBits/ksWidthBits
+// instead of PBS's radixBits/torusBits. Only for switchKeyForTlwe.
+void gadgetDecomposeKs(DecomposedData& out, Torus in, const YatfheParameters& param);
+
 Torus recomposeSelf(const DecomposedData& digits, const YatfheParameters& param);
 
 void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const std::vector<DecomposedData>& mid);
