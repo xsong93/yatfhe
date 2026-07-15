@@ -893,7 +893,7 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
         auto& currIn = cPrimeA[row];
         for (auto j = 0; j < N; j++) {
             DecomposedData d {L};
-            gadgetDecompose(d, currIn.coeffs[j], param);
+            signedGadgetDecomposition(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < L; lvl++) {
                 auto& currOut = decomp[lvl].a[row];
                 currOut.coeffs[j] = d.value[lvl] * d.sign;
@@ -1077,7 +1077,7 @@ void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const T
         auto& currIn = cPrimeA[row];
         for (auto j = 0; j < N; j++) {
             DecomposedData d {L};
-            gadgetDecompose(d, currIn.coeffs[j], param);
+            signedGadgetDecomposition(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < L; lvl++) {
                 auto& currOut = decomp[lvl].a[row];
                 currOut.coeffs[j] = d.value[lvl] * d.sign;

@@ -56,7 +56,7 @@ void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& 
 
     DecomposedData aBar{param.ksLevel};  // hoisted: avoids 2*input.n heap allocations in the loop
     for (int i = 0; i < input.n; i++) {
-        gadgetDecomposeKs(aBar, input.a[i], param);
+        signedGadgetDecompositionKs(aBar, input.a[i], param);
         for (int j = 0; j < param.ksLevel; j++) {
             const int64_t coeff = static_cast<int64_t>(aBar.value[j]) * aBar.sign;
             if (coeff == 0) {

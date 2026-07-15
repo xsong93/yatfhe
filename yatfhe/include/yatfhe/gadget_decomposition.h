@@ -33,6 +33,9 @@ void gadgetDecompose(DecomposedData& out, Torus in, const YatfheParameters& para
 // instead of PBS's radixBits/torusBits. Only for switchKeyForTlwe.
 void gadgetDecomposeKs(DecomposedData& out, Torus in, const YatfheParameters& param);
 
+// Signed (balanced) counterpart of gadgetDecomposeKs. Only for switchKeyForTlwe.
+void signedGadgetDecompositionKs(DecomposedData& out, Torus in, const YatfheParameters& param);
+
 Torus recomposeSelf(const DecomposedData& digits, const YatfheParameters& param);
 
 void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const std::vector<DecomposedData>& mid);

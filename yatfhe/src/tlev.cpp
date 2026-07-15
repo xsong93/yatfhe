@@ -16,7 +16,7 @@ void encTglev(Tlev& output, const TlweKey& tlweKey, Torus input, const YatfhePar
 
 void multTglevWithConst(Tlwe& output, const Tlev& input, Torus num, const YatfheParameters& param) {
     DecomposedData d {input.l};
-    gadgetDecompose(d, num, param);
+    signedGadgetDecomposition(d, num, param);
     for (auto j = 0; j <= output.n; j++) {
         auto& curr = (j < output.n) ? output.a[j] : output.b;
         for (auto l1 = 0; l1 < d.l; l1++) {

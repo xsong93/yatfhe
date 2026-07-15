@@ -4,7 +4,6 @@
 #ifndef HLS_YATFHE_YATFHE_PARAMETERS_H
 #define HLS_YATFHE_YATFHE_PARAMETERS_H
 
-#include <algorithm>
 #include "yatfhe/torus.h"
 
 struct YatfheParameters {
@@ -73,12 +72,10 @@ struct YatfheParameters {
     // it can use a much smaller base (many more, tiny digits) for a large
     // noise reduction at negligible extra cost. KSK entries are always
     // LWE_Q-domain ciphertexts (qLwe, fixed regardless of TORUS_TYPE), so
-    // the usable decomposition width is capped at qLweBits, not torusBits
-    // -- decomposing further (e.g. torusBits=56 > qLweBits=32 under
-    // TORUS_TYPE=56) would produce digits that get silently lost when
-    // encrypted mod qLwe. Call setKsRadixBits() to change ksRadixBits.
+    // the usable decomposition width is capped at qLweBits.
+    // Call setKsRadixBits() to change ksRadixBits.
     int ksRadixBits {2}; // b_ks
-    int ksWidthBits {std::min(torusBits, qLweBits)}; // usable KS precision
+    int ksWidthBits {qLweBits}; // usable KS precision
     int ksLevel {ksWidthBits / ksRadixBits}; // ks decomposition length
     int radixBase {1 << radixBits};  // 2^b
     int baseOverTwo {radixBase / 2}; // B / 2 threshold
@@ -111,7 +108,7 @@ struct YatfheParameters {
 
     void setKsRadixBits(const int b) {
         ksRadixBits = b;
-        ksWidthBits = std::min(torusBits, qLweBits);
+        ksWidthBits = qLweBits;
         ksLevel = ksWidthBits / ksRadixBits;
     }
 };
