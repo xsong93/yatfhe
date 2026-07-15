@@ -119,10 +119,15 @@ Torus recomposeTwoParts(const DecomposedData& lhs, const std::vector<Integer>& r
  * Calculate in * B^-j.
  * @param in The input to decompose. Bit length should be less than (maxIntegerBitLength - (torusBits - radixBits)).
  * i.e. (32 - (32 - 4)) = 4. Therefore, max in should be less than 2^3.
- * @param param
  * @return
  */
-void decomposeOverB(std::vector<Torus>& output, const Integer in, const YatfheParameters& param) {
+void decomposeOverB(std::vector<Torus>& output, const Integer in, const int bitWidth, const int radixBits) {
+    for (int i = 0; i < output.size(); ++i) {
+        output[i] = static_cast<Torus>(in) << (bitWidth - (i + 1) * radixBits);
+    }
+}
+
+void decomposeOverBKS(std::vector<Torus>& output, const Integer in, const YatfheParameters& param) {
     for (int i = 0; i < output.size(); ++i) {
         output[i] = static_cast<Torus>(in) << (param.ksWidthBits - (i + 1) * param.ksRadixBits);
     }

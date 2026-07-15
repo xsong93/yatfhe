@@ -42,7 +42,9 @@ void recomposeFirstHalf(DecomposedData& output, const DecomposedData& lhs, const
 
 Torus recomposeTwoParts(const DecomposedData& lhs, const std::vector<Integer>& rhs);
 
-void decomposeOverB(std::vector<Torus>& output, Integer in, const YatfheParameters& param);
+void decomposeOverB(std::vector<Torus>& output, Integer in, int bitWidth, int radixBits);
+
+void decomposeOverBKS(std::vector<Torus>& output, Integer in, const YatfheParameters& param);
 
 void signedGadgetDecomposition(DecomposedData& res, Torus in, const YatfheParameters& param);
 

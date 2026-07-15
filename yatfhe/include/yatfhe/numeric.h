@@ -46,7 +46,7 @@ Torus roundTorusGeneralError(const Torus in, const int torusBase, const int64_t 
 
 Torus roundTorus32Error(const Torus in, const int torusBase);
 
-Integer roundErrorForShiftedTorus(Torus in, double sigma, int shift);
+Integer roundErrorForShiftedTorus(Torus in, int shift);
 
 int intModP(int a, int p);
 

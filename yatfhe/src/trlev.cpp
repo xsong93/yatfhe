@@ -72,7 +72,7 @@ void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const vector<To
 
 // encrypt +-s*m to ntt domain, sign is determined by @param{isPos}
 // (a-x, as+e)
-void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs,
+void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<IntPolynomial>& inputs,
                            const bool isPos, const YatfheParameters& param) {
     Trlev s2(param);
     encTrlevSingleSample(s2, trlweKey, 0, 0, param);
@@ -98,7 +98,7 @@ void decTrlev(TorusPolynomial& output, const Trlev& input, const TrlweKey& trlwe
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRounding(tmp, input.trlwes[firstLevel], trlweKey);
     for (auto i = 0; i < param.N; i++) {
-        output.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweNoiseB, param.torusBits - param.radixBits);
+        output.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.torusBits - param.radixBits);
     }
 }
 

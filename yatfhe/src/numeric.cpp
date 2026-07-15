@@ -97,11 +97,11 @@ Torus roundTorus32Error(const Torus in, const int torusBase) {
     return modSwitchToTorus32(t, torusBase);
 }
 
-// To compensate the possible negative gaussian error, add sufficient sigma to the value so that it stops at the
+// To compensate the possible negative gaussian error, add half a side to the value so that it stops at the
 // positive side of the nearest desired shift scale. The original integer value can then be restored after a proper right
 // shift operation.
-Integer roundErrorForShiftedTorus(const Torus in, const double sigma, const int shift) {
-    return (in + 20 * doubleToTorus32(sigma)) >> shift;
+Integer roundErrorForShiftedTorus(const Torus in, const int shift) {
+    return (in + (Torus{1} << (shift - 1))) >> shift;
 }
 
 int intModP(const int a, const int p) {

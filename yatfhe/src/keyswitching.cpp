@@ -21,7 +21,7 @@ void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
     convertTrlweKeyToTlweKey(inKey, currKey);
     for (auto i = 0; i < inKey.n; i++) {
         std::vector<Torus> sOverB(param.ksLevel);
-        decomposeOverB(sOverB, inKey.s[i], param); // s_i * B^-j
+        decomposeOverBKS(sOverB, inKey.s[i], param); // s_i * B^-j
         for (auto j = 0; j < param.ksLevel; j++) {
             symEncTlwe(ksk.decomposedKsk[i][j], sOverB[j], targetKey);
         }
