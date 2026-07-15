@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
     Tlwe input{param.n};
     symEncTlwe(input, mu, tlweKey);
-    ScaledTlwe sTlwe {param.N * 2, param.n};
+    ScaledTlwe sTlwe {param.N, param.n};
     rescaleTlweToNewMod(sTlwe, input);
 
     Trlwe acc{param};

@@ -41,9 +41,9 @@ struct YatfheParameters {
     int rlweNoiseB {3}; // σ: 2.21
     int64_t q {Q_32};
     int torusBits {32};
-    int radixBits {5};
-    int l {6};
-    int lApprox {3};
+    int radixBits {4};
+    int l {8};
+    int lApprox {4};
 #elif defined(TORUS56) // 132-bit
     int k {1};
     int N {2048};
