@@ -1039,25 +1039,25 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
     vector b1(level, TorusPolynomial{param.N});
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(1 + level);
+    futures.reserve(2 * level);
 
 #ifdef TERNARY
 #else
     auto& s2 = bsk.s2Dft;
     auto& bskPrime = bsk.bskPrime;
-    Trlwe holder{param};
+    vector<Trlwe> holders(level, Trlwe{param});
 
     // handle first two key components
     {
         {
             const auto a1 = input.a[1];
-            futures.emplace_back(pool.enqueue([&b0, &bskPrime, &holder, a1, &decompA0, level, &param]{
-                for (auto l = 0; l < level; l++) {
-                    rotateTrlweMinusOneBPlusOne(holder, b0[l], bskPrime[0].cPrime[l], a1,
+            for (auto l = 0; l < level; l++) {
+                futures.emplace_back(pool.enqueue([&b0, &bskPrime, &holders, a1, &decompA0, l, &param]{
+                    rotateTrlweMinusOneBPlusOne(holders[l], b0[l], bskPrime[0].cPrime[l], a1,
                                             static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(decompA0[l], holder.a, param);
-                }
-            }));
+                    gadgetDecomposeTrlweA(decompA0[l], holders[l].a, param);
+                }));
+            }
         }
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, bsk.bskFirst[0], input.a[0]);
@@ -1080,13 +1080,13 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
         // automorphism
         if (i < n - 2) {
             const auto aNext = input.a[i + 2];
-            futures.emplace_back(pool.enqueue([&bskPrime, &holder, &nextDecompA, &nextB, aNext, level, i, &param] {
-                for (auto l = 0; l < level; l++) {
-                    rotateTrlweMinusOneBPlusOne(holder, nextB[l], bskPrime[i + 1].cPrime[l], aNext,
+            for (auto l = 0; l < level; l++) {
+                futures.emplace_back(pool.enqueue([&bskPrime, &holders, &nextDecompA, &nextB, aNext, i, l, &param] {
+                    rotateTrlweMinusOneBPlusOne(holders[l], nextB[l], bskPrime[i + 1].cPrime[l], aNext,
                                             static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(nextDecompA[l], holder.a, param);
-                }
-            }));
+                    gadgetDecomposeTrlweA(nextDecompA[l], holders[l].a, param);
+                }));
+            }
         }
 
         // scheme switching
@@ -1128,7 +1128,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
     vector b1(level, TorusPolynomial{param.N});
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(1 + level);
+    futures.reserve(2 * level);
     std::ifstream inFile(fileName, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
@@ -1141,19 +1141,25 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
     deserialize(bsk.s2Dft, inFile);
     auto& s2 = bsk.s2Dft;
     auto& bskPrime = bsk.bskPrime;
-    Trlwe holder{param};
+    vector<Trlwe> holders(level, Trlwe{param});
 
     // handle first two key components
     {
         {
             const auto a1 = input.a[1];
-            futures.emplace_back(pool.enqueue([&b0, &bskPrime, &holder, a1, &decompA0, &inFile, level, &param]{
+            futures.emplace_back(pool.enqueue(
+                [&b0, &bskPrime, &holders, &decompA0, &inFile, &pool, a1, level, &param]{
                 deserialize(bskPrime[0], inFile);
+                vector<future<void>> sub;
+                sub.reserve(level);
                 for (auto l = 0; l < level; l++) {
-                    rotateTrlweMinusOneBPlusOne(holder, b0[l], bskPrime[0].cPrime[l], a1,
-                                            static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(decompA0[l], holder.a, param);
+                    sub.emplace_back(pool.enqueue([&b0, &bskPrime, &holders, a1, &decompA0, l, &param]{
+                        rotateTrlweMinusOneBPlusOne(holders[l], b0[l], bskPrime[0].cPrime[l], a1,
+                                                static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
+                        gadgetDecomposeTrlweA(decompA0[l], holders[l].a, param);
+                    }));
                 }
+                for (auto& f : sub) f.get();
             }));
         }
         Trlwe tmp{param};
@@ -1177,13 +1183,19 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
         // automorphism
         if (i < n - 2) {
             const auto aNext = input.a[i + 2];
-            futures.emplace_back(pool.enqueue([&bskPrime, &holder, &nextDecompA, &nextB, &inFile, aNext, i, level, &param] {
+            futures.emplace_back(pool.enqueue(
+                [&bskPrime, &holders, &nextDecompA, &nextB, &inFile, &pool, aNext, i, level, &param] {
                 deserialize(bskPrime[i + 1], inFile);
+                vector<future<void>> sub;
+                sub.reserve(level);
                 for (auto l = 0; l < level; l++) {
-                    rotateTrlweMinusOneBPlusOne(holder, nextB[l], bskPrime[i + 1].cPrime[l], aNext,
-                                            static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(nextDecompA[l], holder.a, param);
+                    sub.emplace_back(pool.enqueue([&bskPrime, &holders, &nextDecompA, &nextB, aNext, i, l, &param] {
+                        rotateTrlweMinusOneBPlusOne(holders[l], nextB[l], bskPrime[i + 1].cPrime[l], aNext,
+                                                static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
+                        gadgetDecomposeTrlweA(nextDecompA[l], holders[l].a, param);
+                    }));
                 }
+                for (auto& f : sub) f.get();
             }));
         }
 

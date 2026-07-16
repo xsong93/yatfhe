@@ -294,7 +294,7 @@ Integer decryptTrgsw(const Trgsw& trgsw, const YatfheParameters& param, const Tr
     const auto lastRow = param.k;
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRounding(tmp, trgsw.trlweSamples[firstLevel][lastRow], trgswKey.trlweKey);
-    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweNoiseB, param.torusBits - param.radixBits);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.torusBits - param.radixBits);
 }
 
 Integer decryptTrgswNtt(const TrgswDft& trgswDft, const YatfheParameters& param, const TrgswKey& trgswKey) {
@@ -302,7 +302,7 @@ Integer decryptTrgswNtt(const TrgswDft& trgswDft, const YatfheParameters& param,
     const auto lastRow = param.k;
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRoundingNtt(tmp, trgswDft.trlweDftSamples[firstLevel][lastRow], trgswKey.trlweKey);
-    return roundErrorForShiftedTorus(tmp.coeffs[0], param.rlweNoiseB, param.torusBits - param.radixBits);
+    return roundErrorForShiftedTorus(tmp.coeffs[0], param.torusBits - param.radixBits);
 }
 
 void decryptTrgswMP(IntPolynomial& res, const TrgswMP& trgsw, const YatfheParameters& param, const TrgswKey& trgswKey, const bool isDecC) {
@@ -314,7 +314,7 @@ void decryptTrgswMP(IntPolynomial& res, const TrgswMP& trgsw, const YatfheParame
         symDecTrlweWoRounding(tmp, trgsw.c[firstLevel][0], trgswKey.trlweKey);
     }
     for (auto i = 0; i < param.N; i++) {
-        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweNoiseB, param.torusBits - param.radixBits);
+        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.torusBits - param.radixBits);
     }
 }
 
@@ -327,7 +327,7 @@ void decryptTrgswMPNtt(IntPolynomial& res, const TrgswMPDft& trgswDft, const Yat
         symDecTrlweWoRoundingNtt(tmp, trgswDft.c[firstLevel][0], trgswKey.trlweKey);
     }
     for (auto i = 0; i < param.N; i++) {
-        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweNoiseB, param.torusBits - param.radixBits);
+        res.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.torusBits - param.radixBits);
     }
 }
 
@@ -843,38 +843,6 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
     for (auto& f : futures) {
         f.wait();
     }
-
-// #pragma omp parallel for simd collapse(2) schedule(guided)
-//     for (size_t l = 0; l < L; l++) {
-//         for (size_t k = 0; k < K; k++) {
-//             if (k == 0) {
-//                 externalProductTrgswMPNtt(output.cPrime[l], input2, input1.cPrime[l], param);
-//             }
-//             externalProductTrgswMPNtt(output.c[l][k], input2, input1.c[l][k], param);
-//         }
-//     }
-}
-
-void internalProductAsymTrgswMPNtt(TrgswMPDft& output, const TrgswMPDft& input1, const Trlev& input2, const TrlevDft& sSquare, const int level, const YatfheParameters& param) {
-    const auto L = level;
-    auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(L);
-    for (auto l = 0; l < L; l++) {
-        auto& cPrimeL = output.cPrime[l];
-        auto& cL = output.c[l];
-        auto& in2L = input2.trlwes[l];
-        futures.emplace_back(pool.enqueue([&cPrimeL, &cL, &input1, &in2L, &sSquare, &param] {
-            Trlwe tmp{param.k, param.N};
-            vector tmpC(param.k, Trlwe{param.k, param.N});
-            externalProductTrgswMPNtt(tmp, input1, in2L, param.l, param);
-            applyNttForAB(cPrimeL, tmp);
-            switchTrlweToSecretEmbeddingNtt(cL, cPrimeL, sSquare, param);
-        }));
-    }
-    for (auto& f : futures) {
-        f.wait();
-    }
 }
 
 void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPrimeDft, const TrlevDft& sSquare, const YatfheParameters& param) {
@@ -893,7 +861,7 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
         auto& currIn = cPrimeA[row];
         for (auto j = 0; j < N; j++) {
             DecomposedData d {L};
-            gadgetDecompose(d, currIn.coeffs[j], param);
+            signedGadgetDecomposition(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < L; lvl++) {
                 auto& currOut = decomp[lvl].a[row];
                 currOut.coeffs[j] = d.value[lvl] * d.sign;
@@ -1077,7 +1045,7 @@ void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const T
         auto& currIn = cPrimeA[row];
         for (auto j = 0; j < N; j++) {
             DecomposedData d {L};
-            gadgetDecompose(d, currIn.coeffs[j], param);
+            signedGadgetDecomposition(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < L; lvl++) {
                 auto& currOut = decomp[lvl].a[row];
                 currOut.coeffs[j] = d.value[lvl] * d.sign;

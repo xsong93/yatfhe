@@ -9,7 +9,7 @@ option(DEBUG_MODE "Enable debug mode" OFF)
 option(TERNARY "Use ternary secret instead of binary" OFF)
 option(USE_CRT "Use CRT" OFF)
 
-set(TORUS_TYPE "56" CACHE STRING "Torus type (32, 56)")
+set(TORUS_TYPE "32" CACHE STRING "Torus type (32, 56)")
 
 file(GLOB SOURCES
         ./*.cpp

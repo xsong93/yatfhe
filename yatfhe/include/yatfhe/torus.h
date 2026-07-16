@@ -26,7 +26,7 @@ using Ntt24 = uint32_t;
 using Ntt32 = uint32_t;
 using Ntt64 = uint64_t;
 using NttType = uint64_t;
-using Integer = int32_t; // small "message-space" values (plaintext digits, secret-key bits, CRT primes) — independent of torus width
+using Integer = Torus;
 using Binary = Integer;
 const int32_t NUM_PRIMES{4};
 const int32_t NUM_HIGH_PRIMES{2};

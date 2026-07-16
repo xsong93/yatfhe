@@ -72,7 +72,7 @@ void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const vector<To
 
 // encrypt +-s*m to ntt domain, sign is determined by @param{isPos}
 // (a-x, as+e)
-void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs,
+void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<IntPolynomial>& inputs,
                            const bool isPos, const YatfheParameters& param) {
     Trlev s2(param);
     encTrlevSingleSample(s2, trlweKey, 0, 0, param);
@@ -98,7 +98,7 @@ void decTrlev(TorusPolynomial& output, const Trlev& input, const TrlweKey& trlwe
     TorusPolynomial tmp {param.N};
     symDecTrlweWoRounding(tmp, input.trlwes[firstLevel], trlweKey);
     for (auto i = 0; i < param.N; i++) {
-        output.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.rlweNoiseB, param.torusBits - param.radixBits);
+        output.coeffs[i] = roundErrorForShiftedTorus(tmp.coeffs[i], param.torusBits - param.radixBits);
     }
 }
 
@@ -106,7 +106,7 @@ void multTrlevWithConst(Trlwe& output, const Trlev& input, const Torus num, cons
     auto N = output.b.N;
     auto k = output.k;
     DecomposedData d {input.l};
-    gadgetDecompose(d, num, param);
+    signedGadgetDecomposition(d, num, param);
     for (auto j = 0; j < N; j++) {
         for (auto r = 0; r < k + 1; r++) {
             auto& curr = (r < k) ? output.a[r] : output.b;
@@ -125,7 +125,7 @@ void multDecomposedTrlevWithConst(Trlwe& output, const Trlev& input, const Torus
     const auto lvl0 = input.l;
     const auto lvl1 = param.l2;
     DecomposedData lhs {lvl0};
-    gadgetDecompose(lhs, num, param);
+    signedGadgetDecomposition(lhs, num, param);
     std::vector<DecomposedTrlwe> decompTglev(lvl1, DecomposedTrlwe(param));
     for (auto i = 0; i < lvl1; i++) {
         gadgetDecomposeTrlwe(decompTglev[i], input.trlwes[i], param);

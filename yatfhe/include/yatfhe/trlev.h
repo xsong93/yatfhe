@@ -60,7 +60,7 @@ void encTrlevMultiSample(Trlev& output, const TrlweKey& trlweKey, const TorusPol
 
 void symEncTrlevWithKey(Trlev& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs, bool isPos, const YatfheParameters& param);
 
-void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<TorusPolynomial>& inputs, bool isPos, const YatfheParameters& param);
+void symEncTrlevWithKeyNtt(TrlevDft& output, const TrlweKey& trlweKey, const vector<IntPolynomial>& inputs, bool isPos, const YatfheParameters& param);
 
 void decTrlev(TorusPolynomial& output, const Trlev& input, const TrlweKey& trlweKey, const YatfheParameters& param);
 

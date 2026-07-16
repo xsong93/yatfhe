@@ -229,7 +229,7 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
                 for (auto k = 0; k < param.k; k++) {
                     for (auto j = 0; j < param.N; j++) {
                         DecomposedData d{param.l};
-                        gadgetDecompose(d, a[k].coeffs[j], param);
+                        signedGadgetDecomposition(d, a[k].coeffs[j], param);
                         for (auto l = 0; l < param.l; l++) {
                             dA[l][k].coeffs[j] = d.value[l] * d.sign;
                         }
@@ -271,7 +271,7 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswK
                 for (auto k = 0; k < param.k; k++) {
                     for (auto j = 0; j < param.N; j++) {
                         DecomposedData d{param.l};
-                        gadgetDecompose(d, a[k].coeffs[j], param);
+                        signedGadgetDecomposition(d, a[k].coeffs[j], param);
                         for (auto l = 0; l < param.l; l++) {
                             dA[l][k].coeffs[j] = d.value[l] * d.sign;
                         }
@@ -282,7 +282,7 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswK
                 auto& dB = bsk.bskDecompB[bsk.decompIndex(i, l0)];
                 for (auto j = 0; j < param.N; j++) {
                     DecomposedData d{param.l};
-                    gadgetDecompose(d, b.coeffs[j], param);
+                    signedGadgetDecomposition(d, b.coeffs[j], param);
                     for (auto l = 0; l < param.l; l++) {
                         dB[l].coeffs[j] = d.value[l] * d.sign;
                     }

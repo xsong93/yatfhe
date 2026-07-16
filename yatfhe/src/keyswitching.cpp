@@ -21,7 +21,7 @@ void genTlweKeySwitchingKey(TlweKeySwitchingKey& ksk, const TrlweKey& currKey, c
     convertTrlweKeyToTlweKey(inKey, currKey);
     for (auto i = 0; i < inKey.n; i++) {
         std::vector<Torus> sOverB(param.ksLevel);
-        decomposeOverB(sOverB, inKey.s[i], param); // s_i * B^-j
+        decomposeOverBKS(sOverB, inKey.s[i], param); // s_i * B^-j
         for (auto j = 0; j < param.ksLevel; j++) {
             symEncTlwe(ksk.decomposedKsk[i][j], sOverB[j], targetKey);
         }
@@ -49,13 +49,14 @@ void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& 
     const int nOut = output.n;
 
     // Accumulate all KSK contributions in int64 with no per-element modular reduction.
-    // Max magnitude: input.n * ksLevel * (radixBase/2) * (LWE_Q/2) <= 2048*4*128*2^19 = 2^40, fits in int64.
+    // Max magnitude: input.n * ksLevel * (2^ksRadixBits/2) * (LWE_Q/2), comfortably fits in int64
+    // for any (ksRadixBits, ksLevel) split of the (capped) KS decomposition width.
     vector<int64_t> delta(nOut, 0);
     int64_t delta_b = 0;
 
     DecomposedData aBar{param.ksLevel};  // hoisted: avoids 2*input.n heap allocations in the loop
     for (int i = 0; i < input.n; i++) {
-        gadgetDecompose(aBar, input.a[i], param);
+        signedGadgetDecompositionKs(aBar, input.a[i], param);
         for (int j = 0; j < param.ksLevel; j++) {
             const int64_t coeff = static_cast<int64_t>(aBar.value[j]) * aBar.sign;
             if (coeff == 0) {

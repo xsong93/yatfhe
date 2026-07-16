@@ -152,7 +152,7 @@ void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     // server
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
-    ScaledTlwe sTlwe {param.N * 2, param.n};
+    ScaledTlwe sTlwe {param.N, param.n};
     rescaleTlweToNewMod(sTlwe, input);
     Trlwe out{param};
 
@@ -202,7 +202,7 @@ void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     cout << "bench ginx" << endl;
 
     // server side
-    ScaledTlwe sTlwe {param.N * 2, param.n};
+    ScaledTlwe sTlwe {param.N, param.n};
     Trlwe acc{param};
     rescaleTlweToNewMod(sTlwe, input);
     TorusPolynomial v {param.N};
@@ -256,7 +256,7 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
     cout << "bench WWL24" << endl;
 
     // server side
-    ScaledTlwe sTlwe {param.N * 2, param.n};
+    ScaledTlwe sTlwe {param.N, param.n};
     Trlwe acc{param};
     rescaleTlweToNewMod(sTlwe, input);
     TorusPolynomial v {param.N};
@@ -352,7 +352,6 @@ int main(int argc, char **argv) {
     genTlweKey(tlweKey);
     genTrlweKey(trlweKey);
     TlweKey tlweKsKey = tlweKey;
-    tlweKsKey.errorB = param.rlweNoiseB;
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
     // data gen
