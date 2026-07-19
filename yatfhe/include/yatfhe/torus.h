@@ -32,7 +32,7 @@ const int32_t NUM_PRIMES{4};
 const int32_t NUM_HIGH_PRIMES{2};
 const int32_t NUM_LOW_PRIMES{2};
 //const Integer QD_CRT[NUM_PRIMES] {251, 19, 17, 13};
-const Integer QD_CRT[NUM_PRIMES] {251, 241, 239, 233};
+const int QD_CRT[NUM_PRIMES] {251, 241, 239, 233};
 const int64_t Q_60 = INT64_C(1) << 60;
 const int64_t Q_59 = INT64_C(1) << 59;
 const int64_t Q_58 = INT64_C(1) << 58;
