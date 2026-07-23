@@ -8,6 +8,7 @@ option(PRINTER_ON "Enable debug printing" OFF)
 option(DEBUG_MODE "Enable debug mode" OFF)
 option(TERNARY "Use ternary secret instead of binary" OFF)
 option(USE_CRT "Use CRT" OFF)
+option(LWE_TORUS32 "Store TLWE coefficients as 32-bit (requires qLwe <= 2^32)" OFF)
 
 set(TORUS_TYPE "32" CACHE STRING "Torus type (32, 56)")
 
@@ -32,6 +33,7 @@ target_compile_definitions(yatfhe_lib PUBLIC
         $<$<BOOL:${DEBUG_MODE}>:DEBUG_MODE>
         $<$<BOOL:${TERNARY}>:TERNARY>
         $<$<BOOL:${USE_CRT}>:USE_CRT>
+        $<$<BOOL:${LWE_TORUS32}>:LWE_TORUS32>
 )
 
 # Build GMP

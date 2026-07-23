@@ -1,6 +1,9 @@
 //
 // Created by Xintong Song on 2024/5/23.
 //
+#include <cassert>
+#include <limits>
+
 #include "yautil/initializer.h"
 #include "yatfhe/ntt14.h"
 #include "yatfhe/ntt24.h"
@@ -52,6 +55,10 @@ void initYatfhe(YatfheParameters& param) {
     TORUS_MIN = -(TORUS_Q >> 1);
     LWE_MAX = (LWE_Q - 1) >> 1;
     LWE_MIN = -(LWE_Q >> 1);
+
+    assert(LWE_MAX <= std::numeric_limits<LweTorus>::max() &&
+           LWE_MIN >= std::numeric_limits<LweTorus>::min() &&
+           "qLwe exceeds LweTorus storage width; drop LWE_TORUS32");
     NTT_MAX = param.qNtt - 1;
     NTT_MIN = 0;
     NttHexl::initNttHexl(param.N, param.qNtt);

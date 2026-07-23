@@ -20,6 +20,25 @@ using Decomp = int8_t;
 #error "torus.h: TORUS undefined"
 #endif
 
+// LWE-domain torus, selected independently of the TRLWE Torus so a narrow
+// TLWE modulus (qLwe) need not pay for the full Torus width.
+//   default     : LweTorus = Torus  -- qLwe may use the full Torus range
+//                 (e.g. up to 56-bit in TORUS56 builds); no behavior change.
+//   LWE_TORUS32 : LweTorus = int32_t -- qLwe <= 2^32; halves TLWE/KSK/TLEV
+//                 storage and key-switch memory bandwidth.
+// Future-proofing note: a full 64-bit qLwe fits LweTorus == int64_t, but the
+// intermediate products in multTglevWithConst() (tlev.cpp) and the KSK
+// accumulation (keyswitching.cpp) are only 64-bit wide. Keeping qLwe under
+// ~56 bits leaves headroom; a true 64-bit modulus would need 128-bit
+// intermediates there.
+#if defined(LWE_TORUS32)
+using LweTorus = int32_t;
+using UnsignedLwe = uint32_t;
+#else
+using LweTorus = Torus;
+using UnsignedLwe = UnsignedInteger;
+#endif
+
 using Ntt14 = uint16_t;
 using Ntt16 = uint32_t;
 using Ntt24 = uint32_t;
