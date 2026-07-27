@@ -387,44 +387,51 @@ void multTrlweWithConst(Trlwe& output, const Trlwe& input1, const int scalar) {
     // }
 }
 
-void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const int level, const YatfheParameters& param) {
+// no GD, direct NTT mult
+void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const YatfheParameters& param) {
     const auto K = param.k;
-    DecomposedTrlwe decomposedTrlwe{param, level};
-    DecomposedTrlweDft decomposedTrlweDft{param, level};
-    vector<TorusPolynomial> indicatorDecomp(level, TorusPolynomial{param.N});
-    vector<NttPolynomial> indicatorDecompDft(level, NttPolynomial{param.N});
+    TrlweDft inDft{param};
     TrlweDft resDft{param};
-
-    inverseGadgetDecomposePolynomial(indicatorDecomp, poly, param);
-    gadgetDecomposeTrlwe(decomposedTrlwe, in, param);
+    NttPolynomial polyDft{param.N};
 
     // ntt
-    auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(level);
-    for (auto i = 0; i < level; i++) {
-        futures.emplace_back(pool.enqueue([&decomposedTrlweDft, &decomposedTrlwe, &indicatorDecompDft, &indicatorDecomp, i] {
-            applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
-            applyNtt(indicatorDecompDft[i], indicatorDecomp[i]);
-        }));
-    }
-    for (auto& f : futures) {
-        f.get();
-    }
+    applyNttForAB(inDft, in);
+    applyNtt(polyDft, poly);
 
-    // mult
-    for (auto i = 0; i < level; i++) {
-        auto& a = decomposedTrlweDft.rlweDfts[i].a;
-        auto& aResDft = resDft.a;
-        auto& b = decomposedTrlweDft.rlweDfts[i].b;
-        auto& bResDft = resDft.b;
-        auto& currIndicatorDecompDft = indicatorDecompDft[i];
-        for (auto k = 0; k < K; k++) {
-            calModularInnerProductNtt(aResDft[k], a[k], currIndicatorDecompDft);
-        }
-        calModularInnerProductNtt(bResDft, b, currIndicatorDecompDft);
+    // mult, resDft starts at zero so the accumulating product yields in * poly
+    for (auto k = 0; k < K; k++) {
+        calModularInnerProductNtt(resDft.a[k], inDft.a[k], polyDft);
     }
+    calModularInnerProductNtt(resDft.b, inDft.b, polyDft);
 
     //intt
     applyInttForAB(output, resDft);
+}
+
+// Worst-case magnitude of the extra additive error multTrlweWithPolyNtt()
+// introduces for this plaintext, in torus units.
+int64_t directNttWrapNoise(const IntPolynomial& poly, const YatfheParameters& param) {
+    __int128 norm = 0;
+    for (const auto c : poly.coeffs) {
+        norm += c < 0 ? -static_cast<int64_t>(c) : static_cast<int64_t>(c);
+    }
+    // centred residue of qNtt mod TORUS_Q: what one wrap costs
+    auto delta = static_cast<int64_t>(param.qNtt % static_cast<uint64_t>(TORUS_Q));
+    if (delta > TORUS_Q / 2) {
+        delta -= TORUS_Q;
+    }
+    if (delta < 0) {
+        delta = -delta;
+    }
+    // |wraps| <= |true coeff| / qNtt + 1/2, and |true coeff| <= (TORUS_Q / 2) * ||poly||_1
+    const __int128 wraps = (static_cast<__int128>(TORUS_Q / 2) * norm) / static_cast<int64_t>(param.qNtt) + 1;
+    const __int128 noise = wraps * delta;
+    return noise > INT64_MAX ? INT64_MAX : static_cast<int64_t>(noise);
+}
+
+// Whether the wrap noise alone stays inside the rounding margin of one message
+// step. This is the full margin -- a caller whose ciphertext already carries
+// significant noise should compare directNttWrapNoise() against its own budget.
+bool isPolyDirectNttSafe(const IntPolynomial& poly, const YatfheParameters& param) {
+    return directNttWrapNoise(poly, param) < TORUS_Q / (2 * param.torusBase);
 }

@@ -601,6 +601,11 @@ void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const Scale
 
 void multTrlweWithConst(Trlwe& output, const Trlwe& input1, const int scalar);
 
-void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, int level, const YatfheParameters& param);
+// Direct NTT product, no gadget decompositions
+void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const YatfheParameters& param);
+
+int64_t directNttWrapNoise(const IntPolynomial& poly, const YatfheParameters& param);
+
+bool isPolyDirectNttSafe(const IntPolynomial& poly, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRLWE_H

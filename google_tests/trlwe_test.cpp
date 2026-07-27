@@ -559,7 +559,7 @@ TEST(TRLWE, MULT_DECOMP) {
     printBanner("TRLWE.MULT_DECOMP");
 }
 
-TEST(TRLWE, MULT_POLY_DECOMP) {
+TEST(TRLWE, MULT_POLY_DIRECT_NTT) {
     YatfheParameters param{};
     param.N = 4096;
     param.torusBase = 8;
@@ -567,30 +567,30 @@ TEST(TRLWE, MULT_POLY_DECOMP) {
     param.l = 4;
     param.lApprox = 3;
     initYatfhe(param);
-    auto level = param.l - 1;
 
     TrlweKey trlweKey{param};
     genTrlweKey(trlweKey);
 
-    // data gen
-    IntPolynomial plain{param.N}; // Z/pZ
+    // dense data gen, worst case for the wrap-around noise the direct product incurs
+    IntPolynomial plain{param.N};
     for (auto i = 0; i < plain.N; i++) {
         plain.coeffs[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
     }
+    ASSERT_TRUE(isPolyDirectNttSafe(plain, param));
 
     // enc
     Trlwe in1{param};
     TorusPolynomial in1T{param.N};
     IntPolynomial in1P{param.N};
     int pt = 1;
-    Torus mu = modSwitchToTorus32(pt ,param.torusBase);
+    Torus mu = modSwitchToTorus32(pt, param.torusBase);
     in1T.coeffs[5] = mu;
     in1P.coeffs[5] = pt;
     symEncTrlweMultiSample(in1, trlweKey, in1T.coeffs);
 
-    // decomp mult
+    // direct mult, no gadget decomposition
     Trlwe out{param};
-    multTrlweWithPolyNtt(out, in1, plain, level, param);
+    multTrlweWithPolyNtt(out, in1, plain, param);
 
     // dec
     IntPolynomial resP{param.N};
@@ -599,13 +599,10 @@ TEST(TRLWE, MULT_POLY_DECOMP) {
     // verify in message space (Z_t)
     IntPolynomial ptMult{param.N};
     multIntPolynomialModQ(ptMult, plain, in1P, param.torusBase);
-    printArray(ptMult.coeffs, "ptMult");
-    printArray(plain.coeffs, "plain");
-    printArray(resP.coeffs, "res");
 
     ASSERT_EQ(ptMult.coeffs, resP.coeffs);
 
-    printBanner("TRLWE.MULT_POLY_DECOMP");
+    printBanner("TRLWE.MULT_POLY_DIRECT_NTT");
 }
 
 TEST(TRLWE, MULT_LARGE_CONSTANT_MULTI_LVL) {
