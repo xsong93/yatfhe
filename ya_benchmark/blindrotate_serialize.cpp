@@ -15,6 +15,7 @@ int main(int argc, char **argv) {
 //    param.N = 1024;
     param.batchSize = 3;
     param.tasksPerThread = 1;
+    param.torusBase = 8;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, T:%d, b:%d, l:%d, lA:%d\n", param.n, param.k, param.N, param.torusBits, param.radixBits, param.l, param.lApprox);
 
@@ -47,12 +48,17 @@ int main(int argc, char **argv) {
 
 
     // data gen
-    Integer pt = 0;
-    cout << "decPre: " << pt << endl;
-    Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
+    //
+    // Full-range LUT over [-p/2, p/2) via the padding-bit encoding.
+    const int p = param.torusBase;
+    const int encMod = 2 * p;                 // p messages + 1 padding bit
+    Integer pt = -3;                          // negative on purpose: exercises the half
+    const int slot = static_cast<int>(((pt % p) + p) % p);
+    cout << "decPre: " << pt << " (slot " << slot << ")" << endl;
+    Torus mu = modSwitchToTorusGeneral(slot, encMod, LWE_Q);
     Tlwe input{param.n};
     symEncTlwe(input, mu, tlweKey);
-    ScaledTlwe sTlwe {param.N, param.n};
+    ScaledTlwe sTlwe {2 * param.N, param.n};
     rescaleTlweToNewMod(sTlwe, input);
 
     Trlwe acc{param};

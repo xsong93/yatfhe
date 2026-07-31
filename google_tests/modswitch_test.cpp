@@ -11,6 +11,9 @@
 TEST(ModSwitchTest, ModDownTest) {
     YatfheParameters param {};
     const int modPQ = 256;
+    // Pinned to a 32-bit torus
+    param.q = Q_32;
+    param.torusBits = 32;
     initYatfhe(param);
 
     TlweKey tlweKey {param};

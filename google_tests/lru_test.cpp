@@ -53,7 +53,7 @@ TEST(LRU_TEST, LRU) {
             BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
             symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
             genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);
-            auto file = DiskReader::generateGinxKeyFilename(i);
+            auto file = DiskReader::generateLazyKeyFilename(i);
             serializeBskLazyPipeAlt(bskMPLazyPipeAlt, file);
             cout << "write LAZY " << to_string(i) << endl;
         }

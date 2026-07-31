@@ -118,17 +118,25 @@ namespace NttHexl {
         auto N = in.N;
         auto q = getNttHexl().GetModulus();
         auto halfQ = (q + 1) >> 1;
-        std::vector<uint64_t> tmp(N);
+        // Per-thread scratch: this runs 2x per external product.
+        thread_local std::vector<uint64_t> tmp;
+        if (tmp.size() < static_cast<size_t>(N)) tmp.resize(N);
         getNttHexl().ComputeInverse(tmp.data(), in.coeffs.data(), 1, 1);
-        for (int i = 0; i < N; i++) {
-            if (tmp[i] >= halfQ) {
-                tmp[i] -= q;
+        // Branch outside the loop: the power-of-two path vectorises, the general
+        // path stays correct for a non-power-of-two TORUS_Q (Q_CRT).
+        if (TORUS_IS_POW2) {
+            const int shift = TORUS_SHIFT;
+            for (int i = 0; i < N; i++) {
+                // Centre mod qNtt, then reduce to the torus.
+                const uint64_t centred = tmp[i] - (q & static_cast<uint64_t>(-static_cast<int64_t>(tmp[i] >= halfQ)));
+                out.coeffs[i] = static_cast<Torus>(longModPow2(static_cast<int64_t>(centred), shift));
             }
-            if (tmp[i] > TORUS_MAX) {
-                out.coeffs[i] = Torus(longModP(tmp[i], TORUS_Q));
-                continue;
+        } else {
+            const int64_t torusQ = TORUS_Q;
+            for (int i = 0; i < N; i++) {
+                const uint64_t centred = tmp[i] - (q & static_cast<uint64_t>(-static_cast<int64_t>(tmp[i] >= halfQ)));
+                out.coeffs[i] = static_cast<Torus>(longModP(static_cast<int64_t>(centred), torusQ));
             }
-            out.coeffs[i] = Torus(tmp[i]);
         }
     }
 
@@ -141,9 +149,11 @@ namespace NttHexl {
     void calModularInnerProductNtt(NttPolynomial &acc, const NttPolynomial &in1, const NttPolynomial &in2) {
         auto N = in2.N;
         auto q = getNttHexl().GetModulus();
-        NttPolynomial tmp{N};
-        EltwiseMultMod(tmp.coeffs.data(), in1.coeffs.data(), in2.coeffs.data(), N, q, 1);
+        // Per-thread scratch, called 4x per level.
+        thread_local std::vector<NttType> tmp;
+        if (tmp.size() < static_cast<size_t>(N)) tmp.resize(N);
+        EltwiseMultMod(tmp.data(), in1.coeffs.data(), in2.coeffs.data(), N, q, 1);
         // EltwiseAddMod supports output == input1, so acc can be updated in-place
-        EltwiseAddMod(acc.coeffs.data(), acc.coeffs.data(), tmp.coeffs.data(), N, q);
+        EltwiseAddMod(acc.coeffs.data(), acc.coeffs.data(), tmp.data(), N, q);
     }
 }

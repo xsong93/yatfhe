@@ -94,6 +94,9 @@ TEST(NTT64, ADD_CONST) {
 TEST(NTT64, BASIC_ARITH) {
     YatfheParameters p {};
     p.N = 1024;
+    // Pinned to a 32-bit torus
+    p.q = Q_32;
+    p.torusBits = 32;
     initYatfhe(p);
 
     auto N = p.N;
@@ -182,6 +185,9 @@ TEST(NTT64, BASIC_ARITH) {
 TEST(NTT64, CONVOLUTION) {
     YatfheParameters p {};
     p.N = 1024;
+    // Pinned to a 32-bit torus
+    p.q = Q_32;
+    p.torusBits = 32;
     initYatfhe(p);
 
     auto N = p.N;
@@ -218,6 +224,9 @@ TEST(NTT64, CONVOLUTION) {
                    for (auto i = 0 ; i < k; i++) {
                        multIntPolynomialAcc(navMul, poly0[i], poly2[i]);
                    })
+        for (int idx = 0; idx < navMul.N; idx++) {
+            navMul.coeffs[idx] = static_cast<Torus>(longModP(navMul.coeffs[idx], TORUS_Q));
+        }
         printArray(resMul.coeffs, "resMul");
         printArray(navMul.coeffs, "navMul");
 

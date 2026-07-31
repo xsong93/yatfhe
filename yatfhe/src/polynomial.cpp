@@ -216,10 +216,31 @@ void rotateTorusPolynomialMinusOne(TorusPolynomial& out, const int a, const Toru
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
-    Torus tmp = 0;
-    for (auto i = 0; i < N; i++) {
-        tmp = (i < aTrue) ? (-input.coeffs[i - aTrue + N] * isWrap) : (input.coeffs[i - aTrue] * isWrap);
-        out.coeffs[i] = subTorus(TORUS_Q, tmp, input.coeffs[i]);
+    // Split at aTrue rather than testing (i < aTrue) inside the loop: the two
+    // halves are contiguous, so each becomes a straight-line vectorisable pass.
+    // Split at aTrue so neither half has control flow, and branch on
+    // TORUS_IS_POW2 outside the loops: the power-of-two path vectorises, the
+    // general path stays correct for a non-power-of-two TORUS_Q (Q_CRT).
+    if (TORUS_IS_POW2) {
+        const int shift = TORUS_SHIFT;
+        for (auto i = 0; i < aTrue; i++) {
+            const Torus tmp = -input.coeffs[i - aTrue + N] * isWrap;
+            out.coeffs[i] = subTorusPow2(shift, tmp, input.coeffs[i]);
+        }
+        for (auto i = aTrue; i < N; i++) {
+            const Torus tmp = input.coeffs[i - aTrue] * isWrap;
+            out.coeffs[i] = subTorusPow2(shift, tmp, input.coeffs[i]);
+        }
+    } else {
+        const int64_t q = TORUS_Q;
+        for (auto i = 0; i < aTrue; i++) {
+            const Torus tmp = -input.coeffs[i - aTrue + N] * isWrap;
+            out.coeffs[i] = subTorus(q, tmp, input.coeffs[i]);
+        }
+        for (auto i = aTrue; i < N; i++) {
+            const Torus tmp = input.coeffs[i - aTrue] * isWrap;
+            out.coeffs[i] = subTorus(q, tmp, input.coeffs[i]);
+        }
     }
 }
 

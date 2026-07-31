@@ -42,6 +42,9 @@ TEST(HEXL, NTT_INTT) {
 TEST(HEXL, POLY_MULT) {
     YatfheParameters p{};
     p.N = 4096;
+    // Pinned to a 32-bit torus
+    p.q = Q_32;
+    p.torusBits = 32;
     initYatfhe(p);
 
     auto N = p.N;
@@ -132,6 +135,9 @@ TEST(HEXL, NTT_RECOMP) {
     param.N = 4096;
     param.l = 4;
     param.radixBits = 8;
+    param.torusBits = 32;
+    // Pinned to a 32-bit torus
+    param.q = Q_32;
     param.torusBits = 32;
     initYatfhe(param);
     TorusPolynomial ori{param.N};

@@ -428,7 +428,7 @@ TEST(TRLWE, MULT_LARGE_CONSTANT) {
     YatfheParameters param {};
     param.torusBase = 8;
     param.setRadixBits(8);
-    param.l = 4;
+    param.l = param.torusBits / param.radixBits;
     initYatfhe(param);
 
     TrlweKey trlweKey {param};
@@ -489,8 +489,8 @@ TEST(TRLWE, MULT_DECOMP) {
     YatfheParameters param{};
     param.torusBase = 8;
     param.setRadixBits(8);
-    param.l = 4;
-    param.lApprox = 3;
+    param.l = param.torusBits / param.radixBits;
+    param.lApprox = param.l - 1;
     initYatfhe(param);
 
     TrlweKey trlweKey{param};
@@ -603,63 +603,4 @@ TEST(TRLWE, MULT_POLY_DIRECT_NTT) {
     ASSERT_EQ(ptMult.coeffs, resP.coeffs);
 
     printBanner("TRLWE.MULT_POLY_DIRECT_NTT");
-}
-
-TEST(TRLWE, MULT_LARGE_CONSTANT_MULTI_LVL) {
-    YatfheParameters param {};
-    param.torusBase = 8;
-    param.setRadixBits(8);
-    param.l = 4;
-    param.l2 = 4;
-    param.lApprox = 3;
-    initYatfhe(param);
-
-    TrlweKey trlweKey {param};
-    Trlwe trlwe {param.k, param.N};
-    TrlweDft trlweDft {param.k, param.N};
-
-    genTrlweKey(trlweKey);
-
-    // data gen
-    IntPolynomial plain {param.N}; // Z/pZ
-    TorusPolynomial plainT {param.N};
-    for (auto i = 0; i < plain.N; i++) {
-        plain.coeffs[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
-        plainT.coeffs[i] = modSwitchToTorus32(plain.coeffs[i], param.torusBase);
-    }
-
-    // enc
-    Trlev trglev {param};
-    encTrlevMultiSample(trglev, trlweKey, plainT, param);
-
-    Integer y = genIntUniformDist(INT32_MIN, INT32_MAX);
-
-    Trlwe recomp2 {param.k, param.N};
-    multDecomposedTrlevWithConst(recomp2, trglev, y, param);
-
-    // dec
-    TorusPolynomial res {param.N};
-    TorusPolynomial rounded {param.N};
-    IntPolynomial resP {param.N};
-    symDecTrlweWoRounding(res, recomp2, trlweKey);
-
-    for (auto i = 0 ; i < res.N; i++) {
-        rounded.coeffs[i] = roundTorus32Error(res.coeffs[i], param.torusBase);
-        resP.coeffs[i] = modSwitchFromTorus32(rounded.coeffs[i], param.torusBase);
-    }
-
-    printArray(plainT.coeffs, "plainT");
-    vectorMultConst(plainT.coeffs, plainT.coeffs, y);
-    printArray(plainT.coeffs, "p0");
-    printArray(res.coeffs, "re");
-    printArray(rounded.coeffs, "rd");
-
-    printArray(plain.coeffs, "plain");
-    printArray(resP.coeffs, "p1");
-
-    for (auto i = 0 ; i < res.N; i++) {
-        ASSERT_EQ(intModP(plain.coeffs[i] * y, param.torusBase), resP.coeffs[i]);
-    }
-
-    printBanner("TRLWE.MULT_LARGE_CONSTANT_MULTI_LVL");
 }

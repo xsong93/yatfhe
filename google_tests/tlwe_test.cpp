@@ -63,8 +63,8 @@ TEST(TLWE, MULT) {
     YatfheParameters param {};
     param.torusBase = 8;
     param.setRadixBits(8);
-    param.l = 4;
-    param.lApprox = 3;
+    param.l = param.torusBits / param.radixBits;
+    param.lApprox = param.l - 1;
     initYatfhe(param);
 
     TlweKey tlweKey {param.n};

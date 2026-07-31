@@ -164,6 +164,14 @@ extern Integer INT_MAX_VALUE;
 extern Integer INT_MIN_VALUE;
 extern Torus TORUS_MAX;
 extern Torus TORUS_MIN;
+// TORUS_Q is a power of two for the PBS parameter sets (Q_56, Q_32, ...), but NOT
+// in general: the CRT paths run with q = Q_CRT, a product of odd primes. When it
+// is a power of two the centered residue is a sign-extension by TORUS_SHIFT, which
+// lets the hot loops use longModPow2 and vectorise; otherwise they must fall back
+// to longModP. Always branch on TORUS_IS_POW2 *outside* the loop -- TORUS_SHIFT is
+// meaningless (and shifting by it is UB) when the flag is false.
+extern bool TORUS_IS_POW2;
+extern int TORUS_SHIFT;
 extern Torus LWE_MAX;
 extern Torus LWE_MIN;
 extern NttType NTT_MAX;

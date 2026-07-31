@@ -407,6 +407,7 @@ void serializeBskLazyPipeAlt(const BootstrappingKeyMPLazyPipeAlt& t, const std::
 
     // Step 3: Write meta data
     writePOD(os, t.level);
+    writePOD(os, t.group);
     os.close();
 }
 
@@ -428,6 +429,8 @@ void deserializeBskLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bskLazy, const std
     }
 
     // Step 3: Read meta data
+    bskLazy.n = n;
     readPOD(inFile, bskLazy.level);
+    readPOD(inFile, bskLazy.group);
     inFile.close();
 }

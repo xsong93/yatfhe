@@ -1348,13 +1348,15 @@ void blindRotateJP22NttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft
 
 void blindRotateMP21Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
     const auto level = bskDft[0][0].l;
+    // Hoisted out of the loop: rotateTrlweMinusOne overwrites every coefficient,
+    // so the buffer needs no clearing between iterations.
+    Trlwe tmp{param};
 #ifdef TERNARY
     const auto n = param.n;
     for (auto i = 0; i < n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
-        Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, accum, input.a[i]);
         externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], level, param);
         accumulateTrlwe(accum, tmp);
@@ -1368,7 +1370,6 @@ void blindRotateMP21Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, 
         if (input.a[i] == 0) {
             continue;
         }
-        Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, accum, input.a[i]);
         externalProductTrgswMPNttInPlace(tmp, bskDft[i][0], level, param);
         accumulateTrlwe(accum, tmp);

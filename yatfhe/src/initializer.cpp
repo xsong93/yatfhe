@@ -21,6 +21,8 @@ Integer INT_MAX_VALUE;
 Integer INT_MIN_VALUE;
 Torus TORUS_MAX;
 Torus TORUS_MIN;
+bool TORUS_IS_POW2;
+int TORUS_SHIFT;
 Torus LWE_MAX;
 Torus LWE_MIN;
 NttType NTT_MAX;
@@ -53,6 +55,8 @@ void initYatfhe(YatfheParameters& param) {
     INT_MIN_VALUE = INT32_MIN;
     TORUS_MAX = (TORUS_Q - 1) >> 1;
     TORUS_MIN = -(TORUS_Q >> 1);
+    TORUS_IS_POW2 = (TORUS_Q > 1) && (TORUS_Q & (TORUS_Q - 1)) == 0;
+    TORUS_SHIFT = TORUS_IS_POW2 ? 64 - __builtin_ctzll(static_cast<uint64_t>(TORUS_Q)) : 0;
     LWE_MAX = (LWE_Q - 1) >> 1;
     LWE_MIN = -(LWE_Q >> 1);
 
