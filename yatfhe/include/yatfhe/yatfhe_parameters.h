@@ -44,6 +44,7 @@ struct YatfheParameters {
     int radixBits {4};
     int l {8};
     int lApprox {4};
+    uint64_t qNtt {Q_49P_T32};
 #elif defined(TORUS56) // 132-bit
     int k {1};
     int N {2048};
@@ -53,13 +54,15 @@ struct YatfheParameters {
     int radixBits {6};
     int l {6};
     int lApprox {3};
+    // A sub-2^50 prime cannot represent a 56-bit torus value at all, so this set
+    // keeps the 60-bit prime and the 64-bit HEXL paths that come with it.
+    uint64_t qNtt {Q_60P};
 #else
 #error "torus.h: TORUS undefined"
 #endif
 #endif
     int batchSize{8};
     int tasksPerThread{8};
-    uint64_t qNtt {Q_60P};
     int dftBits {64};
     int driftPhase {0};
 
@@ -112,5 +115,22 @@ struct YatfheParameters {
         ksLevel = ksWidthBits / ksRadixBits;
     }
 };
+
+
+constexpr int64_t nttWrapDelta(const uint64_t qNtt, const int64_t torusQ) {
+    const auto r = static_cast<int64_t>(qNtt % static_cast<uint64_t>(torusQ));
+    const auto centred = r > torusQ / 2 ? r - torusQ : r;
+    return centred < 0 ? -centred : centred;
+}
+
+constexpr YatfheParameters YATFHE_DEFAULTS{};
+
+
+static_assert(nttWrapDelta(YATFHE_DEFAULTS.qNtt, YATFHE_DEFAULTS.q) <= (INT64_C(1) << 14),
+              "qNtt must sit within 2^14 of a multiple of the torus modulus q: "
+              "every INTT wrap costs centred(qNtt mod q) of noise. Pick a prime "
+              "of the form m * q + 1 (e.g. Q_49P_T32) or a 2^k - small one.");
+static_assert(YATFHE_DEFAULTS.qNtt > static_cast<uint64_t>(YATFHE_DEFAULTS.q),
+              "qNtt must exceed the torus modulus to represent a torus value.");
 
 #endif //HLS_YATFHE_YATFHE_PARAMETERS_H
