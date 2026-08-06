@@ -704,7 +704,14 @@ namespace {
         void fit(const YatfheParameters& param, const int lv) {
             if (k == param.k && N == param.N && l == param.l && level == lv) return;
             k = param.k; N = param.N; l = param.l; level = lv;
-            decomposed = DecomposedTrlwe{param};
+            // Sized by lv, not param.l: only the top lv digits are ever consumed
+            // below, and decomposeRowUnrolled<L> rounds at L*radixBits, so asking
+            // for lv digits *is* the approximate decomposition rather than a full
+            // one that throws its tail away. A param.l-sized buffer made every one
+            // of the n external products extract param.l digits per row -- and any
+            // param.l > 4 also fell off the unrolled fast path in
+            // gadgetDecomposeTrlwe, which cost more than the digits themselves.
+            decomposed = DecomposedTrlwe{param, lv};
             partials.assign(lv, TrlweDft{param.k, param.N});
             sum = TrlweDft{param.k, param.N};
             futures.reserve(lv);
