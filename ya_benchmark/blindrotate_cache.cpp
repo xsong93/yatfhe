@@ -152,7 +152,7 @@ void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     // server
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
-    ScaledTlwe sTlwe {param.N, param.n};
+    ScaledTlwe sTlwe {2 * param.N, param.n};   // mod 2N: the ring exponent resolves mod 2N
     rescaleTlweToNewMod(sTlwe, input);
     Trlwe out{param};
 
@@ -168,9 +168,10 @@ void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     std::vector<long> iterationTimesUs;
     bool isLoadKey = false;
     for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
-        clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateLazyKeyFilename(id);
+        // Evict before the timer: on a cache miss this file is read.
+        clearFileCache(file);
         auto start = steady_clock::now();
         auto* bskServer = cache.getLazyKeySimple(id);
         if (bskServer != nullptr) {
@@ -202,7 +203,7 @@ void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     cout << "bench ginx" << endl;
 
     // server side
-    ScaledTlwe sTlwe {param.N, param.n};
+    ScaledTlwe sTlwe {2 * param.N, param.n};   // mod 2N: the ring exponent resolves mod 2N
     Trlwe acc{param};
     rescaleTlweToNewMod(sTlwe, input);
     TorusPolynomial v {param.N};
@@ -221,9 +222,10 @@ void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     std::vector<long> iterationTimesUs;
     bool isLoadKey = false;
     for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
-        clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateGinxKeyFilename(id);
+        // Evict before the timer: on a cache miss this file is read.
+        clearFileCache(file);
         auto start = steady_clock::now();
         auto* bskServer = cache.getGinxKeySimple(id);
         if (bskServer != nullptr) {
@@ -256,7 +258,7 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
     cout << "bench WWL24" << endl;
 
     // server side
-    ScaledTlwe sTlwe {param.N, param.n};
+    ScaledTlwe sTlwe {2 * param.N, param.n};   // mod 2N: the ring exponent resolves mod 2N
     Trlwe acc{param};
     rescaleTlweToNewMod(sTlwe, input);
     TorusPolynomial v {param.N};
@@ -275,9 +277,10 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
     std::vector<long> iterationTimesUs;
     bool isLoadKey = false;
     for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
-        clearFileCache();
         auto id = accessPattern[i];
         std::string file = DiskReader::generateWWL24KeyFilename(id);
+        // Evict before the timer: on a cache miss this file is read.
+        clearFileCache(file);
         auto start = steady_clock::now();
         auto* bskServer = cache.getWWL24KeySimple(id);
         if (bskServer != nullptr) {
@@ -355,8 +358,13 @@ int main(int argc, char **argv) {
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
     // data gen
-    Integer pt = 0;
-    Torus mu = modSwitchToTorusGeneral(pt, param.torusBase, LWE_Q);
+    //
+    // Full-range LUT via the padding-bit encoding.
+    const int p = param.torusBase;
+    const int encMod = 2 * p;                 // p messages + 1 padding bit
+    Integer pt = -1;                          // top slot (p-1); valid for any p >= 2
+    const int slot = static_cast<int>(((pt % p) + p) % p);
+    Torus mu = modSwitchToTorusGeneral(slot, encMod, LWE_Q);
     Tlwe input{param.n};
     symEncTlwe(input, mu, tlweKey);
 

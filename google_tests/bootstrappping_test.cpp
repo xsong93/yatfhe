@@ -132,51 +132,49 @@ TEST(BOOTSTRAPPING, MP21) {
 
 TEST(BOOTSTRAPPING, MP21_FR) {
     YatfheParameters param {};
-    param.torusBase = 8;
-    // param.setRadixBits(8);
-    // param.l = 4;
-    // param.lApprox = 3;
+    param.torusBase = 8;                       // message modulus p
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, b:%d, l:%d\n", param.n, param.k, param.N, param.radixBits, param.l);
+
+    // Full-range LUT over the centered range [-p/2, p/2), via the padding-bit
+    // encoding (the tfhe-rs approach).
+    const int p = param.torusBase;
+    const int encMod = 2 * p;                  // p messages + 1 padding bit
 
     TlweKey tlweKey {param};
     TrgswKey trgswKey {param};
     TrlweKey& trlweKey = trgswKey.trlweKey;
     BootstrappingKeyMP bskMP{param, param.lApprox};
     TlweKeySwitchingKey ksKey {param};
-    COUNT_TIME("genTlweKey", genTlweKey(tlweKey);)
-    COUNT_TIME("genTrlweKey", genTrlweKey(trlweKey);)
-    COUNT_TIME("genBootstrappingKey", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
+    genTlweKey(tlweKey);
+    genTrlweKey(trlweKey);
+    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
     TlweKey tlweKsKey = tlweKey;
-    COUNT_TIME("genTlweKeySwitchingKey", genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);)
+    genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
-    int plain = -3;
-    Torus mu = modSwitchToTorusGeneral(plain, param.torusBase, LWE_Q);
     TorusPolynomial v {param.N};
-    generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
+    generateTestPolynomialFR(v, p, 2 * param.N);
 
-    Tlwe input {param.n};
-    Tlwe output {param.n};
-    symEncTlwe(input, mu, tlweKey);
+    for (int plain = -p / 2; plain < p / 2; plain++) {
+        const int slot = ((plain % p) + p) % p;
+        Torus mu = modSwitchToTorusGeneral(slot, encMod, LWE_Q);
+        Tlwe input {param.n};
+        Tlwe output {param.n};
+        symEncTlwe(input, mu, tlweKey);
 
-    cout << "msg: " << modSwitchFromTorusGeneral(mu, param.torusBase, LWE_Q) << endl;
-    auto decPre = symDecTlweToInt(input, tlweKey, param.torusBase);
-    cout << "decPre: " << decPre << endl;
+        ScaledTlwe inputModN2 {2 * param.N, param.n};
+        Trlwe accum {param};
+        Tlwe tmp {ksKey.nCurrKey};
+        rescaleTlweToNewMod(inputModN2, input);
+        genNoiselessTrlweSample(accum, v, inputModN2);
+        blindRotateJP22Ntt(accum, bskMP, inputModN2, param);
+        extractTlweFromTrlwe(tmp, accum, 0);
+        switchKeyForTlwe(output, ksKey, tmp, param);
 
-    ScaledTlwe inputModN2 {param.N, param.n};
-    Trlwe accum {param};
-    Trlwe accumScaled {param};
-    Tlwe tmp {ksKey.nCurrKey};
-    COUNT_TIME("rescaleTlweToNewMod", rescaleTlweToNewMod(inputModN2, input);) // rescale to mod 2N
-    COUNT_TIME("genNoiselessTrlweSample", genNoiselessTrlweSample(accum, v, inputModN2);) // accum = (X^-b) * (0,...,0,v)
-    COUNT_TIME("blindRotateJP22Ntt", blindRotateJP22Ntt(accum, bskMP, inputModN2, param);)
-    COUNT_TIME("extractTlweFromTrlwe", extractTlweFromTrlwe(tmp, accum, 0);) // tmp = (a', b0), a' = ((a1)0, -(a1)N-1, ... , -(a1)1, ..., ..., (ak)0, -(ak)N-1, ... , -(ak)1)
-    COUNT_TIME("switchKeyForTlwe", switchKeyForTlwe(output, ksKey, tmp, param);)
-
-    auto decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
-    cout << "decAft: "<< decAft << endl;
-    ASSERT_EQ(decPre, decAft);
-    cout << "err:" << calTlweError(output, tlweKey, plain) << endl;
+        auto decAft = symDecTlweToInt(output, tlweKey, p);
+        cout << "m: " << plain << ", slot: " << slot << ", decAft: " << decAft << endl;
+        ASSERT_EQ(plain, decAft);
+    }
 
     printBanner("BOOTSTRAPPING.MP21_FR");
 }

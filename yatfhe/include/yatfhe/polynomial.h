@@ -182,20 +182,42 @@ struct Ntt64Polynomial {
             coeffs(n,0), N(n) {};
 };
 
+// Two loop bodies rather than one: longModP's runtime power-of-two test is
+// control flow in the loop, and the TORUS_Q global read cannot be proven
+// invariant against the Torus stores, so together they kept these scalar.
+// Branching once outside the loop keeps the power-of-two case vectorisable while
+// staying correct for a non-power-of-two TORUS_Q (Q_CRT).
 template<typename... PolyArgs>
 void addTorusPolynomial(TorusPolynomial& res, const PolyArgs&... polys) {
     const int N = res.N;
-    for (int i = 0; i < N; i++) {
-        int64_t tmp = (polys.coeffs[i] + ...);
-        res.coeffs[i] = longModP(tmp, TORUS_Q);
+    if (TORUS_IS_POW2) {
+        const int shift = TORUS_SHIFT;
+        for (int i = 0; i < N; i++) {
+            int64_t tmp = (static_cast<int64_t>(polys.coeffs[i]) + ...);
+            res.coeffs[i] = longModPow2(tmp, shift);
+        }
+    } else {
+        const int64_t q = TORUS_Q;
+        for (int i = 0; i < N; i++) {
+            int64_t tmp = (static_cast<int64_t>(polys.coeffs[i]) + ...);
+            res.coeffs[i] = longModP(tmp, q);
+        }
     }
 }
 
 template<typename PolyType>
 void accumulateTorusPolynomial(PolyType& res, const PolyType& accum) {
     const int N = res.N;
-    for (int i = 0; i < N; i++) {
-        res.coeffs[i] = addTorus(TORUS_Q, res.coeffs[i], accum.coeffs[i]);
+    if (TORUS_IS_POW2) {
+        const int shift = TORUS_SHIFT;
+        for (int i = 0; i < N; i++) {
+            res.coeffs[i] = longModPow2(static_cast<int64_t>(res.coeffs[i]) + static_cast<int64_t>(accum.coeffs[i]), shift);
+        }
+    } else {
+        const int64_t q = TORUS_Q;
+        for (int i = 0; i < N; i++) {
+            res.coeffs[i] = longModP(static_cast<int64_t>(res.coeffs[i]) + static_cast<int64_t>(accum.coeffs[i]), q);
+        }
     }
 }
 

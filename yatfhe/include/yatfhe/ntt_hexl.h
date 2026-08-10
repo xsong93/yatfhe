@@ -36,11 +36,10 @@ namespace NttHexl {
         auto N = in.N;
         auto q = getNttHexl().GetModulus();
         for (size_t i = 0; i < N; i++) {
-            if (in.coeffs[i] >= 0) {
-                out.coeffs[i] = Ntt64(in.coeffs[i]);
-            } else {
-                out.coeffs[i] = Ntt64(in.coeffs[i] + q);
-            }
+            // Branchless "v < 0 ? v + q : v". The sign of a ciphertext coefficient
+            // is effectively random, so the branch mispredicted ~50% of the time.
+            const int64_t v = static_cast<int64_t>(in.coeffs[i]);
+            out.coeffs[i] = static_cast<Ntt64>(v) + (q & static_cast<uint64_t>(-static_cast<int64_t>(v < 0)));
         }
         getNttHexl().ComputeForward(out.coeffs.data(), out.coeffs.data(), 1, 1);
     }

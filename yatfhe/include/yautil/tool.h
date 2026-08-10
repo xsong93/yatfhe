@@ -184,6 +184,10 @@ void printMsg(const T in, const string& msg) {
 
 void printBanner(const string& msg);
 
+// Evict one file from the page cache so the next read of it is genuinely cold.
+size_t clearFileCache(const std::string& filename);
+
+// Whole-page-cache drop. This needs root.
 void clearFileCache();
 
 #endif //HLS_YATFHE_TOOL_H

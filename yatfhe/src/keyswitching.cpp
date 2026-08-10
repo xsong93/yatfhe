@@ -72,9 +72,9 @@ void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& 
 
     // Apply with one reduction per element.
     for (int k = 0; k < nOut; k++) {
-        output.a[k] = static_cast<Torus>(longModP(-delta[k], LWE_Q));
+        output.a[k] = static_cast<LweTorus>(longModP(-delta[k], LWE_Q));
     }
-    output.b = static_cast<Torus>(longModP(static_cast<int64_t>(input.b) - delta_b, LWE_Q));
+    output.b = static_cast<LweTorus>(longModP(static_cast<int64_t>(input.b) - delta_b, LWE_Q));
 }
 
 // LWE-to-RLWE Private Key Switching (Wang et al., 2024, Sec. 2.3.1).

@@ -689,20 +689,59 @@ void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Tr
     addTrlwe(output, resB, resA);
 }
 
-void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const int level, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto N = param.N;
-    DecomposedTrlwe decomposedTrlwe{param};
-    gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+namespace {
 
-    auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(level);
-    vector<TrlweDft> partials(level, TrlweDft{k, N});
+    // The blind rotate calls the external product once per LWE coefficient
+    // (n = 1024 times). Keep them as per-thread scratch, resized only when the
+    // dimensions change.
+    struct ExtProdScratch {
+        DecomposedTrlwe decomposed;
+        vector<TrlweDft> partials;
+        TrlweDft sum;
+        vector<future<void>> futures;
+        int k{-1}, N{-1}, l{-1}, level{-1};
 
-    for (int lvl = 0; lvl < level; lvl++) {
-        futures.emplace_back(pool.enqueue([k, N, lvl, &trgswMPInput, &decomposedTrlwe, &partials]() {
-            TrlweDft inDft{k, N};
+        void fit(const YatfheParameters& param, const int lv) {
+            if (k == param.k && N == param.N && l == param.l && level == lv) return;
+            k = param.k; N = param.N; l = param.l; level = lv;
+            // Sized by lv, not param.l: only the top lv digits are ever consumed
+            // below, and decomposeRowUnrolled<L> rounds at L*radixBits, so asking
+            // for lv digits *is* the approximate decomposition rather than a full
+            // one that throws its tail away. A param.l-sized buffer made every one
+            // of the n external products extract param.l digits per row -- and any
+            // param.l > 4 also fell off the unrolled fast path in
+            // gadgetDecomposeTrlwe, which cost more than the digits themselves.
+            decomposed = DecomposedTrlwe{param, lv};
+            partials.assign(lv, TrlweDft{param.k, param.N});
+            sum = TrlweDft{param.k, param.N};
+            futures.reserve(lv);
+        }
+    };
+
+    ExtProdScratch& extProdScratch(const YatfheParameters& param, const int level) {
+        thread_local ExtProdScratch scratch;
+        scratch.fit(param, level);
+        return scratch;
+    }
+
+    void externalProductTrgswMPNttImpl(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput,
+                                       const int level, const YatfheParameters& param) {
+        const auto k = param.k;
+        auto& scratch = extProdScratch(param, level);
+        auto& decomposedTrlwe = scratch.decomposed;
+        auto& partials = scratch.partials;
+
+        gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
+
+        // calModularInnerProductNtt accumulates, so the partials must start at zero.
+        for (auto& partial : partials) clearTrlwe(partial);
+
+        auto accumulateLevel = [k, &trgswMPInput, &decomposedTrlwe, &partials](const int lvl) {
+            const auto N = decomposedTrlwe.trlwes[lvl].b.N;
+            thread_local TrlweDft inDft;
+            if (inDft.a.size() != static_cast<size_t>(k) || inDft.b.N != N) {
+                inDft = TrlweDft{k, N};
+            }
             applyNttForAB(inDft, decomposedTrlwe.trlwes[lvl]);
             const auto& c      = trgswMPInput.c[lvl];
             const auto& cPrime = trgswMPInput.cPrime[lvl];
@@ -717,54 +756,40 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
                 calModularInnerProductNtt(partial.a[i], inB,    cPrime.a[i]);
             }
             calModularInnerProductNtt(partial.b, inB, cPrime.b);
-        }));
-    }
-    for (auto& f : futures) f.get();
+        };
 
-    TrlweDft tmp{k, N};
-    for (int lvl = 0; lvl < level; lvl++) {
-        addTrlweNtt(tmp, tmp, partials[lvl]);
+        // With lApprox == 1 there is no cross-level parallelism to win, so handing
+        // the single task to the pool and blocking on it was pure overhead. The
+        // lone partial is already the sum, so the accumulator pass drops out too.
+        if (level == 1) {
+            accumulateLevel(0);
+            applyInttForAB(output, partials[0]);
+            return;
+        }
+
+        auto& pool = ThreadPool::instance();
+        auto& futures = scratch.futures;
+        futures.clear();
+        for (int lvl = 0; lvl < level; lvl++) {
+            futures.emplace_back(pool.enqueue([lvl, &accumulateLevel] { accumulateLevel(lvl); }));
+        }
+        for (auto& f : futures) f.get();
+
+        auto& tmp = scratch.sum;
+        clearTrlwe(tmp);
+        for (int lvl = 0; lvl < level; lvl++) {
+            addTrlweNtt(tmp, tmp, partials[lvl]);
+        }
+        applyInttForAB(output, tmp);
     }
-    applyInttForAB(output, tmp);
+}
+
+void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const int level, const YatfheParameters& param) {
+    externalProductTrgswMPNttImpl(output, trgswMPInput, trlweInput, level, param);
 }
 
 void externalProductTrgswMPNttInPlace(Trlwe& acc, const TrgswMPDft& trgswMPInput, const int level, const YatfheParameters& param) {
-    const auto k = param.k;
-    const auto N = param.N;
-    DecomposedTrlwe decomposedTrlwe{param};
-    gadgetDecomposeTrlwe(decomposedTrlwe, acc, param);
-
-    auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(level);
-    vector<TrlweDft> partials(level, TrlweDft{k, N});
-
-    for (int lvl = 0; lvl < level; lvl++) {
-        futures.emplace_back(pool.enqueue([k, N, lvl, &trgswMPInput, &decomposedTrlwe, &partials]() {
-            TrlweDft inDft{k, N};
-            applyNttForAB(inDft, decomposedTrlwe.trlwes[lvl]);
-            const auto& c      = trgswMPInput.c[lvl];
-            const auto& cPrime = trgswMPInput.cPrime[lvl];
-            const auto& inA    = inDft.a;
-            const auto& inB    = inDft.b;
-            auto& partial      = partials[lvl];
-            for (size_t i = 0; i < k; i++) {
-                for (size_t i2 = 0; i2 < k; i2++) {
-                    calModularInnerProductNtt(partial.a[i2], inA[i], c[i].a[i2]);
-                }
-                calModularInnerProductNtt(partial.b,    inA[i], c[i].b);
-                calModularInnerProductNtt(partial.a[i], inB,    cPrime.a[i]);
-            }
-            calModularInnerProductNtt(partial.b, inB, cPrime.b);
-        }));
-    }
-    for (auto& f : futures) f.get();
-
-    TrlweDft tmp{k, N};
-    for (int lvl = 0; lvl < level; lvl++) {
-        addTrlweNtt(tmp, tmp, partials[lvl]);
-    }
-    applyInttForAB(acc, tmp);
+    externalProductTrgswMPNttImpl(acc, trgswMPInput, acc, level, param);
 }
 
 void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, const int level, const YatfheParameters& param) {
@@ -1004,6 +1029,12 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
     const auto L = param.l; // must use full decomp length
     const auto N = param.N;
 
+    // Per-thread scratch, the blind rotate
+    // calls this L*K times per LWE coefficient, so a fresh NttPolynomial per digit put
+    // n*level*L allocations through malloc, from `level` threads at once.
+    thread_local NttPolynomial aDft;
+    if (aDft.N != N) aDft = NttPolynomial{N};
+
     // calculate a * S^2
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
@@ -1013,7 +1044,6 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
             auto& cB = cDft[k1].b;
             auto& sA = s2.a;
             auto& a = decompL[k1];
-            NttPolynomial aDft{N};
             applyNtt(aDft, a);
             calModularInnerProductNtt(cPrimeDft.a[k1], aDft, getNttGadgetRecomper(l)); // calculate recomposed cPrimes'a in ntt domain
             for (auto k2 = 0; k2 < K; k2++) {

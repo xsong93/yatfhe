@@ -30,7 +30,7 @@ UnsignedInteger powInt(UnsignedInteger base, UnsignedInteger exponent) {
 TEST(GADGET_DECOMP, SIGNED) {
     YatfheParameters param {};
     param.setRadixBits(8);
-    param.l = 4;
+    param.l = param.torusBits / param.radixBits;
     initYatfhe(param);
     DecomposedData decomp {param.l};
     std::vector<Torus> data (10);
@@ -48,7 +48,7 @@ TEST(GADGET_DECOMP, SIGNED) {
 TEST(GADGET_DECOMP, UNSIGNED) {
     YatfheParameters param {};
     param.setRadixBits(8);
-    param.l = 4;
+    param.l = param.torusBits / param.radixBits;
     initYatfhe(param);
 
     DecomposedData out {param.l};
@@ -67,7 +67,7 @@ TEST(GADGET_DECOMP, UNSIGNED) {
 TEST(GADGET_DECOMP, DECOMPOSE_OVER_B_SINGLE_STAGE) {
     YatfheParameters param {};
     param.setRadixBits(8);
-    param.l = 4;
+    param.l = param.torusBits / param.radixBits;
     initYatfhe(param);
 
     Torus mult = genIntUniformDist(TORUS_MIN, TORUS_MAX);
@@ -92,7 +92,7 @@ TEST(GADGET_DECOMP, DECOMPOSE_OVER_B_SINGLE_STAGE) {
 TEST(GADGET_DECOMP, DECOMPOSE_OVER_B_MULTI_STAGE) {
     YatfheParameters param {};
     param.setRadixBits(8);
-    param.l = 4;
+    param.l = param.torusBits / param.radixBits;
     initYatfhe(param);
     auto level = param.l;
 
@@ -232,8 +232,8 @@ TEST(GADGET_DECOMP, ADD_SUB) {
 TEST(GADGET_DECOMP, MULT) {
     YatfheParameters param {};
     param.setRadixBits(8);
-    param.l = 4;
-    param.lApprox = 3;
+    param.l = param.torusBits / param.radixBits;
+    param.lApprox = param.l - 1;
     initYatfhe(param);
     auto level = param.l;
 
@@ -255,7 +255,7 @@ TEST(GADGET_DECOMP, MULT) {
         decomposeOverB(bOb, b, param.torusBits, param.radixBits);
         printArray(bOb, "bOb");
 
-        auto z = recomposeTwoParts(da, bOb);
+        auto z = static_cast<Torus>(longModP(recomposeTwoParts(da, bOb), TORUS_Q));
         DecomposedData dz {level};
         signedGadgetDecomposition(dz, z, param);
         printArray(dz.value, "dz");

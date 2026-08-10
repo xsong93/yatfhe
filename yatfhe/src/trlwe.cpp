@@ -14,54 +14,56 @@
 using namespace std;
 using namespace NttHexl;
 
-void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, const int pos, double sigma) {
-    initCoeffsWithTUniformNoiseSingleSample(trlwe.b.coeffs, mu, pos, sigma, TORUS_Q);
-    for (auto i = 0 ; i < trlwe.k; i++) {
-        initCoeffsViaUniformDistribution(trlwe.a[i].coeffs, TORUS_MIN, TORUS_MAX);
+namespace {
+    void initTrlweSingleSample(Trlwe& trlwe, const Torus mu, const int pos, double sigma) {
+        initCoeffsWithTUniformNoiseSingleSample(trlwe.b.coeffs, mu, pos, sigma, TORUS_Q);
+        for (auto i = 0 ; i < trlwe.k; i++) {
+            initCoeffsViaUniformDistribution(trlwe.a[i].coeffs, TORUS_MIN, TORUS_MAX);
+        }
+    }
+
+    void initTrlweSingleSampleSimple(TrlweDft& trlweDft, const Torus mu, const int pos, double sigma) {
+        TorusPolynomial bTmp{trlweDft.b.N};
+        initCoeffsWithTUniformNoiseSingleSample(bTmp.coeffs, mu, pos, sigma, TORUS_Q);
+        applyNtt(trlweDft.b, bTmp);
+        for (auto i = 0 ; i < trlweDft.k; i++) {
+            initNttCoeffsViaUniformDistribution(trlweDft.a[i].coeffs, NTT_MIN, NTT_MAX);
+        }
+    }
+
+    void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
+       initCoeffsWithTUniformNoiseMultiSample(trlwe.b.coeffs, mu, sigma, TORUS_Q);
+       for (auto i = 0 ; i < trlwe.k; i++) {
+           initCoeffsViaUniformDistribution(trlwe.a[i].coeffs, TORUS_MIN, TORUS_MAX);
+       }
+    }
+
+    void initTrlweMultiSampleSimple(TrlweDft& trlweDft, const vector<Torus>& mu, double sigma) {
+        TorusPolynomial bTmp{trlweDft.b.N};
+        initCoeffsWithTUniformNoiseMultiSample(bTmp.coeffs, mu, sigma, TORUS_Q);
+        applyNtt(trlweDft.b, bTmp);
+        for (auto i = 0 ; i < trlweDft.k; i++) {
+            initNttCoeffsViaUniformDistribution(trlweDft.a[i].coeffs, NTT_MIN, NTT_MAX);
+        }
+    }
+
+    void symEncTrlwe(Trlwe& trlwe, const TrlweKey& key) {
+        for (auto i = 0; i < trlwe.k; i++) {
+            multTorusPolynomialAcc(trlwe.b, trlwe.a[i], key.s[i]);
+        }
+    }
+
+    void symEncTrlweNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key) {
+        applyNttForAB(trlweDft, trlwe);
+        calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
+        applyIntt(trlwe.b, trlweDft.b);
+    }
+
+    void symEncTrlweNttSimple(TrlweDft& trlweDft, const TrlweKey& key) {
+        calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
     }
 }
 
-void initTrlweSingleSampleSimple(TrlweDft& trlweDft, const Torus mu, const int pos, double sigma) {
-    TorusPolynomial bTmp{trlweDft.b.N};
-    initCoeffsWithTUniformNoiseSingleSample(bTmp.coeffs, mu, pos, sigma, TORUS_Q);
-    applyNtt(trlweDft.b, bTmp);
-    for (auto i = 0 ; i < trlweDft.k; i++) {
-        initNttCoeffsViaUniformDistribution(trlweDft.a[i].coeffs, NTT_MIN, NTT_MAX);
-    }
-}
-
-void initTrlweMultiSample(Trlwe& trlwe, const vector<Torus>& mu, double sigma) {
-    initCoeffsWithTUniformNoiseMultiSample(trlwe.b.coeffs, mu, sigma, TORUS_Q);
-    for (auto i = 0 ; i < trlwe.k; i++) {
-        initCoeffsViaUniformDistribution(trlwe.a[i].coeffs, TORUS_MIN, TORUS_MAX);
-    }
-}
-
-void initTrlweMultiSampleSimple(TrlweDft& trlweDft, const vector<Torus>& mu, double sigma) {
-    TorusPolynomial bTmp{trlweDft.b.N};
-    initCoeffsWithTUniformNoiseMultiSample(bTmp.coeffs, mu, sigma, TORUS_Q);
-    applyNtt(trlweDft.b, bTmp);
-    for (auto i = 0 ; i < trlweDft.k; i++) {
-        initNttCoeffsViaUniformDistribution(trlweDft.a[i].coeffs, NTT_MIN, NTT_MAX);
-    }
-}
-
-
-void symEncTrlwe(Trlwe& trlwe, const TrlweKey& key) {
-    for (auto i = 0; i < trlwe.k; i++) {
-        multTorusPolynomialAcc(trlwe.b, trlwe.a[i], key.s[i]);
-    }
-}
-
-void symEncTrlweNtt(Trlwe& trlwe, TrlweDft& trlweDft, const TrlweKey& key) {
-    applyNttForAB(trlweDft, trlwe);
-    calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
-    applyIntt(trlwe.b, trlweDft.b);
-}
-
-void symEncTrlweNttSimple(TrlweDft& trlweDft, const TrlweKey& key) {
-    calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
-}
 
 void genTrlweKey(TrlweKey& key) {
     for (int i = 0; i < key.k; i++) {
@@ -173,21 +175,84 @@ void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const Scale
     rotateTorusPolynomial(accum.b, -barb, v);
 }
 
+namespace {
+    // Straight-line specialisation of signedGadgetDecomposition for a
+    // compile-time digit count L. The generic version leaves the coefficient loop
+    // with two consecutive inner loops (digit extraction, then write-out), which
+    // GCC refuses to vectorise,
+    //
+    // The carry is per-coefficient (reset every j), so coefficients stay
+    // independent and vectorising across j is exact.
+    // OutT is Torus for the accumulator's decomposition and Decomp (int8_t) for the
+    // key-side ones; the digits are balanced into [-B/2, B/2) either way, so they fit
+    // both.
+    template<int L, typename OutT>
+    void decomposeRowUnrolled(OutT* const* outPtr, const Torus* in, const int N,
+                              const int radixBits, const int torusBits) {
+        const Torus B = static_cast<Torus>(1) << radixBits;
+        const Torus halfB = B >> 1;
+        const int shift = torusBits - L * radixBits;
+        const UnsignedInteger round =
+            (shift > 0) ? (static_cast<UnsignedInteger>(1) << (shift - 1)) : 0;
+
+        OutT* out[L];
+        for (int lvl = 0; lvl < L; lvl++) out[lvl] = outPtr[lvl];
+
+        for (int j = 0; j < N; j++) {
+            const UnsignedInteger u = static_cast<UnsignedInteger>(in[j]) + round;
+            Torus carry = 0;
+            for (int lvl = L - 1; lvl >= 0; --lvl) {   // constant trip count -> fully unrolled
+                const UnsignedInteger window =
+                    (u >> (torusBits - (lvl + 1) * radixBits)) & static_cast<UnsignedInteger>(B - 1);
+                Torus digit = static_cast<Torus>(window) + carry;
+                carry = (digit >= halfB);
+                digit -= carry * B;
+                out[lvl][j] = static_cast<OutT>(digit);  // sign is always +1, so the
+            }                                            // generic "* d.sign" is a no-op
+        }
+    }
+
+    template<typename OutT>
+    void decomposeRow(OutT* const* outPtr, const Torus* in, const int N, const int l,
+                      const YatfheParameters& param) {
+        const int b = param.radixBits, t = param.torusBits;
+        switch (l) {
+            case 1: decomposeRowUnrolled<1>(outPtr, in, N, b, t); return;
+            case 2: decomposeRowUnrolled<2>(outPtr, in, N, b, t); return;
+            case 3: decomposeRowUnrolled<3>(outPtr, in, N, b, t); return;
+            case 4: decomposeRowUnrolled<4>(outPtr, in, N, b, t); return;
+            case 5: decomposeRowUnrolled<5>(outPtr, in, N, b, t); return;
+            case 6: decomposeRowUnrolled<6>(outPtr, in, N, b, t); return;
+            case 7: decomposeRowUnrolled<7>(outPtr, in, N, b, t); return;
+            case 8: decomposeRowUnrolled<8>(outPtr, in, N, b, t); return;
+            default: {
+                DecomposedData d{l};
+                for (auto j = 0; j < N; j++) {
+                    signedGadgetDecomposition(d, in[j], param);
+                    for (auto lvl = 0; lvl < l; lvl++) {
+                        outPtr[lvl][j] = static_cast<OutT>(d.value[lvl] * d.sign);
+                    }
+                }
+            }
+        }
+    }
+}
+
 // G^-1 * Trlwe = DecomposedTrlwe
 void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param) {
     const auto k = input.k;
-    const auto N = input.b.coeffs.size();
+    const int N = static_cast<int>(input.b.coeffs.size());
     const auto l = output.l;
+    // Per-row output pointers, resolved once instead of walking
+    // output.trlwes[lvl].a[row] again for every coefficient.
+    std::vector<Torus*> outPtr(l);
     for (auto row = 0; row < k + 1; row++) {
         auto& currIn = (row < k) ? input.a[row] : input.b;
-        for (auto j = 0; j < N; j++) {
-            DecomposedData d {l};
-            signedGadgetDecomposition(d, currIn.coeffs[j], param);
-            for (auto lvl = 0; lvl < l; lvl++) {
-                auto& currOut = (row < k) ? output.trlwes[lvl].a[row] : output.trlwes[lvl].b;
-                currOut.coeffs[j] = d.value[lvl] * d.sign;
-            }
+        for (auto lvl = 0; lvl < l; lvl++) {
+            auto& currOut = (row < k) ? output.trlwes[lvl].a[row] : output.trlwes[lvl].b;
+            outPtr[lvl] = currOut.coeffs.data();
         }
+        decomposeRow(outPtr.data(), currIn.coeffs.data(), N, l, param);
     }
 }
 
@@ -195,29 +260,23 @@ void gadgetDecomposeTrlweA(vector<vector<DecompPolynomial>>& output, const vecto
     const auto k = param.k;
     const auto N = param.N;
     const auto l = param.l;
+    std::vector<Decomp*> outPtr(l);
     for (auto row = 0; row < k; row++) {
-        auto& currIn = a[row];
-        for (auto j = 0; j < N; j++) {
-            DecomposedData d{l};
-            signedGadgetDecomposition(d, currIn.coeffs[j], param);
-            for (auto lvl = 0; lvl < l; lvl++) {
-                auto& currOut = output[lvl][row];
-                currOut.coeffs[j] = d.value[lvl] * d.sign;
-            }
+        for (auto lvl = 0; lvl < l; lvl++) {
+            outPtr[lvl] = output[lvl][row].coeffs.data();
         }
+        decomposeRow(outPtr.data(), a[row].coeffs.data(), N, l, param);
     }
 }
 
 void gadgetDecomposeTrlweB(vector<DecompPolynomial>& output, const TorusPolynomial& b, const YatfheParameters& param) {
     const auto N = param.N;
     const auto l = param.l;
-    for (auto j = 0; j < N; j++) {
-        DecomposedData d{l};
-        signedGadgetDecomposition(d, b.coeffs[j], param);
-        for (auto lvl = 0; lvl < l; lvl++) {
-            output[lvl].coeffs[j] = d.value[lvl] * d.sign;
-        }
+    std::vector<Decomp*> outPtr(l);
+    for (auto lvl = 0; lvl < l; lvl++) {
+        outPtr[lvl] = output[lvl].coeffs.data();
     }
+    decomposeRow(outPtr.data(), b.coeffs.data(), N, l, param);
 }
 
 // Combine l decomposed Trlwe a & b into one.
@@ -387,44 +446,51 @@ void multTrlweWithConst(Trlwe& output, const Trlwe& input1, const int scalar) {
     // }
 }
 
-void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const int level, const YatfheParameters& param) {
+// no GD, direct NTT mult
+void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const YatfheParameters& param) {
     const auto K = param.k;
-    DecomposedTrlwe decomposedTrlwe{param, level};
-    DecomposedTrlweDft decomposedTrlweDft{param, level};
-    vector<TorusPolynomial> indicatorDecomp(level, TorusPolynomial{param.N});
-    vector<NttPolynomial> indicatorDecompDft(level, NttPolynomial{param.N});
+    TrlweDft inDft{param};
     TrlweDft resDft{param};
-
-    inverseGadgetDecomposePolynomial(indicatorDecomp, poly, param);
-    gadgetDecomposeTrlwe(decomposedTrlwe, in, param);
+    NttPolynomial polyDft{param.N};
 
     // ntt
-    auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(level);
-    for (auto i = 0; i < level; i++) {
-        futures.emplace_back(pool.enqueue([&decomposedTrlweDft, &decomposedTrlwe, &indicatorDecompDft, &indicatorDecomp, i] {
-            applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
-            applyNtt(indicatorDecompDft[i], indicatorDecomp[i]);
-        }));
-    }
-    for (auto& f : futures) {
-        f.get();
-    }
+    applyNttForAB(inDft, in);
+    applyNtt(polyDft, poly);
 
-    // mult
-    for (auto i = 0; i < level; i++) {
-        auto& a = decomposedTrlweDft.rlweDfts[i].a;
-        auto& aResDft = resDft.a;
-        auto& b = decomposedTrlweDft.rlweDfts[i].b;
-        auto& bResDft = resDft.b;
-        auto& currIndicatorDecompDft = indicatorDecompDft[i];
-        for (auto k = 0; k < K; k++) {
-            calModularInnerProductNtt(aResDft[k], a[k], currIndicatorDecompDft);
-        }
-        calModularInnerProductNtt(bResDft, b, currIndicatorDecompDft);
+    // mult, resDft starts at zero so the accumulating product yields in * poly
+    for (auto k = 0; k < K; k++) {
+        calModularInnerProductNtt(resDft.a[k], inDft.a[k], polyDft);
     }
+    calModularInnerProductNtt(resDft.b, inDft.b, polyDft);
 
     //intt
     applyInttForAB(output, resDft);
+}
+
+// Worst-case magnitude of the extra additive error multTrlweWithPolyNtt()
+// introduces for this plaintext, in torus units.
+int64_t directNttWrapNoise(const IntPolynomial& poly, const YatfheParameters& param) {
+    __int128 norm = 0;
+    for (const auto c : poly.coeffs) {
+        norm += c < 0 ? -static_cast<int64_t>(c) : static_cast<int64_t>(c);
+    }
+    // centred residue of qNtt mod TORUS_Q: what one wrap costs
+    auto delta = static_cast<int64_t>(param.qNtt % static_cast<uint64_t>(TORUS_Q));
+    if (delta > TORUS_Q / 2) {
+        delta -= TORUS_Q;
+    }
+    if (delta < 0) {
+        delta = -delta;
+    }
+    // |wraps| <= |true coeff| / qNtt + 1/2, and |true coeff| <= (TORUS_Q / 2) * ||poly||_1
+    const __int128 wraps = (static_cast<__int128>(TORUS_Q / 2) * norm) / static_cast<int64_t>(param.qNtt) + 1;
+    const __int128 noise = wraps * delta;
+    return noise > INT64_MAX ? INT64_MAX : static_cast<int64_t>(noise);
+}
+
+// Whether the wrap noise alone stays inside the rounding margin of one message
+// step. This is the full margin -- a caller whose ciphertext already carries
+// significant noise should compare directNttWrapNoise() against its own budget.
+bool isPolyDirectNttSafe(const IntPolynomial& poly, const YatfheParameters& param) {
+    return directNttWrapNoise(poly, param) < TORUS_Q / (2 * param.torusBase);
 }

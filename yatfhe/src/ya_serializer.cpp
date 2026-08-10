@@ -193,15 +193,33 @@ void deserialize(TrgswMPDft& t, std::istream& is) {
     for (auto& trlwe : t.cPrime) deserialize(trlwe, is);
 }
 
+namespace {
+    // A failed key write must not pass silently. An unwritable path (file owned by
+    // another user, full disk) leaves the *previous* file on disk untouched, so the
+    // paired deserialize goes on to load a key from an older keygen.
+    // Check at open and again after close, which is where a deferred
+    // flush failure (ENOSPC) finally surfaces.
+    std::ofstream openForWrite(const std::string& filename) {
+        std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+        if (!os) throw std::runtime_error("Failed to open file for writing: " + filename);
+        return os;
+    }
+
+    void closeChecked(std::ofstream& os, const std::string& filename) {
+        os.close();
+        if (!os) throw std::runtime_error("Failed to write file: " + filename);
+    }
+}
+
 void serializeBskWWL24(const BootstrappingKeyWWL24& t, const std::string& filename) {
-    std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+    auto os = openForWrite(filename);
     for (auto i = 0; i < t.n; i++) {
         serialize(t.bskDft[i], os);
     }
     serialize(t.s2Dft, os);
     writePOD(os, t.n);
     writePOD(os, t.group);
-    os.close();
+    closeChecked(os, filename);
 }
 
 void deserializeBskWWL24(BootstrappingKeyWWL24& bsk, const std::string& filename, const int n) {
@@ -222,14 +240,14 @@ void deserializeBskWWL24(BootstrappingKeyWWL24& bsk, const std::string& filename
 }
 
 void serializeBskMP(const BootstrappingKeyMP& t, const std::string& filename) {
-    std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+    auto os = openForWrite(filename);
     for (auto i = 0; i < t.n; i++) {
         serialize(t.bskDft[i][0], os);
     }
     writePOD(os, t.n);
     writePOD(os, t.group);
     writePOD(os, t.isHalf);
-    os.close();
+    closeChecked(os, filename);
 }
 
 void deserializeBskMP(BootstrappingKeyMP& bsk, const std::string& filename, const int n) {
@@ -251,14 +269,14 @@ void deserializeBskMP(BootstrappingKeyMP& bsk, const std::string& filename, cons
 }
 
 void serializeBskMPOpt(const BootstrappingKeyMPOpt& t, const std::string& filename) {
-    std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+    auto os = openForWrite(filename);
     serialize(t.bskFirst[0], os);
     for (auto i = 0; i < t.n - 1; i++) {
         serialize(t.bskDft[i][0], os);
     }
     writePOD(os, t.n);
     writePOD(os, t.group);
-    os.close();
+    closeChecked(os, filename);
 }
 
 void deserializeBskMPOpt(BootstrappingKeyMPOpt& bskOpt, const std::string& filename, const int n) {
@@ -284,7 +302,7 @@ void deserializeBskMPOpt(BootstrappingKeyMPOpt& bskOpt, const std::string& filen
 }
 
 void serializeBskMPLazy(const BootstrappingKeyMPLazy& t, const std::string& filename) {
-    std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+    auto os = openForWrite(filename);
     serialize(t.bskFirst[0], os);
     for (auto i = 0; i < t.n - 1; i++) {
         serialize(t.bskTrim[i][0], os);
@@ -298,7 +316,7 @@ void serializeBskMPLazy(const BootstrappingKeyMPLazy& t, const std::string& file
     writePOD(os, t.level);
     writePOD(os, t.group);
     writePOD(os, t.initialized);
-    os.close();
+    closeChecked(os, filename);
 }
 
 void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& filename, const int n) {
@@ -340,7 +358,7 @@ void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& fi
 }
 
 void serializeBskLazyPipe(const BootstrappingKeyMPLazyPipe& t, const std::string& filename) {
-    std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+    auto os = openForWrite(filename);
 
     writePOD(os, t.level);
 
@@ -358,7 +376,7 @@ void serializeBskLazyPipe(const BootstrappingKeyMPLazyPipe& t, const std::string
             serializeNestedVector(t.bskDecompB[t.decompIndex(i, lvl)], os);
         }
     }
-    os.close();
+    closeChecked(os, filename);
 }
 
 void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::string& filename, const int n) {
@@ -394,7 +412,7 @@ void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::stri
 }
 
 void serializeBskLazyPipeAlt(const BootstrappingKeyMPLazyPipeAlt& t, const std::string& filename) {
-    std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+    auto os = openForWrite(filename);
 
     // Step 1: Write bskFirst[0] and s2Dft
     serialize(t.bskFirst[0], os);
@@ -407,7 +425,8 @@ void serializeBskLazyPipeAlt(const BootstrappingKeyMPLazyPipeAlt& t, const std::
 
     // Step 3: Write meta data
     writePOD(os, t.level);
-    os.close();
+    writePOD(os, t.group);
+    closeChecked(os, filename);
 }
 
 void deserializeBskLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bskLazy, const std::string& filename, const int n) {
@@ -428,6 +447,8 @@ void deserializeBskLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bskLazy, const std
     }
 
     // Step 3: Read meta data
+    bskLazy.n = n;
     readPOD(inFile, bskLazy.level);
+    readPOD(inFile, bskLazy.group);
     inFile.close();
 }

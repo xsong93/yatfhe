@@ -151,7 +151,9 @@ struct TrlweDft24{
 
 struct DecomposedTrlwe {
     std::vector<Trlwe> trlwes; // l
-    int l;
+    int l{};
+
+    DecomposedTrlwe() = default;
 
     explicit DecomposedTrlwe(const YatfheParameters& param) :
             l(param.l),
@@ -210,14 +212,6 @@ struct TrlweKey {
         errorB(sigma) {};
 };
 
-// template<typename TrlweType>
-// void addTrlwe(TrlweType& output, const TrlweType& input1, const TrlweType& input2) {
-//     for (auto i = 0; i < output.a.size(); i++) {
-//         addTorusPolynomial(output.a[i], input1.a[i], input2.a[i]);
-//     }
-//     addTorusPolynomial(output.b, input1.b, input2.b);
-// }
-
 template<typename TrlweType, typename... TrlweArgs>
 void addTrlwe(TrlweType& output, const TrlweArgs&... inputs) {
     for (auto i = 0; i < output.a.size(); i++) {
@@ -239,24 +233,17 @@ void subTrlwe(TrlweType& output, const TrlweType& input1, const TrlweType& input
 template<typename TrlweType>
 void subTrlweFromConst(TrlweType& output, const TrlweType& input, const Torus scalar) {
     const auto N = output.b.N;
-    for (auto j = 0; j < (int)output.a.size(); j++) {
+    for (auto j = 0; j < static_cast<int>(output.a.size()); j++) {
         for (auto i = 0; i < N; i++) {
-            output.a[j].coeffs[i] = subTorus(TORUS_Q, Torus(0), input.a[j].coeffs[i]);
+            output.a[j].coeffs[i] = subTorus(TORUS_Q, static_cast<Torus>(0), input.a[j].coeffs[i]);
         }
     }
     output.b.coeffs[0] = subTorus(TORUS_Q, scalar, input.b.coeffs[0]);
     for (auto i = 1; i < N; i++) {
-        output.b.coeffs[i] = subTorus(TORUS_Q, Torus(0), input.b.coeffs[i]);
+        output.b.coeffs[i] = subTorus(TORUS_Q, static_cast<Torus>(0), input.b.coeffs[i]);
     }
 }
 
-// template<typename TrlweDftType>
-// void addTrlweNtt(TrlweDftType& output, const TrlweDftType& input1, const TrlweDftType& input2) {
-//     for (auto i = 0; i < output.a.size(); i++) {
-//         addNttPolynomial(output.a[i], input1.a[i], input2.a[i]);
-//     }
-//     addNttPolynomial(output.b, input1.b, input2.b);
-// }
 template<typename TrlweDftType, typename... TrlweDftArgs>
 void addTrlweNtt(TrlweDftType& output, const TrlweDftArgs&... inputs) {
     for (auto i = 0; i < output.a.size(); i++) {
@@ -427,7 +414,7 @@ void trlweMcrtToCrt(std::vector<TrlweType>& trlwe, const YatfheParameters& param
 template<typename TrlweTypeA, typename TrlweTypeB>
 void recompTrlweApproxCrt(TrlweTypeA& out, std::vector<TrlweTypeB>& inMCRT, const YatfheParameters& param) {
     auto& outA = out.a;
-    auto qCRT = param.qCRT;
+    const auto qCRT = param.qCRT;
     for (size_t k = 0; k < param.k; k++) {
         auto& coeffA = outA[k].coeffs;
         for (size_t j = 0; j < param.N; j++) {
@@ -452,7 +439,7 @@ template<typename TrlweTypeA, typename TrlweTypeB>
 void recompTrlweCrt(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const YatfheParameters& param) {
     const size_t d   = param.d;
     const size_t N   = param.N;
-    const auto   qCRT = param.qCRT;
+    const auto qCRT = param.qCRT;
 
     // Hoist gadget vector to avoid param pointer chasing in the hot loop.
     long z[NUM_PRIMES];
@@ -489,7 +476,7 @@ template<typename TrlweTypeA, typename TrlweTypeB>
 void recompTrlweCrtNO(TrlweTypeA& out, TrlweTypeB& inCRT, const YatfheParameters& param) {
     auto& outA = out.a;
     auto& inA = inCRT.a;
-    auto qCRT = param.qCRT;
+    const auto qCRT = param.qCRT;
     for (size_t k = 0; k < param.k; k++) {
         auto& coeffOutA = outA[k].coeffs;
         auto& coeffInA = inA[k].coeffs;
@@ -520,22 +507,6 @@ void clearTrlwe(TrlweType& obj) {
         std::fill(poly.coeffs.begin(), poly.coeffs.end(), 0);
     }
     std::fill(obj.b.coeffs.begin(), obj.b.coeffs.end(), 0);
-}
-
-// CKKS-style mod-down: divide every coefficient by 2^shift with round-to-nearest.
-// Reduces per-ciphertext noise by ~2^shift at the cost of scaling the message down
-// by the same factor; callers must decode with torusBase << shift afterwards.
-inline void modDownTrlwe(Trlwe& trlwe, const int shift) {
-    if (shift <= 0) return;
-    const int64_t half = static_cast<int64_t>(1) << (shift - 1);
-    for (auto& poly : trlwe.a) {
-        for (Torus& c : poly.coeffs) {
-            c = static_cast<Torus>(c >> shift);
-        }
-    }
-    for (Torus& c : trlwe.b.coeffs) {
-        c = static_cast<Torus>(c >> shift);
-    }
 }
 
 void genTrlweKey(TrlweKey& key);
@@ -569,6 +540,7 @@ void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft,
 void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param);
 
 void gadgetDecomposeTrlweA(vector<vector<DecompPolynomial>>& output, const vector<TorusPolynomial>& a, const YatfheParameters& param);
+
 void gadgetDecomposeTrlweB(vector<DecompPolynomial>& output, const TorusPolynomial& b, const YatfheParameters& param);
 
 void recomposeTrlwe(Trlwe& output, const DecomposedTrlwe& input, const YatfheParameters& param);
@@ -581,15 +553,15 @@ void rotateTrlwe(Trlwe& res, const Trlwe& input, int a);
 
 void rotateAccumulateTrlwe(Trlwe& accum, const Trlwe& input, int aTrue, int isWrap);
 
-void rotateTrlweNtt(TrlweDft& res, const TrlweDft& input, const int r);
+void rotateTrlweNtt(TrlweDft& res, const TrlweDft& input, int r);
 
 void rotateTrlweMinusOne(Trlwe& res, const Trlwe& input, int a);
 
 void rotateTrlweMinusOneBPlusOne(Trlwe& res, TorusPolynomial& b, const Trlwe& input, int a, Torus one);
 
-void rotateTrlweMinusOneNtt(TrlweDft& res, const TrlweDft& input, const int r);
+void rotateTrlweMinusOneNtt(TrlweDft& res, const TrlweDft& input, int r);
 
-void rotateTrlweMinusOneBPlusOneNtt(TrlweDft& res, const TrlweDft& input, const int r);
+void rotateTrlweMinusOneBPlusOneNtt(TrlweDft& res, const TrlweDft& input, int r);
 
 void rotateTrlwe8MinusOne(Trlwe8& res, const Trlwe8& input, int a, int modP);
 
@@ -599,8 +571,13 @@ void rescaleTrlweToNewMod(Trlwe& output, const Trlwe& in, int64_t newMod, int64_
 
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput);
 
-void multTrlweWithConst(Trlwe& output, const Trlwe& input1, const int scalar);
+void multTrlweWithConst(Trlwe& output, const Trlwe& input1, int scalar);
 
-void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, int level, const YatfheParameters& param);
+// Direct NTT product, no gadget decompositions
+void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const YatfheParameters& param);
+
+int64_t directNttWrapNoise(const IntPolynomial& poly, const YatfheParameters& param);
+
+bool isPolyDirectNttSafe(const IntPolynomial& poly, const YatfheParameters& param);
 
 #endif //HLS_YATFHE_TRLWE_H

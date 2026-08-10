@@ -114,16 +114,6 @@ int intModP(const int a, const int p) {
     return b;
 }
 
-int64_t longModP(const int64_t a, const int64_t p) {
-    auto b = a % p;
-    if (b > (p - 1) / 2) {
-        b -= p;
-    } else if (b < - p / 2) {
-        b += p;
-    }
-    return b;
-}
-
 // a * b = (k*a_hi + a_lo) * (k*b_hi + b_lo)
 // k = 2^32
 // https://stackoverflow.com/a/31662911/6553631
@@ -162,15 +152,6 @@ int64_t montgomoryReduceT32(int64_t in) {
         r -= TORUS_Q;
     }
     return in < 0 ? -static_cast<int64_t>(r) : static_cast<int64_t>(r);
-}
-
-Torus subTorus(const int64_t q, const Torus in1, const Torus in2) {
-    if (sizeof(Torus) == 4 && q == Q_32) {
-        return in1 - in2;
-    }
-    auto tmp = static_cast<int64_t>(in1) - static_cast<int64_t>(in2);
-//    return (tmp > TORUS_MAX) ? static_cast<Torus>(tmp - TORUS_Q) : static_cast<Torus>((tmp < TORUS_MIN) ? (TORUS_Q + tmp) : tmp);
-    return (Torus)longModP(tmp, q);
 }
 
 Torus multTorus(const int64_t q, const Torus in1, const Torus in2) {

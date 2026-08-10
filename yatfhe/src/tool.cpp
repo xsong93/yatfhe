@@ -6,6 +6,10 @@
 #include "yautil/tool.h"
 
 #include <thread>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 #include "yatfhe/trlwe.h"
 
@@ -121,8 +125,55 @@ void printBanner(const string& msg) {
 #endif
 }
 
+size_t clearFileCache(const std::string& filename) {
+    const int fd = ::open(filename.c_str(), O_RDONLY);
+    if (fd < 0) {
+        return 0;   // no such file: nothing of it is cached
+    }
+    struct stat st{};
+    if (::fstat(fd, &st) != 0 || st.st_size <= 0) {
+        ::close(fd);
+        return 0;
+    }
+    const auto len = static_cast<size_t>(st.st_size);
+    // POSIX_FADV_DONTNEED drops clean pages only, so flush first -- without this a
+    // key file written moments earlier is still dirty and survives the advice.
+    ::fdatasync(fd);
+    ::posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED);
+
+    // Verify rather than assume. mincore() reports which pages remain resident;
+    // mapping the file does not fault them in, so asking does not undo the evict.
+    size_t resident = 0;
+    const auto pageSize = static_cast<size_t>(::sysconf(_SC_PAGESIZE));
+    void* map = ::mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, 0);
+    if (map != MAP_FAILED) {
+        std::vector<unsigned char> present((len + pageSize - 1) / pageSize, 0);
+        if (::mincore(map, len, present.data()) == 0) {
+            for (const unsigned char page : present) {
+                resident += (page & 1u);
+            }
+        }
+        ::munmap(map, len);
+    }
+    ::close(fd);
+    if (resident != 0) {
+        cerr << "clearFileCache(" << filename << "): " << resident
+             << " pages still resident, so the next read is not fully cold" << endl;
+    }
+    return resident;
+}
+
 void clearFileCache() {
-    // Clear page cache, dentries, and inodes
-    system("sync; echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null");
+    // sudo -n so a missing password fails immediately instead of blocking on a prompt.
+    if (system("sync; echo 3 | sudo -n tee /proc/sys/vm/drop_caches > /dev/null 2>&1") != 0) {
+        static bool warned = false;
+        if (!warned) {
+            cerr << "clearFileCache(): dropping the page cache needs root, so nothing "
+                    "was dropped -- any \"cold\" timing after this is warm. Use "
+                    "clearFileCache(filename) instead." << endl;
+            warned = true;
+        }
+        return;
+    }
     std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Let it settle
 }

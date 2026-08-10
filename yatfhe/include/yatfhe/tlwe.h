@@ -11,14 +11,14 @@
 #include "yatfhe/torus.h"
 
 struct Tlwe {
-    std::vector<Torus> a {}; // n
-    Torus b {};
+    std::vector<LweTorus> a {}; // n
+    LweTorus b {};
     int n {};
     size_t bytes {};
 
     Tlwe() = default;
 
-    explicit Tlwe(int n) : a(n), b(0), n(n), bytes(sizeof(Torus) * (n+1)) {};
+    explicit Tlwe(int n) : a(n), b(0), n(n), bytes(sizeof(LweTorus) * (n+1)) {};
 };
 
 struct ScaledTlwe {

@@ -50,15 +50,50 @@ Integer roundErrorForShiftedTorus(Torus in, int shift);
 
 int intModP(int a, int p);
 
-int64_t longModP(int64_t a, int64_t p);
+
+// Every torus modulus in use is a power of two (Q_56, Q_32, ...), and for those
+// the centered residue is exactly a sign-extension from the low log2(p) bits --
+// the generic path compiles to a 64-bit idiv, since p is only known at runtime.
+// The non-power-of-two path is still needed for the CRT primes.
+inline int64_t longModP(const int64_t a, const int64_t p) {
+    if (p > 1 && (p & (p - 1)) == 0) {
+        const int shift = 64 - __builtin_ctzll(static_cast<uint64_t>(p));
+        return static_cast<int64_t>(static_cast<uint64_t>(a) << shift) >> shift;
+    }
+    auto b = a % p;
+    if (b > (p - 1) / 2) {
+        b -= p;
+    } else if (b < - p / 2) {
+        b += p;
+    }
+    return b;
+}
+
+// Centred residue of a mod 2^(64-shift), for modulus is a power of two
+// (pass TORUS_SHIFT for TORUS_Q). Same result as
+// longModP, but branch-free, so allowing vectorising.
+inline int64_t longModPow2(const int64_t a, const int shift) {
+    return static_cast<int64_t>(static_cast<uint64_t>(a) << shift) >> shift;
+}
+
+// Power-of-two counterpart of subTorus. For TORUS32 this reproduces the plain
+// in1 - in2 wraparound exactly (shift == 32 sign-extends from bit 31).
+inline Torus subTorusPow2(const int shift, const Torus in1, const Torus in2) {
+    return static_cast<Torus>(longModPow2(static_cast<int64_t>(in1) - static_cast<int64_t>(in2), shift));
+}
 
 int64_t barrettReduceT32(int64_t in);
 
 int64_t montgomoryReduceT32(int64_t in);
 
-// Torus addTorus(Torus in1, Torus in2);
 
-Torus subTorus(int64_t q, Torus in1, Torus in2);
+inline Torus subTorus(const int64_t q, const Torus in1, const Torus in2) {
+    if (sizeof(Torus) == 4 && q == Q_32) {
+        return in1 - in2;
+    }
+    auto tmp = static_cast<int64_t>(in1) - static_cast<int64_t>(in2);
+    return static_cast<Torus>(longModP(tmp, q));
+}
 
 Torus multTorus(int64_t q, Torus in1, Torus in2);
 
@@ -70,10 +105,9 @@ void initCoeffsViaUniformDistribution(std::vector<Torus>& coeffs, Torus min, Tor
 
 void initNttCoeffsViaUniformDistribution(std::vector<NttType>& coeffs, NttType min, NttType max);
 
-void initCoeffsWithTUniformNoiseSingleSample(vector<Torus>& coeffs, Torus msg, int pos, double sigma, const int64_t torusQ);
+void initCoeffsWithTUniformNoiseSingleSample(vector<Torus>& coeffs, Torus msg, int pos, double sigma, int64_t torusQ);
 
-void initCoeffsWithTUniformNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, double sigma
-                                            , const int64_t torusQ);
+void initCoeffsWithTUniformNoiseMultiSample(std::vector<Torus>& coeffs, const std::vector<Torus>& msg, double sigma, int64_t torusQ);
 
 Integer modPow(Integer x, Integer y, Integer mod);
 
