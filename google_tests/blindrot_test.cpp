@@ -275,6 +275,113 @@ TEST(BLIND_ROT, BLIND_ROT_MP21_NTT) {
     printBanner("BLIND_ROT.BLIND_ROT_MP21_NTT");
 }
 
+#ifdef TORUS32
+static void benchBlindRotateMP21Ntt(int N, int radixBits, int l, int lApprox) {
+    YatfheParameters param{};
+    param.N = N;
+    param.setRadixBits(radixBits);
+    param.l = l;
+    param.lApprox = lApprox;
+    initYatfhe(param);
+
+    // key gen
+    TlweKey tlweKey{param};
+    genTlweKey(tlweKey);
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    genTrlweKey(trlweKey);
+    BootstrappingKeyMP bskMP{param, param.lApprox};
+    genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
+
+    // data gen
+    Trlwe in2{param.k, param.N};
+    TrlweDft in2Dft{param.k, param.N};
+    TorusPolynomial v {param.N};
+    generateTestPolynomial(v, param.torusBase, 2 * param.N);
+    symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, v.coeffs);
+
+    // rots gen
+    ScaledTlwe sTlwe {param.N * 2, param.n};
+    for (auto i = 0 ; i < sTlwe.n; i++) {
+        sTlwe.a[i] = genIntUniformDist(-2 * param.N, 2 * param.N);
+    }
+
+    // expected result
+    int rot = 0;
+    IntPolynomial rotInP{param.N};
+    TrlweDft rotInDft{param.k, param.N};
+    for (auto i = 0 ; i < param.n; i++) {
+        if (tlweKey.s[i] == 1) {
+            rot += sTlwe.a[i];
+        } else if (tlweKey.s[i] == -1) {
+            rot -= sTlwe.a[i];
+        }
+    }
+    rotateTrlweNtt(rotInDft, in2Dft, rot);
+    symDecTrlweToIntNtt(rotInP, rotInDft, trlweKey, param.torusBase);
+
+    std::string label = "blindRotateMP21Ntt N=" + std::to_string(param.N)
+        + " radixBits=" + std::to_string(param.radixBits)
+        + " l=" + std::to_string(param.l)
+        + " lApprox=" + std::to_string(param.lApprox);
+    // Wall-clock time (COUNT_TIME) plus total CPU work summed across all
+    // threads via CLOCK_PROCESS_CPUTIME_ID, so it is independent of the
+    // thread speed-up. cpu/wall approximates the effective parallelism.
+    auto wallStart = steady_clock::now();
+    timespec cpuStart{}, cpuEnd{};
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &cpuStart);
+    blindRotateMP21Ntt(in2, bskMP.bskDft, sTlwe, param);
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &cpuEnd);
+    long wallUs = duration_cast<microseconds>(steady_clock::now() - wallStart).count();
+    long cpuUs = (cpuEnd.tv_sec - cpuStart.tv_sec) * 1000000L
+               + (cpuEnd.tv_nsec - cpuStart.tv_nsec) / 1000L;
+    std::cout << "elapsed time (" << label << ") in us: " << wallUs << std::endl;
+    std::cout << "total cpu work (" << label << ") in us: " << cpuUs
+              << " (x" << (wallUs > 0 ? (double) cpuUs / wallUs : 0.0)
+              << " parallelism)" << std::endl;
+
+    // dec
+    IntPolynomial decP {param.N};
+    symDecTrlweToInt(decP, in2, trlweKey, param.torusBase);
+
+    // soft correctness check: report mismatches but never fail (timing test)
+    int mismatch = 0;
+    for (auto i = 0; i < param.N; i++) {
+        if (rotInP.coeffs[i] != decP.coeffs[i]) mismatch++;
+    }
+    if (mismatch == 0) {
+        std::cout << "[correctness] " << label << ": OK" << std::endl;
+    } else {
+        std::cout << "[correctness] " << label << ": MISMATCH in "
+                  << mismatch << "/" << param.N << " coeffs (not failing)"
+                  << std::endl;
+    }
+}
+
+// One test per (N, radixBits, l, lApprox) set so each runs a single
+// initYatfhe (matching the rest of the suite) and can be filtered/timed
+// independently.
+TEST(BLIND_ROT, BLIND_ROT_MP21_NTT_TIMING_1) {
+    benchBlindRotateMP21Ntt(2048, 7, 4, 3);
+    printBanner("BLIND_ROT.BLIND_ROT_MP21_NTT_TIMING_1");
+}
+
+TEST(BLIND_ROT, BLIND_ROT_MP21_NTT_TIMING_2) {
+    benchBlindRotateMP21Ntt(4096, 6, 5, 4);
+    printBanner("BLIND_ROT.BLIND_ROT_MP21_NTT_TIMING_2");
+}
+
+TEST(BLIND_ROT, BLIND_ROT_MP21_NTT_TIMING_3) {
+    benchBlindRotateMP21Ntt(8192, 4, 8, 6);
+    printBanner("BLIND_ROT.BLIND_ROT_MP21_NTT_TIMING_3");
+}
+
+TEST(BLIND_ROT, BLIND_ROT_MP21_NTT_TIMING_4) {
+    benchBlindRotateMP21Ntt(16384, 2, 16, 14);
+    printBanner("BLIND_ROT.BLIND_ROT_MP21_NTT_TIMING_4");
+}
+#endif
+
 TEST(BLIND_ROT, BLIND_ROT_PRE_ROT_NTT) {
     YatfheParameters param{};
     initYatfhe(param);

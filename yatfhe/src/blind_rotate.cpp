@@ -1104,7 +1104,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
         }
 
         // accumulation
-        if (i >= 1 && input.a[i + 1] != 0) {
+        if (i >= 1 && input.a[i] != 0) {
             externalProductTrgswMPNttInPlace(accum, currExpanded, level, param);
         }
 
@@ -1214,7 +1214,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
         }
 
         // accumulation
-        if (i >= 1 && input.a[i + 1] != 0) {
+        if (i >= 1 && input.a[i] != 0) {
             externalProductTrgswMPNttInPlace(accum, currExpanded, level, param);
         }
 
