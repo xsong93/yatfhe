@@ -6,3 +6,4 @@ cmake-build-debug/
 /bench*
 /build/
 /venv/
+*.bin

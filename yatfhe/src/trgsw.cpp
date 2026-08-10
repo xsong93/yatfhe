@@ -1029,6 +1029,12 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
     const auto L = param.l; // must use full decomp length
     const auto N = param.N;
 
+    // Per-thread scratch, the blind rotate
+    // calls this L*K times per LWE coefficient, so a fresh NttPolynomial per digit put
+    // n*level*L allocations through malloc, from `level` threads at once.
+    thread_local NttPolynomial aDft;
+    if (aDft.N != N) aDft = NttPolynomial{N};
+
     // calculate a * S^2
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
@@ -1038,7 +1044,6 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
             auto& cB = cDft[k1].b;
             auto& sA = s2.a;
             auto& a = decompL[k1];
-            NttPolynomial aDft{N};
             applyNtt(aDft, a);
             calModularInnerProductNtt(cPrimeDft.a[k1], aDft, getNttGadgetRecomper(l)); // calculate recomposed cPrimes'a in ntt domain
             for (auto k2 = 0; k2 < K; k2++) {

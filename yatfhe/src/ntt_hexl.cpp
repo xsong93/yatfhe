@@ -3,6 +3,8 @@
 //
 
 #include <unordered_map>
+#include <stdexcept>
+#include <string>
 #include "yatfhe/ntt_hexl.h"
 #include "yatfhe/polynomial.h"
 #include "yautil/tool.h"
@@ -17,10 +19,11 @@ namespace NttHexl {
     }
 
     void initNttHexl(uint64_t degree, uint64_t q) {
-        static bool initialized = false;
-        if (!initialized) {
+        static uint64_t curDegree = 0, curQ = 0;
+        if (degree != curDegree || q != curQ) {
             getNttHexl() = NTT(degree, q);
-            initialized = true;
+            curDegree = degree;
+            curQ = q;
         }
     }
 
@@ -67,50 +70,84 @@ namespace NttHexl {
         return getNttGadgetRecompMap().find(currL)->second;
     }
 
+    namespace {
+        bool rotTablesStale(int32_t degree, int32_t& curDegree, uint64_t& curQ) {
+            const uint64_t q = getNttHexl().GetModulus();
+            if (degree == curDegree && q == curQ) return false;
+            curDegree = degree;
+            curQ = q;
+            return true;
+        }
+    }
+
     void initNttRotMap(int32_t degree) {
-        static bool NttRotInitialized = false;
-        if (!NttRotInitialized) {
-            for (int32_t i = 0; i < degree; i++) {
-                NttPolynomial tmp{degree};
-                TorusPolynomial tmpT{degree};
-                tmpT.coeffs[i] = 1;
-                applyNtt(tmp, tmpT);
-                getNttRotMap().insert({i, tmp});
-                tmpT.coeffs[i] = -1;
-                applyNtt(tmp, tmpT);
-                getNttRotInverseMap().insert({i, tmp});
-            }
-            NttRotInitialized = true;
+        static int32_t curDegree = -1;
+        static uint64_t curQ = 0;
+        if (!rotTablesStale(degree, curDegree, curQ)) return;
+        getNttRotMap().clear();
+        getNttRotInverseMap().clear();
+        for (int32_t i = 0; i < degree; i++) {
+            NttPolynomial tmp{degree};
+            TorusPolynomial tmpT{degree};
+            tmpT.coeffs[i] = 1;
+            applyNtt(tmp, tmpT);
+            getNttRotMap().insert_or_assign(i, tmp);
+            tmpT.coeffs[i] = -1;
+            applyNtt(tmp, tmpT);
+            getNttRotInverseMap().insert_or_assign(i, tmp);
         }
     }
 
     void initNttRotMinusOneMap(int32_t degree) {
-        static bool NttRotMinusOneInitialized = false;
-        if (!NttRotMinusOneInitialized) {
-            for (int32_t i = 0; i < degree; i++) {
-                NttPolynomial tmp{degree};
-                TorusPolynomial tmpT{degree};
-                tmpT.coeffs[i] = 1;
-                tmpT.coeffs[0] -= 1;
-                applyNtt(tmp, tmpT);
-                getNttRotMinusOneMap().insert({i, tmp});
-                tmpT = TorusPolynomial{degree};
-                tmpT.coeffs[i] = -1;
-                tmpT.coeffs[0] -= 1;
-                applyNtt(tmp, tmpT);
-                getNttRotMinusOneInverseMap().insert({i, tmp});
-            }
-            NttRotMinusOneInitialized = true;
+        static int32_t curDegree = -1;
+        static uint64_t curQ = 0;
+        if (!rotTablesStale(degree, curDegree, curQ)) return;
+        getNttRotMinusOneMap().clear();
+        getNttRotMinusOneInverseMap().clear();
+        for (int32_t i = 0; i < degree; i++) {
+            NttPolynomial tmp{degree};
+            TorusPolynomial tmpT{degree};
+            tmpT.coeffs[i] = 1;
+            tmpT.coeffs[0] -= 1;
+            applyNtt(tmp, tmpT);
+            getNttRotMinusOneMap().insert_or_assign(i, tmp);
+            tmpT = TorusPolynomial{degree};
+            tmpT.coeffs[i] = -1;
+            tmpT.coeffs[0] -= 1;
+            applyNtt(tmp, tmpT);
+            getNttRotMinusOneInverseMap().insert_or_assign(i, tmp);
         }
     }
 
     void initNttGadgetRecompMap(int32_t bitLength, int32_t radixBit, int32_t level, int32_t degree) {
+        static int32_t curBitLength = -1, curRadixBit = -1, curDegree = -1;
+        static uint64_t curQ = 0;
+        const uint64_t q = getNttHexl().GetModulus();
+        auto& map = getNttGadgetRecompMap();
+        if (bitLength != curBitLength || radixBit != curRadixBit
+                || degree != curDegree || q != curQ) {
+            map.clear();
+            curBitLength = bitLength;
+            curRadixBit = radixBit;
+            curDegree = degree;
+            curQ = q;
+        }
         for (auto l = 0; l < level; l++) {
+            const int shift = bitLength - (l + 1) * radixBit;
+            if (shift < 0) {
+                // 1 << negative is undefined, and a gadget wider than the torus has no
+                // meaning.
+                throw std::invalid_argument(
+                    "initNttGadgetRecompMap: level " + std::to_string(l + 1) +
+                    " of radix 2^" + std::to_string(radixBit) +
+                    " exceeds the torus width " + std::to_string(bitLength) +
+                    "; require l * radixBits <= torusBits");
+            }
             TorusPolynomial tmp{degree};
             NttPolynomial ntt{degree};
-            tmp.coeffs[0] = static_cast<Torus>(1) << (bitLength - (l + 1) * radixBit);
+            tmp.coeffs[0] = static_cast<Torus>(1) << shift;
             applyNtt(ntt, tmp);
-            getNttGadgetRecompMap().insert({l, ntt});
+            map.insert_or_assign(l, ntt);
         }
     }
 

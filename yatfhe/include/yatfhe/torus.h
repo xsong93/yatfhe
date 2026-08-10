@@ -15,7 +15,7 @@ using Decomp = int8_t;
 #elif defined(TORUS56)
 using Torus = int64_t;
 using UnsignedInteger = uint64_t;
-using Decomp = int8_t;
+using Decomp = int32_t;
 #else
 #error "torus.h: TORUS undefined"
 #endif
@@ -163,9 +163,19 @@ constexpr uint32_t Q_12P = 2049U;
 //     |centred(qNtt mod q)| units -- see nttWrapDelta() in yatfhe_parameters.h.
 // Being a multiple of 2^32 plus one, it is also 1 (mod 2N) for every N <= 2^31,
 // so the negacyclic NTT exists for any ring degree in use here.
-// (Q_50P also clears both bars, with the same wrap cost as Q_60P: 16383.
-//  Q_49P does NOT -- its residue mod 2^32 is -(2^30 - 1), which is fatal.)
 constexpr uint64_t Q_49P_T32 = 562941363486721ULL;
+
+// The 56-bit torus counterpart, chosen on the same wrap criterion: 27 * 2^56 + 1.
+//   * > 2^56, so it can represent a torus value.
+//   * = 1 (mod 2^56), so an INTT wrap costs 1 unit.
+//   * Being a multiple of 2^56 plus one, it is 1 (mod 2N) for every N <= 2^55, so the
+//     negacyclic NTT exists for any ring degree here.
+//   * 61 bits, inside HEXL's 62-bit modulus limit. It is the SMALLEST prime meeting
+//     these: m * 2^56 + 1 is composite for every m < 27. The m*2^56 - 1 form cannot
+//     work at all -- it is 2^16 - 1 (mod 2^16), so no 2N-th root of unity exists.
+// Too wide for the AVX512-IFMA path either way: any modulus above 2^56 exceeds it,
+// so TORUS56 uses HEXL's 64-bit NTT regardless of which of these primes is picked.
+constexpr uint64_t Q_61P_T56 = 1945555039024054273ULL;
 constexpr int64_t Q_CRT = static_cast<int64_t>(QD_CRT[0]) * QD_CRT[1] * QD_CRT[2] * QD_CRT[3];
 constexpr uint64_t BARRETT_CONSTANT = UINT64_MAX / static_cast<uint64_t>(Q_CRT);  // μ = floor(2^64 / TORUS_Q)
 

@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
 //    param.N = 1024;
     param.batchSize = 3;
     param.tasksPerThread = 1;
-    param.torusBase = 8;
+    param.torusBase = 4;
     initYatfhe(param);
     printf("n:%d, k:%d, N:%d, T:%d, b:%d, l:%d, lA:%d\n", param.n, param.k, param.N, param.torusBits, param.radixBits, param.l, param.lApprox);
 
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     // Full-range LUT over [-p/2, p/2) via the padding-bit encoding.
     const int p = param.torusBase;
     const int encMod = 2 * p;                 // p messages + 1 padding bit
-    Integer pt = -3;                          // negative on purpose: exercises the half
+    Integer pt = -2;                          // negative on purpose: exercises the half
     const int slot = static_cast<int>(((pt % p) + p) % p);
     cout << "decPre: " << pt << " (slot " << slot << ")" << endl;
     Torus mu = modSwitchToTorusGeneral(slot, encMod, LWE_Q);
@@ -77,10 +77,9 @@ int main(int argc, char **argv) {
     // server side
     // GINX server procedure
     {
-        clearFileCache();
         BootstrappingKeyMP bskMPServer;
         COUNT_TIME("GINX write key", serializeBskMP(bskMP, "BSK_GINX.bin");)
-        clearFileCache();
+        clearFileCache("BSK_GINX.bin");
         COUNT_TIME("GINX read key", deserializeBskMP(bskMPServer, "BSK_GINX.bin", param.n);)
         genNoiselessTrlweSample(acc, v, sTlwe);
         COUNT_TIME("GINX blindRotate", blindRotateJP22Ntt(acc, bskMPServer, sTlwe, param);)
@@ -88,10 +87,9 @@ int main(int argc, char **argv) {
 
     // optimized GINX server procedure
     {
-        clearFileCache();
         BootstrappingKeyMPOpt bskMPOptServer;
         COUNT_TIME("GINX_OPT write key", serializeBskMPOpt(bskMPOpt, "BSK_GINX_OPT.bin");)
-        clearFileCache();
+        clearFileCache("BSK_GINX_OPT.bin");
         COUNT_TIME("GINX_OPT read key", deserializeBskMPOpt(bskMPOptServer, "BSK_GINX_OPT.bin", param.n))
         COUNT_TIME("GINX_OPT blindRotate", blindRotateOptNtt(out, bskMPOptServer.bskFirst, bskMPOptServer.bskDft,
                                                           sTlwe, v, param);)
@@ -100,20 +98,18 @@ int main(int argc, char **argv) {
 
     // pipelined lazy key initialization server procedure
     {
-        clearFileCache();
         COUNT_TIME("PIPE_LAZY_INIT write key", serializeBskLazyPipe(bskMPLazyPipe, "BSK_PIPE_INIT.bin");)
         BootstrappingKeyMPLazyPipe bskMPLazyServer;
-        clearFileCache();
+        clearFileCache("BSK_PIPE_INIT.bin");
         COUNT_TIME("PIPE_LAZY_INIT blindRotate",
                    blindRotatePipeInitNtt(out31, bskMPLazyServer, sTlwe, v, "BSK_PIPE_INIT.bin", param);)
     }
 
     // pipelined lazy key initialization server procedure
     {
-        clearFileCache();
+        clearFileCache("BSK_PIPE_INIT.bin");
         BootstrappingKeyMPLazyPipe bskMPLazyServer;
         COUNT_TIME("deserializeBskLazyPipe", deserializeBskLazyPipe(bskMPLazyServer, "BSK_PIPE_INIT.bin", param.n);)
-        clearFileCache();
         COUNT_TIME("PIPE_LAZY blindRotate", blindRotateLazyPipeNtt(out3, bskMPLazyServer, sTlwe, v, param);)
     }
 
@@ -122,9 +118,8 @@ int main(int argc, char **argv) {
     {
         BootstrappingKeyMPLazy bskMPLazyServer;
         if (!bskMPLazyServer.initialized) {
-            clearFileCache();
             COUNT_TIME("PARALLEL_LAZY write key", serializeBskMPLazy(bskMPLazyOpt, "BSK_PAL_LAZY.bin");)
-            clearFileCache();
+            clearFileCache("BSK_PAL_LAZY.bin");
             COUNT_TIME("PARALLEL_LAZY read key", deserializeBskMPLazy(bskMPLazyServer, "BSK_PAL_LAZY.bin", param.n);)
             COUNT_TIME("PARALLEL_LAZY blindRotate",
                        blindRotateLazyMTNtt(out4, bskMPLazyServer.bskFirst, bskMPLazyServer.bskTrim,
@@ -139,7 +134,6 @@ int main(int argc, char **argv) {
 
     // pipelined lazy key initialization alternative server procedure
     {
-        clearFileCache();
         COUNT_TIME("PIPE_LAZY_ALT blindRotate",
                    blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt, sTlwe, v, param);)
         COUNT_TIME("PIPE_LAZY_ALT write key",serializeBskLazyPipeAlt(bskMPLazyPipeAlt, "BSK_PIPE_ALT.bin");)
@@ -147,17 +141,16 @@ int main(int argc, char **argv) {
 
     {
         BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAltServer;
-        clearFileCache();
+        clearFileCache("BSK_PIPE_ALT.bin");
         COUNT_TIME("PIPE_LAZY_ALT_INIT blindRotate",
                    blindRotateLazyPipeAltInitNtt(out6, bskMPLazyPipeAltServer, sTlwe, v, "BSK_PIPE_ALT.bin", param);)
     }
 
     // WWL24 procedure
     {
-        clearFileCache();
         BootstrappingKeyWWL24 bskWWL24Server;
         COUNT_TIME("WWL24 write key", serializeBskWWL24(bskWWL24, "BSK_WWL.bin");)
-        clearFileCache();
+        clearFileCache("BSK_WWL.bin");
         COUNT_TIME("WWL24 read key", deserializeBskWWL24(bskWWL24Server, "BSK_WWL.bin", param.n);)
         genNoiselessTrlweSample(out7, v, sTlwe);
         COUNT_TIME("WWL24 blindRotate", blindRotateWWL24Ntt(out7, bskWWL24Server, sTlwe, bskWWL24Server.s2Dft, param);)

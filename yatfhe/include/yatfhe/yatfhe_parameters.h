@@ -28,8 +28,8 @@ struct YatfheParameters {
     // int lApprox {2};
 #else // binary secret
     // LWE params, 132-bit
-    int n {1024};
-    int lweNoiseB {10}; // σ: 9.21
+    int n {680};
+    int lweNoiseB {18}; // σ: 9.21
     int64_t qLwe{Q_32};
     int qLweBits {32};
 
@@ -51,12 +51,10 @@ struct YatfheParameters {
     int rlweNoiseB {8}; // σ: 7.21
     int64_t q {Q_56};
     int torusBits {56};
-    int radixBits {6};
-    int l {6};
-    int lApprox {3};
-    // A sub-2^50 prime cannot represent a 56-bit torus value at all, so this set
-    // keeps the 60-bit prime and the 64-bit HEXL paths that come with it.
-    uint64_t qNtt {Q_60P};
+    int radixBits {14};
+    int l {4};
+    int lApprox {1};
+    uint64_t qNtt {Q_61P_T56};
 #else
 #error "torus.h: TORUS undefined"
 #endif

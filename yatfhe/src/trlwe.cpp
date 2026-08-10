@@ -183,8 +183,11 @@ namespace {
     //
     // The carry is per-coefficient (reset every j), so coefficients stay
     // independent and vectorising across j is exact.
-    template<int L>
-    void decomposeRowUnrolled(Torus* const* outPtr, const Torus* in, const int N,
+    // OutT is Torus for the accumulator's decomposition and Decomp (int8_t) for the
+    // key-side ones; the digits are balanced into [-B/2, B/2) either way, so they fit
+    // both.
+    template<int L, typename OutT>
+    void decomposeRowUnrolled(OutT* const* outPtr, const Torus* in, const int N,
                               const int radixBits, const int torusBits) {
         const Torus B = static_cast<Torus>(1) << radixBits;
         const Torus halfB = B >> 1;
@@ -192,7 +195,7 @@ namespace {
         const UnsignedInteger round =
             (shift > 0) ? (static_cast<UnsignedInteger>(1) << (shift - 1)) : 0;
 
-        Torus* out[L];
+        OutT* out[L];
         for (int lvl = 0; lvl < L; lvl++) out[lvl] = outPtr[lvl];
 
         for (int j = 0; j < N; j++) {
@@ -204,8 +207,33 @@ namespace {
                 Torus digit = static_cast<Torus>(window) + carry;
                 carry = (digit >= halfB);
                 digit -= carry * B;
-                out[lvl][j] = digit;                   // sign is always +1, so the
-            }                                          // generic "* d.sign" is a no-op
+                out[lvl][j] = static_cast<OutT>(digit);  // sign is always +1, so the
+            }                                            // generic "* d.sign" is a no-op
+        }
+    }
+
+    template<typename OutT>
+    void decomposeRow(OutT* const* outPtr, const Torus* in, const int N, const int l,
+                      const YatfheParameters& param) {
+        const int b = param.radixBits, t = param.torusBits;
+        switch (l) {
+            case 1: decomposeRowUnrolled<1>(outPtr, in, N, b, t); return;
+            case 2: decomposeRowUnrolled<2>(outPtr, in, N, b, t); return;
+            case 3: decomposeRowUnrolled<3>(outPtr, in, N, b, t); return;
+            case 4: decomposeRowUnrolled<4>(outPtr, in, N, b, t); return;
+            case 5: decomposeRowUnrolled<5>(outPtr, in, N, b, t); return;
+            case 6: decomposeRowUnrolled<6>(outPtr, in, N, b, t); return;
+            case 7: decomposeRowUnrolled<7>(outPtr, in, N, b, t); return;
+            case 8: decomposeRowUnrolled<8>(outPtr, in, N, b, t); return;
+            default: {
+                DecomposedData d{l};
+                for (auto j = 0; j < N; j++) {
+                    signedGadgetDecomposition(d, in[j], param);
+                    for (auto lvl = 0; lvl < l; lvl++) {
+                        outPtr[lvl][j] = static_cast<OutT>(d.value[lvl] * d.sign);
+                    }
+                }
+            }
         }
     }
 }
@@ -215,7 +243,6 @@ void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const Yat
     const auto k = input.k;
     const int N = static_cast<int>(input.b.coeffs.size());
     const auto l = output.l;
-    DecomposedData d{l};
     // Per-row output pointers, resolved once instead of walking
     // output.trlwes[lvl].a[row] again for every coefficient.
     std::vector<Torus*> outPtr(l);
@@ -225,19 +252,7 @@ void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const Yat
             auto& currOut = (row < k) ? output.trlwes[lvl].a[row] : output.trlwes[lvl].b;
             outPtr[lvl] = currOut.coeffs.data();
         }
-        switch (l) {
-            case 1: decomposeRowUnrolled<1>(outPtr.data(), currIn.coeffs.data(), N, param.radixBits, param.torusBits); break;
-            case 2: decomposeRowUnrolled<2>(outPtr.data(), currIn.coeffs.data(), N, param.radixBits, param.torusBits); break;
-            case 3: decomposeRowUnrolled<3>(outPtr.data(), currIn.coeffs.data(), N, param.radixBits, param.torusBits); break;
-            case 4: decomposeRowUnrolled<4>(outPtr.data(), currIn.coeffs.data(), N, param.radixBits, param.torusBits); break;
-            default:
-                for (auto j = 0; j < N; j++) {
-                    signedGadgetDecomposition(d, currIn.coeffs[j], param);
-                    for (auto lvl = 0; lvl < l; lvl++) {
-                        outPtr[lvl][j] = d.value[lvl] * d.sign;
-                    }
-                }
-        }
+        decomposeRow(outPtr.data(), currIn.coeffs.data(), N, l, param);
     }
 }
 
@@ -245,29 +260,23 @@ void gadgetDecomposeTrlweA(vector<vector<DecompPolynomial>>& output, const vecto
     const auto k = param.k;
     const auto N = param.N;
     const auto l = param.l;
-    DecomposedData d{l};
+    std::vector<Decomp*> outPtr(l);
     for (auto row = 0; row < k; row++) {
-        auto& currIn = a[row];
-        for (auto j = 0; j < N; j++) {
-            signedGadgetDecomposition(d, currIn.coeffs[j], param);
-            for (auto lvl = 0; lvl < l; lvl++) {
-                auto& currOut = output[lvl][row];
-                currOut.coeffs[j] = d.value[lvl] * d.sign;
-            }
+        for (auto lvl = 0; lvl < l; lvl++) {
+            outPtr[lvl] = output[lvl][row].coeffs.data();
         }
+        decomposeRow(outPtr.data(), a[row].coeffs.data(), N, l, param);
     }
 }
 
 void gadgetDecomposeTrlweB(vector<DecompPolynomial>& output, const TorusPolynomial& b, const YatfheParameters& param) {
     const auto N = param.N;
     const auto l = param.l;
-    DecomposedData d{l};
-    for (auto j = 0; j < N; j++) {
-        signedGadgetDecomposition(d, b.coeffs[j], param);
-        for (auto lvl = 0; lvl < l; lvl++) {
-            output[lvl].coeffs[j] = d.value[lvl] * d.sign;
-        }
+    std::vector<Decomp*> outPtr(l);
+    for (auto lvl = 0; lvl < l; lvl++) {
+        outPtr[lvl] = output[lvl].coeffs.data();
     }
+    decomposeRow(outPtr.data(), b.coeffs.data(), N, l, param);
 }
 
 // Combine l decomposed Trlwe a & b into one.
