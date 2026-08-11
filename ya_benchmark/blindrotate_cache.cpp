@@ -309,8 +309,8 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
 }
 
 int main(int argc, char **argv) {
-    int sizeRatio = round(98376/24776); // ginx key size / lazy key size
-    int sizeRatio2 = round(98376/49380); // ginx key size / wwl+24 key size
+    int sizeRatio = round(174196/43792); // ginx key size / lazy key size
+    int sizeRatio2 = round(174196/87352); // ginx key size / wwl+24 key size
 
     CommandLineParser parser(argc, argv);
 
