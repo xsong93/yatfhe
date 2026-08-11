@@ -13,14 +13,42 @@
 #include <condition_variable>
 #include <future>
 #include <functional>
+#include <atomic>
+#include <exception>
+
+// Counter-based join for a batch of tasks that are fired together. enqueue() costs
+// a packaged_task allocation plus a condition_variable per task, which the blind
+// rotate pays 8 times per LWE coefficient. A group waits on one counter instead.
+class TaskGroup {
+public:
+    void wait();
+
+private:
+    friend class ThreadPool;
+    void expect(int count) { remaining.fetch_add(count, std::memory_order_relaxed); }
+    void finish(std::exception_ptr error);
+
+    std::atomic<int> remaining{0};
+    std::mutex mutex;
+    std::condition_variable condition;
+    std::exception_ptr firstError;
+};
 
 class ThreadPool {
 public:
 
     static void initThreadPool();
 
+    // CPUs this process may actually run on.
+    static unsigned usableConcurrency();
+
+    // True while running inside a pool worker. A task that fans out sub-tasks and
+    // then waits for them deadlocks as soon as every worker sits in that same wait,
+    // so nested helpers check this and do their parts inline instead.
+    static bool onWorkerThread();
+
     static ThreadPool& instance() {
-        static ThreadPool instance(std::thread::hardware_concurrency());
+        static ThreadPool instance(usableConcurrency());
         return instance;
     }
 
@@ -41,10 +69,29 @@ public:
             std::unique_lock<std::mutex> lock(queue_mutex);
             if(stop)
                 throw std::runtime_error("enqueue on stopped ThreadPool");
-            tasks.emplace([task](){ (*task)(); });
+            tasks.push(Job{[task](){ (*task)(); }});
         }
         condition.notify_one();
         return res;
+    }
+
+    // Run fn(0), ..., fn(count-1) on the pool, joining through group.wait().
+    // Nothing is copied: the queue holds a pointer, so fn must stay alive until
+    // that wait returns. Declare the callable outside the loop that fires it and
+    // let it read state through references, and a batch costs no allocation at all.
+    template<class F>
+    void run(TaskGroup& group, const int count, const F& fn) {
+        if (count <= 0) return;
+        group.expect(count);
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            if(stop)
+                throw std::runtime_error("run on stopped ThreadPool");
+            for (int i = 0; i < count; ++i)
+                tasks.push(Job{{}, &invokeIndexed<F>, &fn, i, &group});
+        }
+        for (int i = 0; i < count; ++i)
+            condition.notify_one();
     }
 
     ThreadPool(const ThreadPool&) = delete;
@@ -52,9 +99,23 @@ public:
     ~ThreadPool();
 
 private:
+    // Either a standalone callable (enqueue) or one slot of a group (run).
+    struct Job {
+        std::function<void()> standalone;
+        void (*indexed)(const void*, int) {nullptr};
+        const void* callable {nullptr};
+        int index {0};
+        TaskGroup* group {nullptr};
+    };
+
+    template<class F>
+    static void invokeIndexed(const void* callable, const int index) {
+        (*static_cast<const F*>(callable))(index);
+    }
+
     explicit ThreadPool(size_t threads);
     std::vector<std::thread> workers;
-    std::queue<std::function<void()>> tasks;
+    std::queue<Job> tasks;
     std::mutex queue_mutex;
     std::condition_variable condition;
     bool stop;

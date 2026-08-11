@@ -767,13 +767,20 @@ namespace {
             return;
         }
 
-        auto& pool = ThreadPool::instance();
-        auto& futures = scratch.futures;
-        futures.clear();
-        for (int lvl = 0; lvl < level; lvl++) {
-            futures.emplace_back(pool.enqueue([lvl, &accumulateLevel] { accumulateLevel(lvl); }));
+        // Already on a worker: the callers that fan this out submit more tasks than a small pool has
+        // threads, so enqueuing here and blocking would leave every worker waiting on
+        // work that no one is left to run.
+        if (ThreadPool::onWorkerThread()) {
+            for (int lvl = 0; lvl < level; lvl++) accumulateLevel(lvl);
+        } else {
+            auto& pool = ThreadPool::instance();
+            auto& futures = scratch.futures;
+            futures.clear();
+            for (int lvl = 0; lvl < level; lvl++) {
+                futures.emplace_back(pool.enqueue([lvl, &accumulateLevel] { accumulateLevel(lvl); }));
+            }
+            for (auto& f : futures) f.get();
         }
-        for (auto& f : futures) f.get();
 
         auto& tmp = scratch.sum;
         clearTrlwe(tmp);

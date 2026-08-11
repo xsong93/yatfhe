@@ -1038,8 +1038,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
     vector b0(level, TorusPolynomial{param.N});
     vector b1(level, TorusPolynomial{param.N});
     auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(2 * level);
+    TaskGroup group;
 
 #ifdef TERNARY
 #else
@@ -1047,70 +1046,71 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
     auto& bskPrime = bsk.bskPrime;
     vector<Trlwe> holders(level, Trlwe{param});
 
+    int keyIndex = 0;
+    int rotateBy = input.a[1];
+    auto* currExpanded = &expanded0;
+    auto* nextExpanded = &expanded1;
+    auto* currDecompA = &decompA0;
+    auto* nextDecompA = &decompA0;
+    auto* currB = &b0;
+    auto* nextB = &b0;
+
+    // automorphism
+    const auto stageA = [&](const int l) {
+        rotateTrlweMinusOneBPlusOne(holders[l], (*nextB)[l], bskPrime[keyIndex].cPrime[l], rotateBy,
+                                static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
+        gadgetDecomposeTrlweA((*nextDecompA)[l], holders[l].a, param);
+    };
+
+    // scheme switching
+    const auto stageB = [&](const int l) {
+        clearTrlwe(nextExpanded->cPrime[l]);
+        for (auto &item: nextExpanded->c[l]) {
+            clearTrlwe(item);
+        }
+        switchTrlweToSecretEmbeddingNttMix(nextExpanded->c[l], nextExpanded->cPrime[l], (*currDecompA)[l],
+                                           (*currB)[l], s2, param);
+    };
+
     // handle first two key components
     {
-        {
-            const auto a1 = input.a[1];
-            for (auto l = 0; l < level; l++) {
-                futures.emplace_back(pool.enqueue([&b0, &bskPrime, &holders, a1, &decompA0, l, &param]{
-                    rotateTrlweMinusOneBPlusOne(holders[l], b0[l], bskPrime[0].cPrime[l], a1,
-                                            static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(decompA0[l], holders[l].a, param);
-                }));
-            }
-        }
+        pool.run(group, level, stageA);   // keyIndex 0 into decompA0/b0
+
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, bsk.bskFirst[0], input.a[0]);
         addTorusPolynomial(tmp.b, tmp.b, v);
         rotateTrlwe(accum, tmp, -input.b);
 
-        for (auto& f : futures) f.get();
-        futures.clear();
+        group.wait();
     }
 
     // accumulate on the n - 1 key components
     for (auto i = 0; i < n; i++) {
-        auto& currExpanded = i % 2 == 0 ? expanded0 : expanded1;
-        auto& nextExpanded = i % 2 == 0 ? expanded1 : expanded0;
-        auto& currDecompA = i % 2 == 0 ? decompA0 : decompA1;
-        auto& nextDecompA = i % 2 == 0 ? decompA1 : decompA0;
-        auto& currB = i % 2 == 0 ? b0 : b1;
-        auto& nextB = i % 2 == 0 ? b1 : b0;
+        const bool even = i % 2 == 0;
+        currExpanded = even ? &expanded0 : &expanded1;
+        nextExpanded = even ? &expanded1 : &expanded0;
+        currDecompA = even ? &decompA0 : &decompA1;
+        nextDecompA = even ? &decompA1 : &decompA0;
+        currB = even ? &b0 : &b1;
+        nextB = even ? &b1 : &b0;
 
-        // automorphism
-        if (i < n - 2) {
-            const auto aNext = input.a[i + 2];
-            for (auto l = 0; l < level; l++) {
-                futures.emplace_back(pool.enqueue([&bskPrime, &holders, &nextDecompA, &nextB, aNext, i, l, &param] {
-                    rotateTrlweMinusOneBPlusOne(holders[l], nextB[l], bskPrime[i + 1].cPrime[l], aNext,
-                                            static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                    gadgetDecomposeTrlweA(nextDecompA[l], holders[l].a, param);
-                }));
-            }
+        if (i < n - 1) {
+            pool.run(group, level, stageB);
         }
 
-        // scheme switching
-        if (i < n - 1) {
-            for (auto l = 0; l < level; l++) {
-                futures.emplace_back(pool.enqueue([&nextExpanded, &currDecompA, &currB, &param, l, &s2] {
-                    clearTrlwe(nextExpanded.cPrime[l]);
-                    for (auto &item: nextExpanded.c[l]) {
-                        clearTrlwe(item);
-                    }
-                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currDecompA[l],
-                                                       currB[l], s2, param);
-                }));
-            }
+        if (i < n - 2) {
+            keyIndex = i + 1;
+            rotateBy = input.a[i + 2];
+            pool.run(group, level, stageA);
         }
 
         // accumulation
         if (i >= 1 && input.a[i] != 0) {
-            externalProductTrgswMPNttInPlace(accum, currExpanded, level, param);
+            externalProductTrgswMPNttInPlace(accum, *currExpanded, level, param);
         }
 
         if (i < n - 1) {
-            for (auto& f : futures) f.get();
-            futures.clear();
+            group.wait();
         }
     }
 #endif
