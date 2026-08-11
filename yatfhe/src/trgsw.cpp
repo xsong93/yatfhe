@@ -698,7 +698,7 @@ namespace {
         DecomposedTrlwe decomposed;
         vector<TrlweDft> partials;
         TrlweDft sum;
-        vector<future<void>> futures;
+        TaskGroup group;
         int k{-1}, N{-1}, l{-1}, level{-1};
 
         void fit(const YatfheParameters& param, const int lv) {
@@ -714,7 +714,6 @@ namespace {
             decomposed = DecomposedTrlwe{param, lv};
             partials.assign(lv, TrlweDft{param.k, param.N});
             sum = TrlweDft{param.k, param.N};
-            futures.reserve(lv);
         }
     };
 
@@ -773,13 +772,10 @@ namespace {
         if (ThreadPool::onWorkerThread()) {
             for (int lvl = 0; lvl < level; lvl++) accumulateLevel(lvl);
         } else {
-            auto& pool = ThreadPool::instance();
-            auto& futures = scratch.futures;
-            futures.clear();
-            for (int lvl = 0; lvl < level; lvl++) {
-                futures.emplace_back(pool.enqueue([lvl, &accumulateLevel] { accumulateLevel(lvl); }));
-            }
-            for (auto& f : futures) f.get();
+            // accumulateLevel outlives the wait, so the group can point at it rather
+            // than copy it into a packaged_task per level.
+            ThreadPool::instance().run(scratch.group, level, accumulateLevel);
+            scratch.group.wait();
         }
 
         auto& tmp = scratch.sum;

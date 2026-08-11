@@ -1127,8 +1127,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
     vector b0(level, TorusPolynomial{param.N});
     vector b1(level, TorusPolynomial{param.N});
     auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(2 * level);
+    TaskGroup group;
     std::ifstream inFile(fileName, std::ios::binary);
     if (!inFile) throw std::runtime_error("Failed to open file");
 
@@ -1143,84 +1142,84 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
     auto& bskPrime = bsk.bskPrime;
     vector<Trlwe> holders(level, Trlwe{param});
 
+    int keyIndex = 0;
+    int readIndex = 0;
+    bool readAhead = false;
+    int rotateBy = input.a[1];
+    auto* currExpanded = &expanded0;
+    auto* nextExpanded = &expanded1;
+    auto* currDecompA = &decompA0;
+    auto* nextDecompA = &decompA0;
+    auto* currB = &b0;
+    auto* nextB = &b0;
+
+    // automorphism, with the read folded into slot 0
+    const auto stageA = [&](const int l) {
+        rotateTrlweMinusOneBPlusOne(holders[l], (*nextB)[l], bskPrime[keyIndex].cPrime[l], rotateBy,
+                                static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
+        gadgetDecomposeTrlweA((*nextDecompA)[l], holders[l].a, param);
+        if (l == 0 && readAhead) {
+            deserialize(bskPrime[readIndex], inFile);
+        }
+    };
+
+    // scheme switching
+    const auto stageB = [&](const int l) {
+        clearTrlwe(nextExpanded->cPrime[l]);
+        for (auto &item: nextExpanded->c[l]) {
+            clearTrlwe(item);
+        }
+        switchTrlweToSecretEmbeddingNttMix(nextExpanded->c[l], nextExpanded->cPrime[l], (*currDecompA)[l],
+                                           (*currB)[l], s2, param);
+    };
+
     // handle first two key components
     {
-        {
-            const auto a1 = input.a[1];
-            futures.emplace_back(pool.enqueue(
-                [&b0, &bskPrime, &holders, &decompA0, &inFile, &pool, a1, level, &param]{
-                deserialize(bskPrime[0], inFile);
-                vector<future<void>> sub;
-                sub.reserve(level);
-                for (auto l = 0; l < level; l++) {
-                    sub.emplace_back(pool.enqueue([&b0, &bskPrime, &holders, a1, &decompA0, l, &param]{
-                        rotateTrlweMinusOneBPlusOne(holders[l], b0[l], bskPrime[0].cPrime[l], a1,
-                                                static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                        gadgetDecomposeTrlweA(decompA0[l], holders[l].a, param);
-                    }));
-                }
-                for (auto& f : sub) f.get();
-            }));
-        }
+        deserialize(bskPrime[0], inFile);   // stageA below needs it now
+        readIndex = 1;                      // iteration 0 needs it next
+        readAhead = true;
+        pool.run(group, level, stageA);     // keyIndex 0 into decompA0/b0
+
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, bsk.bskFirst[0], input.a[0]);
         addTorusPolynomial(tmp.b, tmp.b, v);
         rotateTrlwe(accum, tmp, -input.b);
 
-        for (auto& f : futures) f.get();
-        futures.clear();
+        group.wait();
     }
 
     // accumulate on the n - 1 key components
     for (auto i = 0; i < n; i++) {
-        auto& currExpanded = i % 2 == 0 ? expanded0 : expanded1;
-        auto& nextExpanded = i % 2 == 0 ? expanded1 : expanded0;
-        auto& currDecompA = i % 2 == 0 ? decompA0 : decompA1;
-        auto& nextDecompA = i % 2 == 0 ? decompA1 : decompA0;
-        auto& currB = i % 2 == 0 ? b0 : b1;
-        auto& nextB = i % 2 == 0 ? b1 : b0;
+        const bool even = i % 2 == 0;
+        currExpanded = even ? &expanded0 : &expanded1;
+        nextExpanded = even ? &expanded1 : &expanded0;
+        currDecompA = even ? &decompA0 : &decompA1;
+        nextDecompA = even ? &decompA1 : &decompA0;
+        currB = even ? &b0 : &b1;
+        nextB = even ? &b1 : &b0;
 
-        // automorphism
-        if (i < n - 2) {
-            const auto aNext = input.a[i + 2];
-            futures.emplace_back(pool.enqueue(
-                [&bskPrime, &holders, &nextDecompA, &nextB, &inFile, &pool, aNext, i, level, &param] {
-                deserialize(bskPrime[i + 1], inFile);
-                vector<future<void>> sub;
-                sub.reserve(level);
-                for (auto l = 0; l < level; l++) {
-                    sub.emplace_back(pool.enqueue([&bskPrime, &holders, &nextDecompA, &nextB, aNext, i, l, &param] {
-                        rotateTrlweMinusOneBPlusOne(holders[l], nextB[l], bskPrime[i + 1].cPrime[l], aNext,
-                                                static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-                        gadgetDecomposeTrlweA(nextDecompA[l], holders[l].a, param);
-                    }));
-                }
-                for (auto& f : sub) f.get();
-            }));
+        // Scheme switching goes in first: its tasks are the long pole, so anything
+        // queued ahead of them delays the join.
+        if (i < n - 1) {
+            pool.run(group, level, stageB);
         }
 
-        // scheme switching
-        if (i < n - 1) {
-            for (auto l = 0; l < level; l++) {
-                futures.emplace_back(pool.enqueue([&nextExpanded, &currDecompA, &currB, &param, l, &s2] {
-                    clearTrlwe(nextExpanded.cPrime[l]);
-                    for (auto &item: nextExpanded.c[l]) {
-                        clearTrlwe(item);
-                    }
-                    switchTrlweToSecretEmbeddingNttMix(nextExpanded.c[l], nextExpanded.cPrime[l], currDecompA[l],
-                                                       currB[l], s2, param);
-                }));
-            }
+        if (i < n - 2) {
+            keyIndex = i + 1;   // read at iteration i - 1, joined by its barrier
+            rotateBy = input.a[i + 2];
+            // bskPrime holds n - 1 components, so the last one to read is n - 2
+            readIndex = i + 2;
+            readAhead = i < n - 3;
+            pool.run(group, level, stageA);
         }
 
         // accumulation
         if (i >= 1 && input.a[i] != 0) {
-            externalProductTrgswMPNttInPlace(accum, currExpanded, level, param);
+            externalProductTrgswMPNttInPlace(accum, *currExpanded, level, param);
         }
 
         if (i < n - 1) {
-            for (auto& f : futures) f.get();
-            futures.clear();
+            group.wait();
         }
     }
     inFile.close();
@@ -1233,20 +1232,21 @@ void blindRotateWWL24Ntt(Trlwe& accum, BootstrappingKeyWWL24& bsk, const ScaledT
 #ifdef TERNARY
 #else
     auto& pool = ThreadPool::instance();
-    vector<future<void>> futures;
-    futures.reserve(level);
+    TaskGroup group;
+
+    int keyIndex = 0;
+    const auto schemeSwitch = [&](const int l) {
+        switchTrlweToSecretEmbeddingNtt(bskDft[keyIndex].c[l], bskDft[keyIndex].cPrime[l], s2, param);
+    };
+
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
         bskDft[i].c.resize(level, vector(param.k, TrlweDft(param.k, param.N)));
-        for (auto l = 0; l < level; l++) {
-            futures.emplace_back(pool.enqueue([&bskDft, &s2, &param, l, i] {
-                switchTrlweToSecretEmbeddingNtt(bskDft[i].c[l], bskDft[i].cPrime[l], s2, param);
-            }));
-        }
-        for (auto& f : futures) f.get();
-        futures.clear();
+        keyIndex = i;
+        pool.run(group, level, schemeSwitch);
+        group.wait();
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, accum, input.a[i]);
         externalProductTrgswMPNttInPlace(tmp, bskDft[i], level, param);
