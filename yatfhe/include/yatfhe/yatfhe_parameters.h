@@ -27,9 +27,9 @@ struct YatfheParameters {
     // int l {4};
     // int lApprox {2};
 #else // binary secret
-    // LWE params, 132-bit
+    // LWE params, 128.5-bit
     int n {680};
-    int lweNoiseB {18}; // σ: 9.21
+    int lweNoiseB {18}; // log2 σ: 17.21
     int64_t qLwe{Q_32};
     int qLweBits {32};
 
@@ -38,7 +38,7 @@ struct YatfheParameters {
 #if defined(TORUS32) // 212-bit,
     int k {1};
     int N {2048};
-    int rlweNoiseB {3}; // σ: 2.21
+    int rlweNoiseB {3}; // log2 σ: 2.21
     int64_t q {Q_32};
     int torusBits {32};
     int radixBits {4};
@@ -48,7 +48,7 @@ struct YatfheParameters {
 #elif defined(TORUS56) // 132-bit
     int k {1};
     int N {2048};
-    int rlweNoiseB {8}; // σ: 7.21
+    int rlweNoiseB {8}; // log2 σ: 7.21
     int64_t q {Q_56};
     int torusBits {56};
     int radixBits {14};
