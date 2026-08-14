@@ -45,9 +45,9 @@ yatfhe/
     | --- | --- |-----------------------------------------------------|
     | `TORUS` | `32` | Torus type, `32` or `56` (`-DTORUS_TYPE`)           |
     | `TARGET_ARCH` | `native` | ISA baseline: `native`, `avx512`, `avx2`, `generic` |
-    | `HEXL_ROOT` | `/usr/local/lib` | HEXL install path                                   |
+    | `HEXL_ROOT` | `/usr/local` | HEXL install path                                   |
 
-    Use an AVX-512 HEXL for `TARGET_ARCH=avx512`. A HEXL built without it costs roughly 4x on the NTT.
+    Use an AVX-512 HEXL for `TARGET_ARCH=avx512`.
 
 3. **Running Benchmarks**
     ```
