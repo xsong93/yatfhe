@@ -11,7 +11,7 @@ TARGET_ARCH="${TARGET_ARCH:-native}"
 # AVX-512-tuned HEXL for native/avx512, the system HEXL for avx2/generic.
 # Set HEXL_ROOT explicitly to override, or HEXL_ROOT= to force the system one.
 case "$TARGET_ARCH" in
-    native|avx512) DEFAULT_HEXL_ROOT="$HOME/Github/hexl/install-avx512" ;;
+    native|avx512) DEFAULT_HEXL_ROOT="/usr/local/lib" ;;
     *)             DEFAULT_HEXL_ROOT="" ;;
 esac
 HEXL_ROOT="${HEXL_ROOT-$DEFAULT_HEXL_ROOT}"

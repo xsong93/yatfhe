@@ -3,35 +3,60 @@
 ## Repository Structure
 ```
 yatfhe/
-├── benchmark_run/ # Benchmarking scripts and configuration
-├── ya_benchmark/ # Additional benchmarking helpers
-├── yatfhe/ # Core library source code
+├── yatfhe/ # Core library source code (yatfhe_lib)
+├── ya_benchmark/ # Benchmark programs, one executable per .cpp
+├── google_tests/ # GoogleTest suite (google_tests_run)
+├── CMakeLists.txt # Top-level CMake build configuration
+├── build_bench_blindrotate.sh # Configure + build everything into CMAKE_BUILD/
+├── cp_bench.sh # Copies the built benchmarks to benchmark_run/server/
+├── gtest_run.sh # Runs the test binary, optional --gtest_filter argument
+├── cmake_run.sh # Configure + `make install` the library system-wide
+├── clean_install.sh # Removes CMAKE_BUILD/ and the installed headers/libs
 ├── .gitignore
-├── CMakeLists.txt # Main CMake build configuration
 ├── LICENSE.txt # License file
-├── build_bench_blindrotate.sh # Script to build benchmarks
-└── cp_bench.sh # Utility to copy benchmarks
+└── README.md
 ```
 
 ## Dependencies
 
 - **CMake** (>= 3.10)
 - **C++17** compatible compiler
+- **pkg-config** -- used to locate GMP
 - **GMP** (GNU Multiple Precision Arithmetic Library)
   - Please refer to https://gmplib.org/ for the installation instructions on your system.
+  - The build finds it through pkg-config, so `gmp.pc` has to be visible. Installing
+    to a prefix outside the default search path means exporting it yourself.
 - **Intel HEXL** (Homomorphic Encryption Acceleration Library)
   - You can install it manually from https://github.com/intel/hexl.
+  - Point `HEXL_ROOT` at the install if it is not on the default CMake search path (see Build Instructions).
+- **nlohmann/json** -- required by the `blindrotate_cache` benchmark, which writes its results as json.
+  - Debian/Ubuntu: `sudo apt install nlohmann-json3-dev`. Otherwise, install the
+    header-only library from https://github.com/nlohmann/json.
 
 ## Build Instructions
 
 1. **Clone the repository**
 2. **Configure and build**
     ```
-    mkdir benchmark_run/server
+    mkdir -p benchmark_run/server
     chmod +x build_bench_blindrotate.sh
     ./build_bench_blindrotate.sh
     bash cp_bench.sh
     ```
+
+    The script configures and builds into `CMAKE_BUILD/`, and reads three
+    environment variables:
+
+    | variable | default | meaning |
+    | --- | --- | --- |
+    | `TORUS` | `32` | Torus type, `32` or `56` (`-DTORUS_TYPE`) |
+    | `TARGET_ARCH` | `native` | ISA baseline: `native`, `avx512`, `avx2`, `generic` |
+    | `HEXL_ROOT` | `/usr/local/lib` for `native`/`avx512`, else unset | HEXL install to put on `CMAKE_PREFIX_PATH` |
+
+    `TARGET_ARCH` governs this project's own code only -- the HEXL you link has to
+    match separately, which is what `HEXL_ROOT` selects. Use an AVX-512-tuned HEXL
+    for `avx512`. A HEXL built without it costs roughly 4x on the NTT.
+    Set `HEXL_ROOT=` (empty) to force the system install.
 
 3. **Running Benchmarks**
     ```

@@ -39,8 +39,8 @@ target_compile_definitions(yatfhe_lib PUBLIC
 # Build GMP
 message(STATUS "Linking GMP...")
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GMPXX REQUIRED IMPORTED_TARGET gmpxx)
-target_link_libraries(yatfhe_lib PkgConfig::GMPXX)
+pkg_check_modules(GMP REQUIRED IMPORTED_TARGET gmp)
+target_link_libraries(yatfhe_lib PkgConfig::GMP)
 message(STATUS "Linking GMP...DONE!!")
 
 # Link HEXL
