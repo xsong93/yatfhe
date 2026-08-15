@@ -80,10 +80,6 @@ void deserialize(TrlweDft& t, std::istream& is) {
         t.a.resize(a_size);
         for (auto& poly : t.a) deserialize(poly, is);
     } else {
-        // Ensure a stale value from a previous use of this object (e.g. a ping-ponged
-        // buffer being deserialized into repeatedly) can't survive: without this, a
-        // later resize(k, ...) onto an already-correctly-sized `a` is a no-op, leaving
-        // old NTT data in place for the next accumulation step to add onto.
         t.a.clear();
     }
 }
@@ -194,11 +190,6 @@ void deserialize(TrgswMPDft& t, std::istream& is) {
 }
 
 namespace {
-    // A failed key write must not pass silently. An unwritable path (file owned by
-    // another user, full disk) leaves the *previous* file on disk untouched, so the
-    // paired deserialize goes on to load a key from an older keygen.
-    // Check at open and again after close, which is where a deferred
-    // flush failure (ENOSPC) finally surfaces.
     std::ofstream openForWrite(const std::string& filename) {
         std::ofstream os(filename, std::ios::binary | std::ios::trunc);
         if (!os) throw std::runtime_error("Failed to open file for writing: " + filename);
@@ -334,10 +325,7 @@ void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& fi
         bskLazy.bskTrim[i].resize(1);  // Each bskTrim[i] is a vector of size 1
         deserialize(bskLazy.bskTrim[i][0], inFile);
     }
-
-    // level/group aren't known until read from metadata at the end of the file, but each
-    // TrgswMPDft already carries its own level count, and group is always 1 in this
-    // (non-TERNARY) format, so we can recover what decompIndex() needs here.
+    
     bskLazy.level = bskLazy.bskTrim[0][0].l;
     bskLazy.group = 1;
     bskLazy.bskDecompA.resize(static_cast<size_t>(n - 1) * bskLazy.level); // bskDecompA has (n-1)*level cells

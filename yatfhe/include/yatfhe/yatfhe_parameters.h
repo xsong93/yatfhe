@@ -27,9 +27,9 @@ struct YatfheParameters {
     // int l {4};
     // int lApprox {2};
 #else // binary secret
-    // LWE params, 128.5-bit
-    int n {680};
-    int lweNoiseB {18}; // log2 σ: 17.21
+    // LWE params, 128.3-bit
+    int n {640};
+    int lweNoiseB {19}; // log2 σ: 18.21
     int64_t qLwe{Q_32};
     int qLweBits {32};
 
@@ -67,20 +67,15 @@ struct YatfheParameters {
     // RGSW params
     int l2 {4}; // todo
     int lDft {dftBits / radixBits};
-    // KS params: the KSK's own gadget base/level, independent of PBS's
-    // radixBits/l. KS is a scalar multiply-accumulate over k*N rows, far
-    // cheaper per level than a PBS external product over n iterations, so
-    // it can use a much smaller base (many more, tiny digits) for a large
-    // noise reduction at negligible extra cost. KSK entries are always
-    // LWE_Q-domain ciphertexts (qLwe, fixed regardless of TORUS_TYPE), so
-    // the usable decomposition width is capped at qLweBits.
-    // Call setKsRadixBits() to change ksRadixBits.
-    int ksRadixBits {2}; // b_ks
-    int ksWidthBits {qLweBits}; // usable KS precision
-    int ksLevel {ksWidthBits / ksRadixBits}; // ks decomposition length
     int radixBase {1 << radixBits};  // 2^b
     int baseOverTwo {radixBase / 2}; // B / 2 threshold
     int digitMask {radixBase - 1};
+
+    // KS params
+    int ksRadixBits {2}; // b_ks
+    int ksWidthBits {qLweBits}; // usable KS precision
+    int ksLevel {ksWidthBits / ksRadixBits}; // ks decomposition length
+
     int group {1};
     // CRT params
     int d{NUM_PRIMES}; // # of primes
