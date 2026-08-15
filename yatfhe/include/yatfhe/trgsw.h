@@ -342,6 +342,12 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
 
 void externalProductTrgswMPNttInPlace(Trlwe& acc, const TrgswMPDft& trgswMPInput, const int level, const YatfheParameters& param);
 
+// Same as externalProductTrgswMPNttInPlace, but with the RGSW's two RLWE' rows passed
+// separately (cRows = RLWE'(sk*m), cPrimeRows = RLWE'(m)). Lets a caller that holds the
+// rows in different objects avoid copying one into the other to form a TrgswMPDft.
+void externalProductSplitNttInPlace(Trlwe& acc, const vector<vector<TrlweDft>>& cRows, const vector<TrlweDft>& cPrimeRows,
+                                    int level, const YatfheParameters& param);
+
 void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, int level, const YatfheParameters& param);
 
 void internalProductTrgswMP(TrgswMP& output, const TrgswMP& input1, const TrgswMP& input2, int level, const YatfheParameters& param);
@@ -351,6 +357,9 @@ void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const Trg
 void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, int level, const YatfheParameters& param);
 
 
+// RLWE' -> RGSW scheme switching: given cPrimeDft = RLWE(v_l * m) and sSquare = RLWE'(sk^2),
+// writes RLWE(v_l * sk * m) into cDft. cDft is zeroed on entry, so it may be a reused buffer.
+// (The Opt/Mix/FromDft variants below still accumulate and need a cleared cDft from the caller.)
 void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPrimeDft, const TrlevDft& sSquare, const YatfheParameters& param);
 
 void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,

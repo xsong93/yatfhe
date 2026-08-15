@@ -691,9 +691,7 @@ void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Tr
 
 namespace {
 
-    // The blind rotate calls the external product once per LWE coefficient
-    // (n = 1024 times). Keep them as per-thread scratch, resized only when the
-    // dimensions change.
+    // per-thread scratch, resized only when the dimensions change.
     struct ExtProdScratch {
         DecomposedTrlwe decomposed;
         vector<TrlweDft> partials;
@@ -704,13 +702,6 @@ namespace {
         void fit(const YatfheParameters& param, const int lv) {
             if (k == param.k && N == param.N && l == param.l && level == lv) return;
             k = param.k; N = param.N; l = param.l; level = lv;
-            // Sized by lv, not param.l: only the top lv digits are ever consumed
-            // below, and decomposeRowUnrolled<L> rounds at L*radixBits, so asking
-            // for lv digits *is* the approximate decomposition rather than a full
-            // one that throws its tail away. A param.l-sized buffer made every one
-            // of the n external products extract param.l digits per row -- and any
-            // param.l > 4 also fell off the unrolled fast path in
-            // gadgetDecomposeTrlwe, which cost more than the digits themselves.
             decomposed = DecomposedTrlwe{param, lv};
             partials.assign(lv, TrlweDft{param.k, param.N});
             sum = TrlweDft{param.k, param.N};
@@ -723,7 +714,8 @@ namespace {
         return scratch;
     }
 
-    void externalProductTrgswMPNttImpl(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput,
+    void externalProductTrgswMPNttImpl(Trlwe& output, const vector<vector<TrlweDft>>& cRows,
+                                       const vector<TrlweDft>& cPrimeRows, const Trlwe& trlweInput,
                                        const int level, const YatfheParameters& param) {
         const auto k = param.k;
         auto& scratch = extProdScratch(param, level);
@@ -735,18 +727,18 @@ namespace {
         // calModularInnerProductNtt accumulates, so the partials must start at zero.
         for (auto& partial : partials) clearTrlwe(partial);
 
-        auto accumulateLevel = [k, &trgswMPInput, &decomposedTrlwe, &partials](const int lvl) {
+        auto accumulateLevel = [k, &cRows, &cPrimeRows, &decomposedTrlwe, &partials](const int lvl) {
             const auto N = decomposedTrlwe.trlwes[lvl].b.N;
             thread_local TrlweDft inDft;
             if (inDft.a.size() != static_cast<size_t>(k) || inDft.b.N != N) {
                 inDft = TrlweDft{k, N};
             }
             applyNttForAB(inDft, decomposedTrlwe.trlwes[lvl]);
-            const auto& c      = trgswMPInput.c[lvl];
-            const auto& cPrime = trgswMPInput.cPrime[lvl];
-            const auto& inA    = inDft.a;
-            const auto& inB    = inDft.b;
-            auto& partial      = partials[lvl];
+            const auto& c = cRows[lvl];
+            const auto& cPrime = cPrimeRows[lvl];
+            const auto& inA = inDft.a;
+            const auto& inB = inDft.b;
+            auto& partial = partials[lvl];
             for (size_t i = 0; i < k; i++) {
                 for (size_t i2 = 0; i2 < k; i2++) {
                     calModularInnerProductNtt(partial.a[i2], inA[i], c[i].a[i2]);
@@ -757,23 +749,16 @@ namespace {
             calModularInnerProductNtt(partial.b, inB, cPrime.b);
         };
 
-        // With lApprox == 1 there is no cross-level parallelism to win, so handing
-        // the single task to the pool and blocking on it was pure overhead. The
-        // lone partial is already the sum, so the accumulator pass drops out too.
         if (level == 1) {
             accumulateLevel(0);
             applyInttForAB(output, partials[0]);
             return;
         }
 
-        // Already on a worker: the callers that fan this out submit more tasks than a small pool has
-        // threads, so enqueuing here and blocking would leave every worker waiting on
-        // work that no one is left to run.
+        // Already on a worker, so enqueuing here and blocking would leave every worker waiting on work that no one is left to run.
         if (ThreadPool::onWorkerThread()) {
             for (int lvl = 0; lvl < level; lvl++) accumulateLevel(lvl);
         } else {
-            // accumulateLevel outlives the wait, so the group can point at it rather
-            // than copy it into a packaged_task per level.
             ThreadPool::instance().run(scratch.group, level, accumulateLevel);
             scratch.group.wait();
         }
@@ -788,11 +773,16 @@ namespace {
 }
 
 void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, const Trlwe& trlweInput, const int level, const YatfheParameters& param) {
-    externalProductTrgswMPNttImpl(output, trgswMPInput, trlweInput, level, param);
+    externalProductTrgswMPNttImpl(output, trgswMPInput.c, trgswMPInput.cPrime, trlweInput, level, param);
 }
 
 void externalProductTrgswMPNttInPlace(Trlwe& acc, const TrgswMPDft& trgswMPInput, const int level, const YatfheParameters& param) {
-    externalProductTrgswMPNttImpl(acc, trgswMPInput, acc, level, param);
+    externalProductTrgswMPNttImpl(acc, trgswMPInput.c, trgswMPInput.cPrime, acc, level, param);
+}
+
+void externalProductSplitNttInPlace(Trlwe& acc, const vector<vector<TrlweDft>>& cRows, const vector<TrlweDft>& cPrimeRows,
+                                    const int level, const YatfheParameters& param) {
+    externalProductTrgswMPNttImpl(acc, cRows, cPrimeRows, acc, level, param);
 }
 
 void generalExternalProductTrgswMPNtt(Trlev& output, const TrgswMPDft& input1, const Trlev& input2, const int level, const YatfheParameters& param) {
@@ -882,6 +872,11 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
     vector cPrimeA(K, TorusPolynomial{N});
     for (auto i = 0; i < K; i++) {
         applyIntt(cPrimeA[i], cPrimeADft[i]);
+    }
+
+    // calModularInnerProductNtt below accumulates, so cDft must start at zero.
+    for (auto& c : cDft) {
+        clearTrlwe(c);
     }
 
     vector decomp(L, Trlwe{K, N});

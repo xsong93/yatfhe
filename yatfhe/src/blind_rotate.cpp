@@ -2,6 +2,7 @@
 // Created by xintong on 4/21/25.
 //
 #include <mutex>
+#include <stdexcept>
 #include "yatfhe/blind_rotate.h"
 #include "yatfhe/cmux.h"
 #include "yatfhe/ntt_hexl.h"
@@ -747,6 +748,7 @@ void blindRotateLazyMTNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<ve
     const auto n = param.n;
 
 #ifdef TERNARY
+    throw std::runtime_error("blindRotateLazyMTNtt: not implemented for ternary keys");
 #else
     // handle first Rlwe key component
     // R(v) + (X^a0 - 1)R(v*s0)
@@ -817,36 +819,6 @@ namespace {
             }
         }
     }
-
-    // void deserializeAndRotateBskComponent(vector<NttPolynomial>& bskB, vector<vector<vector<DecompPolynomial>>>& bskDecompA,
-    //                                        vector<vector<vector<NttPolynomial>>>& rotatedADft, vector<NttPolynomial>& rotatedB,
-    //                                        const int32_t a, const int keyIndex, const int level, std::ifstream& inFile,
-    //                                        const YatfheParameters& param) {
-    //     for (auto l = 0; l < level; l++) {
-    //         deserializeNestedVector(bskDecompA[keyIndex * level + l], inFile);
-    //         deserialize(bskB[keyIndex * level + l], inFile);
-    //     }
-    //
-    //     const auto q = NttHexl::getNttHexl().GetModulus();
-    //     NttPolynomial aDft{param.N};
-    //     for (auto lvl = 0; lvl < level; lvl++) {
-    //         const auto& decompA = bskDecompA[keyIndex * level + lvl];
-    //         for (auto dl = 0; dl < param.l; dl++) {
-    //             for (auto k1 = 0; k1 < param.k; k1++) {
-    //                 NttHexl::applyNtt(aDft, decompA[dl][k1]);
-    //                 rotateNttPolynomialMinusOne(rotatedADft[lvl][dl][k1], aDft, a);
-    //             }
-    //         }
-    //         rotateNttPolynomialMinusOne(rotatedB[lvl], bskB[keyIndex * level + lvl], a);
-    //
-    //         // b + g_l (noiseless gadget coefficient for this level)
-    //         const auto g_l = static_cast<uint64_t>(static_cast<Torus>(1) << (param.torusBits - (lvl + 1) * param.radixBits));
-    //         for (auto& coeff : rotatedB[lvl].coeffs) {
-    //             coeff += g_l;
-    //             if (coeff >= q) coeff -= q;
-    //         }
-    //     }
-    // }
 }
 
 void blindRotateLazyPipeNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipe& bsk, const ScaledTlwe& input,
@@ -864,6 +836,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipe& bsk,
     futures.reserve(1 + level);
 
 #ifdef TERNARY
+    throw std::runtime_error("blindRotateLazyPipeNtt: not implemented for ternary keys");
 #else
     auto& s2 = bsk.s2Dft;
     auto& bskDecompA = bsk.bskDecompA;
@@ -952,6 +925,7 @@ void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const
 
 
 #ifdef TERNARY
+    throw std::runtime_error("blindRotatePipeInitNtt: not implemented for ternary keys");
 #else
 
     // read keys
@@ -1041,6 +1015,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
     TaskGroup group;
 
 #ifdef TERNARY
+    throw std::runtime_error("blindRotateLazyPipeAltNtt: not implemented for ternary keys");
 #else
     auto& s2 = bsk.s2Dft;
     auto& bskPrime = bsk.bskPrime;
@@ -1132,6 +1107,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
     if (!inFile) throw std::runtime_error("Failed to open file");
 
 #ifdef TERNARY
+    throw std::runtime_error("blindRotateLazyPipeAltInitNtt: not implemented for ternary keys");
 #else
     // read keys
     bsk.bskFirst.resize(1);
@@ -1226,30 +1202,33 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
 #endif
 }
 
-void blindRotateWWL24Ntt(Trlwe& accum, BootstrappingKeyWWL24& bsk, const ScaledTlwe& input, const TrlevDft& s2, const YatfheParameters& param) {
-    auto& bskDft = bsk.bskDft;
-    const auto level = bskDft[0].l;
+// SFBS blind rotation (WWL+24, Algorithm 3)
+void blindRotateWWL24Ntt(Trlwe& accum, const BootstrappingKeyWWL24& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
 #ifdef TERNARY
+    throw std::runtime_error("blindRotateWWL24Ntt: not implemented for ternary keys");
 #else
+    const auto& bskDft = bsk.bskDft;
+    const auto& s2 = bsk.s2Dft;
+    const auto level = bskDft[0].l;
     auto& pool = ThreadPool::instance();
     TaskGroup group;
+    vector cRows(level, vector(param.k, TrlweDft(param.k, param.N)));
 
     int keyIndex = 0;
     const auto schemeSwitch = [&](const int l) {
-        switchTrlweToSecretEmbeddingNtt(bskDft[keyIndex].c[l], bskDft[keyIndex].cPrime[l], s2, param);
+        switchTrlweToSecretEmbeddingNtt(cRows[l], bskDft[keyIndex].cPrime[l], s2, param);
     };
 
+    Trlwe tmp{param};
     for (auto i = 0; i < param.n; i++) {
         if (input.a[i] == 0) {
             continue;
         }
-        bskDft[i].c.resize(level, vector(param.k, TrlweDft(param.k, param.N)));
         keyIndex = i;
         pool.run(group, level, schemeSwitch);
         group.wait();
-        Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, accum, input.a[i]);
-        externalProductTrgswMPNttInPlace(tmp, bskDft[i], level, param);
+        externalProductSplitNttInPlace(tmp, cRows, bskDft[i].cPrime, level, param);
         accumulateTrlwe(accum, tmp);
     }
 #endif

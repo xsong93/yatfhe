@@ -275,6 +275,63 @@ TEST(BLIND_ROT, BLIND_ROT_MP21_NTT) {
     printBanner("BLIND_ROT.BLIND_ROT_MP21_NTT");
 }
 
+// SFBS (WWL+24, Algorithm 3)
+TEST(BLIND_ROT, BLIND_ROT_WWL24_NTT) {
+    YatfheParameters param{};
+    initYatfhe(param);
+
+    // key gen
+    TlweKey tlweKey{param};
+    genTlweKey(tlweKey);
+    TrgswKey trgswKey{param};
+    TrlweKey& trlweKey = trgswKey.trlweKey;
+    genTrlweKey(trlweKey);
+    BootstrappingKeyWWL24 bsk{param, param.lApprox};
+    COUNT_TIME("genBootstrappingKeyWWL24", genBootstrappingKeyWWL24(bsk, trgswKey, tlweKey, param);)
+
+    // rots gen
+    ScaledTlwe sTlwe{param.N * 2, param.n};
+    for (auto i = 0; i < sTlwe.n; i++) {
+        sTlwe.a[i] = genIntUniformDist(-2 * param.N, 2 * param.N);
+    }
+
+    int rot = 0;
+    for (auto i = 0; i < param.n; i++) {
+        if (tlweKey.s[i] == 1) {
+            rot += sTlwe.a[i];
+        } else if (tlweKey.s[i] == -1) {
+            rot -= sTlwe.a[i];
+        }
+    }
+    printMsg(rot, "rot");
+
+    for (auto run = 0; run < 2; run++) {
+        // data gen
+        Trlwe in2{param.k, param.N};
+        TrlweDft in2Dft{param.k, param.N};
+        TorusPolynomial v{param.N};
+        generateTestPolynomial(v, param.torusBase, 2 * param.N);
+        symEncTrlweMultiSampleNtt(in2, in2Dft, trlweKey, v.coeffs);
+
+        // expected result
+        IntPolynomial rotInP{param.N};
+        TrlweDft rotInDft{param.k, param.N};
+        rotateTrlweNtt(rotInDft, in2Dft, rot);
+        symDecTrlweToIntNtt(rotInP, rotInDft, trlweKey, param.torusBase);
+
+        COUNT_TIME("blindRotateWWL24Ntt", blindRotateWWL24Ntt(in2, bsk, sTlwe, param);)
+
+        IntPolynomial decP{param.N};
+        symDecTrlweToInt(decP, in2, trlweKey, param.torusBase);
+        ASSERT_EQ(rotInP.coeffs, decP.coeffs) << "run " << run;
+
+        for (auto i = 0; i < bsk.n; i++) {
+            ASSERT_TRUE(bsk.bskDft[i].c.empty()) << "key grew at index " << i;
+        }
+    }
+    printBanner("BLIND_ROT.BLIND_ROT_WWL24_NTT");
+}
+
 #ifdef TORUS32
 static void benchBlindRotateMP21Ntt(int N, int radixBits, int l, int lApprox) {
     YatfheParameters param{};

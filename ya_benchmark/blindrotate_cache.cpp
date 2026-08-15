@@ -284,12 +284,12 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
         auto start = steady_clock::now();
         auto* bskServer = cache.getWWL24KeySimple(id);
         if (bskServer != nullptr) {
-            blindRotateWWL24Ntt(acc, *bskServer, sTlwe, bskServer->s2Dft, param);
+            blindRotateWWL24Ntt(acc, *bskServer, sTlwe, param);
         } else {
             isLoadKey = true;
             BootstrappingKeyWWL24 bsk;
             deserializeBskWWL24(bsk, file, param.n);
-            blindRotateWWL24Ntt(acc, bsk, sTlwe, bsk.s2Dft, param);
+            blindRotateWWL24Ntt(acc, bsk, sTlwe, param);
             cache.putWWL24Key(id, std::move(bsk));
         }
         auto end = steady_clock::now();

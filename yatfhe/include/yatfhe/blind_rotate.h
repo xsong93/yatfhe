@@ -49,7 +49,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
 
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 
-void blindRotateWWL24Ntt(Trlwe& accum, BootstrappingKeyWWL24& bsk, const ScaledTlwe& input, const TrlevDft& s2, const YatfheParameters& param);
+void blindRotateWWL24Ntt(Trlwe& accum, const BootstrappingKeyWWL24& bsk, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateJP22Ntt(Trlwe& accum, const BootstrappingKeyMP& bsk, const ScaledTlwe& input, const YatfheParameters& param);
 

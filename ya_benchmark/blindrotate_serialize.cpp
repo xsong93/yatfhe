@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
         clearFileCache("BSK_WWL.bin");
         COUNT_TIME("WWL24 read key", deserializeBskWWL24(bskWWL24Server, "BSK_WWL.bin", param.n);)
         genNoiselessTrlweSample(out7, v, sTlwe);
-        COUNT_TIME("WWL24 blindRotate", blindRotateWWL24Ntt(out7, bskWWL24Server, sTlwe, bskWWL24Server.s2Dft, param);)
+        COUNT_TIME("WWL24 blindRotate", blindRotateWWL24Ntt(out7, bskWWL24Server, sTlwe, param);)
     }
 
     // client side
