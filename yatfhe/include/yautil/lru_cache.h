@@ -52,10 +52,10 @@ public:
         return nullptr;
     }
 
-    void put(const KeyType& key, const ValueType&& value) {
+    void put(const KeyType& key, ValueType&& value) {
         auto it = node_map_.find(key);
         if (it != node_map_.end()) {
-            it->second->value = value;
+            it->second->value = std::move(value);
             node_list_.splice(node_list_.begin(), node_list_, it->second);
             return;
         }
