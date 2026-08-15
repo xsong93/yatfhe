@@ -309,8 +309,8 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
 }
 
 int main(int argc, char **argv) {
-    int sizeRatio = round(174196/43792); // ginx key size / lazy key size
-    int sizeRatio2 = round(174196/87352); // ginx key size / wwl+24 key size
+    int sizeRatio = 4; // ginx key size / lazy key size
+    int sizeRatio2 = 2; // ginx key size / wwl+24 key size
 
     CommandLineParser parser(argc, argv);
 
@@ -358,11 +358,9 @@ int main(int argc, char **argv) {
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
 
     // data gen
-    //
-    // Full-range LUT via the padding-bit encoding.
     const int p = param.torusBase;
-    const int encMod = 2 * p;                 // p messages + 1 padding bit
-    Integer pt = -1;                          // top slot (p-1); valid for any p >= 2
+    const int encMod = 2 * p;
+    Integer pt = -1;
     const int slot = static_cast<int>(((pt % p) + p) % p);
     Torus mu = modSwitchToTorusGeneral(slot, encMod, LWE_Q);
     Tlwe input{param.n};

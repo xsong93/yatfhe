@@ -342,9 +342,6 @@ void externalProductTrgswMPNtt(Trlwe& output, const TrgswMPDft& trgswMPInput, co
 
 void externalProductTrgswMPNttInPlace(Trlwe& acc, const TrgswMPDft& trgswMPInput, const int level, const YatfheParameters& param);
 
-// Same as externalProductTrgswMPNttInPlace, but with the RGSW's two RLWE' rows passed
-// separately (cRows = RLWE'(sk*m), cPrimeRows = RLWE'(m)). Lets a caller that holds the
-// rows in different objects avoid copying one into the other to form a TrgswMPDft.
 void externalProductSplitNttInPlace(Trlwe& acc, const vector<vector<TrlweDft>>& cRows, const vector<TrlweDft>& cPrimeRows,
                                     int level, const YatfheParameters& param);
 
@@ -356,10 +353,6 @@ void internalProductTrgswMPNtt(TrgswMP& output, const TrgswMP& input1, const Trg
 
 void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const TrgswMPDft& input2, int level, const YatfheParameters& param);
 
-
-// RLWE' -> RGSW scheme switching: given cPrimeDft = RLWE(v_l * m) and sSquare = RLWE'(sk^2),
-// writes RLWE(v_l * sk * m) into cDft. cDft is zeroed on entry, so it may be a reused buffer.
-// (The Opt/Mix/FromDft variants below still accumulate and need a cleared cDft from the caller.)
 void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPrimeDft, const TrlevDft& sSquare, const YatfheParameters& param);
 
 void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,
@@ -369,10 +362,6 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
                                         const TorusPolynomial& cPrimeB, const TrlevDft& sSquare,
                                         const YatfheParameters& param);
 
-// Same computation as switchTrlweToSecretEmbeddingNttOpt, but takes a of the decomposition
-// that the caller has already transformed to NTT domain (and, typically, already rotated via
-// rotateNttPolynomialMinusOne) instead of a coefficient-domain decompA it would have to NTT
-// itself. cPrimeDft.b must likewise already hold the (rotated) b the caller wants embedded.
 void switchTrlweToSecretEmbeddingNttFromDft(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft,
                                             const vector<vector<NttPolynomial>>& aDft,
                                             const TrlevDft& sSquare, const YatfheParameters& param);

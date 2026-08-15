@@ -868,8 +868,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipe& bsk,
         auto& currRotatedB = i % 2 == 0 ? rotatedBDecomp0 : rotatedBDecomp1;
         auto& nextRotatedB = i % 2 == 0 ? rotatedBDecomp1 : rotatedBDecomp0;
 
-        // operator 1 (automorphism): NTT the just-loaded decompA/b and rotate it, along with
-        // by aNext -- cheap, since this data is still pre-expansion size.
+        // automorphism
         if (i < n - 2) {
             const auto aNext = input.a[i + 2];
             futures.emplace_back(pool.enqueue([&bskDecompB, &bskDecompA, &nextRotatedA, &nextRotatedB, aNext, level, i, &param] {
@@ -877,9 +876,7 @@ void blindRotateLazyPipeNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipe& bsk,
             }));
         }
 
-        // operator 2 (scheme switching): consume the rotated decompA/b prepared on the
-        // previous iteration to produce the final, already-rotated TRGSW for component
-        // directly into nextRotated.
+        // scheme switching
         if (i < n - 1) {
             for (auto l = 0; l < level; l++) {
                 futures.emplace_back(pool.enqueue([&nextRotated, &currRotatedA, &currRotatedB, &s2, l, &param] {
@@ -964,8 +961,7 @@ void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const
         auto& currRotatedB = i % 2 == 0 ? rotatedBDecomp0 : rotatedBDecomp1;
         auto& nextRotatedB = i % 2 == 0 ? rotatedBDecomp1 : rotatedBDecomp0;
 
-        // operator 1 (automorphism): NTT the just-loaded decompA/b and rotate it, along with
-        // by aNext -- cheap, since this data is still pre-expansion size.
+        // automorphism
         if (i < n - 2) {
             const auto aNext = input.a[i + 2];
             futures.emplace_back(pool.enqueue([&bskDecompB, &bskDecompA, &nextRotatedA, &nextRotatedB, aNext, level, i, &inFile, &param] {
@@ -973,9 +969,7 @@ void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const
             }));
         }
 
-        // operator 2 (scheme switching): consume the rotated decompA/b prepared on the
-        // previous iteration to produce the final, already-rotated TRGSW for component
-        // directly into nextRotated.
+        // scheme switching
         if (i < n - 1) {
             for (auto l = 0; l < level; l++) {
                 futures.emplace_back(pool.enqueue([&nextRotated, &currRotatedA, &currRotatedB, &s2, l, &param] {
@@ -1151,10 +1145,10 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
 
     // handle first two key components
     {
-        deserialize(bskPrime[0], inFile);   // stageA below needs it now
-        readIndex = 1;                      // iteration 0 needs it next
+        deserialize(bskPrime[0], inFile);
+        readIndex = 1;
         readAhead = true;
-        pool.run(group, level, stageA);     // keyIndex 0 into decompA0/b0
+        pool.run(group, level, stageA);
 
         Trlwe tmp{param};
         rotateTrlweMinusOne(tmp, bsk.bskFirst[0], input.a[0]);
@@ -1174,16 +1168,15 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
         currB = even ? &b0 : &b1;
         nextB = even ? &b1 : &b0;
 
-        // Scheme switching goes in first: its tasks are the long pole, so anything
-        // queued ahead of them delays the join.
+        // Scheme switching
         if (i < n - 1) {
             pool.run(group, level, stageB);
         }
 
+        // automorphism
         if (i < n - 2) {
-            keyIndex = i + 1;   // read at iteration i - 1, joined by its barrier
+            keyIndex = i + 1;
             rotateBy = input.a[i + 2];
-            // bskPrime holds n - 1 components, so the last one to read is n - 2
             readIndex = i + 2;
             readAhead = i < n - 3;
             pool.run(group, level, stageA);
@@ -1327,8 +1320,6 @@ void blindRotateJP22NttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft
 
 void blindRotateMP21Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
     const auto level = bskDft[0][0].l;
-    // Hoisted out of the loop: rotateTrlweMinusOne overwrites every coefficient,
-    // so the buffer needs no clearing between iterations.
     Trlwe tmp{param};
 #ifdef TERNARY
     const auto n = param.n;

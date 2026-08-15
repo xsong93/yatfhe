@@ -650,9 +650,6 @@ TEST(RGSWMP, SCHEME_SWITCHING) {
     Integer mu1 = 1;
     encryptTrgswMP(in1, mu1, trgswKey, 0, param);
     {
-        // encryptTrgswMPNtt samples cPrime's "a" natively/uniformly over the wide qNtt domain,
-        // which switchTrlweToSecretEmbeddingNtt cannot correctly INTT+decompose (it needs a
-        // genuinely bounded Torus-domain "a" forward-transformed into NTT domain instead).
         TorusPolynomial muPolyFix{param.N};
         Trlwe scratch{param.k, param.N};
         for (auto lvl = 0; lvl < in1Dft.l; lvl++) {

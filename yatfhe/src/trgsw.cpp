@@ -869,7 +869,7 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
     const auto N = param.N;
     auto& cPrimeADft = cPrimeDft.a;
     auto& cPrimeBDft = cPrimeDft.b;
-    vector cPrimeA(K, TorusPolynomial{N});
+    thread_local vector cPrimeA(K, TorusPolynomial{N});
     for (auto i = 0; i < K; i++) {
         applyIntt(cPrimeA[i], cPrimeADft[i]);
     }
@@ -879,11 +879,11 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
         clearTrlwe(c);
     }
 
-    vector decomp(L, Trlwe{K, N});
+    thread_local vector decomp(L, Trlwe{K, N});
     for (auto row = 0; row < K; row++) {
         auto& currIn = cPrimeA[row];
+        DecomposedData d {L};
         for (auto j = 0; j < N; j++) {
-            DecomposedData d {L};
             signedGadgetDecomposition(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < L; lvl++) {
                 auto& currOut = decomp[lvl].a[row];
@@ -954,8 +954,6 @@ void switchTrlweToSecretEmbeddingNttFromDft(vector<TrlweDft>& cDft, TrlweDft& cP
     const auto K = param.k;
     const auto L = param.l; // must use full decomp length
 
-    // calculate a * S^2, using the already-NTT'd (and typically already rotated) aDft
-    // supplied by the caller instead of computing NTT(decompA) here.
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
         auto& aDftL = aDft[l];
@@ -988,8 +986,7 @@ void switchDecompTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, TrlweDft& cPr
     const auto L = param.l; // must use full decomp length
     const auto N = param.N;
 
-    // calculate a * S^2, using the already-NTT'd (and typically already rotated) aDft
-    // supplied by the caller instead of computing NTT(decompA) here.
+    // calculate a * S^2
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
         auto& aL = aDecomp[l];
@@ -1027,9 +1024,6 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
     const auto L = param.l; // must use full decomp length
     const auto N = param.N;
 
-    // Per-thread scratch, the blind rotate
-    // calls this L*K times per LWE coefficient, so a fresh NttPolynomial per digit put
-    // n*level*L allocations through malloc, from `level` threads at once.
     thread_local NttPolynomial aDft;
     if (aDft.N != N) aDft = NttPolynomial{N};
 
@@ -1071,8 +1065,8 @@ void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const T
 
     for (auto row = 0; row < K; row++) {
         auto& currIn = cPrimeA[row];
+        DecomposedData d {L};
         for (auto j = 0; j < N; j++) {
-            DecomposedData d {L};
             signedGadgetDecomposition(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < L; lvl++) {
                 auto& currOut = decomp[lvl].a[row];
