@@ -1,4 +1,6 @@
 
+#include <iostream>
+
 #include "yatfhe/bootstrapping.h"
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trgsw.h"

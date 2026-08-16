@@ -62,6 +62,55 @@ namespace {
     void symEncTrlweNttSimple(TrlweDft& trlweDft, const TrlweKey& key) {
         calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
     }
+
+    template<int L, typename OutT>
+    void decomposeRowUnrolled(OutT* const* outPtr, const Torus* in, const int N,
+                              const int radixBits, const int torusBits) {
+        const Torus B = static_cast<Torus>(1) << radixBits;
+        const Torus halfB = B >> 1;
+        const int shift = torusBits - L * radixBits;
+        const UnsignedInteger round = (shift > 0) ? (static_cast<UnsignedInteger>(1) << (shift - 1)) : 0;
+
+        OutT* out[L];
+        for (int lvl = 0; lvl < L; lvl++) out[lvl] = outPtr[lvl];
+
+        for (int j = 0; j < N; j++) {
+            const UnsignedInteger u = static_cast<UnsignedInteger>(in[j]) + round;
+            Torus carry = 0;
+            for (int lvl = L - 1; lvl >= 0; --lvl) {   // constant trip count -> fully unrolled
+                const UnsignedInteger window = (u >> (torusBits - (lvl + 1) * radixBits)) & static_cast<UnsignedInteger>(B - 1);
+                Torus digit = static_cast<Torus>(window) + carry;
+                carry = (digit >= halfB);
+                digit -= carry * B;
+                out[lvl][j] = static_cast<OutT>(digit);  // sign is always +1
+            }
+        }
+    }
+
+    template<typename OutT>
+    void decomposeRow(OutT* const* outPtr, const Torus* in, const int N, const int l,
+                      const YatfheParameters& param) {
+        const int b = param.radixBits, t = param.torusBits;
+        switch (l) {
+            case 1: decomposeRowUnrolled<1>(outPtr, in, N, b, t); return;
+            case 2: decomposeRowUnrolled<2>(outPtr, in, N, b, t); return;
+            case 3: decomposeRowUnrolled<3>(outPtr, in, N, b, t); return;
+            case 4: decomposeRowUnrolled<4>(outPtr, in, N, b, t); return;
+            case 5: decomposeRowUnrolled<5>(outPtr, in, N, b, t); return;
+            case 6: decomposeRowUnrolled<6>(outPtr, in, N, b, t); return;
+            case 7: decomposeRowUnrolled<7>(outPtr, in, N, b, t); return;
+            case 8: decomposeRowUnrolled<8>(outPtr, in, N, b, t); return;
+            default: {
+                DecomposedData d{l};
+                for (auto j = 0; j < N; j++) {
+                    signedGadgetDecomposition(d, in[j], param);
+                    for (auto lvl = 0; lvl < l; lvl++) {
+                        outPtr[lvl][j] = static_cast<OutT>(d.value[lvl] * d.sign);
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -175,76 +224,11 @@ void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const Scale
     rotateTorusPolynomial(accum.b, -barb, v);
 }
 
-namespace {
-    // Straight-line specialisation of signedGadgetDecomposition for a
-    // compile-time digit count L. The generic version leaves the coefficient loop
-    // with two consecutive inner loops (digit extraction, then write-out), which
-    // GCC refuses to vectorise,
-    //
-    // The carry is per-coefficient (reset every j), so coefficients stay
-    // independent and vectorising across j is exact.
-    // OutT is Torus for the accumulator's decomposition and Decomp (int8_t) for the
-    // key-side ones; the digits are balanced into [-B/2, B/2) either way, so they fit
-    // both.
-    template<int L, typename OutT>
-    void decomposeRowUnrolled(OutT* const* outPtr, const Torus* in, const int N,
-                              const int radixBits, const int torusBits) {
-        const Torus B = static_cast<Torus>(1) << radixBits;
-        const Torus halfB = B >> 1;
-        const int shift = torusBits - L * radixBits;
-        const UnsignedInteger round =
-            (shift > 0) ? (static_cast<UnsignedInteger>(1) << (shift - 1)) : 0;
-
-        OutT* out[L];
-        for (int lvl = 0; lvl < L; lvl++) out[lvl] = outPtr[lvl];
-
-        for (int j = 0; j < N; j++) {
-            const UnsignedInteger u = static_cast<UnsignedInteger>(in[j]) + round;
-            Torus carry = 0;
-            for (int lvl = L - 1; lvl >= 0; --lvl) {   // constant trip count -> fully unrolled
-                const UnsignedInteger window =
-                    (u >> (torusBits - (lvl + 1) * radixBits)) & static_cast<UnsignedInteger>(B - 1);
-                Torus digit = static_cast<Torus>(window) + carry;
-                carry = (digit >= halfB);
-                digit -= carry * B;
-                out[lvl][j] = static_cast<OutT>(digit);  // sign is always +1, so the
-            }                                            // generic "* d.sign" is a no-op
-        }
-    }
-
-    template<typename OutT>
-    void decomposeRow(OutT* const* outPtr, const Torus* in, const int N, const int l,
-                      const YatfheParameters& param) {
-        const int b = param.radixBits, t = param.torusBits;
-        switch (l) {
-            case 1: decomposeRowUnrolled<1>(outPtr, in, N, b, t); return;
-            case 2: decomposeRowUnrolled<2>(outPtr, in, N, b, t); return;
-            case 3: decomposeRowUnrolled<3>(outPtr, in, N, b, t); return;
-            case 4: decomposeRowUnrolled<4>(outPtr, in, N, b, t); return;
-            case 5: decomposeRowUnrolled<5>(outPtr, in, N, b, t); return;
-            case 6: decomposeRowUnrolled<6>(outPtr, in, N, b, t); return;
-            case 7: decomposeRowUnrolled<7>(outPtr, in, N, b, t); return;
-            case 8: decomposeRowUnrolled<8>(outPtr, in, N, b, t); return;
-            default: {
-                DecomposedData d{l};
-                for (auto j = 0; j < N; j++) {
-                    signedGadgetDecomposition(d, in[j], param);
-                    for (auto lvl = 0; lvl < l; lvl++) {
-                        outPtr[lvl][j] = static_cast<OutT>(d.value[lvl] * d.sign);
-                    }
-                }
-            }
-        }
-    }
-}
-
 // G^-1 * Trlwe = DecomposedTrlwe
 void gadgetDecomposeTrlwe(DecomposedTrlwe& output, const Trlwe& input, const YatfheParameters& param) {
     const auto k = input.k;
     const int N = static_cast<int>(input.b.coeffs.size());
     const auto l = output.l;
-    // Per-row output pointers, resolved once instead of walking
-    // output.trlwes[lvl].a[row] again for every coefficient.
     std::vector<Torus*> outPtr(l);
     for (auto row = 0; row < k + 1; row++) {
         auto& currIn = (row < k) ? input.a[row] : input.b;
@@ -410,42 +394,6 @@ void rescaleTrlweToNewMod(Trlwe& output, const Trlwe& in, const int64_t newMod, 
     }
 }
 
-void multTrlweWithConst(Trlwe& output, const Trlwe& input1, const int scalar) {
-    if (scalar == 0) {
-        clearTrlwe(output);
-        return;
-    }
-
-    // // decompose the scalar on base 2
-    // std::vector<int> mults;
-    // auto cop = scalar;
-    // while (cop >= 2) {
-    //     mults.emplace_back(2);
-    //     cop = cop % 2;
-    // }
-    // if (cop == 1) {
-    //     mults.emplace_back(1);
-    // }
-
-    // decompose the scalar on base 1
-    for (auto i = 0; i < scalar; i++) {
-        accumulateTrlwe(output, input1);
-    }
-    //
-    // Trlwe tmp{input1.k, input1.N};
-    // for (const auto m : mults) {
-    //     for (auto i = 0; i < output.k; i++) {
-    //         for (int j = 0; j < output.N; j++) {
-    //             tmp.a[i].coeffs[j] = multTorus(TORUS_Q, input1.a[i].coeffs[j], m);
-    //         }
-    //     }
-    //     for (int j = 0; j < output.N; j++) {
-    //         tmp.b.coeffs[j] = multTorus(TORUS_Q, input1.b.coeffs[j], m);
-    //     }
-    //     accumulateTrlwe(output, tmp);
-    // }
-}
-
 // no GD, direct NTT mult
 void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const YatfheParameters& param) {
     const auto K = param.k;
@@ -465,32 +413,4 @@ void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& p
 
     //intt
     applyInttForAB(output, resDft);
-}
-
-// Worst-case magnitude of the extra additive error multTrlweWithPolyNtt()
-// introduces for this plaintext, in torus units.
-int64_t directNttWrapNoise(const IntPolynomial& poly, const YatfheParameters& param) {
-    __int128 norm = 0;
-    for (const auto c : poly.coeffs) {
-        norm += c < 0 ? -static_cast<int64_t>(c) : static_cast<int64_t>(c);
-    }
-    // centred residue of qNtt mod TORUS_Q: what one wrap costs
-    auto delta = static_cast<int64_t>(param.qNtt % static_cast<uint64_t>(TORUS_Q));
-    if (delta > TORUS_Q / 2) {
-        delta -= TORUS_Q;
-    }
-    if (delta < 0) {
-        delta = -delta;
-    }
-    // |wraps| <= |true coeff| / qNtt + 1/2, and |true coeff| <= (TORUS_Q / 2) * ||poly||_1
-    const __int128 wraps = (static_cast<__int128>(TORUS_Q / 2) * norm) / static_cast<int64_t>(param.qNtt) + 1;
-    const __int128 noise = wraps * delta;
-    return noise > INT64_MAX ? INT64_MAX : static_cast<int64_t>(noise);
-}
-
-// Whether the wrap noise alone stays inside the rounding margin of one message
-// step. This is the full margin -- a caller whose ciphertext already carries
-// significant noise should compare directNttWrapNoise() against its own budget.
-bool isPolyDirectNttSafe(const IntPolynomial& poly, const YatfheParameters& param) {
-    return directNttWrapNoise(poly, param) < TORUS_Q / (2 * param.torusBase);
 }

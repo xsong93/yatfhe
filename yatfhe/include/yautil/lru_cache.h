@@ -2,8 +2,8 @@
 // Created by xsong93 on 2025/11/9.
 //
 
-#ifndef BASE_LRU_CACHE_H
-#define BASE_LRU_CACHE_H
+#ifndef YATFHE_LRU_CACHE_H
+#define YATFHE_LRU_CACHE_H
 
 #include <unordered_map>
 #include <list>
@@ -118,4 +118,4 @@ private:
     }
 };
 
-#endif //BASE_LRU_CACHE_H
+#endif //YATFHE_LRU_CACHE_H

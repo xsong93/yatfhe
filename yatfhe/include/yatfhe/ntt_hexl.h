@@ -2,8 +2,8 @@
 // Created by Xintong on 25-4-16.
 //
 
-#ifndef HLS_YATFHE_NTT_HEXL_H
-#define HLS_YATFHE_NTT_HEXL_H
+#ifndef YATFHE_NTT_HEXL_H
+#define YATFHE_NTT_HEXL_H
 
 #include <hexl/hexl.hpp>
 #include "yatfhe/polynomial.h"
@@ -36,9 +36,8 @@ namespace NttHexl {
         auto N = in.N;
         auto q = getNttHexl().GetModulus();
         for (size_t i = 0; i < N; i++) {
-            // Branchless "v < 0 ? v + q : v". The sign of a ciphertext coefficient
-            // is effectively random, so the branch mispredicted ~50% of the time.
-            const int64_t v = static_cast<int64_t>(in.coeffs[i]);
+            // Branchless "v < 0 ? v + q : v".
+            const auto v = static_cast<int64_t>(in.coeffs[i]);
             out.coeffs[i] = static_cast<Ntt64>(v) + (q & static_cast<uint64_t>(-static_cast<int64_t>(v < 0)));
         }
         getNttHexl().ComputeForward(out.coeffs.data(), out.coeffs.data(), 1, 1);
@@ -84,4 +83,4 @@ namespace NttHexl {
 
 }
 
-#endif //HLS_YATFHE_NTT_HEXL_H
+#endif //YATFHE_NTT_HEXL_H

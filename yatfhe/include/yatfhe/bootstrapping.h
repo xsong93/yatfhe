@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2023/12/25.
 //
 
-#ifndef HLS_YATFHE_BOOTSTRAPPING_H
-#define HLS_YATFHE_BOOTSTRAPPING_H
+#ifndef YATFHE_BOOTSTRAPPING_H
+#define YATFHE_BOOTSTRAPPING_H
 
 #include <vector>
 #include "yatfhe/tlwe.h"
@@ -130,6 +130,28 @@ struct BootstrappingKeyWWL24 {
             n = p.n / group * (1 << group);
         }
         bskDft = vector(n, TrgswMPDft(p, level, true));
+        s2Dft = TrlevDft{p, p.l};
+#endif
+    }
+};
+
+struct BootstrappingKeyWWL24Alt {
+    vector<TrgswMP> trgsws {};
+    TrlevDft s2Dft {};
+    int n {};
+    int group {};
+
+    explicit BootstrappingKeyWWL24Alt() = default;
+
+    explicit BootstrappingKeyWWL24Alt(const YatfheParameters& p, const int level) : group(p.group) {
+#ifdef TERNARY
+#else
+        if (group == 1) {
+            n = p.n;
+        } else {
+            n = p.n / group * (1 << group);
+        }
+        trgsws = vector(n, TrgswMP(p, level, true));
         s2Dft = TrlevDft{p, p.l};
 #endif
     }
@@ -357,6 +379,9 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
 
 void genBootstrappingKeyWWL24(BootstrappingKeyWWL24& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param);
 
+void genBootstrappingKeyWWL24Alt(BootstrappingKeyWWL24Alt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
+                                 const YatfheParameters& param);
+
 void genBootstrappingKeyMP(BootstrappingKeyMP& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
                            const YatfheParameters& param);
 
@@ -381,4 +406,4 @@ void transferValueToIndex(Trlwe& output, Tlwe& input, const BootstrappingKeyMP& 
 
 void transferValueToIndexRange(Trlwe& output, Tlwe& input, const Integer v, const BootstrappingKeyMP& bskMP, const YatfheParameters& param);
 
-#endif //HLS_YATFHE_BOOTSTRAPPING_H
+#endif //YATFHE_BOOTSTRAPPING_H

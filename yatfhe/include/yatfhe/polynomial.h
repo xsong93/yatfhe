@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2023/12/25.
 //
 
-#ifndef HLS_YATFHE_POLYNOMIAL_H
-#define HLS_YATFHE_POLYNOMIAL_H
+#ifndef YATFHE_POLYNOMIAL_H
+#define YATFHE_POLYNOMIAL_H
 
 #include <vector>
 #include <cstdint>
@@ -182,11 +182,6 @@ struct Ntt64Polynomial {
             coeffs(n,0), N(n) {};
 };
 
-// Two loop bodies rather than one: longModP's runtime power-of-two test is
-// control flow in the loop, and the TORUS_Q global read cannot be proven
-// invariant against the Torus stores, so together they kept these scalar.
-// Branching once outside the loop keeps the power-of-two case vectorisable while
-// staying correct for a non-power-of-two TORUS_Q (Q_CRT).
 template<typename... PolyArgs>
 void addTorusPolynomial(TorusPolynomial& res, const PolyArgs&... polys) {
     const int N = res.N;
@@ -287,8 +282,6 @@ void multTorusPolynomialAcc(TorusPolynomial& res, const TorusPolynomial& poly1, 
 
 void addIntPolynomial(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
 
-// void addTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2);
-
 void addSubIntPolynomialWithOffset(IntPolynomial& poly, int offset, bool isAdd);
 
 void subIntPolynomial(IntPolynomial& res, const IntPolynomial& poly1, const IntPolynomial& poly2);
@@ -303,10 +296,8 @@ void genNttPolynomialWithValueAt(NttPolynomial& lagrangePolynomial, int value, i
 
 void accumulateNttPolynomial(NttPolynomial& accum, NttPolynomial& poly);
 
-// void addNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2);
-
 void subNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2);
 
 void inverseGadgetDecomposePolynomial(vector<TorusPolynomial>& output, const IntPolynomial& input, const YatfheParameters& param);
 
-#endif //HLS_YATFHE_POLYNOMIAL_H
+#endif //YATFHE_POLYNOMIAL_H

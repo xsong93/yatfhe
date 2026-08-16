@@ -2,8 +2,8 @@
 // Created by xintong on 4/21/25.
 //
 
-#ifndef HLS_YATFHE_CMUX_H
-#define HLS_YATFHE_CMUX_H
+#ifndef YATFHE_CMUX_H
+#define YATFHE_CMUX_H
 
 #include "yatfhe/trgsw.h"
 
@@ -18,4 +18,4 @@ void controlMuxApproxCRT(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& in
 void controlMuxApproxCRTNtt(std::vector<Trlwe8>& res, const std::vector<Trlwe8>& inputs, int aBarI, const std::vector<TrgswDft24>& bskCRT, const YatfheParameters& param);
 
 
-#endif //HLS_YATFHE_CMUX_H
+#endif //YATFHE_CMUX_H

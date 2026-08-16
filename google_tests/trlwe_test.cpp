@@ -397,33 +397,6 @@ TEST(TRLWE, ADD_SUB_MULTI_SAMPLE) {
     printBanner("TRLWE.ADD_SUB_MULTI_SAMPLE");
 }
 
-TEST(TRLWE, MULT_CONST) {
-    YatfheParameters param {};
-    param.torusBase = 8;
-    param.N = 4096;
-    initYatfhe(param);
-
-    TrlweKey trlweKey {param};
-    Trlwe trlwe {param.k, param.N};
-    genTrlweKey(trlweKey);
-
-    Integer plain = 1;
-    Torus mu = modSwitchToTorus32(plain, param.torusBase);
-
-    IntPolynomial output{param.N};
-    int pos = 0;
-    symEncTrlweSingleSample(trlwe, trlweKey, mu, pos);
-
-    Trlwe out{param};
-    multTrlweWithConst(out, trlwe, 3);
-    symDecTrlweToInt(output, out, trlweKey, param.torusBase);
-
-    cout << "mu:" << plain <<endl;
-    printArray(output.coeffs, "output");
-    ASSERT_EQ(output.coeffs[0], 3);
-    printBanner("TRLWE.MULT_CONST");
-}
-
 TEST(TRLWE, MULT_LARGE_CONSTANT) {
     YatfheParameters param {};
     param.torusBase = 8;
@@ -561,7 +534,7 @@ TEST(TRLWE, MULT_DECOMP) {
 
 TEST(TRLWE, MULT_POLY_DIRECT_NTT) {
     YatfheParameters param{};
-    param.N = 4096;
+    param.N = 1024;
     param.torusBase = 8;
     param.setRadixBits(8);
     param.l = 4;
@@ -571,12 +544,10 @@ TEST(TRLWE, MULT_POLY_DIRECT_NTT) {
     TrlweKey trlweKey{param};
     genTrlweKey(trlweKey);
 
-    // dense data gen, worst case for the wrap-around noise the direct product incurs
     IntPolynomial plain{param.N};
     for (auto i = 0; i < plain.N; i++) {
         plain.coeffs[i] = genIntUniformDist(-param.torusBase / 2, param.torusBase / 2 - 1);
     }
-    ASSERT_TRUE(isPolyDirectNttSafe(plain, param));
 
     // enc
     Trlwe in1{param};

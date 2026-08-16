@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2024/9/13.
 //
 
-#ifndef HLS_YATFHE_NTT24_H
-#define HLS_YATFHE_NTT24_H
+#ifndef YATFHE_NTT24_H
+#define YATFHE_NTT24_H
 
 #include <gmp.h>
 #include <vector>
@@ -53,7 +53,7 @@ namespace NttNative24 {
     extern TwParam NWC_ITW;
     extern TwRom TW_ROM;
 
-//----------------------------------------------------------------------------------
+
     void genTW_ROM(TwRom &tw_rom);
 
     void genNWCparam(TwParam &nwc_tw, int n, const TwRom &tw_rom, const std::string &str);
@@ -123,4 +123,4 @@ namespace NttNative24 {
     void calModularInnerProductNtt(Ntt24Polynomial &out, const Ntt24Polynomial &in1, const Ntt24Polynomial &in2);
 }
 
-#endif //HLS_YATFHE_NTT24_H
+#endif //YATFHE_NTT24_H

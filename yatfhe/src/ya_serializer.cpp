@@ -4,6 +4,19 @@
 
 #include "yautil/ya_serializer.h"
 
+namespace {
+    std::ofstream openForWrite(const std::string& filename) {
+        std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+        if (!os) throw std::runtime_error("Failed to open file for writing: " + filename);
+        return os;
+    }
+
+    void closeChecked(std::ofstream& os, const std::string& filename) {
+        os.close();
+        if (!os) throw std::runtime_error("Failed to write file: " + filename);
+    }
+}
+
 // Serialize NttPolynomial
 void serialize(const NttPolynomial& p, std::ostream& os) {
     writePOD(os, p.N);
@@ -189,19 +202,6 @@ void deserialize(TrgswMPDft& t, std::istream& is) {
     for (auto& trlwe : t.cPrime) deserialize(trlwe, is);
 }
 
-namespace {
-    std::ofstream openForWrite(const std::string& filename) {
-        std::ofstream os(filename, std::ios::binary | std::ios::trunc);
-        if (!os) throw std::runtime_error("Failed to open file for writing: " + filename);
-        return os;
-    }
-
-    void closeChecked(std::ofstream& os, const std::string& filename) {
-        os.close();
-        if (!os) throw std::runtime_error("Failed to write file: " + filename);
-    }
-}
-
 void serializeBskWWL24(const BootstrappingKeyWWL24& t, const std::string& filename) {
     auto os = openForWrite(filename);
     for (auto i = 0; i < t.n; i++) {
@@ -221,6 +221,34 @@ void deserializeBskWWL24(BootstrappingKeyWWL24& bsk, const std::string& filename
 
     for (int i = 0; i < n; i++) {
         deserialize(bsk.bskDft[i], inFile);  // Read TrgswMPDft in order
+    }
+    deserialize(bsk.s2Dft, inFile);
+
+    // Read remaining fields (n, group, isHalf) if they were serialized
+    readPOD(inFile, bsk.n);
+    readPOD(inFile, bsk.group);
+    inFile.close();
+}
+
+void serializeBskWWL24Alt(const BootstrappingKeyWWL24Alt& t, const std::string& filename) {
+    auto os = openForWrite(filename);
+    for (auto i = 0; i < t.n; i++) {
+        serialize(t.trgsws[i], os);
+    }
+    serialize(t.s2Dft, os);
+    writePOD(os, t.n);
+    writePOD(os, t.group);
+    closeChecked(os, filename);
+}
+
+void deserializeBskWWL24Alt(BootstrappingKeyWWL24Alt& bsk, const std::string& filename, const int n) {
+    std::ifstream inFile(filename, std::ios::binary);
+    if (!inFile) throw std::runtime_error("Failed to open file");
+
+    bsk.trgsws.resize(n);  // Initialize outer vector (size = n)
+
+    for (int i = 0; i < n; i++) {
+        deserialize(bsk.trgsws[i], inFile);
     }
     deserialize(bsk.s2Dft, inFile);
 
@@ -280,7 +308,7 @@ void deserializeBskMPOpt(BootstrappingKeyMPOpt& bskOpt, const std::string& filen
     // Step 1: Deserialize bskFirst[0]
     deserialize(bskOpt.bskFirst[0], inFile);
 
-    // Step 2: Deserialize bskDft[i][0] for i = 0 to n-2
+    // Step 2: Deserialize bskDft[i][0]
     for (int i = 0; i < n - 1; i++) {
         bskOpt.bskDft[i].resize(1);  // Each bskDft[i] is a vector of size 1
         deserialize(bskOpt.bskDft[i][0], inFile);
@@ -320,7 +348,7 @@ void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& fi
     // Step 1: Deserialize bskFirst[0]
     deserialize(bskLazy.bskFirst[0], inFile);
 
-    // Step 2: Deserialize bskTrim[i][0] for i = 0 to n-2
+    // Step 2: Deserialize bskTrim[i][0]
     for (int i = 0; i < n - 1; ++i) {
         bskLazy.bskTrim[i].resize(1);  // Each bskTrim[i] is a vector of size 1
         deserialize(bskLazy.bskTrim[i][0], inFile);
@@ -330,7 +358,7 @@ void deserializeBskMPLazy(BootstrappingKeyMPLazy& bskLazy, const std::string& fi
     bskLazy.group = 1;
     bskLazy.bskDecompA.resize(static_cast<size_t>(n - 1) * bskLazy.level); // bskDecompA has (n-1)*level cells
 
-    // Step 3: Deserialize bskDecompA[i][lvl] for i = 0 to n-2, lvl = 0 to level-1
+    // Step 3: Deserialize bskDecompA[i][lvl]
     for (int i = 0; i < n - 1; ++i) {
         for (int lvl = 0; lvl < bskLazy.level; ++lvl) {
             deserializeNestedVector(bskLazy.bskDecompA[bskLazy.decompIndex(i, lvl)], inFile);

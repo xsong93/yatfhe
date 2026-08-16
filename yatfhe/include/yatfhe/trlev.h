@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2024/4/22.
 //
 
-#ifndef HLS_YATFHE_TRGLEV_H
-#define HLS_YATFHE_TRGLEV_H
+#ifndef YATFHE_TRGLEV_H
+#define YATFHE_TRGLEV_H
 
 #include "yatfhe/trlwe.h"
 
@@ -52,7 +52,6 @@ void subTrlev(TrlevType& out, const TrlevType& in1, const TrlevType& in2) {
 void encTrlevSingleSample(Trlev& output, const TrlweKey& trlweKey, Torus input, int pos, const YatfheParameters& param);
 
 // Encode a scalar `input` as monomial X^{monomialIndex} in the RLWE plaintext polynomial domain.
-// This is needed when the morphism f(m) is represented as a monomial in R.
 void encTrlevSingleSampleMonomial(Trlev& output, const TrlweKey& trlweKey, Torus input, int monomialIndex,
                                    const YatfheParameters& param);
 
@@ -70,4 +69,4 @@ void multDecomposedTrlevWithConst(Trlwe& output, const Trlev& input, Torus num, 
 
 void rotateTrlev(Trlev& trglev, const int rot, const YatfheParameters& param);
 
-#endif //HLS_YATFHE_TRGLEV_H
+#endif //YATFHE_TRGLEV_H

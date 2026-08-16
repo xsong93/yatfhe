@@ -40,12 +40,9 @@ uint64_t genUInt64UniformDist(const uint64_t lowerBound, const uint64_t upperBou
 }
 
 /**
-TUniform distribution ∈ ``ZZ ∩ [-2**b, 2**b]``, endpoints inclusive.
-This distribution samples the two end-points with probability 1/2**(b+2) and the
-intermediate points with probability 1/2**(b+1).
-
-As an example, with b=0 this distribution samples ±1 each with probability 1/4 and
-0 with probability 1/2.
+TUniform distribution ∈ ``ZZ ∩ [-2**b, 2**b]``.
+This distribution samples the two end-points with probability 1/2**(b+2) and the intermediate points with probability 1/2**(b+1).
+As an example, with b=0, this samples ±1 each with probability 1/4 and 0 with probability 1/2.
 */
 static Torus genTUniformNoise(const int b) {
     int requiredBits = b + 2;
@@ -191,7 +188,6 @@ Torus modSwitchToTorusGeneral(const int32_t mu, const uint32_t mSize, const int6
 
 int64_t modSwitchFromTorusGeneral(const Torus in, const int64_t newMod, const int64_t torusQ) {
     // Convert torus element from modulus `torusQ` to modulus `newMod`.
-    // For upscaling (torusQ < newMod) that integer division becomes 0, so we must handle it separately.
     if (torusQ >= newMod) {
         const int64_t scale = torusQ / newMod;
         // Round-to-nearest without floating point.
@@ -205,7 +201,7 @@ int64_t modSwitchFromTorusGeneral(const Torus in, const int64_t newMod, const in
     if (scaleUp * torusQ == newMod) {
         return longModP(static_cast<int64_t>(in) * scaleUp, newMod);
     }
-    // Fallback for non-integer ratios (should be rare).
+    // Fallback for non-integer ratios.
     double div = static_cast<double>(in) * static_cast<double>(newMod) / static_cast<double>(torusQ);
     const auto real = static_cast<int32_t>(round(div));
     return longModP(static_cast<int64_t>(real), newMod);

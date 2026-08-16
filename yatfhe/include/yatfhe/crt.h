@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2024/8/27.
 //
 
-#ifndef HLS_YATFHE_CRT_H
-#define HLS_YATFHE_CRT_H
+#ifndef YATFHE_CRT_H
+#define YATFHE_CRT_H
 
 #include <iostream>
 #include <vector>
@@ -32,4 +32,4 @@ void decompTrlweApproxCrt(std::vector<Trlwe8>& out, const std::vector<Trlwe8>& i
 
 void broadcastTrlweApproxCrt(std::vector<std::vector<Trlwe8>>& out, const std::vector<Trlwe8>& in, const YatfheParameters& param);
 
-#endif //HLS_YATFHE_CRT_H
+#endif //YATFHE_CRT_H

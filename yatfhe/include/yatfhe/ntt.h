@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2024/1/10.
 //
 
-#ifndef HLS_YATFHE_NTT_H
-#define HLS_YATFHE_NTT_H
+#ifndef YATFHE_NTT_H
+#define YATFHE_NTT_H
 
 #include <vector>
 #include "yatfhe/polynomial.h"
@@ -39,4 +39,4 @@ namespace NttNative {
     void bitRevShuffle(std::vector<NttType> &x);
 }
 
-#endif //HLS_YATFHE_NTT_H
+#endif //YATFHE_NTT_H

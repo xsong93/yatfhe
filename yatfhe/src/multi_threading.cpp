@@ -20,8 +20,6 @@ bool ThreadPool::onWorkerThread() { return insideWorker; }
 
 unsigned ThreadPool::usableConcurrency() {
 #ifdef __linux__
-    // Fails with EINVAL above CPU_SETSIZE (1024) CPUs; fall through to the
-    // machine-wide count in that case.
     cpu_set_t set;
     CPU_ZERO(&set);
     if (sched_getaffinity(0, sizeof(set), &set) == 0) {
@@ -30,7 +28,7 @@ unsigned ThreadPool::usableConcurrency() {
     }
 #endif
     const unsigned reported = std::thread::hardware_concurrency();
-    return reported > 0 ? reported : 1; // 0 means "unknown", and would hang the pool
+    return reported > 0 ? reported : 1; // 0 means unknown, and would hang the pool
 }
 
 void ThreadPool::initThreadPool() {
@@ -43,9 +41,6 @@ void TaskGroup::finish(std::exception_ptr error) {
         std::lock_guard<std::mutex> lock(mutex);
         if (!firstError) firstError = error;
     }
-    // Only the task that empties the group touches the mutex, so the common case
-    // is one atomic decrement. wait() re-checks under the mutex, so a decrement
-    // that lands just before the waiter blocks cannot be missed.
     if (remaining.fetch_sub(1, std::memory_order_acq_rel) == 1) {
         std::lock_guard<std::mutex> lock(mutex);
         condition.notify_all();

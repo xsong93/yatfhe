@@ -2,8 +2,8 @@
 // Created by xintong on 4/21/25.
 //
 
-#ifndef HLS_YATFHE_BLIND_ROTATE_H
-#define HLS_YATFHE_BLIND_ROTATE_H
+#ifndef YATFHE_BLIND_ROTATE_H
+#define YATFHE_BLIND_ROTATE_H
 
 #include "yatfhe/trgsw.h"
 #include "yatfhe/bootstrapping.h"
@@ -51,10 +51,12 @@ void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsw
 
 void blindRotateWWL24Ntt(Trlwe& accum, const BootstrappingKeyWWL24& bsk, const ScaledTlwe& input, const YatfheParameters& param);
 
+void blindRotateWWL24AltNtt(Trlwe& accum, const BootstrappingKeyWWL24Alt& bsk, const ScaledTlwe& input, const YatfheParameters& param);
+
 void blindRotateJP22Ntt(Trlwe& accum, const BootstrappingKeyMP& bsk, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateJP22NttMT(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
 
 void blindRotateMP21Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, const ScaledTlwe& input, const YatfheParameters& param);
 
-#endif //HLS_YATFHE_BLIND_ROTATE_H
+#endif //YATFHE_BLIND_ROTATE_H

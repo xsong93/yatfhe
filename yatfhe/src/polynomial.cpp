@@ -70,10 +70,8 @@ void roundErrorDoublePoly(DoublePolynomial& target, const int torusBase) {
     }
 }
 
-// vj = ((pj / q) mod p) / p, with every slot (including slot 0) centered on
-// its sample point rather than starting there. Slot 0's left half wraps
-// around to the end of the array, negated, since it represents the
-// negacyclic reflection of the small-negative-index side of index 0.
+// vj = ((pj / q) mod p) / p, with every slot (including slot 0) centered on its sample point. Slot 0's left half wraps
+// around to the end of the array, negated.
 void generateTestPolynomial(TorusPolynomial& v, const int modP, const int modQ) {
     const int N = v.N;
     const int boxSize = modQ / modP;
@@ -194,8 +192,8 @@ void rotateTorusPolynomial(TorusPolynomial& out, const int a, const TorusPolynom
     }
 }
 
-// Fused: accum += X^a * input, no temporary buffer needed.
-// Split into two contiguous loops to enable auto-vectorization (no branch on i).
+// accum += X^a * input.
+// Split into two contiguous loops to enable auto-vectorization.
 void rotateAccumulateTorusPolynomial(TorusPolynomial& accum, const int aTrue, const int isWrap,
                                       const TorusPolynomial& input) {
     const int N = input.N;
@@ -216,11 +214,6 @@ void rotateTorusPolynomialMinusOne(TorusPolynomial& out, const int a, const Toru
     const auto N = input.N;
     int aTrue, isWrap;
     validateRotator(aTrue, isWrap, a, N);
-    // Split at aTrue rather than testing (i < aTrue) inside the loop: the two
-    // halves are contiguous, so each becomes a straight-line vectorisable pass.
-    // Split at aTrue so neither half has control flow, and branch on
-    // TORUS_IS_POW2 outside the loops: the power-of-two path vectorises, the
-    // general path stays correct for a non-power-of-two TORUS_Q (Q_CRT).
     if (TORUS_IS_POW2) {
         const int shift = TORUS_SHIFT;
         for (auto i = 0; i < aTrue; i++) {
@@ -382,13 +375,6 @@ void addIntPolynomial(IntPolynomial& res, const IntPolynomial& poly1, const IntP
     }
 }
 
-// void addTorusPolynomial(TorusPolynomial& res, const TorusPolynomial& poly1, const TorusPolynomial& poly2) {
-//     const int N = res.N;
-//     for (int i = 0; i < N; i++) {
-//         res.coeffs[i] = addTorus(poly1.coeffs[i], poly2.coeffs[i]);
-//     }
-// }
-
 /**
  * Add or sub a value to every coefficients of the target polynomial.
  * @param poly Target polynomial.
@@ -448,13 +434,6 @@ void accumulateNttPolynomial(NttPolynomial& accum, NttPolynomial& poly) {
         accum.coeffs[i] = AddUIntMod(accum.coeffs[i], poly.coeffs[i], q);
     }
 }
-
-// void addNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2) {
-//     const auto q = NttHexl::getNttHexl().GetModulus();
-//     for (auto i = 0; i < input1.N; i++) {
-//         output.coeffs[i] = AddUIntMod(input1.coeffs[i], input2.coeffs[i], q);
-//     }
-// }
 
 void subNttPolynomial(NttPolynomial& output, const NttPolynomial& input1, const NttPolynomial& input2) {
     const auto q = NttHexl::getNttHexl().GetModulus();

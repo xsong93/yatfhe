@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2024/5/28.
 //
 
-#ifndef HLS_YATFHE_NTT16_H
-#define HLS_YATFHE_NTT16_H
+#ifndef YATFHE_NTT16_H
+#define YATFHE_NTT16_H
 
 #include <gmp.h>
 #include <vector>
@@ -53,7 +53,7 @@ namespace NttNative16 {
     extern TwParam NWC_ITW;
     extern TwRom TW_ROM;
 
-//----------------------------------------------------------------------------------
+
     void genTW_ROM(TwRom &tw_rom);
 
     void genNWCparam(TwParam &nwc_tw, const int n, const TwRom &tw_rom, const std::string &str);
@@ -91,4 +91,4 @@ namespace NttNative16 {
     }
 }
 
-#endif //HLS_YATFHE_NTT16_H
+#endif //YATFHE_NTT16_H

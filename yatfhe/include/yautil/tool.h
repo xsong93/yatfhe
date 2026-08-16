@@ -2,13 +2,12 @@
 // Created by Xintong Song on 2024/2/18.
 //
 
-#ifndef HLS_YATFHE_TOOL_H
-#define HLS_YATFHE_TOOL_H
+#ifndef YATFHE_TOOL_H
+#define YATFHE_TOOL_H
 
 #include <iostream>
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
-#include "yatfhe/trgsw.h"
 #include "yautil/ansi_color.h"
 
 using namespace std;
@@ -190,4 +189,4 @@ size_t clearFileCache(const std::string& filename);
 // Whole-page-cache drop. This needs root.
 void clearFileCache();
 
-#endif //HLS_YATFHE_TOOL_H
+#endif //YATFHE_TOOL_H

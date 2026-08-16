@@ -1,8 +1,8 @@
 //
 // Created by Xintong Song on 2023/12/7.
 //
-#ifndef HLS_YATFHE_YATFHE_PARAMETERS_H
-#define HLS_YATFHE_YATFHE_PARAMETERS_H
+#ifndef YATFHE_YATFHE_PARAMETERS_H
+#define YATFHE_YATFHE_PARAMETERS_H
 
 #include "yatfhe/torus.h"
 
@@ -28,13 +28,13 @@ struct YatfheParameters {
     // int lApprox {2};
 #else // binary secret
     // LWE params, 128.3-bit
-    int n {640};
-    int lweNoiseB {19}; // log2 σ: 18.21
+    int n {680};
+    int lweNoiseB {17}; // log2 σ: 17.21
     int64_t qLwe{Q_32};
     int qLweBits {32};
 
     // RLWE params
-    int torusBase {2}; // p|q
+    int torusBase {4}; // p|q
 #if defined(TORUS32) // 212-bit,
     int k {1};
     int N {2048};
@@ -109,21 +109,4 @@ struct YatfheParameters {
     }
 };
 
-
-constexpr int64_t nttWrapDelta(const uint64_t qNtt, const int64_t torusQ) {
-    const auto r = static_cast<int64_t>(qNtt % static_cast<uint64_t>(torusQ));
-    const auto centred = r > torusQ / 2 ? r - torusQ : r;
-    return centred < 0 ? -centred : centred;
-}
-
-constexpr YatfheParameters YATFHE_DEFAULTS{};
-
-
-static_assert(nttWrapDelta(YATFHE_DEFAULTS.qNtt, YATFHE_DEFAULTS.q) <= (INT64_C(1) << 14),
-              "qNtt must sit within 2^14 of a multiple of the torus modulus q: "
-              "every INTT wrap costs centred(qNtt mod q) of noise. Pick a prime "
-              "of the form m * q + 1 (e.g. Q_49P_T32) or a 2^k - small one.");
-static_assert(YATFHE_DEFAULTS.qNtt > static_cast<uint64_t>(YATFHE_DEFAULTS.q),
-              "qNtt must exceed the torus modulus to represent a torus value.");
-
-#endif //HLS_YATFHE_YATFHE_PARAMETERS_H
+#endif //YATFHE_YATFHE_PARAMETERS_H

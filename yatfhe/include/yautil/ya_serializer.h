@@ -2,8 +2,8 @@
 // Created by xintong on 10/27/25.
 //
 
-#ifndef BASE_YA_SERIALIZER_H
-#define BASE_YA_SERIALIZER_H
+#ifndef YATFHE_YA_SERIALIZER_H
+#define YATFHE_YA_SERIALIZER_H
 
 #include <fstream>
 #include <vector>
@@ -48,6 +48,10 @@ void deserialize(TrgswMPDft& t, std::istream& is);
 void serializeBskWWL24(const BootstrappingKeyWWL24& t, const std::string& filename);
 
 void deserializeBskWWL24(BootstrappingKeyWWL24& bsk, const std::string& filename, const int n);
+
+void serializeBskWWL24Alt(const BootstrappingKeyWWL24Alt& t, const std::string& filename);
+
+void deserializeBskWWL24Alt(BootstrappingKeyWWL24Alt& bsk, const std::string& filename, const int n);
 
 void serializeBskMP(const BootstrappingKeyMP& t, const std::string& filename);
 
@@ -145,4 +149,4 @@ inline void deserializeNestedVector<NttPolynomial>(std::vector<NttPolynomial>& v
     }
 }
 
-#endif //BASE_YA_SERIALIZER_H
+#endif //YATFHE_YA_SERIALIZER_H

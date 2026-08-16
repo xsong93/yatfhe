@@ -3,8 +3,8 @@
 // Copyright (c) 2012 Jakob Progsch, Václav Zeman.
 //
 
-#ifndef HLS_YATFHE_MULTI_THREADING_H
-#define HLS_YATFHE_MULTI_THREADING_H
+#ifndef YATFHE_MULTI_THREADING_H
+#define YATFHE_MULTI_THREADING_H
 
 #include <vector>
 #include <thread>
@@ -16,9 +16,9 @@
 #include <atomic>
 #include <exception>
 
-// Counter-based join for a batch of tasks that are fired together. enqueue() costs
-// a packaged_task allocation plus a condition_variable per task, which the blind
-// rotate pays 8 times per LWE coefficient. A group waits on one counter instead.
+// Counter-based join for a batch of tasks that are fired together.
+// enqueue() costs a packaged_task allocation plus a condition_variable per task.
+// A group waits on one counter.
 class TaskGroup {
 public:
     void wait();
@@ -42,9 +42,7 @@ public:
     // CPUs this process may actually run on.
     static unsigned usableConcurrency();
 
-    // True while running inside a pool worker. A task that fans out sub-tasks and
-    // then waits for them deadlocks as soon as every worker sits in that same wait,
-    // so nested helpers check this and do their parts inline instead.
+    // True while running inside a pool worker.
     static bool onWorkerThread();
 
     static ThreadPool& instance() {
@@ -76,9 +74,6 @@ public:
     }
 
     // Run fn(0), ..., fn(count-1) on the pool, joining through group.wait().
-    // Nothing is copied: the queue holds a pointer, so fn must stay alive until
-    // that wait returns. Declare the callable outside the loop that fires it and
-    // let it read state through references, and a batch costs no allocation at all.
     template<class F>
     void run(TaskGroup& group, const int count, const F& fn) {
         if (count <= 0) return;
@@ -99,7 +94,6 @@ public:
     ~ThreadPool();
 
 private:
-    // Either a standalone callable (enqueue) or one slot of a group (run).
     struct Job {
         std::function<void()> standalone;
         void (*indexed)(const void*, int) {nullptr};
@@ -121,4 +115,4 @@ private:
     bool stop;
 };
 
-#endif //HLS_YATFHE_MULTI_THREADING_H
+#endif //YATFHE_MULTI_THREADING_H

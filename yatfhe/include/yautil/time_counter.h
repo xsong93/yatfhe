@@ -1,8 +1,8 @@
 //
 // Created by Xintong Song on 2023/12/7.
 //
-#ifndef HLS_YATFHE_TIME_COUNTER_H
-#define HLS_YATFHE_TIME_COUNTER_H
+#ifndef YATFHE_TIME_COUNTER_H
+#define YATFHE_TIME_COUNTER_H
 
 #include <ctime>
 #include <chrono>
@@ -52,4 +52,4 @@ public:
     TimeCounter::printTime(MSG, TimeCounter::timeGlobal, 500);
 
 
-#endif //HLS_YATFHE_TIME_COUNTER_H
+#endif //YATFHE_TIME_COUNTER_H

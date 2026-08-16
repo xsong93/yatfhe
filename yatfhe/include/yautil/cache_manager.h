@@ -2,8 +2,8 @@
 // Created by xsong93 on 2025/11/9.
 //
 
-#ifndef BASE_CACHE_MANAGER_H
-#define BASE_CACHE_MANAGER_H
+#ifndef YATFHE_CACHE_MANAGER_H
+#define YATFHE_CACHE_MANAGER_H
 
 #include "yatfhe/bootstrapping.h"
 #include "yautil/lru_cache.h"
@@ -274,4 +274,4 @@ public:
 };
 
 
-#endif //BASE_CACHE_MANAGER_H
+#endif //YATFHE_CACHE_MANAGER_H

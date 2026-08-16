@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2024/4/1.
 //
 
-#ifndef HLS_YATFHE_ANSI_COLOR_H
-#define HLS_YATFHE_ANSI_COLOR_H
+#ifndef YATFHE_ANSI_COLOR_H
+#define YATFHE_ANSI_COLOR_H
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
@@ -13,4 +13,4 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-#endif //HLS_YATFHE_ANSI_COLOR_H
+#endif //YATFHE_ANSI_COLOR_H

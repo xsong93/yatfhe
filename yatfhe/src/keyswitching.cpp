@@ -47,14 +47,9 @@ void genPrivateKeySwitchingKey(PrivateKeySwitchingKey& psk, const TrlweKey& trlw
  */
 void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& input, const YatfheParameters& param) {
     const int nOut = output.n;
-
-    // Accumulate all KSK contributions in int64 with no per-element modular reduction.
-    // Max magnitude: input.n * ksLevel * (2^ksRadixBits/2) * (LWE_Q/2), comfortably fits in int64
-    // for any (ksRadixBits, ksLevel) split of the (capped) KS decomposition width.
     vector<int64_t> delta(nOut, 0);
     int64_t delta_b = 0;
-
-    DecomposedData aBar{param.ksLevel};  // hoisted: avoids 2*input.n heap allocations in the loop
+    DecomposedData aBar{param.ksLevel};
     for (int i = 0; i < input.n; i++) {
         signedGadgetDecompositionKs(aBar, input.a[i], param);
         for (int j = 0; j < param.ksLevel; j++) {
@@ -70,7 +65,6 @@ void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& 
         }
     }
 
-    // Apply with one reduction per element.
     for (int k = 0; k < nOut; k++) {
         output.a[k] = static_cast<LweTorus>(longModP(-delta[k], LWE_Q));
     }
@@ -82,16 +76,14 @@ void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& 
 // Here f is identity and RLWE'(f(s_i)) is reused from bootstrap key cPrime terms.
 void tlweToTrlwePrivateKeySwitching(Trlwe& out, const Tlwe& in, const PrivateKeySwitchingKey& psk,
                                     const YatfheParameters& param) {
-    // Ensure output is clean; multTrlevWithConst adds into output.
+    // Ensure output is clean.
     clearTrlwe(out);
 
     // b ⊙ RLWE'(1): represented as a noiseless RLWE with only constant term.
-    // `in` is in LWE torus domain, `out` is in RLWE torus domain -> rescale.
     const auto bScaled = modSwitchFromTorusGeneral(in.b, TORUS_Q, LWE_Q);
     multTrlevWithConst(out, psk.one, bScaled, param);
 
-    // -sum_i a_i ⊙ RLWE'(s_i): TLWE phase is b - <a, s>, so the ai terms must be subtracted.
-
+    // -sum_i a_i ⊙ RLWE'(s_i).
     for (int i = 0; i < in.n; ++i) {
         if (in.a[i] == 0) {
             continue;

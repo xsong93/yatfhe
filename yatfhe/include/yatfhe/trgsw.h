@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2023/12/25.
 //
 
-#ifndef HLS_YATFHE_TRGSW_H
-#define HLS_YATFHE_TRGSW_H
+#ifndef YATFHE_TRGSW_H
+#define YATFHE_TRGSW_H
 
 #include <vector>
 
@@ -224,17 +224,6 @@ void addTrgswMP(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
     }
 }
 
-// template<typename TrgswType>
-// void addTrgswMPNtt(TrgswType& out, const TrgswType& in1, const TrgswType& in2) {
-//     const auto L = out.l;
-//     const auto K = out.k;
-//     for (size_t l = 0; l < L; l++) {
-//         addTrlweNtt(out.cPrime[l], in1.cPrime[l], in2.cPrime[l]);
-//         for (size_t k = 0; k < K; k++) {
-//             addTrlweNtt(out.c[l][k], in1.c[l][k], in2.c[l][k]);
-//         }
-//     }
-// }
 template<typename TrgswType, typename... TrgswArgs>
 void addTrgswMPNtt(TrgswType& out, const TrgswArgs&... inputs) {
     const auto L = out.l;
@@ -355,6 +344,8 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 
 void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPrimeDft, const TrlevDft& sSquare, const YatfheParameters& param);
 
+void switchTrlweToSecretEmbeddingAltNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
+
 void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,
                                         const TrlevDft& sSquare, const YatfheParameters& param);
 
@@ -372,4 +363,4 @@ void switchDecompTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, TrlweDft& cPr
 
 void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param);
 
-#endif //HLS_YATFHE_TRGSW_H
+#endif //YATFHE_TRGSW_H

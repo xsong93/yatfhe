@@ -2,8 +2,8 @@
 // Created by xsong93 on 11/10/25.
 //
 
-#ifndef BASE_CACHE_WORKLOAD_GENERATOR_H
-#define BASE_CACHE_WORKLOAD_GENERATOR_H
+#ifndef YATFHE_CACHE_WORKLOAD_GENERATOR_H
+#define YATFHE_CACHE_WORKLOAD_GENERATOR_H
 
 #include <cstdint>
 #include <vector>
@@ -51,4 +51,4 @@ public:
     }
 };
 
-#endif //BASE_CACHE_WORKLOAD_GENERATOR_H
+#endif //YATFHE_CACHE_WORKLOAD_GENERATOR_H

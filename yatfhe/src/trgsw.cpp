@@ -556,12 +556,10 @@ void externalProductTrgswNtt(Trlwe& output, const TrgswDft& trgswDftInput, const
 
     gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);  // 8 * 2
 
-//#pragma omp parallel for
     for (auto i = 0; i < level; i++) {
         applyNttForAB(decomposedTrlweDft.rlweDfts[i], decomposedTrlwe.trlwes[i]);
     }
 
-//#pragma omp parallel for collapse(2) private(out)
     for (auto lvl = 0; lvl < level; lvl++) {
         for (auto col = 0; col < k + 1; col++) {
             auto& curr = (col < k) ? decomposedTrlweDft.rlweDfts[lvl].a[col] : decomposedTrlweDft.rlweDfts[lvl].b;
@@ -570,9 +568,6 @@ void externalProductTrgswNtt(Trlwe& output, const TrgswDft& trgswDftInput, const
                 auto& curr2 = (col2 < k) ? trgswDftInput.trlweDftSamples[lvl][col].a[col2]
                                          : trgswDftInput.trlweDftSamples[lvl][col].b;
                 NttPolynomial tmp{N};
-//                EltwiseMultMod(tmp.coeffs.data(), curr.coeffs.data(), curr2.coeffs.data(), N, param.qNtt, 1);
-//                EltwiseAddMod(out.coeffs.data(), out.coeffs.data(), tmp.coeffs.data(), N, param.qNtt);
-//                calModularInnerProductNttHexl(out, curr, curr2, N, param.qNtt);
                 calModularInnerProductNtt(out, curr, curr2);
             }
         }
@@ -691,8 +686,8 @@ void externalProductTrgswMP(Trlwe& output, const TrgswMP& trgswMPInput, const Tr
 
 namespace {
 
-    // per-thread scratch, resized only when the dimensions change.
-    struct ExtProdScratch {
+    // per-thread buffer, resized only when the dimensions change.
+    struct ExtProdDataNtt {
         DecomposedTrlwe decomposed;
         vector<TrlweDft> partials;
         TrlweDft sum;
@@ -708,8 +703,8 @@ namespace {
         }
     };
 
-    ExtProdScratch& extProdScratch(const YatfheParameters& param, const int level) {
-        thread_local ExtProdScratch scratch;
+    ExtProdDataNtt& extProdDataNtt(const YatfheParameters& param, const int level) {
+        thread_local ExtProdDataNtt scratch;
         scratch.fit(param, level);
         return scratch;
     }
@@ -718,9 +713,9 @@ namespace {
                                        const vector<TrlweDft>& cPrimeRows, const Trlwe& trlweInput,
                                        const int level, const YatfheParameters& param) {
         const auto k = param.k;
-        auto& scratch = extProdScratch(param, level);
-        auto& decomposedTrlwe = scratch.decomposed;
-        auto& partials = scratch.partials;
+        auto& data = extProdDataNtt(param, level);
+        auto& decomposedTrlwe = data.decomposed;
+        auto& partials = data.partials;
 
         gadgetDecomposeTrlwe(decomposedTrlwe, trlweInput, param);
 
@@ -759,11 +754,11 @@ namespace {
         if (ThreadPool::onWorkerThread()) {
             for (int lvl = 0; lvl < level; lvl++) accumulateLevel(lvl);
         } else {
-            ThreadPool::instance().run(scratch.group, level, accumulateLevel);
-            scratch.group.wait();
+            ThreadPool::instance().run(data.group, level, accumulateLevel);
+            data.group.wait();
         }
 
-        auto& tmp = scratch.sum;
+        auto& tmp = data.sum;
         clearTrlwe(tmp);
         for (int lvl = 0; lvl < level; lvl++) {
             addTrlweNtt(tmp, tmp, partials[lvl]);
@@ -865,7 +860,7 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 
 void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPrimeDft, const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l; // must use full decomp length
+    const auto L = param.l;
     const auto N = param.N;
     auto& cPrimeADft = cPrimeDft.a;
     auto& cPrimeBDft = cPrimeDft.b;
@@ -880,9 +875,9 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
     }
 
     thread_local vector decomp(L, Trlwe{K, N});
+    thread_local DecomposedData d{L};
     for (auto row = 0; row < K; row++) {
         auto& currIn = cPrimeA[row];
-        DecomposedData d {L};
         for (auto j = 0; j < N; j++) {
             signedGadgetDecomposition(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < L; lvl++) {
@@ -892,6 +887,7 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
         }
     }
 
+    thread_local NttPolynomial aDft{N};
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
         auto& decompL = decomp[l];
@@ -899,7 +895,55 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
             auto& cA = cDft[k1].a;
             auto& cB = cDft[k1].b;
             auto& sA = s2.a;
-            NttPolynomial aDft{N};
+            applyNtt(aDft, decompL.a[k1]);
+            for (auto k2 = 0; k2 < K; k2++) {
+                calModularInnerProductNtt(cA[k2], aDft, sA[k2]);
+            }
+            calModularInnerProductNtt(cB, aDft, s2.b);
+        }
+    }
+
+    for (auto k1 = 0; k1 < K; k1++) {
+        for (auto k2 = 0; k2 < K; k2++) {
+            addNttPolynomial(cDft[k1].a[k2], cDft[k1].a[k2], cPrimeBDft);
+        }
+    }
+}
+
+void switchTrlweToSecretEmbeddingAltNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l;
+    const auto N = param.N;
+    auto& cPrimeA = cPrime.a;
+    auto& cPrimeBDft = cPrimeDft.b;
+    applyNttForAB(cPrimeDft, cPrime);
+
+    // calModularInnerProductNtt below accumulates, so cDft must start at zero.
+    for (auto& c : cDft) {
+        clearTrlwe(c);
+    }
+
+    thread_local vector decomp(L, Trlwe{K, N});
+    thread_local DecomposedData d{L};
+    for (auto row = 0; row < K; row++) {
+        auto& currIn = cPrimeA[row];
+        for (auto j = 0; j < N; j++) {
+            signedGadgetDecomposition(d, currIn.coeffs[j], param);
+            for (auto lvl = 0; lvl < L; lvl++) {
+                auto& currOut = decomp[lvl].a[row];
+                currOut.coeffs[j] = d.value[lvl] * d.sign;
+            }
+        }
+    }
+
+    thread_local NttPolynomial aDft{N};
+    for (auto l = 0; l < L; l++) {
+        auto& s2 = sSquare.trlweDfts[l];
+        auto& decompL = decomp[l];
+        for (auto k1 = 0; k1 < K; k1++) {
+            auto& cA = cDft[k1].a;
+            auto& cB = cDft[k1].b;
+            auto& sA = s2.a;
             applyNtt(aDft, decompL.a[k1]);
             for (auto k2 = 0; k2 < K; k2++) {
                 calModularInnerProductNtt(cA[k2], aDft, sA[k2]);
@@ -918,10 +962,11 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
 void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,
                                         const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l; // must use full decomp length
+    const auto L = param.l;
     const auto N = param.N;
 
     // calculate a * S^2
+    thread_local NttPolynomial aDft{N};
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
         auto& decompL = decompA[l];
@@ -930,7 +975,6 @@ void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrime
             auto& cB = cDft[k1].b;
             auto& sA = s2.a;
             auto& a = decompL[k1];
-            NttPolynomial aDft{N};
             applyNtt(aDft, a);
             calModularInnerProductNtt(cPrimeDft.a[k1], aDft, getNttGadgetRecomper(l)); // calculate recomposed cPrimes'a in ntt domain
             for (auto k2 = 0; k2 < K; k2++) {
@@ -952,7 +996,7 @@ void switchTrlweToSecretEmbeddingNttFromDft(vector<TrlweDft>& cDft, TrlweDft& cP
                                             const vector<vector<NttPolynomial>>& aDft,
                                             const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l; // must use full decomp length
+    const auto L = param.l;
 
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
@@ -983,15 +1027,16 @@ void switchDecompTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, TrlweDft& cPr
                                            const vector<DecompPolynomial>& bDecomp,
                                            const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l; // must use full decomp length
+    const auto L = param.l;
     const auto N = param.N;
 
     // calculate a * S^2
+    thread_local NttPolynomial aDft{N};
+    thread_local NttPolynomial bDft{N};
     for (auto l = 0; l < L; l++) {
         auto& s2 = sSquare.trlweDfts[l];
         auto& aL = aDecomp[l];
         auto& bL = bDecomp[l];
-        NttPolynomial bDft{N};
         applyNtt(bDft, bL);
         calModularInnerProductNtt(cPrimeDft.b, bDft, getNttGadgetRecomper(l));
         for (auto k1 = 0; k1 < K; k1++) {
@@ -999,7 +1044,6 @@ void switchDecompTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, TrlweDft& cPr
             auto& cB = cDft[k1].b;
             auto& sA = s2.a;
             auto& a = aL[k1];
-            NttPolynomial aDft{N};
             applyNtt(aDft, a);
             calModularInnerProductNtt(cPrimeDft.a[k1], aDft, getNttGadgetRecomper(l)); // calculate recomposed cPrimes'a in ntt domain
             for (auto k2 = 0; k2 < K; k2++) {
@@ -1021,7 +1065,7 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
                                         const TorusPolynomial& cPrimeB, const TrlevDft& sSquare,
                                         const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l; // must use full decomp length
+    const auto L = param.l;
     const auto N = param.N;
 
     thread_local NttPolynomial aDft;
@@ -1056,16 +1100,15 @@ void switchTrlweToSecretEmbeddingNttMix(vector<TrlweDft>& cDft, TrlweDft& cPrime
 
 void switchTrlweToSecretEmbedding(vector<Trlwe>& c, const Trlwe& cPrime, const Trlev& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l; // must use full decomp length
+    const auto L = param.l;
     const auto N = param.N;
     auto& cPrimeA = cPrime.a;
     auto& cPrimeB = cPrime.b;
 
-    vector decomp(L, Trlwe{K, N});
-
+    thread_local vector decomp(L, Trlwe{K, N});
+    thread_local DecomposedData d {L};
     for (auto row = 0; row < K; row++) {
         auto& currIn = cPrimeA[row];
-        DecomposedData d {L};
         for (auto j = 0; j < N; j++) {
             signedGadgetDecomposition(d, currIn.coeffs[j], param);
             for (auto lvl = 0; lvl < L; lvl++) {

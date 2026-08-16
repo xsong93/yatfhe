@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2025/3/4.
 //
 
-#ifndef HLS_YATFHE_NTT32_H
-#define HLS_YATFHE_NTT32_H
+#ifndef YATFHE_NTT32_H
+#define YATFHE_NTT32_H
 
 #include <gmp.h>
 #include <vector>
@@ -50,7 +50,7 @@ namespace NttNative32 {
     extern TwParam NWC_ITW;
     extern TwRom TW_ROM;
 
-//----------------------------------------------------------------------------------
+
     void genTW_ROM(TwRom &tw_rom);
 
     void genNWCparam(TwParam &nwc_tw, int n, const TwRom &tw_rom, const std::string &str);
@@ -120,4 +120,4 @@ namespace NttNative32 {
     void calModularInnerProductNtt(Ntt32Polynomial &out, const Ntt32Polynomial &in1, const Ntt32Polynomial &in2);
 }
 
-#endif //HLS_YATFHE_NTT32_H
+#endif //YATFHE_NTT32_H

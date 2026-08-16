@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2023/12/11.
 //
 
-#ifndef HLS_YATFHE_NUMERIC_FUNCTIONS_H
-#define HLS_YATFHE_NUMERIC_FUNCTIONS_H
+#ifndef YATFHE_NUMERIC_FUNCTIONS_H
+#define YATFHE_NUMERIC_FUNCTIONS_H
 
 #include <cstdlib>
 #include <random>
@@ -50,12 +50,8 @@ Integer roundErrorForShiftedTorus(Torus in, int shift);
 
 int intModP(int a, int p);
 
-
-// Every torus modulus in use is a power of two (Q_56, Q_32, ...), and for those
-// the centered residue is exactly a sign-extension from the low log2(p) bits --
-// the generic path compiles to a 64-bit idiv, since p is only known at runtime.
-// The non-power-of-two path is still needed for the CRT primes.
 inline int64_t longModP(const int64_t a, const int64_t p) {
+    // power of two moduli: sign-extension from the low log2(p) bits
     if (p > 1 && (p & (p - 1)) == 0) {
         const int shift = 64 - __builtin_ctzll(static_cast<uint64_t>(p));
         return static_cast<int64_t>(static_cast<uint64_t>(a) << shift) >> shift;
@@ -69,15 +65,12 @@ inline int64_t longModP(const int64_t a, const int64_t p) {
     return b;
 }
 
-// Centred residue of a mod 2^(64-shift), for modulus is a power of two
-// (pass TORUS_SHIFT for TORUS_Q). Same result as
-// longModP, but branch-free, so allowing vectorising.
+// branch-free for vectorisation
 inline int64_t longModPow2(const int64_t a, const int shift) {
     return static_cast<int64_t>(static_cast<uint64_t>(a) << shift) >> shift;
 }
 
-// Power-of-two counterpart of subTorus. For TORUS32 this reproduces the plain
-// in1 - in2 wraparound exactly (shift == 32 sign-extends from bit 31).
+// power-of-two version of subTorus
 inline Torus subTorusPow2(const int shift, const Torus in1, const Torus in2) {
     return static_cast<Torus>(longModPow2(static_cast<int64_t>(in1) - static_cast<int64_t>(in2), shift));
 }
@@ -195,4 +188,4 @@ void vectorSub(vector<T>& output, vector<T>& input1, vector<T>& input2, int64_t 
     }
 }
 
-#endif //HLS_YATFHE_NUMERIC_FUNCTIONS_H
+#endif //YATFHE_NUMERIC_FUNCTIONS_H

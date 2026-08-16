@@ -135,8 +135,7 @@ namespace NttHexl {
         for (auto l = 0; l < level; l++) {
             const int shift = bitLength - (l + 1) * radixBit;
             if (shift < 0) {
-                // 1 << negative is undefined, and a gadget wider than the torus has no
-                // meaning.
+                // 1 << negative is undefined
                 throw std::invalid_argument(
                     "initNttGadgetRecompMap: level " + std::to_string(l + 1) +
                     " of radix 2^" + std::to_string(radixBit) +
@@ -155,12 +154,10 @@ namespace NttHexl {
         auto N = in.N;
         auto q = getNttHexl().GetModulus();
         auto halfQ = (q + 1) >> 1;
-        // Per-thread scratch: this runs 2x per external product.
         thread_local std::vector<uint64_t> tmp;
         if (tmp.size() < static_cast<size_t>(N)) tmp.resize(N);
         getNttHexl().ComputeInverse(tmp.data(), in.coeffs.data(), 1, 1);
-        // Branch outside the loop: the power-of-two path vectorises, the general
-        // path stays correct for a non-power-of-two TORUS_Q (Q_CRT).
+        // power-of-two path vectorises.
         if (TORUS_IS_POW2) {
             const int shift = TORUS_SHIFT;
             for (int i = 0; i < N; i++) {
@@ -186,11 +183,9 @@ namespace NttHexl {
     void calModularInnerProductNtt(NttPolynomial &acc, const NttPolynomial &in1, const NttPolynomial &in2) {
         auto N = in2.N;
         auto q = getNttHexl().GetModulus();
-        // Per-thread scratch, called 4x per level.
         thread_local std::vector<NttType> tmp;
         if (tmp.size() < static_cast<size_t>(N)) tmp.resize(N);
         EltwiseMultMod(tmp.data(), in1.coeffs.data(), in2.coeffs.data(), N, q, 1);
-        // EltwiseAddMod supports output == input1, so acc can be updated in-place
         EltwiseAddMod(acc.coeffs.data(), acc.coeffs.data(), tmp.data(), N, q);
     }
 }

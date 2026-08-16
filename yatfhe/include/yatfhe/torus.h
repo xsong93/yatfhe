@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2023/12/8.
 //
 
-#ifndef HLS_YATFHE_TORUS_H
-#define HLS_YATFHE_TORUS_H
+#ifndef YATFHE_TORUS_H
+#define YATFHE_TORUS_H
 
 #include <cstdlib>
 #include <cstdint>
@@ -20,17 +20,7 @@ using Decomp = int32_t;
 #error "torus.h: TORUS undefined"
 #endif
 
-// LWE-domain torus, selected independently of the TRLWE Torus so a narrow
-// TLWE modulus (qLwe) need not pay for the full Torus width.
-//   default     : LweTorus = Torus  -- qLwe may use the full Torus range
-//                 (e.g. up to 56-bit in TORUS56 builds); no behavior change.
-//   LWE_TORUS32 : LweTorus = int32_t -- qLwe <= 2^32; halves TLWE/KSK/TLEV
-//                 storage and key-switch memory bandwidth.
-// Future-proofing note: a full 64-bit qLwe fits LweTorus == int64_t, but the
-// intermediate products in multTglevWithConst() (tlev.cpp) and the KSK
-// accumulation (keyswitching.cpp) are only 64-bit wide. Keeping qLwe under
-// ~56 bits leaves headroom; a true 64-bit modulus would need 128-bit
-// intermediates there.
+// LWE-domain torus
 #if defined(LWE_TORUS32)
 using LweTorus = int32_t;
 using UnsignedLwe = uint32_t;
@@ -155,26 +145,15 @@ constexpr uint32_t Q_15P = 32257U;
 constexpr uint32_t Q_14P = 15361U;
 constexpr uint32_t Q_13P = 7937U;
 constexpr uint32_t Q_12P = 2049U;
-// NTT prime for the 32-bit torus: 131070 * 2^32 + 1. Two properties earn it a
-// dedicated constant instead of one of the Q_xxP above:
-//   * < 2^50, so HEXL dispatches the 52-bit AVX512-IFMA NTT and the float
-//     EltwiseMultMod instead of the 64-bit paths (~1.65x on the PBS phase).
-//   * = 1 (mod 2^32), so an INTT wrap costs 1 unit of torus noise rather than
-//     |centred(qNtt mod q)| units -- see nttWrapDelta() in yatfhe_parameters.h.
-// Being a multiple of 2^32 plus one, it is also 1 (mod 2N) for every N <= 2^31,
-// so the negacyclic NTT exists for any ring degree in use here.
+// NTT prime for the 32-bit torus that:
+//   < 2^50, so HEXL dispatches the 52-bit AVX512-IFMA NTT;
+//   = 1 (mod 2^32), so an INTT wrap costs 1 unit of torus noise.
 constexpr uint64_t Q_49P_T32 = 562941363486721ULL;
 
-// The 56-bit torus counterpart, chosen on the same wrap criterion: 27 * 2^56 + 1.
-//   * > 2^56, so it can represent a torus value.
-//   * = 1 (mod 2^56), so an INTT wrap costs 1 unit.
-//   * Being a multiple of 2^56 plus one, it is 1 (mod 2N) for every N <= 2^55, so the
-//     negacyclic NTT exists for any ring degree here.
-//   * 61 bits, inside HEXL's 62-bit modulus limit. It is the SMALLEST prime meeting
-//     these: m * 2^56 + 1 is composite for every m < 27. The m*2^56 - 1 form cannot
-//     work at all -- it is 2^16 - 1 (mod 2^16), so no 2N-th root of unity exists.
-// Too wide for the AVX512-IFMA path either way: any modulus above 2^56 exceeds it,
-// so TORUS56 uses HEXL's 64-bit NTT regardless of which of these primes is picked.
+// NTT prime for the 56-bit torus that:
+//   > 2^56, so it can represent a torus value;
+//   = 1 (mod 2^56), so an INTT wrap costs 1 unit;
+//   insides HEXL's 62-bit modulus limit.
 constexpr uint64_t Q_61P_T56 = 1945555039024054273ULL;
 constexpr int64_t Q_CRT = static_cast<int64_t>(QD_CRT[0]) * QD_CRT[1] * QD_CRT[2] * QD_CRT[3];
 constexpr uint64_t BARRETT_CONSTANT = UINT64_MAX / static_cast<uint64_t>(Q_CRT);  // μ = floor(2^64 / TORUS_Q)
@@ -186,12 +165,6 @@ extern Integer INT_MAX_VALUE;
 extern Integer INT_MIN_VALUE;
 extern Torus TORUS_MAX;
 extern Torus TORUS_MIN;
-// TORUS_Q is a power of two for the PBS parameter sets (Q_56, Q_32, ...), but NOT
-// in general: the CRT paths run with q = Q_CRT, a product of odd primes. When it
-// is a power of two the centered residue is a sign-extension by TORUS_SHIFT, which
-// lets the hot loops use longModPow2 and vectorise; otherwise they must fall back
-// to longModP. Always branch on TORUS_IS_POW2 *outside* the loop -- TORUS_SHIFT is
-// meaningless (and shifting by it is UB) when the flag is false.
 extern bool TORUS_IS_POW2;
 extern int TORUS_SHIFT;
 extern Torus LWE_MAX;
@@ -199,4 +172,4 @@ extern Torus LWE_MIN;
 extern NttType NTT_MAX;
 extern NttType NTT_MIN;
 
-#endif //HLS_YATFHE_TORUS_H
+#endif //YATFHE_TORUS_H

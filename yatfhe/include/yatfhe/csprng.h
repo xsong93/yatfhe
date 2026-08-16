@@ -1,16 +1,13 @@
 //
 // ChaCha20-based CSPRNG.
 //
-#ifndef HLS_YATFHE_CSPRNG_H
-#define HLS_YATFHE_CSPRNG_H
+#ifndef YATFHE_CSPRNG_H
+#define YATFHE_CSPRNG_H
 
 #include <array>
 #include <cstdint>
 #include <cstddef>
 
-// Seeded once from OS entropy rather than reseeded per call, since ChaCha20's
-// keystream is itself cryptographically secure -- unlike mt19937, whose 624-word state can be
-// reconstructed from a modest number of its outputs regardless of how it was seeded.
 class ChaCha20Rng {
 public:
     using result_type = uint32_t;
@@ -30,4 +27,4 @@ private:
     size_t blockPos_ = 16; // force a refill on first use
 };
 
-#endif //HLS_YATFHE_CSPRNG_H
+#endif //YATFHE_CSPRNG_H

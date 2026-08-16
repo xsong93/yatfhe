@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2023/12/25.
 //
 
-#ifndef HLS_YATFHE_TRLWE_H
-#define HLS_YATFHE_TRLWE_H
+#ifndef YATFHE_TRLWE_H
+#define YATFHE_TRLWE_H
 
 #include <vector>
 
@@ -228,8 +228,7 @@ void subTrlwe(TrlweType& output, const TrlweType& input1, const TrlweType& input
     subTorusPolynomial(output.b, input1.b, input2.b);
 }
 
-// Computes output = scalar - input without requiring a pre-built rlweOne ciphertext.
-// Uses subTorus for correct modular reduction under any TORUS_Q.
+// output = scalar - input
 template<typename TrlweType>
 void subTrlweFromConst(TrlweType& output, const TrlweType& input, const Torus scalar) {
     const auto N = output.b.N;
@@ -379,8 +378,6 @@ void trlweMcrtToCrt(std::vector<TrlweType>& trlwe, const YatfheParameters& param
     const size_t dl = param.dl;
     const size_t N  = param.N;
 
-    // Hoist low-prime constants into stack arrays so all dl values are available
-    // simultaneously when the loop order is (k, j, d) rather than (d, k, j).
     int64_t taoUInv[NUM_LOW_PRIMES];
     int     ql[NUM_LOW_PRIMES];
     for (size_t d = 0; d < dl; d++) {
@@ -441,12 +438,9 @@ void recompTrlweCrt(TrlweTypeA& out, std::vector<TrlweTypeB>& inCRT, const Yatfh
     const size_t N   = param.N;
     const auto qCRT = param.qCRT;
 
-    // Hoist gadget vector to avoid param pointer chasing in the hot loop.
     long z[NUM_PRIMES];
     for (size_t di = 0; di < d; di++) z[di] = param.z[di];
 
-    // Cache one raw input pointer per prime outside the j loop to remove the
-    // inCRT[d].a[k].coeffs chain (three pointer dereferences) from the inner body.
     using InCoeffPtr = decltype(inCRT[0].a[0].coeffs.data());
 
     for (size_t k = 0; k < static_cast<size_t>(param.k); k++) {
@@ -571,13 +565,7 @@ void rescaleTrlweToNewMod(Trlwe& output, const Trlwe& in, int64_t newMod, int64_
 
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput);
 
-void multTrlweWithConst(Trlwe& output, const Trlwe& input1, int scalar);
-
 // Direct NTT product, no gadget decompositions
 void multTrlweWithPolyNtt(Trlwe& output, const Trlwe& in, const IntPolynomial& poly, const YatfheParameters& param);
 
-int64_t directNttWrapNoise(const IntPolynomial& poly, const YatfheParameters& param);
-
-bool isPolyDirectNttSafe(const IntPolynomial& poly, const YatfheParameters& param);
-
-#endif //HLS_YATFHE_TRLWE_H
+#endif //YATFHE_TRLWE_H

@@ -49,12 +49,6 @@ void gadgetDecomposeKs(DecomposedData& out, const Torus in, const YatfheParamete
     }
 }
 
-// Signed (balanced) counterpart of gadgetDecomposeKs, over the KSK's own
-// ksRadixBits/ksWidthBits. See signedGadgetDecomposition for the digit/residual
-// rationale. switchKeyForTlwe consumes this as a signed MAC (coeff = value[j]*
-// sign accumulated in int64, one longModP(., LWE_Q) at the end), so balanced
-// digits drop in unchanged; the top carry-out has weight 2^ksWidthBits == LWE_Q
-// and vanishes mod LWE_Q, keeping the key switch exact.
 void signedGadgetDecompositionKs(DecomposedData& out, const Torus in, const YatfheParameters& param) {
     const int radixBits = param.ksRadixBits;
     const int widthBits = param.ksWidthBits;

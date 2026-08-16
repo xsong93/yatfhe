@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2024/5/9.
 //
 
-#ifndef HLS_YATFHE_TRLGSW_H
-#define HLS_YATFHE_TRLGSW_H
+#ifndef YATFHE_TRLGSW_H
+#define YATFHE_TRLGSW_H
 
 #include "yatfhe/trgsw.h"
 
@@ -32,4 +32,4 @@ void externalProductTrlgsw(Trlwe& output, const Trlgsw& trlgsw, Trlwe& trlweInpu
 void externalProductTrlgswNtt(Trlwe& output, const TrlgswDft14& trlgswDft14Input, Trlwe& trlweInput, const YatfheParameters& param);
 
 
-#endif //HLS_YATFHE_TRLGSW_H
+#endif //YATFHE_TRLGSW_H

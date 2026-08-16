@@ -36,6 +36,8 @@ int main(int argc, char **argv) {
     COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
     BootstrappingKeyWWL24 bskWWL24{param, param.lApprox};
     COUNT_TIME("genBootstrappingKeyWWL24", genBootstrappingKeyWWL24(bskWWL24, trgswKey, tlweKey, param);)
+    BootstrappingKeyWWL24Alt bskWWL24Alt{param, param.lApprox};
+    COUNT_TIME("genBootstrappingKeyWWL24Alt", genBootstrappingKeyWWL24Alt(bskWWL24Alt, trgswKey, tlweKey, param);)
     BootstrappingKeyMPOpt bskMPOpt{param, param.lApprox, false};
     COUNT_TIME("genBootstrappingKeyMPOpt", genBootstrappingKeyMPOpt(bskMPOpt, trgswKey, tlweKey, v, param);)
 
@@ -48,11 +50,9 @@ int main(int argc, char **argv) {
 
 
     // data gen
-    //
-    // Full-range LUT over [-p/2, p/2) via the padding-bit encoding.
     const int p = param.torusBase;
-    const int encMod = 2 * p;                 // p messages + 1 padding bit
-    Integer pt = -2;                          // negative on purpose: exercises the half
+    const int encMod = 2 * p;
+    Integer pt = -2;
     const int slot = static_cast<int>(((pt % p) + p) % p);
     cout << "decPre: " << pt << " (slot " << slot << ")" << endl;
     Torus mu = modSwitchToTorusGeneral(slot, encMod, LWE_Q);
@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
     Trlwe out5{param};
     Trlwe out6{param};
     Trlwe out7{param};
+    Trlwe out8{param};
     Tlwe tmp{ksKey.nCurrKey};
     Tlwe output {param.n};
 
@@ -155,6 +156,14 @@ int main(int argc, char **argv) {
         genNoiselessTrlweSample(out7, v, sTlwe);
         COUNT_TIME("WWL24 blindRotate", blindRotateWWL24Ntt(out7, bskWWL24Server, sTlwe, param);)
     }
+    {
+        BootstrappingKeyWWL24Alt bskWWL24Server;
+        COUNT_TIME("WWL24_ALT write key", serializeBskWWL24Alt(bskWWL24Alt, "BSK_WWL_ALT.bin");)
+        clearFileCache("BSK_WWL_ALT.bin");
+        COUNT_TIME("WWL24_ALT read key", deserializeBskWWL24Alt(bskWWL24Server, "BSK_WWL_ALT.bin", param.n);)
+        genNoiselessTrlweSample(out8, v, sTlwe);
+        COUNT_TIME("WWL24_ALT blindRotate", blindRotateWWL24AltNtt(out8, bskWWL24Server, sTlwe, param);)
+    }
 
     // client side
     extractTlweFromTrlwe(tmp, acc, param.driftPhase);
@@ -204,6 +213,12 @@ int main(int argc, char **argv) {
     decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
     cout << "decAft(WWL24): "<< decAft << endl;
     cout << "err(WWL24):" << calTlweError(output, tlweKey, pt) << endl;
+
+    extractTlweFromTrlwe(tmp, out8, param.driftPhase);
+    switchKeyForTlwe(output, ksKey, tmp, param);
+    decAft = symDecTlweToInt(output, tlweKey, param.torusBase);
+    cout << "decAft(WWL24_ALT): "<< decAft << endl;
+    cout << "err(WWL24_ALT):" << calTlweError(output, tlweKey, pt) << endl;
 
     return 0;
 }

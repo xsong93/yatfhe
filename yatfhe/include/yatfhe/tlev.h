@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2024/6/12.
 //
 
-#ifndef HLS_YATFHE_TGLEV_H
-#define HLS_YATFHE_TGLEV_H
+#ifndef YATFHE_TGLEV_H
+#define YATFHE_TGLEV_H
 
 #include "yatfhe/yatfhe_parameters.h"
 #include "yatfhe/tlwe.h"
@@ -21,6 +21,4 @@ void encTglev(Tlev& output, const TlweKey& tlweKey, Torus input, const YatfhePar
 
 void multTglevWithConst(Tlwe& output, const Tlev& input, Torus num, const YatfheParameters& param);
 
-// void multDecomposedTglevWithConst(Tlwe& output, const Tglev& input, Integer num, const YatfheParameters& param);
-
-#endif //HLS_YATFHE_TGLEV_H
+#endif //YATFHE_TGLEV_H

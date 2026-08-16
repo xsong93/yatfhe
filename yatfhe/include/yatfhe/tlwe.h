@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2023/12/8.
 //
 
-#ifndef HLS_YATFHE_TLWE_H
-#define HLS_YATFHE_TLWE_H
+#ifndef YATFHE_TLWE_H
+#define YATFHE_TLWE_H
 
 #include <vector>
 
@@ -72,4 +72,4 @@ void resetTlweToZero(Tlwe& tlwe);
 
 void inverseTlwe(Tlwe& tlwe);
 
-#endif //HLS_YATFHE_TLWE_H
+#endif //YATFHE_TLWE_H

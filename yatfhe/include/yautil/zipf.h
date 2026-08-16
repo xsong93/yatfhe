@@ -2,8 +2,8 @@
 // Created by xsong93 on 11/10/25.
 //
 
-#ifndef BASE_ZIPF_H
-#define BASE_ZIPF_H
+#ifndef YATFHE_ZIPF_H
+#define YATFHE_ZIPF_H
 
 #include <cstdint>
 #include <vector>
@@ -74,4 +74,4 @@ private:
     }
 };
 
-#endif //BASE_ZIPF_H
+#endif //YATFHE_ZIPF_H

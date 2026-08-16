@@ -2,8 +2,8 @@
 // Created by Xintong Song on 2024/3/8.
 //
 
-#ifndef HLS_YATFHE_KEYSWITCHING_H
-#define HLS_YATFHE_KEYSWITCHING_H
+#ifndef YATFHE_KEYSWITCHING_H
+#define YATFHE_KEYSWITCHING_H
 
 #include <vector>
 #include "yatfhe/tlwe.h"
@@ -50,4 +50,4 @@ void switchKeyForTlwe(Tlwe& output, const TlweKeySwitchingKey& ksk, const Tlwe& 
 void tlweToTrlwePrivateKeySwitching(Trlwe& out, const Tlwe& in, const PrivateKeySwitchingKey& psk,
                                     const YatfheParameters& param);
 
-#endif //HLS_YATFHE_KEYSWITCHING_H
+#endif //YATFHE_KEYSWITCHING_H

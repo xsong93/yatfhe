@@ -9,6 +9,38 @@
 #include "yatfhe/key_patterns.h"
 #include "yautil/multi_threading.h"
 
+namespace {
+    void genBootstrappingKeyGroup(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+        int j = 0;
+        const auto group = param.group;
+        const auto batchSize = 1 << group;
+        const int max = param.n - param.n % param.group;
+        for (int i = 0; i < max; i = i + group) {
+            int combined = 0;
+            for (int i2 = 0; i2 < group; i2++) {
+                const auto s = tlweKey.s[i + i2] << (group - 1 - i2);
+                combined |= s;
+            }
+
+            for (int k = 0; k < batchSize; ++k) {
+                const int mu = combined == k ? 1 : 0;
+                encryptTrgswNtt(bsk.bsk[j + k], bsk.bskDft[j + k], mu, trgswKey, 0, param);
+            }
+            j += batchSize;
+        }
+        for (int i = max; i < tlweKey.n; ++i) {
+            encryptTrgswNtt(bsk.bsk[j], bsk.bskDft[j], tlweKey.s[i], trgswKey, 0, param);
+            j++;
+        }
+    }
+
+    void genBootstrappingKeyNormal(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+        for (auto i = 0; i < bsk.n; i++) {
+            encryptTrgswNtt(bsk.bsk[i], bsk.bskDft[i], tlweKey.s[i], trgswKey, 0, param);
+        }
+    }
+}
+
 void functionalBootstrapping(Tlwe& out, const Tlwe& input, const BootstrappingKey& bsk, const TlweKeySwitchingKey& ksk, const TorusPolynomial& v, const YatfheParameters& param) {
     ScaledTlwe inputModN2 {param.N * 2, param.n};
     Trlwe accum {param.k, param.N};
@@ -60,36 +92,6 @@ void functionalBootstrappingCrt(Tlwe& out, const Tlwe& input, const Bootstrappin
     switchKeyForTlwe(out, ksk, tmp, param);
 }
 
-void genBootstrappingKeyGroup(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
-    int j = 0;
-    const auto group = param.group;
-    const auto batchSize = 1 << group;
-    const int max = param.n - param.n % param.group;
-    for (int i = 0; i < max; i = i + group) {
-        int combined = 0;
-        for (int i2 = 0; i2 < group; i2++) {
-            const auto s = tlweKey.s[i + i2] << (group - 1 - i2);
-            combined |= s;
-        }
-
-        for (int k = 0; k < batchSize; ++k) {
-            const int mu = combined == k ? 1 : 0;
-            encryptTrgswNtt(bsk.bsk[j + k], bsk.bskDft[j + k], mu, trgswKey, 0, param);
-        }
-        j += batchSize;
-    }
-    for (int i = max; i < tlweKey.n; ++i) {
-        encryptTrgswNtt(bsk.bsk[j], bsk.bskDft[j], tlweKey.s[i], trgswKey, 0, param);
-        j++;
-    }
-}
-
-void genBootstrappingKeyNormal(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
-    for (auto i = 0; i < bsk.n; i++) {
-        encryptTrgswNtt(bsk.bsk[i], bsk.bskDft[i], tlweKey.s[i], trgswKey, 0, param);
-    }
-}
-
 void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
     if (bsk.group == 1) {
         genBootstrappingKeyNormal(bsk, trgswKey, tlweKey, param);
@@ -100,27 +102,44 @@ void genBootstrappingKey(BootstrappingKey& bsk, TrgswKey& trgswKey, const TlweKe
 
 void genBootstrappingKeyWWL24(BootstrappingKeyWWL24& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
 #ifdef TERNARY
+    throw std::runtime_error("genBootstrappingKeyWWL24: not implemented for ternary keys");
 #else
-    // cPrime must hold a genuinely bounded (Torus-domain) "a", forward-transformed into NTT
-    // domain, since switchTrlweToSecretEmbeddingNtt later INTTs it and gadget-decomposes the
-    // result at torusBits precision. encryptTrgswMPNtt's usual "Simple" path samples "a"
-    // natively/uniformly over the wider qNtt domain, which is fine for a plain external
-    // product but not decomposable this way.
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
     futures.reserve(bsk.n);
     for (auto i = 0; i < bsk.n; i++) {
         futures.emplace_back(pool.enqueue([i, &bsk, &trgswKey, &tlweKey, &param] {
             TorusPolynomial muPoly{param.N};
-            Trlwe scratch{param.k, param.N};
+            Trlwe tmp{param.k, param.N};
             for (auto lvl = 0; lvl < bsk.bskDft[i].l; lvl++) {
                 muPoly.coeffs[0] = tlweKey.s[i] << (param.torusBits - (lvl + 1) * param.radixBits);
-                symEncTrlweMultiSampleNtt(scratch, bsk.bskDft[i].cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
+                symEncTrlweMultiSampleNtt(tmp, bsk.bskDft[i].cPrime[lvl], trgswKey.trlweKey, muPoly.coeffs);
             }
         }));
     }
     for (auto& f : futures) f.wait();
-    // s2Dft encrypts the TRLWE secret key itself; generated once.
+    symEncTrlevWithKeyNtt(bsk.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
+#endif
+}
+
+void genBootstrappingKeyWWL24Alt(BootstrappingKeyWWL24Alt& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
+#ifdef TERNARY
+    throw std::runtime_error("genBootstrappingKeyWWL24Alt: not implemented for ternary keys");
+#else
+    auto& pool = ThreadPool::instance();
+    vector<future<void>> futures;
+    futures.reserve(bsk.n);
+    for (auto i = 0; i < bsk.n; i++) {
+        futures.emplace_back(pool.enqueue([i, &bsk, &trgswKey, &tlweKey, &param] {
+            TorusPolynomial muPoly{param.N};
+            TrlweDft tmp{param.k, param.N};
+            for (auto lvl = 0; lvl < bsk.trgsws[i].l; lvl++) {
+                muPoly.coeffs[0] = tlweKey.s[i] << (param.torusBits - (lvl + 1) * param.radixBits);
+                symEncTrlweMultiSampleNtt(bsk.trgsws[i].cPrime[lvl], tmp, trgswKey.trlweKey, muPoly.coeffs);
+            }
+        }));
+    }
+    for (auto& f : futures) f.wait();
     symEncTrlevWithKeyNtt(bsk.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
 #endif
 }
@@ -204,6 +223,7 @@ void genBootstrappingKeyMPOpt(BootstrappingKeyMPOpt& bsk, TrgswKey& trgswKey, co
 void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, const TlweKey& tlweKey,
                                const TorusPolynomial& v, const YatfheParameters& param) {
 #ifdef TERNARY
+    throw std::runtime_error("genBootstrappingKeyMPLazy: not implemented for ternary keys");
 #else
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
@@ -246,6 +266,7 @@ void genBootstrappingKeyMPLazy(BootstrappingKeyMPLazy& bsk, TrgswKey& trgswKey, 
 void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                    const TorusPolynomial& v, const YatfheParameters& param) {
 #ifdef TERNARY
+    throw std::runtime_error("genBootstrappingKeyMPLazyPipe: not implemented for ternary keys");
 #else
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
@@ -298,6 +319,7 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswK
 void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                    const TorusPolynomial& v, const YatfheParameters& param) {
 #ifdef TERNARY
+    throw std::runtime_error("genBootstrappingKeyMPLazyPipeAlt: not implemented for ternary keys");
 #else
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;

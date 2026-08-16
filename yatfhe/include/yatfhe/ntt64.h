@@ -2,8 +2,8 @@
 // Created by ic on 24-4-29.
 //
 
-#ifndef HLS_YATFHE_NTT64_H
-#define HLS_YATFHE_NTT64_H
+#ifndef YATFHE_NTT64_H
+#define YATFHE_NTT64_H
 
 #include <vector>
 #include <string>
@@ -54,7 +54,6 @@ namespace NttNative64 {
     extern TwParam NWC_ITW;
     extern TwRom TW_ROM;
 
-//----------------------------------------------------------------------------------
 
     void genTW_ROM(TwRom &tw_rom);
 
@@ -114,4 +113,4 @@ void applyNttForAB(T &out, R &in) {
     }
 }
 
-#endif //HLS_YATFHE_NTT64_H
+#endif //YATFHE_NTT64_H

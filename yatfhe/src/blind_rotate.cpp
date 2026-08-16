@@ -1,7 +1,6 @@
 //
 // Created by xintong on 4/21/25.
 //
-#include <mutex>
 #include <stdexcept>
 #include "yatfhe/blind_rotate.h"
 #include "yatfhe/cmux.h"
@@ -10,480 +9,525 @@
 #include "yautil/multi_threading.h"
 #include "yautil/ya_serializer.h"
 
-void preRotateBinary(Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut, const vector<Trlwe>& key1,
-                     const vector<vector<TrgswMPDft>>& trgswDftsIn, const ScaledTlwe& in, const int batchSize,
-                     const YatfheParameters& param) {
-    const auto n = param.n;
-    auto& pool = ThreadPool::instance();
+namespace {
+    void preRotateBinary(Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut, const vector<Trlwe>& key1,
+                         const vector<vector<TrgswMPDft>>& trgswDftsIn, const ScaledTlwe& in, const int batchSize,
+                         const YatfheParameters& param) {
+        const auto n = param.n;
+        auto& pool = ThreadPool::instance();
 
-    vector<future<void>> futures;
-    futures.reserve(batchSize);
+        vector<future<void>> futures;
+        futures.reserve(batchSize);
 
-    {
-        Trlwe tmp{param.k, param.N};
-        rotateTrlwe(tmp, key1[0], in.a[0]);
-        addTrlwe(tmp, tmp, key1[1]);
-        rotateTrlwe(trlweOut, tmp, -in.b);
-    }
-
-    for (int start = 1; start < n; start += batchSize) {
-        futures.clear();
-        const int end = min(start + batchSize, n);
-
-        for (int i = start; i < end; ++i) {
-            const auto ai = in.a[i];
-            const int j = i - 1;
-            const auto& keyIn = trgswDftsIn[j];
-            auto& keyOut = trgswDftsOut[j];
-            futures.emplace_back(pool.enqueue([ai, &param, &keyOut, &keyIn] {
-                if (ai != 0) {
-                    rotateTrgswMPNtt(keyOut, keyIn[0], ai, param);
-                }
-                addTrgswMPNtt(keyOut, keyOut, keyIn[1]);
-            }));
+        {
+            Trlwe tmp{param.k, param.N};
+            rotateTrlwe(tmp, key1[0], in.a[0]);
+            addTrlwe(tmp, tmp, key1[1]);
+            rotateTrlwe(trlweOut, tmp, -in.b);
         }
 
-        for (auto& f : futures) {
-            f.get();
-        }
-    }
-}
+        for (int start = 1; start < n; start += batchSize) {
+            futures.clear();
+            const int end = min(start + batchSize, n);
 
-void preRotateTernary(Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut, const vector<Trlwe>& key1,
-                      const vector<vector<TrgswMPDft>>& trgswDftsIn, const ScaledTlwe& in, const int batchSize,
-                       const int tasksPerThread, const YatfheParameters& param) {
-    const auto n = param.n;
-    auto& pool = ThreadPool::instance();
-
-    vector<future<void>> futures;
-    futures.reserve(batchSize);
-
-    {
-        Trlwe tmp{param}, tmp2{param};
-        rotateTrlwe(tmp, key1[0], in.a[0]);
-        rotateTrlwe(tmp2, key1[1], -in.a[0]);
-        addTrlwe(tmp, tmp, tmp2, key1[2]);
-        rotateTrlwe(trlweOut, tmp, -in.b);
-    }
-
-    for (int start = 1; start < n; start += batchSize * tasksPerThread) {
-        futures.clear();
-        const int end = min(start + batchSize * tasksPerThread, n);
-
-        // Process tasks in chunks of 'tasksPerThread'
-        for (int chunkStart = start; chunkStart < end; chunkStart += tasksPerThread) {
-            const int chunkEnd = min(chunkStart + tasksPerThread, end);
-
-            futures.emplace_back(pool.enqueue([chunkStart, chunkEnd, &in, &param, &trgswDftsOut, &trgswDftsIn] {
-                for (int i = chunkStart; i < chunkEnd; ++i) {
-                    const auto ai = in.a[i];
-                    const int j = i - 1;
-                    auto& keyOut = trgswDftsOut[j];
-                    const auto& keyIn = trgswDftsIn[j];
-
-                    TrgswMPDft keyOut2{param};
+            for (int i = start; i < end; ++i) {
+                const auto ai = in.a[i];
+                const int j = i - 1;
+                const auto& keyIn = trgswDftsIn[j];
+                auto& keyOut = trgswDftsOut[j];
+                futures.emplace_back(pool.enqueue([ai, &param, &keyOut, &keyIn] {
                     if (ai != 0) {
                         rotateTrgswMPNtt(keyOut, keyIn[0], ai, param);
-                        rotateTrgswMPNtt(keyOut2, keyIn[1], -ai, param);
                     }
-                    addTrgswMPNtt(keyOut, keyOut, keyOut2, keyIn[2]);
-                }
-            }));
-        }
+                    addTrgswMPNtt(keyOut, keyOut, keyIn[1]);
+                }));
+            }
 
-        for (auto& f : futures) {
-            f.get();
+            for (auto& f : futures) {
+                f.get();
+            }
         }
     }
-}
 
-void switchSchemeInBatchBinary(vector<vector<TrgswMPDft>>& bsk, const TrlevDft& s2, const ScaledTlwe& input,
-                               const YatfheParameters& param) {
-    /**
-     * Performs:
-     *  for (auto i = 0; i < n-1; i++) {
-     *       bsk[i][0].c = vector(level, vector(param.k, TrlweDft(param.k, param.N)));
-     *       for (auto l = 0; l < level; l++) {
-     *           switchTrlweToSecretEmbeddingNtt(bsk[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
-     *       }
-     *   }
-     */
-    const auto n = param.n;
-    const auto batchSize = param.batchSize;
-    const auto tasksPerThread = param.tasksPerThread;
-    const auto level = bsk[0][0].l;
-    auto& pool = ThreadPool::instance();
+    void preRotateTernary(Trlwe& trlweOut, vector<TrgswMPDft>& trgswDftsOut, const vector<Trlwe>& key1,
+                          const vector<vector<TrgswMPDft>>& trgswDftsIn, const ScaledTlwe& in, const int batchSize,
+                           const int tasksPerThread, const YatfheParameters& param) {
+        const auto n = param.n;
+        auto& pool = ThreadPool::instance();
 
-    vector<future<void>> futures;
-    futures.reserve(batchSize);
+        vector<future<void>> futures;
+        futures.reserve(batchSize);
 
-    for (int start = 0; start < n - 1; start += batchSize * tasksPerThread) {
-        futures.clear();
-        const int end = min(start + batchSize * tasksPerThread, n - 1);
-
-        // Process tasks in chunks of 'tasksPerThread'
-        for (int chunkStart = start; chunkStart < end; chunkStart += tasksPerThread) {
-            const int chunkEnd = min(chunkStart + tasksPerThread, end);
-
-            futures.emplace_back(pool.enqueue([&bsk, &s2, &input, &param, chunkStart, chunkEnd, level] {
-                for (int i = chunkStart; i < chunkEnd; ++i) {
-                    if (input.a[i+1] == 0) {
-                        continue;
-                    }
-                    bsk[i][0].c.resize(level, vector(param.k, TrlweDft(param.k, param.N)));
-                    for (auto l = 0; l < level; l++) {
-                        switchTrlweToSecretEmbeddingNtt(bsk[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
-                    }
-                }
-            }));
+        {
+            Trlwe tmp{param}, tmp2{param};
+            rotateTrlwe(tmp, key1[0], in.a[0]);
+            rotateTrlwe(tmp2, key1[1], -in.a[0]);
+            addTrlwe(tmp, tmp, tmp2, key1[2]);
+            rotateTrlwe(trlweOut, tmp, -in.b);
         }
-        for (auto& f : futures) {
-            f.get();
+
+        for (int start = 1; start < n; start += batchSize * tasksPerThread) {
+            futures.clear();
+            const int end = min(start + batchSize * tasksPerThread, n);
+
+            // Process tasks in chunks of 'tasksPerThread'
+            for (int chunkStart = start; chunkStart < end; chunkStart += tasksPerThread) {
+                const int chunkEnd = min(chunkStart + tasksPerThread, end);
+
+                futures.emplace_back(pool.enqueue([chunkStart, chunkEnd, &in, &param, &trgswDftsOut, &trgswDftsIn] {
+                    for (int i = chunkStart; i < chunkEnd; ++i) {
+                        const auto ai = in.a[i];
+                        const int j = i - 1;
+                        auto& keyOut = trgswDftsOut[j];
+                        const auto& keyIn = trgswDftsIn[j];
+
+                        TrgswMPDft keyOut2{param};
+                        if (ai != 0) {
+                            rotateTrgswMPNtt(keyOut, keyIn[0], ai, param);
+                            rotateTrgswMPNtt(keyOut2, keyIn[1], -ai, param);
+                        }
+                        addTrgswMPNtt(keyOut, keyOut, keyOut2, keyIn[2]);
+                    }
+                }));
+            }
+
+            for (auto& f : futures) {
+                f.get();
+            }
         }
     }
-}
 
-void switchSchemeInBatchBinaryOpt(vector<vector<TrgswMPDft>>& bsk, const TrlevDft& s2, const ScaledTlwe& input,
-                               const YatfheParameters& param,
-                               const vector<vector<vector<DecompPolynomial>>>& bskDecompA) {
-    const auto n = param.n;
-    const auto batchSize = param.batchSize;
-    const auto tasksPerThread = param.tasksPerThread;
-    const auto level = bsk[0][0].l;
-    auto& pool = ThreadPool::instance();
+    void switchSchemeInBatchBinary(vector<vector<TrgswMPDft>>& bsk, const TrlevDft& s2, const ScaledTlwe& input,
+                                   const YatfheParameters& param) {
+        /**
+         * Performs:
+         *  for (auto i = 0; i < n-1; i++) {
+         *       bsk[i][0].c = vector(level, vector(param.k, TrlweDft(param.k, param.N)));
+         *       for (auto l = 0; l < level; l++) {
+         *           switchTrlweToSecretEmbeddingNtt(bsk[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
+         *       }
+         *   }
+         */
+        const auto n = param.n;
+        const auto batchSize = param.batchSize;
+        const auto tasksPerThread = param.tasksPerThread;
+        const auto level = bsk[0][0].l;
+        auto& pool = ThreadPool::instance();
 
-    vector<future<void>> futures;
-    futures.reserve(batchSize);
+        vector<future<void>> futures;
+        futures.reserve(batchSize);
 
-    for (int start = 0; start < n - 1; start += batchSize * tasksPerThread) {
-        futures.clear();
-        const int end = min(start + batchSize * tasksPerThread, n - 1);
+        for (int start = 0; start < n - 1; start += batchSize * tasksPerThread) {
+            futures.clear();
+            const int end = min(start + batchSize * tasksPerThread, n - 1);
 
-        // Process tasks in chunks of 'tasksPerThread'
-        for (int chunkStart = start; chunkStart < end; chunkStart += tasksPerThread) {
-            const int chunkEnd = min(chunkStart + tasksPerThread, end);
+            // Process tasks in chunks of 'tasksPerThread'
+            for (int chunkStart = start; chunkStart < end; chunkStart += tasksPerThread) {
+                const int chunkEnd = min(chunkStart + tasksPerThread, end);
 
-            futures.emplace_back(pool.enqueue([&bsk, &s2, &input, &param, &bskDecompA, chunkStart, chunkEnd, level] {
-                for (int i = chunkStart; i < chunkEnd; ++i) {
-                    if (input.a[i+1] == 0) {
-                        continue;
+                futures.emplace_back(pool.enqueue([&bsk, &s2, &input, &param, chunkStart, chunkEnd, level] {
+                    for (int i = chunkStart; i < chunkEnd; ++i) {
+                        if (input.a[i+1] == 0) {
+                            continue;
+                        }
+                        bsk[i][0].c.resize(level, vector(param.k, TrlweDft(param.k, param.N)));
+                        for (auto l = 0; l < level; l++) {
+                            switchTrlweToSecretEmbeddingNtt(bsk[i][0].c[l], bsk[i][0].cPrime[l], s2, param);
+                        }
                     }
-                    bsk[i][0].c.resize(level);
-                    for (auto l = 0; l < level; l++) {
-                        auto& c = bsk[i][0].c[l];
-                        auto& cPrime = bsk[i][0].cPrime[l];
-                        auto& decompA = bskDecompA[i * level + l];
-                        c.resize(param.k, TrlweDft(param.k, param.N));
-                        cPrime.a.resize(param.k, NttPolynomial(param.N));
-                        switchTrlweToSecretEmbeddingNttOpt(bsk[i][0].c[l], bsk[i][0].cPrime[l],
-                            decompA, s2, param);
+                }));
+            }
+            for (auto& f : futures) {
+                f.get();
+            }
+        }
+    }
+
+    void switchSchemeInBatchBinaryOpt(vector<vector<TrgswMPDft>>& bsk, const TrlevDft& s2, const ScaledTlwe& input,
+                                   const YatfheParameters& param,
+                                   const vector<vector<vector<DecompPolynomial>>>& bskDecompA) {
+        const auto n = param.n;
+        const auto batchSize = param.batchSize;
+        const auto tasksPerThread = param.tasksPerThread;
+        const auto level = bsk[0][0].l;
+        auto& pool = ThreadPool::instance();
+
+        vector<future<void>> futures;
+        futures.reserve(batchSize);
+
+        for (int start = 0; start < n - 1; start += batchSize * tasksPerThread) {
+            futures.clear();
+            const int end = min(start + batchSize * tasksPerThread, n - 1);
+
+            // Process tasks in chunks of 'tasksPerThread'
+            for (int chunkStart = start; chunkStart < end; chunkStart += tasksPerThread) {
+                const int chunkEnd = min(chunkStart + tasksPerThread, end);
+
+                futures.emplace_back(pool.enqueue([&bsk, &s2, &input, &param, &bskDecompA, chunkStart, chunkEnd, level] {
+                    for (int i = chunkStart; i < chunkEnd; ++i) {
+                        if (input.a[i+1] == 0) {
+                            continue;
+                        }
+                        bsk[i][0].c.resize(level);
+                        for (auto l = 0; l < level; l++) {
+                            auto& c = bsk[i][0].c[l];
+                            auto& cPrime = bsk[i][0].cPrime[l];
+                            auto& decompA = bskDecompA[i * level + l];
+                            c.resize(param.k, TrlweDft(param.k, param.N));
+                            cPrime.a.resize(param.k, NttPolynomial(param.N));
+                            switchTrlweToSecretEmbeddingNttOpt(bsk[i][0].c[l], bsk[i][0].cPrime[l],
+                                decompA, s2, param);
+                        }
                     }
-                }
-            }));
-        }
-        for (auto& f : futures) {
-            f.get();
+                }));
+            }
+            for (auto& f : futures) {
+                f.get();
+            }
         }
     }
-}
 
-void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
-    Trlwe temp{param.k, param.N};
-    for (auto i = 0; i < param.n; i++) {
-        if (input.a[i] == 0) {
-            continue;
+    void blindRotateNormal(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+        Trlwe temp{param.k, param.N};
+        for (auto i = 0; i < param.n; i++) {
+            if (input.a[i] == 0) {
+                continue;
+            }
+            temp = Trlwe{param.k, param.N};
+            controlMux(temp, accum, input.a[i], bsk[i], param);
+            accum = std::move(temp); // Update acc
         }
-        temp = Trlwe{param.k, param.N};
-        controlMux(temp, accum, input.a[i], bsk[i], param);
-        accum = std::move(temp); // Update acc
     }
-}
 
-void blindRotateNormalNtt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
-    Trlwe temp{param.k, param.N};
-    for (auto i = 0; i < param.n; i++) {
-        if (input.a[i] == 0) {
-            continue;
+    void blindRotateNormalNtt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+        Trlwe temp{param.k, param.N};
+        for (auto i = 0; i < param.n; i++) {
+            if (input.a[i] == 0) {
+                continue;
+            }
+            temp = Trlwe{param.k, param.N};
+            controlMuxNtt(temp, accum, input.a[i], bskDft[i], param);
+            accum = std::move(temp);
         }
-        temp = Trlwe{param.k, param.N};
-        controlMuxNtt(temp, accum, input.a[i], bskDft[i], param);
-        accum = std::move(temp);
     }
-}
 
-void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
-    Trlwe temp{param.k, param.N};
-    Trgsw tmp1{param}, tmp2{param}, tmp3{param};
-    int j = 0;
-    auto batchSize = 1 << param.group;
-    auto& pool = ThreadPool::instance();
-    for (auto i = 0; i < param.n; i = i + 2) {
-        auto a1 = input.a[i];
-        auto a2 = input.a[i + 1];
-        auto& bsk1 = bsk[j];
-        auto bsk2 = bsk[j + 1];
-        auto bsk3 = bsk[j + 2];
-        auto bsk4 = bsk[j + 3];
-        auto a12 = a1 + a2;
-        auto future1 = pool.enqueue([&]{ rotateTrgsw(bsk2, a2, param); });
-        auto future2 = pool.enqueue([&]{ rotateTrgsw(bsk3, a1, param); });
-        auto future3 = pool.enqueue([&]{ rotateTrgsw(bsk4, a12, param); });
-        future1.get();
-        future2.get();
-        future3.get();
+    void blindRotateGroup2(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+        Trlwe temp{param.k, param.N};
+        Trgsw tmp1{param}, tmp2{param}, tmp3{param};
+        int j = 0;
+        auto batchSize = 1 << param.group;
+        auto& pool = ThreadPool::instance();
+        for (auto i = 0; i < param.n; i = i + 2) {
+            auto a1 = input.a[i];
+            auto a2 = input.a[i + 1];
+            auto& bsk1 = bsk[j];
+            auto bsk2 = bsk[j + 1];
+            auto bsk3 = bsk[j + 2];
+            auto bsk4 = bsk[j + 3];
+            auto a12 = a1 + a2;
+            auto future1 = pool.enqueue([&]{ rotateTrgsw(bsk2, a2, param); });
+            auto future2 = pool.enqueue([&]{ rotateTrgsw(bsk3, a1, param); });
+            auto future3 = pool.enqueue([&]{ rotateTrgsw(bsk4, a12, param); });
+            future1.get();
+            future2.get();
+            future3.get();
 
-        for (size_t l = 0; l < param.l; l++) {
-            for (size_t k = 0; k < param.k + 1; k++) {
-                for (auto k2 = 0; k2 < param.k; k2++) {
-                    auto& coeffA1 = bsk1.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA2 = bsk2.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA3 = bsk3.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA4 = bsk4.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffAT = tmp3.trlweSamples[l][k].a[k2].coeffs;
+            for (size_t l = 0; l < param.l; l++) {
+                for (size_t k = 0; k < param.k + 1; k++) {
+                    for (auto k2 = 0; k2 < param.k; k2++) {
+                        auto& coeffA1 = bsk1.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA2 = bsk2.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA3 = bsk3.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA4 = bsk4.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffAT = tmp3.trlweSamples[l][k].a[k2].coeffs;
+                        for (int n = 0; n < param.N; n++) {
+                            coeffAT[n] = coeffA1[n] + coeffA2[n] + coeffA3[n] + coeffA4[n];
+                        }
+                    }
+                    auto& coeffB1 = bsk1.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB2 = bsk2.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB3 = bsk3.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB4 = bsk4.trlweSamples[l][k].b.coeffs;
+                    auto& coeffBT = tmp3.trlweSamples[l][k].b.coeffs;
                     for (int n = 0; n < param.N; n++) {
-                        coeffAT[n] = coeffA1[n] + coeffA2[n] + coeffA3[n] + coeffA4[n];
+                        coeffBT[n] = coeffB1[n] + coeffB2[n] + coeffB3[n] + coeffB4[n];
                     }
                 }
-                auto& coeffB1 = bsk1.trlweSamples[l][k].b.coeffs;
-                auto& coeffB2 = bsk2.trlweSamples[l][k].b.coeffs;
-                auto& coeffB3 = bsk3.trlweSamples[l][k].b.coeffs;
-                auto& coeffB4 = bsk4.trlweSamples[l][k].b.coeffs;
-                auto& coeffBT = tmp3.trlweSamples[l][k].b.coeffs;
-                for (int n = 0; n < param.N; n++) {
-                    coeffBT[n] = coeffB1[n] + coeffB2[n] + coeffB3[n] + coeffB4[n];
-                }
             }
+            temp = Trlwe{param.k, param.N};
+            externalProductTrgsw(temp, tmp3, accum, param);
+            accum = std::move(temp);
+            j += batchSize;
         }
-        temp = Trlwe{param.k, param.N};
-        externalProductTrgsw(temp, tmp3, accum, param);
-        accum = std::move(temp);
-        j += batchSize;
     }
-}
 
-void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
-    Trlwe temp{param.k, param.N};
-    TrgswDft tmp1{param}, tmp2{param}, tmp3{param};
-    int j = 0;
-    auto batchSize = 1 << param.group;
-    auto& pool = ThreadPool::instance();
-    for (auto i = 0; i < param.n; i = i + 2) {
-        auto a1 = input.a[i];
-        auto a2 = input.a[i + 1];
-        auto& bsk1 = bskDft[j];
-        auto bsk2 = bskDft[j + 1];
-        auto bsk3 = bskDft[j + 2];
-        auto bsk4 = bskDft[j + 3];
-        auto a12 = a1 + a2;
-        auto future1 = pool.enqueue([&]{ rotateTrgswNtt(bsk2, a2, param); });
-        auto future2 = pool.enqueue([&]{ rotateTrgswNtt(bsk3, a1, param); });
-        auto future3 = pool.enqueue([&]{ rotateTrgswNtt(bsk4, a12, param); });
-        future1.get();
-        future2.get();
-        future3.get();
+    void blindRotateGroup2Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+        Trlwe temp{param.k, param.N};
+        TrgswDft tmp1{param}, tmp2{param}, tmp3{param};
+        int j = 0;
+        auto batchSize = 1 << param.group;
+        auto& pool = ThreadPool::instance();
+        for (auto i = 0; i < param.n; i = i + 2) {
+            auto a1 = input.a[i];
+            auto a2 = input.a[i + 1];
+            auto& bsk1 = bskDft[j];
+            auto bsk2 = bskDft[j + 1];
+            auto bsk3 = bskDft[j + 2];
+            auto bsk4 = bskDft[j + 3];
+            auto a12 = a1 + a2;
+            auto future1 = pool.enqueue([&]{ rotateTrgswNtt(bsk2, a2, param); });
+            auto future2 = pool.enqueue([&]{ rotateTrgswNtt(bsk3, a1, param); });
+            auto future3 = pool.enqueue([&]{ rotateTrgswNtt(bsk4, a12, param); });
+            future1.get();
+            future2.get();
+            future3.get();
 
-        auto q = NttHexl::getNttHexl().GetModulus();
-        auto L = param.l;
-        auto K = param.k;
-        auto N = param.N;
-        for (int l = 0; l < L; l++) {
-            for (int k = 0; k < K + 1; k++) {
-                for (int k2 = 0; k2 < K; k2++) {
-                    auto& coeffA1 = bsk1.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA2 = bsk2.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA3 = bsk3.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA4 = bsk4.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffAT = tmp3.trlweDftSamples[l][k].a[k2].coeffs;
-                    for (int n = 0; n < N; n++) {
-                        auto val1 = AddUIntMod(coeffA1[n], coeffA2[n], q);
-                        auto val2 = AddUIntMod(coeffA3[n], coeffA4[n], q);
-                        coeffAT[n] = AddUIntMod(val1, val2, q);
+            auto q = NttHexl::getNttHexl().GetModulus();
+            auto L = param.l;
+            auto K = param.k;
+            auto N = param.N;
+            for (int l = 0; l < L; l++) {
+                for (int k = 0; k < K + 1; k++) {
+                    for (int k2 = 0; k2 < K; k2++) {
+                        auto& coeffA1 = bsk1.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA2 = bsk2.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA3 = bsk3.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA4 = bsk4.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffAT = tmp3.trlweDftSamples[l][k].a[k2].coeffs;
+                        for (int n = 0; n < N; n++) {
+                            auto val1 = AddUIntMod(coeffA1[n], coeffA2[n], q);
+                            auto val2 = AddUIntMod(coeffA3[n], coeffA4[n], q);
+                            coeffAT[n] = AddUIntMod(val1, val2, q);
+                        }
                     }
-                }
-                auto& coeffB1 = bsk1.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB2 = bsk2.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB3 = bsk3.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB4 = bsk4.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffBT = tmp3.trlweDftSamples[l][k].b.coeffs;
-                for (int n = 0; n < param.N; n++) {
-                    uint64_t val1 = AddUIntMod(coeffB1[n], coeffB2[n], q);
-                    uint64_t val2 = AddUIntMod(coeffB3[n], coeffB4[n], q);
-                    coeffBT[n] = AddUIntMod(val1, val2, q);
-                }
-            }
-        }
-        temp = Trlwe{param.k, param.N};
-        externalProductTrgswNtt(temp, tmp3, accum, param.lApprox, param);
-        accum = std::move(temp);
-        j += batchSize;
-    }
-}
-
-// todo: general n support
-void blindRotateGroup3(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
-    Trlwe temp{param.k, param.N};
-    Trgsw tmp{param};
-    int j = 0;
-    auto batchSize = 1 << param.group;
-    auto& pool = ThreadPool::instance();
-    for (auto i = 0; i < param.n; i = i + 3) {
-        auto a1 = input.a[i];
-        auto a2 = input.a[i + 1];
-        auto a3 = input.a[i + 2];
-        auto& bsk1 = bsk[j];
-        auto bsk2 = bsk[j + 1];
-        auto bsk3 = bsk[j + 2];
-        auto bsk4 = bsk[j + 3];
-        auto bsk5 = bsk[j + 4];
-        auto bsk6 = bsk[j + 5];
-        auto bsk7 = bsk[j + 6];
-        auto bsk8 = bsk[j + 7];
-        auto a12 = a1 + a2;
-        auto a13 = a1 + a3;
-        auto a23 = a2 + a3;
-        auto a123 = a12 + a3;
-        auto future1 = pool.enqueue([&]{ rotateTrgsw(bsk2, a3, param); });
-        auto future2 = pool.enqueue([&]{ rotateTrgsw(bsk3, a2, param); });
-        auto future3 = pool.enqueue([&]{ rotateTrgsw(bsk4, a23, param); });
-        auto future4 = pool.enqueue([&]{ rotateTrgsw(bsk5, a1, param); });
-        auto future5 = pool.enqueue([&]{ rotateTrgsw(bsk6, a13, param); });
-        auto future6 = pool.enqueue([&]{ rotateTrgsw(bsk7, a12, param); });
-        auto future7 = pool.enqueue([&]{ rotateTrgsw(bsk8, a123, param); });
-
-        future1.get();
-        future2.get();
-        future3.get();
-        future4.get();
-        future5.get();
-        future6.get();
-        future7.get();
-
-        for (size_t l = 0; l < param.l; l++) {
-            for (size_t k = 0; k < param.k + 1; k++) {
-                for (auto k2 = 0; k2 < param.k; k2++) {
-                    auto& coeffA1 = bsk1.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA2 = bsk2.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA3 = bsk3.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA4 = bsk4.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA5 = bsk5.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA6 = bsk6.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA7 = bsk7.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffA8 = bsk8.trlweSamples[l][k].a[k2].coeffs;
-                    auto& coeffAT = tmp.trlweSamples[l][k].a[k2].coeffs;
+                    auto& coeffB1 = bsk1.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB2 = bsk2.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB3 = bsk3.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB4 = bsk4.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffBT = tmp3.trlweDftSamples[l][k].b.coeffs;
                     for (int n = 0; n < param.N; n++) {
-                        coeffAT[n] = coeffA1[n] + coeffA2[n] + coeffA3[n] + coeffA4[n] + coeffA5[n] + coeffA6[n] + coeffA7[n] + coeffA8[n];
+                        uint64_t val1 = AddUIntMod(coeffB1[n], coeffB2[n], q);
+                        uint64_t val2 = AddUIntMod(coeffB3[n], coeffB4[n], q);
+                        coeffBT[n] = AddUIntMod(val1, val2, q);
                     }
                 }
-                auto& coeffB1 = bsk1.trlweSamples[l][k].b.coeffs;
-                auto& coeffB2 = bsk2.trlweSamples[l][k].b.coeffs;
-                auto& coeffB3 = bsk3.trlweSamples[l][k].b.coeffs;
-                auto& coeffB4 = bsk4.trlweSamples[l][k].b.coeffs;
-                auto& coeffB5 = bsk5.trlweSamples[l][k].b.coeffs;
-                auto& coeffB6 = bsk6.trlweSamples[l][k].b.coeffs;
-                auto& coeffB7 = bsk7.trlweSamples[l][k].b.coeffs;
-                auto& coeffB8 = bsk8.trlweSamples[l][k].b.coeffs;
-                auto& coeffBT = tmp.trlweSamples[l][k].b.coeffs;
-                for (int n = 0; n < param.N; n++) {
-                    coeffBT[n] = coeffB1[n] + coeffB2[n] + coeffB3[n] + coeffB4[n] + coeffB5[n] + coeffB6[n] + coeffB7[n] + coeffB8[n];
+            }
+            temp = Trlwe{param.k, param.N};
+            externalProductTrgswNtt(temp, tmp3, accum, param.lApprox, param);
+            accum = std::move(temp);
+            j += batchSize;
+        }
+    }
+
+    // todo: general n support
+    void blindRotateGroup3(Trlwe& accum, const vector<Trgsw>& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+        Trlwe temp{param.k, param.N};
+        Trgsw tmp{param};
+        int j = 0;
+        auto batchSize = 1 << param.group;
+        auto& pool = ThreadPool::instance();
+        for (auto i = 0; i < param.n; i = i + 3) {
+            auto a1 = input.a[i];
+            auto a2 = input.a[i + 1];
+            auto a3 = input.a[i + 2];
+            auto& bsk1 = bsk[j];
+            auto bsk2 = bsk[j + 1];
+            auto bsk3 = bsk[j + 2];
+            auto bsk4 = bsk[j + 3];
+            auto bsk5 = bsk[j + 4];
+            auto bsk6 = bsk[j + 5];
+            auto bsk7 = bsk[j + 6];
+            auto bsk8 = bsk[j + 7];
+            auto a12 = a1 + a2;
+            auto a13 = a1 + a3;
+            auto a23 = a2 + a3;
+            auto a123 = a12 + a3;
+            auto future1 = pool.enqueue([&]{ rotateTrgsw(bsk2, a3, param); });
+            auto future2 = pool.enqueue([&]{ rotateTrgsw(bsk3, a2, param); });
+            auto future3 = pool.enqueue([&]{ rotateTrgsw(bsk4, a23, param); });
+            auto future4 = pool.enqueue([&]{ rotateTrgsw(bsk5, a1, param); });
+            auto future5 = pool.enqueue([&]{ rotateTrgsw(bsk6, a13, param); });
+            auto future6 = pool.enqueue([&]{ rotateTrgsw(bsk7, a12, param); });
+            auto future7 = pool.enqueue([&]{ rotateTrgsw(bsk8, a123, param); });
+
+            future1.get();
+            future2.get();
+            future3.get();
+            future4.get();
+            future5.get();
+            future6.get();
+            future7.get();
+
+            for (size_t l = 0; l < param.l; l++) {
+                for (size_t k = 0; k < param.k + 1; k++) {
+                    for (auto k2 = 0; k2 < param.k; k2++) {
+                        auto& coeffA1 = bsk1.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA2 = bsk2.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA3 = bsk3.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA4 = bsk4.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA5 = bsk5.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA6 = bsk6.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA7 = bsk7.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffA8 = bsk8.trlweSamples[l][k].a[k2].coeffs;
+                        auto& coeffAT = tmp.trlweSamples[l][k].a[k2].coeffs;
+                        for (int n = 0; n < param.N; n++) {
+                            coeffAT[n] = coeffA1[n] + coeffA2[n] + coeffA3[n] + coeffA4[n] + coeffA5[n] + coeffA6[n] + coeffA7[n] + coeffA8[n];
+                        }
+                    }
+                    auto& coeffB1 = bsk1.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB2 = bsk2.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB3 = bsk3.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB4 = bsk4.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB5 = bsk5.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB6 = bsk6.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB7 = bsk7.trlweSamples[l][k].b.coeffs;
+                    auto& coeffB8 = bsk8.trlweSamples[l][k].b.coeffs;
+                    auto& coeffBT = tmp.trlweSamples[l][k].b.coeffs;
+                    for (int n = 0; n < param.N; n++) {
+                        coeffBT[n] = coeffB1[n] + coeffB2[n] + coeffB3[n] + coeffB4[n] + coeffB5[n] + coeffB6[n] + coeffB7[n] + coeffB8[n];
+                    }
                 }
             }
+            temp = Trlwe{param.k, param.N};
+            externalProductTrgsw(temp, tmp, accum, param);
+            accum = std::move(temp);
+            j += batchSize;
         }
-        temp = Trlwe{param.k, param.N};
-        externalProductTrgsw(temp, tmp, accum, param);
-        accum = std::move(temp);
-        j += batchSize;
     }
-}
 
-void blindRotateGroup3Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
-    Trlwe temp{param.k, param.N};
-    TrgswDft tmp{param};
-    int j = 0;
-    auto batchSize = 1 << param.group;
-    auto& pool = ThreadPool::instance();
-    for (auto i = 0; i < param.n; i = i + 3) {
-        auto a1 = input.a[i];
-        auto a2 = input.a[i + 1];
-        auto a3 = input.a[i + 2];
-        auto& bsk1 = bskDft[j];
-        auto bsk2 = bskDft[j + 1];
-        auto bsk3 = bskDft[j + 2];
-        auto bsk4 = bskDft[j + 3];
-        auto bsk5 = bskDft[j + 4];
-        auto bsk6 = bskDft[j + 5];
-        auto bsk7 = bskDft[j + 6];
-        auto bsk8 = bskDft[j + 7];
-        auto a12 = a1 + a2;
-        auto a13 = a1 + a3;
-        auto a23 = a2 + a3;
-        auto a123 = a12 + a3;
-        auto future1 = pool.enqueue([&]{ rotateTrgswNtt(bsk2, a3, param); });
-        auto future2 = pool.enqueue([&]{ rotateTrgswNtt(bsk3, a2, param); });
-        auto future3 = pool.enqueue([&]{ rotateTrgswNtt(bsk4, a23, param); });
-        auto future4 = pool.enqueue([&]{ rotateTrgswNtt(bsk5, a1, param); });
-        auto future5 = pool.enqueue([&]{ rotateTrgswNtt(bsk6, a13, param); });
-        auto future6 = pool.enqueue([&]{ rotateTrgswNtt(bsk7, a12, param); });
-        auto future7 = pool.enqueue([&]{ rotateTrgswNtt(bsk8, a123, param); });
+    void blindRotateGroup3Ntt(Trlwe& accum, const vector<TrgswDft>& bskDft, const ScaledTlwe& input, const YatfheParameters& param) {
+        Trlwe temp{param.k, param.N};
+        TrgswDft tmp{param};
+        int j = 0;
+        auto batchSize = 1 << param.group;
+        auto& pool = ThreadPool::instance();
+        for (auto i = 0; i < param.n; i = i + 3) {
+            auto a1 = input.a[i];
+            auto a2 = input.a[i + 1];
+            auto a3 = input.a[i + 2];
+            auto& bsk1 = bskDft[j];
+            auto bsk2 = bskDft[j + 1];
+            auto bsk3 = bskDft[j + 2];
+            auto bsk4 = bskDft[j + 3];
+            auto bsk5 = bskDft[j + 4];
+            auto bsk6 = bskDft[j + 5];
+            auto bsk7 = bskDft[j + 6];
+            auto bsk8 = bskDft[j + 7];
+            auto a12 = a1 + a2;
+            auto a13 = a1 + a3;
+            auto a23 = a2 + a3;
+            auto a123 = a12 + a3;
+            auto future1 = pool.enqueue([&]{ rotateTrgswNtt(bsk2, a3, param); });
+            auto future2 = pool.enqueue([&]{ rotateTrgswNtt(bsk3, a2, param); });
+            auto future3 = pool.enqueue([&]{ rotateTrgswNtt(bsk4, a23, param); });
+            auto future4 = pool.enqueue([&]{ rotateTrgswNtt(bsk5, a1, param); });
+            auto future5 = pool.enqueue([&]{ rotateTrgswNtt(bsk6, a13, param); });
+            auto future6 = pool.enqueue([&]{ rotateTrgswNtt(bsk7, a12, param); });
+            auto future7 = pool.enqueue([&]{ rotateTrgswNtt(bsk8, a123, param); });
 
-        future1.get();
-        future2.get();
-        future3.get();
-        future4.get();
-        future5.get();
-        future6.get();
-        future7.get();
+            future1.get();
+            future2.get();
+            future3.get();
+            future4.get();
+            future5.get();
+            future6.get();
+            future7.get();
 
-        auto q = NttHexl::getNttHexl().GetModulus();
-        auto N = param.N;
-        std::vector vecs(6, std::vector<uint64_t>(N));
-        for (size_t l = 0; l < param.l; l++) {
-            for (size_t k = 0; k < param.k + 1; k++) {
-                for (auto k2 = 0; k2 < param.k; k2++) {
-                    auto& coeffA1 = bsk1.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA2 = bsk2.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA3 = bsk3.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA4 = bsk4.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA5 = bsk5.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA6 = bsk6.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA7 = bsk7.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffA8 = bsk8.trlweDftSamples[l][k].a[k2].coeffs;
-                    auto& coeffAT = tmp.trlweDftSamples[l][k].a[k2].coeffs;
+            auto q = NttHexl::getNttHexl().GetModulus();
+            auto N = param.N;
+            std::vector vecs(6, std::vector<uint64_t>(N));
+            for (size_t l = 0; l < param.l; l++) {
+                for (size_t k = 0; k < param.k + 1; k++) {
+                    for (auto k2 = 0; k2 < param.k; k2++) {
+                        auto& coeffA1 = bsk1.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA2 = bsk2.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA3 = bsk3.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA4 = bsk4.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA5 = bsk5.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA6 = bsk6.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA7 = bsk7.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffA8 = bsk8.trlweDftSamples[l][k].a[k2].coeffs;
+                        auto& coeffAT = tmp.trlweDftSamples[l][k].a[k2].coeffs;
 
-                    EltwiseAddMod(vecs[0].data(), coeffA1.data(), coeffA2.data(), N, q);
-                    EltwiseAddMod(vecs[1].data(), coeffA3.data(), coeffA4.data(), N, q);
-                    EltwiseAddMod(vecs[2].data(), coeffA5.data(), coeffA6.data(), N, q);
-                    EltwiseAddMod(vecs[3].data(), coeffA7.data(), coeffA8.data(), N, q);
+                        EltwiseAddMod(vecs[0].data(), coeffA1.data(), coeffA2.data(), N, q);
+                        EltwiseAddMod(vecs[1].data(), coeffA3.data(), coeffA4.data(), N, q);
+                        EltwiseAddMod(vecs[2].data(), coeffA5.data(), coeffA6.data(), N, q);
+                        EltwiseAddMod(vecs[3].data(), coeffA7.data(), coeffA8.data(), N, q);
+
+                        EltwiseAddMod(vecs[4].data(), vecs[0].data(), vecs[1].data(), N, q);
+                        EltwiseAddMod(vecs[5].data(), vecs[2].data(), vecs[3].data(), N, q);
+
+                        EltwiseAddMod(coeffAT.data(), vecs[4].data(), vecs[5].data(), N, q);
+                    }
+                    auto& coeffB1 = bsk1.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB2 = bsk2.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB3 = bsk3.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB4 = bsk4.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB5 = bsk5.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB6 = bsk6.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB7 = bsk7.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffB8 = bsk8.trlweDftSamples[l][k].b.coeffs;
+                    auto& coeffBT = tmp.trlweDftSamples[l][k].b.coeffs;
+
+                    EltwiseAddMod(vecs[0].data(), coeffB1.data(), coeffB2.data(), N, q);
+                    EltwiseAddMod(vecs[1].data(), coeffB3.data(), coeffB4.data(), N, q);
+                    EltwiseAddMod(vecs[2].data(), coeffB5.data(), coeffB6.data(), N, q);
+                    EltwiseAddMod(vecs[3].data(), coeffB7.data(), coeffB8.data(), N, q);
 
                     EltwiseAddMod(vecs[4].data(), vecs[0].data(), vecs[1].data(), N, q);
                     EltwiseAddMod(vecs[5].data(), vecs[2].data(), vecs[3].data(), N, q);
 
-                    EltwiseAddMod(coeffAT.data(), vecs[4].data(), vecs[5].data(), N, q);
+                    EltwiseAddMod(coeffBT.data(), vecs[4].data(), vecs[5].data(), N, q);
                 }
-                auto& coeffB1 = bsk1.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB2 = bsk2.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB3 = bsk3.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB4 = bsk4.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB5 = bsk5.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB6 = bsk6.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB7 = bsk7.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffB8 = bsk8.trlweDftSamples[l][k].b.coeffs;
-                auto& coeffBT = tmp.trlweDftSamples[l][k].b.coeffs;
+            }
+            temp = Trlwe{param.k, param.N};
+            externalProductTrgswNtt(temp, tmp, accum, param.lApprox, param);
+            accum = std::move(temp);
+            j += batchSize;
+        }
+    }
 
-                EltwiseAddMod(vecs[0].data(), coeffB1.data(), coeffB2.data(), N, q);
-                EltwiseAddMod(vecs[1].data(), coeffB3.data(), coeffB4.data(), N, q);
-                EltwiseAddMod(vecs[2].data(), coeffB5.data(), coeffB6.data(), N, q);
-                EltwiseAddMod(vecs[3].data(), coeffB7.data(), coeffB8.data(), N, q);
+    void rotateBskComponent(const vector<vector<DecompPolynomial>>& bskDecompB, const vector<vector<vector<DecompPolynomial>>>& bskDecompA,
+                            vector<vector<vector<DecompPolynomial>>>& rotatedA, vector<vector<DecompPolynomial>>& rotatedB,
+                            const int32_t a, const int keyIndex, const int level, const YatfheParameters& param) {
+        const auto q = NttHexl::getNttHexl().GetModulus();
+        for (auto lvl = 0; lvl < level; lvl++) {
+            const auto& decompA = bskDecompA[keyIndex * level + lvl];
+            const auto& decompB = bskDecompB[keyIndex * level + lvl];
+            for (auto dl = 0; dl < param.l; dl++) {
+                for (auto k1 = 0; k1 < param.k; k1++) {
+                    rotateDecompPolynomialMinusOne(rotatedA[lvl][dl][k1], a, decompA[dl][k1]);
+                }
+                rotateDecompPolynomialMinusOne(rotatedB[lvl][dl], a, decompB[dl]);
 
-                EltwiseAddMod(vecs[4].data(), vecs[0].data(), vecs[1].data(), N, q);
-                EltwiseAddMod(vecs[5].data(), vecs[2].data(), vecs[3].data(), N, q);
-
-                EltwiseAddMod(coeffBT.data(), vecs[4].data(), vecs[5].data(), N, q);
+                // b+1
+                if (lvl == dl) rotatedB[lvl][lvl].coeffs[0] = static_cast<Decomp>(rotatedB[lvl][lvl].coeffs[0] + 1);
             }
         }
-        temp = Trlwe{param.k, param.N};
-        externalProductTrgswNtt(temp, tmp, accum, param.lApprox, param);
-        accum = std::move(temp);
-        j += batchSize;
+    }
+
+    void deserializeAndRotateBskComponent(vector<vector<DecompPolynomial>>& bskDecompB, vector<vector<vector<DecompPolynomial>>>& bskDecompA,
+                                       vector<vector<vector<DecompPolynomial>>>& rotatedA, vector<vector<DecompPolynomial>>& rotatedB,
+                                       const int32_t a, const int keyIndex, const int level, std::ifstream& inFile,
+                                       const YatfheParameters& param) {
+        for (auto l = 0; l < level; l++) {
+            deserializeNestedVector(bskDecompA[keyIndex * level + l], inFile);
+            deserializeNestedVector(bskDecompB[keyIndex * level + l], inFile);
+        }
+
+        for (auto lvl = 0; lvl < level; lvl++) {
+            const auto& decompA = bskDecompA[keyIndex * level + lvl];
+            const auto& decompB = bskDecompB[keyIndex * level + lvl];
+            for (auto dl = 0; dl < param.l; dl++) {
+                for (auto k1 = 0; k1 < param.k; k1++) {
+                    rotateDecompPolynomialMinusOne(rotatedA[lvl][dl][k1], a, decompA[dl][k1]);
+                }
+                rotateDecompPolynomialMinusOne(rotatedB[lvl][dl], a, decompB[dl]);
+
+                // b+1
+                if (lvl == dl) rotatedB[lvl][lvl].coeffs[0] = static_cast<Decomp>(rotatedB[lvl][lvl].coeffs[0] + 1);
+            }
+        }
     }
 }
 
@@ -773,52 +817,6 @@ void blindRotateLazyMTNtt(Trlwe& accum, const vector<Trlwe>& bskFirst, vector<ve
         accumulateTrlwe(accum, tmp);
     }
 #endif
-}
-
-namespace {
-
-    void rotateBskComponent(const vector<vector<DecompPolynomial>>& bskDecompB, const vector<vector<vector<DecompPolynomial>>>& bskDecompA,
-                            vector<vector<vector<DecompPolynomial>>>& rotatedA, vector<vector<DecompPolynomial>>& rotatedB,
-                            const int32_t a, const int keyIndex, const int level, const YatfheParameters& param) {
-        const auto q = NttHexl::getNttHexl().GetModulus();
-        for (auto lvl = 0; lvl < level; lvl++) {
-            const auto& decompA = bskDecompA[keyIndex * level + lvl];
-            const auto& decompB = bskDecompB[keyIndex * level + lvl];
-            for (auto dl = 0; dl < param.l; dl++) {
-                for (auto k1 = 0; k1 < param.k; k1++) {
-                    rotateDecompPolynomialMinusOne(rotatedA[lvl][dl][k1], a, decompA[dl][k1]);
-                }
-                rotateDecompPolynomialMinusOne(rotatedB[lvl][dl], a, decompB[dl]);
-
-                // b+1
-                if (lvl == dl) rotatedB[lvl][lvl].coeffs[0] = static_cast<Decomp>(rotatedB[lvl][lvl].coeffs[0] + 1);
-            }
-        }
-    }
-
-    void deserializeAndRotateBskComponent(vector<vector<DecompPolynomial>>& bskDecompB, vector<vector<vector<DecompPolynomial>>>& bskDecompA,
-                                       vector<vector<vector<DecompPolynomial>>>& rotatedA, vector<vector<DecompPolynomial>>& rotatedB,
-                                       const int32_t a, const int keyIndex, const int level, std::ifstream& inFile,
-                                       const YatfheParameters& param) {
-        for (auto l = 0; l < level; l++) {
-            deserializeNestedVector(bskDecompA[keyIndex * level + l], inFile);
-            deserializeNestedVector(bskDecompB[keyIndex * level + l], inFile);
-        }
-
-        for (auto lvl = 0; lvl < level; lvl++) {
-            const auto& decompA = bskDecompA[keyIndex * level + lvl];
-            const auto& decompB = bskDecompB[keyIndex * level + lvl];
-            for (auto dl = 0; dl < param.l; dl++) {
-                for (auto k1 = 0; k1 < param.k; k1++) {
-                    rotateDecompPolynomialMinusOne(rotatedA[lvl][dl][k1], a, decompA[dl][k1]);
-                }
-                rotateDecompPolynomialMinusOne(rotatedB[lvl][dl], a, decompB[dl]);
-
-                // b+1
-                if (lvl == dl) rotatedB[lvl][lvl].coeffs[0] = static_cast<Decomp>(rotatedB[lvl][lvl].coeffs[0] + 1);
-            }
-        }
-    }
 }
 
 void blindRotateLazyPipeNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipe& bsk, const ScaledTlwe& input,
@@ -1227,6 +1225,39 @@ void blindRotateWWL24Ntt(Trlwe& accum, const BootstrappingKeyWWL24& bsk, const S
 #endif
 }
 
+// SFBS blind rotation that performs NTTs on server
+void blindRotateWWL24AltNtt(Trlwe& accum, const BootstrappingKeyWWL24Alt& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
+#ifdef TERNARY
+    throw std::runtime_error("blindRotateWWL24AltNtt: not implemented for ternary keys");
+#else
+    const auto& trgsws = bsk.trgsws;
+    const auto& s2 = bsk.s2Dft;
+    const auto level = trgsws[0].l;
+    auto& pool = ThreadPool::instance();
+    TaskGroup group;
+    vector cRows(level, vector(param.k, TrlweDft(param.k, param.N)));
+    vector cPrimeRows(level, TrlweDft(param.k, param.N));
+
+    int keyIndex = 0;
+    const auto schemeSwitch = [&](const int l) {
+        switchTrlweToSecretEmbeddingAltNtt(cRows[l], cPrimeRows[l], trgsws[keyIndex].cPrime[l], s2, param);
+    };
+
+    Trlwe tmp{param};
+    for (auto i = 0; i < param.n; i++) {
+        if (input.a[i] == 0) {
+            continue;
+        }
+        keyIndex = i;
+        pool.run(group, level, schemeSwitch);
+        group.wait();
+        rotateTrlweMinusOne(tmp, accum, input.a[i]);
+        externalProductSplitNttInPlace(tmp, cRows, cPrimeRows, level, param);
+        accumulateTrlwe(accum, tmp);
+    }
+#endif
+}
+
 
 void blindRotateJP22Ntt(Trlwe& accum, const BootstrappingKeyMP& bsk, const ScaledTlwe& input, const YatfheParameters& param) {
     auto& bskDft = bsk.bskDft;
@@ -1345,22 +1376,6 @@ void blindRotateMP21Ntt(Trlwe& accum, const vector<vector<TrgswMPDft>>& bskDft, 
         accumulateTrlwe(accum, tmp);
     }
 #endif
-}
-
-void blindRotateMPInternalNtt(TrgswMP& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {
-    TrgswMP temp{param};
-    for (auto i = 0; i < param.n; i++) {
-        if (input.a[i] == 0) {
-            continue;
-        }
-        temp = accum;
-        TrgswMP tmp {param};
-        rotateTrgswMP(accum, input.a[i], param);
-        subTrgswMP(tmp, accum, temp);
-        internalProductTrgswMPNtt(accum, tmp, trgsws[i], trgsws[i].l, param); // res *= bskI
-        addTrgswMP(tmp, accum, temp); // res += input
-        accum = std::move(tmp);
-    }
 }
 
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param) {
