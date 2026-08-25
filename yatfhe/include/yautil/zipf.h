@@ -5,42 +5,56 @@
 #ifndef YATFHE_ZIPF_H
 #define YATFHE_ZIPF_H
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
-#include <vector>
 #include <random>
+#include <vector>
 
 class ZipfDistribution {
 private:
     int N;
+    uint64_t seed_;
     std::vector<double> probabilities;
     std::vector<double> cumulative;
     std::uniform_real_distribution<double> dist;
-    std::random_device rd_;
-    std::mt19937 gen_;
+    std::mt19937_64 gen_;
 
 public:
-    ZipfDistribution(double s = 1.0, int N = 50) : gen_(rd_()), dist(0.0, 1.0), N(N) {
+    static constexpr uint64_t kDefaultSeed = 20260816ULL;
+
+    explicit ZipfDistribution(double s = 1.0, int N = 50, uint64_t seed = kDefaultSeed)
+        : N(N), seed_(seed), dist(0.0, 1.0), gen_(seed) {
         probabilities.resize(N);
         cumulative.resize(N);
         calculateDistribution(s);
     }
 
-    // generate random number
-    int generate() {
-        double u = dist(gen_);
-
-        for (int i = 1; i <= N; ++i) {
-            if (u <= cumulative[i]) {
-                return i;
-            }
-        }
-        return N - 1;
+    static uint64_t randomSeed() {
+        std::random_device rd;
+        return (static_cast<uint64_t>(rd()) << 32) ^ rd();
     }
 
-    // get probability for a number
-    double probability(int number) const {
-        if (number < 0 || number >= N) return 0.0;
-        return probabilities[number];
+    uint64_t seed() const { return seed_; }
+
+    int size() const { return N; }
+
+    void reseed(const uint64_t seed) {
+        seed_ = seed;
+        gen_.seed(seed);
+    }
+
+    int generate() {
+        const double u = dist(gen_);
+        const auto it = std::lower_bound(cumulative.begin(), cumulative.end(), u);
+        auto rank = static_cast<int>(it - cumulative.begin());
+        if (rank >= N) rank = N - 1;   // guards u == 1.0 and fp rounding at the tail
+        return rank;
+    }
+
+    double probability(const int rank) const {
+        if (rank < 0 || rank >= N) return 0.0;
+        return probabilities[rank];
     }
 
     // generate random distributed access pattern
@@ -61,8 +75,7 @@ private:
         }
 
         for (int rank = 1; rank <= N; ++rank) {
-            int number = rank - 1;
-            probabilities[number] = 1.0 / (std::pow(rank, s) * harmonic);
+            probabilities[rank - 1] = 1.0 / (std::pow(rank, s) * harmonic);
         }
 
         cumulative[0] = probabilities[0];

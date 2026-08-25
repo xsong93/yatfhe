@@ -9,7 +9,18 @@
 #include "yautil/initializer.h"
 #include "yautil/ya_serializer.h"
 
-int main(){
+int main(int argc, char** argv){
+    int users = 50;
+    int from = 1;
+    for (int i = 1; i < argc; ++i) {
+        const std::string a = argv[i];
+        if (a.rfind("--users=", 0) == 0) users = std::atoi(a.c_str() + 8);
+        if (a.rfind("--from=", 0) == 0)  from  = std::atoi(a.c_str() + 7);
+    }
+    if (users < 1) users = 1;
+    if (from < 1) from = 1;
+    std::cout << "generating ids " << from << ".." << users << std::endl;
+
     YatfheParameters param{};
     initYatfhe(param);
 
@@ -26,7 +37,7 @@ int main(){
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
 
-    for (int i = 1; i <= 50; i++) {
+    for (int i = from; i <= users; i++) {
         BootstrappingKeyWWL24 bskWWL24{param, param.lApprox};
         genBootstrappingKeyWWL24(bskWWL24, trgswKey, tlweKey, param);
         string file;
@@ -36,7 +47,7 @@ int main(){
         serializeBskWWL24(bskWWL24, file);
         cout << file << " generated." << endl;
     }
-    for (int i = 1; i <= 50; i++) {
+    for (int i = from; i <= users; i++) {
         BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
         symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
         genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);
@@ -47,7 +58,7 @@ int main(){
         serializeBskLazyPipeAlt(bskMPLazyPipeAlt, file);
         cout << file << " generated." << endl;
     }
-    for (int i = 1; i <= 50; i++) {
+    for (int i = from; i <= users; i++) {
         BootstrappingKeyMP bskMP{param, param.lApprox};
         genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
         string file;

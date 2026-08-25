@@ -14,13 +14,24 @@
 class CacheWorkloadGenerator {
 private:
     ZipfDistribution zipf;
+    int idBase;
 
 public:
-    explicit CacheWorkloadGenerator(double zipfParam = 1.2, int dataSize = 50) : zipf(zipfParam, dataSize) {}
+    explicit CacheWorkloadGenerator(double zipfParam = 1.2, int dataSize = 50,
+                                    uint64_t seed = ZipfDistribution::kDefaultSeed, int idBase = 1)
+        : zipf(zipfParam, dataSize, seed), idBase(idBase) {}
+
+    uint64_t seed() const { return zipf.seed(); }
+
+    int userCount() const { return zipf.size(); }
 
     // generate access pattern with Zipf distribution
     std::vector<int> generateAccessPattern(size_t length) {
-        return zipf.generateBatch(length);
+        std::vector<int> pattern = zipf.generateBatch(length);
+        for (int& id : pattern) {
+            id += idBase;
+        }
+        return pattern;
     }
 
     // hot, cold data

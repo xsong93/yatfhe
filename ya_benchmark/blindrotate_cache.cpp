@@ -1,6 +1,11 @@
 
 #include <nlohmann/json.hpp>
 
+#include <sched.h>
+#include <unistd.h>
+#include <algorithm>
+#include <numeric>
+
 #include "yatfhe/tlwe.h"
 #include "yatfhe/trlwe.h"
 #include "yatfhe/trgsw.h"
@@ -58,15 +63,22 @@ public:
     void printUsage(const std::string& programName) const {
         std::cout << "Usage: " << programName << " [Options]" << std::endl;
         std::cout << "Options:" << std::endl;
-        std::cout << "  --cap=N      Cache capacity (Default: 5)" << std::endl;
-        std::cout << "  --s=N        Zipf s (Default: 0.8)" << std::endl;
-        std::cout << "  --m=N        Size ratio of two keys (Default: 4)" << std::endl;
-        std::cout << "  --pat=N      Request size (Default: 1000)" << std::endl;
-        std::cout << "  --help       Show helps." << std::endl;
+        std::cout << "  --caps=LIST  Comma separated cache capacities (Default: 100,50,20,10,5,1)" << std::endl;
+        std::cout << "  --users=N    Number of tenants (Default: 50)" << std::endl;
+        std::cout << "  --s=N        Zipf skew s (Default: 0.83)" << std::endl;
+        std::cout << "  --reqs=N     Measured requests per method (Default: 10000)" << std::endl;
+        std::cout << "  --warm=N     Warm-up requests per method (Default: 500)" << std::endl;
+        std::cout << "  --seed=N     Workload RNG seed (Default: 20260816)" << std::endl;
+        std::cout << "  --iso=MODE   Cache budget model: bytes | slots (Default: bytes)" << std::endl;
+        std::cout << "               bytes: equal memory" << std::endl;
+        std::cout << "               slots: equal slot count" << std::endl;
+        std::cout << "  --m=N        GINX/OURS key size ratio (Default: 4)" << std::endl;
+        std::cout << "  --m2=N       GINX/WWL+24 key size ratio (Default: 2)" << std::endl;
+        std::cout << "  --tag=STR    Suffix appended to the output json" << std::endl;
         std::cout << std::endl;
         std::cout << "Usage example:" << std::endl;
-        std::cout << "  " << programName << " --cap=10 --s=1.0 --pat=2000" << std::endl;
-        std::cout << "  " << programName << " --s=0.9" << std::endl;
+        std::cout << "  taskset -c 0-7 " << programName << " --reqs=10000 --seed=1" << std::endl;
+        std::cout << "  " << programName << " --caps=10,5 --reqs=2000 --iso=slots --tag=iso" << std::endl;
     }
 
 private:
@@ -94,223 +106,319 @@ private:
     }
 };
 
-void benchStat(const std::vector<long>& iteration_times_us, const long request, const double hitRate, const string& benchName,
-               const int cacheCap, const string& saveFileName) {
 
-    // Calculate statistics
-    double sum = 0.0;
-    double min_time = std::numeric_limits<double>::max();
-    double max_time = std::numeric_limits<double>::min();
+struct RunConfig {
+    int users{};
+    int ginxCapacity{};
+    int pipeCapacity{};
+    int wwl24Capacity{};
+    double zipfS{};
+    uint64_t seed{};
+    long warmupRequests{};
+    long measuredRequests{};
+    std::string isoMode;
+    std::string tag;
+};
 
-    for (double time : iteration_times_us) {
-        sum += time;
-        if (time < min_time) min_time = time;
-        if (time > max_time) max_time = time;
+struct RequestRecord {
+    long timeUs;
+    int keyId;
+    bool hit;
+};
+
+static std::string cpuAffinity() {
+    cpu_set_t mask;
+    CPU_ZERO(&mask);
+    if (sched_getaffinity(0, sizeof(mask), &mask) != 0) {
+        return "none";
+    }
+    std::string out;
+    int tmp = -1;
+    const int maxCpu = CPU_SETSIZE;
+    for (int cpu = 0; cpu <= maxCpu; ++cpu) {
+        const bool in = cpu < maxCpu && CPU_ISSET(cpu, &mask);
+        if (in && tmp < 0) {
+            tmp = cpu;
+        } else if (!in && tmp >= 0) {
+            if (!out.empty())
+                out += ',';
+            out += std::to_string(tmp);
+            if (cpu - 1 != tmp)
+                out += "-" + std::to_string(cpu - 1);
+            tmp = -1;
+        }
+    }
+    return out.empty() ? "none" : out;
+}
+
+static double percentile(const std::vector<long>& sorted, const double p) {
+    if (sorted.empty())
+        return 0.0;
+    const double rank = p / 100.0 * static_cast<double>(sorted.size());
+    auto idx = static_cast<long>(std::ceil(rank)) - 1;
+    if (idx < 0)
+        idx = 0;
+    if (idx >= static_cast<long>(sorted.size()))
+        idx = static_cast<long>(sorted.size()) - 1;
+    return static_cast<double>(sorted[idx]);
+}
+
+static json summarize(std::vector<long> samples) {
+    json out;
+    out["count"] = samples.size();
+    if (samples.empty()) {
+        return out;
+    }
+    std::sort(samples.begin(), samples.end());
+    const double sum = std::accumulate(samples.begin(), samples.end(), 0.0);
+    const double mean = sum / static_cast<double>(samples.size());
+    double sq = 0.0;
+    for (const long v : samples) {
+        const double d = static_cast<double>(v) - mean;
+        sq += d * d;
+    }
+    const double sd = std::sqrt(sq / static_cast<double>(samples.size()));
+
+    out["mean_us"] = mean;
+    out["sd_us"] = sd;
+    out["min_us"] = static_cast<double>(samples.front());
+    out["max_us"] = static_cast<double>(samples.back());
+    out["p50_us"] = percentile(samples, 50.0);
+    out["p90_us"] = percentile(samples, 90.0);
+    out["p99_us"] = percentile(samples, 99.0);
+    out["p99_9_us"] = percentile(samples, 99.9);
+    return out;
+}
+
+void benchStat(const std::vector<RequestRecord>& records, const double hitRate,
+               const string& benchName, const RunConfig& cfg, const string& saveFileName) {
+    std::vector<long> all, hits, misses;
+    all.reserve(records.size());
+    for (const auto& [timeUs, keyId, hit] : records) {
+        all.push_back(timeUs);
+        (hit ? hits : misses).push_back(timeUs);
     }
 
-    double average_time = sum / iteration_times_us.size();
-
-    // Create JSON structure
-    nlohmann::json results;
+    json results;
     results["benchmark_name"] = benchName;
-    results["pressure_ratio"] = 50.0 / cacheCap;
-    results["total_iterations"] = iteration_times_us.size();
+    results["schema_version"] = 2;
     results["time_unit"] = "microseconds";
 
-    // Individual iteration times
+    results["config"] = {
+        {"users", cfg.users},
+        {"ginx_capacity_keys", cfg.ginxCapacity},
+        {"lazy_capacity_keys", cfg.pipeCapacity},
+        {"wwl24_capacity_keys", cfg.wwl24Capacity},
+        {"pressure_ratio", static_cast<double>(cfg.users) / cfg.ginxCapacity},
+        {"zipf_s", cfg.zipfS},
+        {"seed", cfg.seed},
+        {"warmup_requests", cfg.warmupRequests},
+        {"measured_requests", cfg.measuredRequests},
+        {"iso_mode", cfg.isoMode},
+        {"tag", cfg.tag},
+    };
+
+    results["environment"] = {
+        {"affinity_cpus", cpuAffinity()},
+        {"cpus_available", static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN))},
+    };
+
     results["iterations"] = json::array();
-    for (size_t i = 0; i < iteration_times_us.size(); ++i) {
+    for (size_t i = 0; i < records.size(); ++i) {
         results["iterations"].push_back({
             {"iteration", i + 1},
-            {"time_us", iteration_times_us[i]}
+            {"time_us", records[i].timeUs},
+            {"key_id", records[i].keyId},
+            {"hit", records[i].hit},
         });
     }
 
-    // Statistics
-    results["statistics"] = {
-        {"average_time_us", average_time},
-        {"min_time_us", min_time},
-        {"max_time_us", max_time},
-        {"total_time_us", sum},
-        {"total_requests", request},
-        {"hit_rate", hitRate}
-    };
+    results["statistics"] = summarize(all);
+    results["statistics"]["hit_rate"] = hitRate;
+    results["statistics"]["total_requests"] = records.size();
+    results["hit_statistics"] = summarize(hits);
+    results["miss_statistics"] = summarize(misses);
 
-    // Write to file
     std::ofstream outfile(saveFileName);
-    outfile << results.dump(4) << std::endl; // Pretty print with 4-space indent
+    outfile << results.dump(2) << std::endl;
     outfile.close();
 
-    std::cout << "Benchmark results saved to: " << saveFileName << std::endl;
-    std::cout << "Average time: " << average_time << " μs" << std::endl;
+    std::cout << "Saved " << saveFileName
+              << "  n=" << all.size()
+              << "  mean=" << results["statistics"]["mean_us"].get<double>() / 1000.0 << " ms"
+              << "  sd=" << results["statistics"]["sd_us"].get<double>() / 1000.0 << " ms"
+              << "  p99.9=" << results["statistics"]["p99_9_us"].get<double>() / 1000.0 << " ms"
+              << "  hr=" << hitRate << std::endl;
 }
 
-void benchLazy(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
-               const int cacheCap, bool isSave) {
+static string outputName(const string& stem, const RunConfig& cfg) {
+    string name = stem + "_benchmark_results_" + to_string(cfg.ginxCapacity);
+    if (!cfg.tag.empty()) name += "_" + cfg.tag;
+    return name + ".json";
+}
+
+void benchPipe(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache,
+               const vector<int>& accessPattern, const RunConfig& cfg, bool isSave) {
     cout << "bench ours" << endl;
 
     // server
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
-    ScaledTlwe sTlwe {2 * param.N, param.n};   // mod 2N: the ring exponent resolves mod 2N
+    ScaledTlwe sTlwe {2 * param.N, param.n};
     rescaleTlweToNewMod(sTlwe, input);
     Trlwe out{param};
 
     // warm up
     cout << "warm up" << endl;
-    for (auto i = 0; i < accessPattern.size()/2; i++) {
+    for (long i = 0; i < cfg.warmupRequests; i++) {
         cache.getLazyKey(accessPattern[i]);
     }
     cache.resetStats();
 
     cout << "normal run" << endl;
     // normal run
-    std::vector<long> iterationTimesUs;
-    bool isLoadKey = false;
-    for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
+    std::vector<RequestRecord> records;
+    records.reserve(cfg.measuredRequests);
+    for (long i = cfg.warmupRequests; i < cfg.warmupRequests + cfg.measuredRequests; i++) {
         auto id = accessPattern[i];
         std::string file = DiskReader::generateLazyKeyFilename(id);
         // Evict before the timer: on a cache miss this file is read.
         clearFileCache(file);
         auto start = steady_clock::now();
         auto* bskServer = cache.getLazyKeySimple(id);
-        if (bskServer != nullptr) {
+        const bool hit = bskServer != nullptr;
+        if (hit) {
             blindRotateLazyPipeAltNtt(out, *bskServer, sTlwe, v, param);
         } else {
-            isLoadKey = true;
             BootstrappingKeyMPLazyPipeAlt bsk;
             blindRotateLazyPipeAltInitNtt(out, bsk, sTlwe, v, file, param);
             cache.putLazyKey(id, std::move(bsk));
         }
         auto end = steady_clock::now();
-        auto elapsedUs = duration_cast<microseconds>(end - start).count();
-        iterationTimesUs.push_back(elapsedUs);
-        if (isLoadKey) printMsg(id, "Evict LRU key, load");
+        records.push_back({duration_cast<microseconds>(end - start).count(), id, hit});
     }
-    printArray(iterationTimesUs, "iterationTimesUs");
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.lazyRequest << std::endl;
     std::cout << "Hit rate: " << stats.lazyHitRate() * 100 << "%" << std::endl;
-    string file = "ours_benchmark_results_" + to_string(cacheCap) + ".json";
     if (isSave) {
-        benchStat(iterationTimesUs, iterationTimesUs.size(), stats.lazyHitRate(),
-                  "Benchmark/OURS",  cacheCap, file);
+        benchStat(records, stats.lazyHitRate(), "Benchmark/OURS", cfg, outputName("ours", cfg));
     }
 }
 
-void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
-               const int cacheCap, bool isSave) {
+void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache,
+               const vector<int>& accessPattern, const RunConfig& cfg, bool isSave) {
     cout << "bench ginx" << endl;
 
     // server side
-    ScaledTlwe sTlwe {2 * param.N, param.n};   // mod 2N: the ring exponent resolves mod 2N
+    ScaledTlwe sTlwe {2 * param.N, param.n};
     Trlwe acc{param};
     rescaleTlweToNewMod(sTlwe, input);
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
-    genNoiselessTrlweSample(acc, v, sTlwe);
 
     // warm up
     cout << "warm up" << endl;
-    for (auto i = 0; i < accessPattern.size()/2; i++) {
+    for (long i = 0; i < cfg.warmupRequests; i++) {
         cache.getGinxKey(accessPattern[i]);
     }
     cache.resetStats();
 
     cout << "normal run" << endl;
     // normal run
-    std::vector<long> iterationTimesUs;
-    bool isLoadKey = false;
-    for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
+    std::vector<RequestRecord> records;
+    records.reserve(cfg.measuredRequests);
+    for (long i = cfg.warmupRequests; i < cfg.warmupRequests + cfg.measuredRequests; i++) {
         auto id = accessPattern[i];
         std::string file = DiskReader::generateGinxKeyFilename(id);
         // Evict before the timer: on a cache miss this file is read.
         clearFileCache(file);
+        genNoiselessTrlweSample(acc, v, sTlwe);
         auto start = steady_clock::now();
         auto* bskServer = cache.getGinxKeySimple(id);
-        if (bskServer != nullptr) {
+        const bool hit = bskServer != nullptr;
+        if (hit) {
             blindRotateJP22Ntt(acc, *bskServer, sTlwe, param);
         } else {
-            isLoadKey = true;
             BootstrappingKeyMP bsk;
             deserializeBskMP(bsk, file, param.n);
             blindRotateJP22Ntt(acc, bsk, sTlwe, param);
             cache.putMpKey(id, std::move(bsk));
         }
         auto end = steady_clock::now();
-        auto elapsedUs = duration_cast<microseconds>(end - start).count();
-        iterationTimesUs.push_back(elapsedUs);
-        if (isLoadKey) printMsg(id, "Evict LRU key, load");
+        records.push_back({duration_cast<microseconds>(end - start).count(), id, hit});
     }
-    printArray(iterationTimesUs, "iterationTimesUs");
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.ginxRequest << std::endl;
     std::cout << "Hit rate: " << stats.ginxHitRate() * 100 << "%" << std::endl;
-    string file = "tfhe_benchmark_results_" + to_string(cacheCap) + ".json";
     if (isSave) {
-        benchStat(iterationTimesUs, iterationTimesUs.size(), stats.ginxHitRate(),
-                  "Benchmark/TFHE", cacheCap, file);
+        benchStat(records, stats.ginxHitRate(), "Benchmark/TFHE", cfg, outputName("tfhe", cfg));
     }
 }
 
-void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache, const vector<int>& accessPattern,
-                const int cacheCap, bool isSave) {
+void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheManager& cache,
+                const vector<int>& accessPattern, const RunConfig& cfg, bool isSave) {
     cout << "bench WWL24" << endl;
 
     // server side
-    ScaledTlwe sTlwe {2 * param.N, param.n};   // mod 2N: the ring exponent resolves mod 2N
+    ScaledTlwe sTlwe {2 * param.N, param.n};
     Trlwe acc{param};
     rescaleTlweToNewMod(sTlwe, input);
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
-    genNoiselessTrlweSample(acc, v, sTlwe);
 
     // warm up
     cout << "warm up" << endl;
-    for (auto i = 0; i < accessPattern.size()/2; i++) {
+    for (long i = 0; i < cfg.warmupRequests; i++) {
         cache.getWWL24Key(accessPattern[i]);
     }
     cache.resetStats();
 
     cout << "normal run" << endl;
     // normal run
-    std::vector<long> iterationTimesUs;
-    bool isLoadKey = false;
-    for (auto i = accessPattern.size()/2; i < accessPattern.size()/2 + 300; i++) {
+    std::vector<RequestRecord> records;
+    records.reserve(cfg.measuredRequests);
+    for (long i = cfg.warmupRequests; i < cfg.warmupRequests + cfg.measuredRequests; i++) {
         auto id = accessPattern[i];
         std::string file = DiskReader::generateWWL24KeyFilename(id);
-        // Evict before the timer: on a cache miss this file is read.
         clearFileCache(file);
+        genNoiselessTrlweSample(acc, v, sTlwe);
         auto start = steady_clock::now();
         auto* bskServer = cache.getWWL24KeySimple(id);
-        if (bskServer != nullptr) {
+        const bool hit = bskServer != nullptr;
+        if (hit) {
             blindRotateWWL24Ntt(acc, *bskServer, sTlwe, param);
         } else {
-            isLoadKey = true;
             BootstrappingKeyWWL24 bsk;
             deserializeBskWWL24(bsk, file, param.n);
             blindRotateWWL24Ntt(acc, bsk, sTlwe, param);
             cache.putWWL24Key(id, std::move(bsk));
         }
         auto end = steady_clock::now();
-        auto elapsedUs = duration_cast<microseconds>(end - start).count();
-        iterationTimesUs.push_back(elapsedUs);
-        if (isLoadKey) printMsg(id, "Evict LRU key, load");
+        records.push_back({duration_cast<microseconds>(end - start).count(), id, hit});
     }
-    printArray(iterationTimesUs, "iterationTimesUs");
     auto stats = cache.getStats();
     std::cout << "Total requests: " << stats.wwl24Request << std::endl;
     std::cout << "Hit rate: " << stats.wwl24HitRate() * 100 << "%" << std::endl;
-    string file = "wwl+24_benchmark_results_" + to_string(cacheCap) + ".json";
     if (isSave) {
-        benchStat(iterationTimesUs, iterationTimesUs.size(), stats.wwl24HitRate(),
-                  "Benchmark/WWL+24", cacheCap, file);
+        benchStat(records, stats.wwl24HitRate(), "Benchmark/WWL+24", cfg, outputName("wwl+24", cfg));
     }
 }
 
+static std::vector<int> parseCapacity(const std::string& text) {
+    std::vector<int> caps;
+    std::stringstream ss(text);
+    std::string item;
+    while (std::getline(ss, item, ',')) {
+        if (item.empty()) continue;
+        const int value = std::atoi(item.c_str());
+        if (value > 0) caps.push_back(value);
+    }
+    return caps;
+}
+
 int main(int argc, char **argv) {
-    int sizeRatio = 4; // ginx key size / lazy key size
-    int sizeRatio2 = 2; // ginx key size / wwl+24 key size
+    constexpr int sizeRatio = 4;  // ginx key size / ours key size
+    constexpr int sizeRatio2 = 2; // ginx key size / wwl+24 key size
 
     CommandLineParser parser(argc, argv);
 
@@ -319,29 +427,45 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    int cacheCapacity = parser.getInt("cap", 5);
+    const std::string caps = parser.getString("caps", "100,50,20,10,5,1");
+    const int users = parser.getInt("users", 50);
     double zipfParam = parser.getDouble("s", 0.83);
-    int multiplier = parser.getInt("m", sizeRatio);
-    int multiplier2 = parser.getInt("m2", sizeRatio2);
-    int patternSize = parser.getInt("pat", 2000);
+    const int multiplier = parser.getInt("m", sizeRatio);
+    const int multiplier2 = parser.getInt("m2", sizeRatio2);
+    long requests = parser.getInt("reqs", 10000);
+    long warmup = parser.getInt("warm", 500);
+    const auto seed = static_cast<uint64_t>(parser.getInt("seed", ZipfDistribution::kDefaultSeed));
+    const std::string iso = parser.getString("iso", "bytes");
+    const std::string tag = parser.getString("tag", "");
 
-    if (cacheCapacity <= 0) {
-        std::cerr << "Error: Cache capacity should be larger than 0，using default 5" << std::endl;
-        cacheCapacity = 5;
+    std::vector<int> capacities = parseCapacity(caps);
+    if (capacities.empty()) {
+        std::cerr << "Error: --caps is empty, using the default" << std::endl;
+        capacities = {100, 50, 20, 10, 5, 1};
     }
     if (zipfParam <= 0) {
-        std::cerr << "Error: Zipf parameter should be larger than 0，using default 0.83" << std::endl;
+        std::cerr << "Error: Zipf parameter should be larger than 0, using default 0.83" << std::endl;
         zipfParam = 0.83;
     }
-    if (multiplier <= 0) {
-        std::cerr << "Error: m should be no less than 1，using default 4" << std::endl;
-        multiplier = sizeRatio;
+    if (requests <= 0) {
+        std::cerr << "Error: --reqs should be larger than 0, using default 10000" << std::endl;
+        requests = 10000;
     }
-    if (patternSize <= 0) {
-        std::cerr << "Error: Request pattern size should be larger than 0，using default 2000" << std::endl;
-        patternSize = 2000;
+    if (warmup < 0) {
+        std::cerr << "Error: --warm should be larger than 0, using default 500" << std::endl;
+        warmup = 500;
+    }
+    if (iso != "bytes" && iso != "slots") {
+        std::cerr << "Error: --iso must be bytes or slots" << std::endl;
+        return 1;
     }
 
+    std::cout << "users=" << users
+              << "zipf s=" << zipfParam
+              << "seed=" << seed
+              << "warm=" << warmup
+              << "reqs=" << requests
+              << "iso=" << iso << std::endl;
 
     YatfheParameters param{};
     initYatfhe(param);
@@ -366,105 +490,35 @@ int main(int argc, char **argv) {
     Tlwe input{param.n};
     symEncTlwe(input, mu, tlweKey);
 
-
-
     // server side
-    // warm up cycle
-    {
-        cacheCapacity = 100;
-        multiplier = 1;
-        multiplier2 = 1;
-        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
-        // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
-        CacheWorkloadGenerator workload(zipfParam);
+    const size_t patternSize = static_cast<size_t>(warmup + requests);
+    for (const int cacheCapacity : capacities) {
+        const int pipeMultiplier = iso == "bytes" ? multiplier : 1;
+        const int wwl24Multiplier = iso == "bytes" ? multiplier2 : 1;
+
+        RunConfig cfg;
+        cfg.users = users;
+        cfg.ginxCapacity = cacheCapacity;
+        cfg.pipeCapacity = cacheCapacity * pipeMultiplier;
+        cfg.wwl24Capacity = cacheCapacity * wwl24Multiplier;
+        cfg.zipfS = zipfParam;
+        cfg.seed = seed;
+        cfg.warmupRequests = warmup;
+        cfg.measuredRequests = requests;
+        cfg.isoMode = iso;
+        cfg.tag = tag;
+
+        printf("\n=== capacity=%d (pressure %.2f)  ours=%d wwl24=%d slots  seed=%llu ===\n",
+               cacheCapacity, static_cast<double>(users) / cacheCapacity,
+               cfg.pipeCapacity, cfg.wwl24Capacity, static_cast<unsigned long long>(seed));
+
+        SimpleCacheManager cache(param.n, cfg.ginxCapacity, cfg.pipeCapacity, cfg.wwl24Capacity);
+        CacheWorkloadGenerator workload(zipfParam, users, seed);
         auto accessPattern = workload.generateAccessPattern(patternSize);
-        printArray(accessPattern, "access pattern");
 
-        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
-    }
-
-    // benchmarking
-    {
-        cacheCapacity = 50;
-        multiplier = 1;
-        multiplier2 = 1;
-        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
-        // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
-        CacheWorkloadGenerator workload(zipfParam);
-        auto accessPattern = workload.generateAccessPattern(patternSize);
-        printArray(accessPattern, "access pattern");
-
-        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
-    }
-
-    {
-        cacheCapacity = 20;
-        multiplier = sizeRatio;
-        multiplier2 = sizeRatio2;
-        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
-        // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
-        CacheWorkloadGenerator workload(zipfParam);
-        auto accessPattern = workload.generateAccessPattern(patternSize);
-        printArray(accessPattern, "access pattern");
-
-        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
-    }
-
-    {
-        cacheCapacity = 10;
-        multiplier = sizeRatio;
-        multiplier2 = sizeRatio2;
-        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
-        // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
-        CacheWorkloadGenerator workload(zipfParam);
-        auto accessPattern = workload.generateAccessPattern(patternSize);
-        printArray(accessPattern, "access pattern");
-
-        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
-    }
-
-    {
-        cacheCapacity = 5;
-        multiplier = sizeRatio;
-        multiplier2 = sizeRatio2;
-        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
-        // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
-        CacheWorkloadGenerator workload(zipfParam);
-        auto accessPattern = workload.generateAccessPattern(patternSize);
-        printArray(accessPattern, "access pattern");
-
-        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
-    }
-
-    {
-        cacheCapacity = 1;
-        multiplier = 1;
-        multiplier2 = 1;
-        printf("Cache capacity=%d, Zipf s=%.3f, Max request count=%d\n", cacheCapacity, zipfParam, patternSize);
-        // init cache
-        SimpleCacheManager cache(param.n, cacheCapacity, cacheCapacity * multiplier, cacheCapacity * multiplier2);
-        CacheWorkloadGenerator workload(zipfParam);
-        auto accessPattern = workload.generateAccessPattern(patternSize);
-        printArray(accessPattern, "access pattern");
-
-        benchWWL24(input, param, cache, accessPattern, cacheCapacity, true);
-        benchLazy(input, param, cache, accessPattern, cacheCapacity, true);
-        benchGinx(input, param, cache, accessPattern, cacheCapacity, true);
+        benchWWL24(input, param, cache, accessPattern, cfg, true);
+        benchPipe(input, param, cache, accessPattern, cfg, true);
+        benchGinx(input, param, cache, accessPattern, cfg, true);
     }
 
     return 0;
