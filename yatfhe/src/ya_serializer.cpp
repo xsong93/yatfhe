@@ -430,8 +430,8 @@ void deserializeBskLazyPipe(BootstrappingKeyMPLazyPipe& bskLazy, const std::stri
 void serializeBskLazyPipeAlt(const BootstrappingKeyMPLazyPipeAlt& t, const std::string& filename) {
     auto os = openForWrite(filename);
 
-    // Step 1: Write bskFirst[0] and s2Dft
-    serialize(t.bskFirst[0], os);
+    // Step 1: Write bskFirstLev and s2Dft
+    serialize(t.bskFirstLev, os);
     serialize(t.s2Dft, os);
 
     // Step 2: Write bskPrime[i][0]
@@ -450,11 +450,11 @@ void deserializeBskLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bskLazy, const std
     if (!inFile) throw std::runtime_error("Failed to open file");
 
     // Resize vectors to match serialization structure
-    bskLazy.bskFirst.resize(1);
     bskLazy.bskPrime.resize(n - 1);
+    bskLazy.derivedValid = false;   // derived component is per-LUT, never stored
 
-    // Step 1: Read bskFirst[0] and s2Dft
-    deserialize(bskLazy.bskFirst[0], inFile);
+    // Step 1: Read bskFirstLev and s2Dft
+    deserialize(bskLazy.bskFirstLev, inFile);
     deserialize(bskLazy.s2Dft, inFile);
 
     // Step 2: Read bskPrime[i]

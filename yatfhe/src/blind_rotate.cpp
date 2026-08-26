@@ -1044,7 +1044,12 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
         pool.run(group, level, stageA);   // keyIndex 0 into decompA0/b0
 
         Trlwe tmp{param};
-        rotateTrlweMinusOne(tmp, bsk.bskFirst[0], input.a[0]);
+        // Fold the server's LUT into RLEV(s_0).
+        if (!bsk.derivedValid) {
+            deriveFirstComponentNtt(bsk.bskFirstDerived, bsk.bskFirstLev, v, param);
+            bsk.derivedValid = true;
+        }
+        rotateTrlweMinusOne(tmp, bsk.bskFirstDerived, input.a[0]);
         addTorusPolynomial(tmp.b, tmp.b, v);
         rotateTrlwe(accum, tmp, -input.b);
 
@@ -1102,9 +1107,9 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
     throw std::runtime_error("blindRotateLazyPipeAltInitNtt: not implemented for ternary keys");
 #else
     // read keys
-    bsk.bskFirst.resize(1);
     bsk.bskPrime.resize(n - 1);
-    deserialize(bsk.bskFirst[0], inFile);
+    bsk.derivedValid = false;
+    deserialize(bsk.bskFirstLev, inFile);
     deserialize(bsk.s2Dft, inFile);
     auto& s2 = bsk.s2Dft;
     auto& bskPrime = bsk.bskPrime;
@@ -1149,7 +1154,12 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
         pool.run(group, level, stageA);
 
         Trlwe tmp{param};
-        rotateTrlweMinusOne(tmp, bsk.bskFirst[0], input.a[0]);
+        // Fold the server's LUT into RLEV(s_0).
+        if (!bsk.derivedValid) {
+            deriveFirstComponentNtt(bsk.bskFirstDerived, bsk.bskFirstLev, v, param);
+            bsk.derivedValid = true;
+        }
+        rotateTrlweMinusOne(tmp, bsk.bskFirstDerived, input.a[0]);
         addTorusPolynomial(tmp.b, tmp.b, v);
         rotateTrlwe(accum, tmp, -input.b);
 

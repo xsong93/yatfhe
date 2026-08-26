@@ -344,6 +344,9 @@ void internalProductTrgswMPNtt(TrgswMPDft& output, const TrgswMP& input1, const 
 
 void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPrimeDft, const TrlevDft& sSquare, const YatfheParameters& param);
 
+// RLWE(v*s_0) from a LUT-independent RLEV(s_0) plus the server's plaintext v.
+void deriveFirstComponentNtt(Trlwe& out, const TrlevDft& firstLev, const TorusPolynomial& v, const YatfheParameters& param);
+
 void switchTrlweToSecretEmbeddingAltNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param);
 
 void switchTrlweToSecretEmbeddingNttOpt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const vector<vector<DecompPolynomial>>& decompA,

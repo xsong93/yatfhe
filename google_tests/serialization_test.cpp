@@ -124,9 +124,7 @@ void verifyBskMPLazyAlt(const BootstrappingKeyMPLazyPipeAlt& a, const Bootstrapp
     ASSERT_EQ(a.n, b.n);
     ASSERT_EQ(a.level, b.level);
     ASSERT_EQ(a.group, b.group);
-    for (auto d = 0; d < a.bskFirst.size(); d++) {
-        verifyTrlwe(a.bskFirst[d], b.bskFirst[d]);
-    }
+    verifyTrlevDft(a.bskFirstLev, b.bskFirstLev);
     verifyTrlevDft(a.s2Dft, b.s2Dft);
     for (auto i = 0; i < a.n - 1; i++) {
         verifyTrgswMP(a.bskPrime[i], b.bskPrime[i]);
@@ -402,7 +400,7 @@ TEST(SERIALIZATION, BSKMPLAZY_ALT) {
 
     BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
     symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trlweKey, trlweKey.s, true, param);
-    genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, v, param);
+    genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, param);
 
     COUNT_TIME("serializeBskLazyPipeAlt", serializeBskLazyPipeAlt(bskMPLazyPipeAlt, "SERIALIZATION_TEST_BSKMPLAZY_ALT.bin");)
 

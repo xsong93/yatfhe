@@ -6,8 +6,11 @@
 #include "yatfhe/blind_rotate.h"
 #include "yatfhe/keyswitching.h"
 #include "yatfhe/ntt24.h"
+#include "yatfhe/ntt_hexl.h"
 #include "yatfhe/key_patterns.h"
 #include "yautil/multi_threading.h"
+
+using namespace NttHexl;
 
 namespace {
     void genBootstrappingKeyGroup(BootstrappingKey& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey, const YatfheParameters& param) {
@@ -317,7 +320,7 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswK
 }
 
 void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-                                   const TorusPolynomial& v, const YatfheParameters& param) {
+                                   const YatfheParameters& param) {
 #ifdef TERNARY
     throw std::runtime_error("genBootstrappingKeyMPLazyPipeAlt: not implemented for ternary keys");
 #else
@@ -325,12 +328,12 @@ void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const 
     vector<future<void>> futures;
     futures.reserve(bsk.n);  // 1 first-block task + (n-1) loop tasks
 
-    // process first key component
-    futures.emplace_back(pool.enqueue([&bsk, &trgswKey, &tlweKey, &v] {
-        if (tlweKey.s[0] == 1) {
-            symEncTrlweMultiSample(bsk.bskFirst[0], trgswKey.trlweKey, v.coeffs);
-        } else {
-            symEncTrlweSingleSample(bsk.bskFirst[0], trgswKey.trlweKey, 0, 0);
+    // First key component: RLEV(s_0) without test polynomial.
+    futures.emplace_back(pool.enqueue([&bsk, &trgswKey, &tlweKey, &param] {
+        Trlev lev{param, param.l};
+        encTrlevSingleSample(lev, trgswKey.trlweKey, tlweKey.s[0], 0, param);
+        for (auto l = 0; l < param.l; l++) {
+            applyNttForAB(bsk.bskFirstLev.trlweDfts[l], lev.trlwes[l]);
         }
     }));
 

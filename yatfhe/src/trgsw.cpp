@@ -910,6 +910,46 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
     }
 }
 
+// RLWE(v * s_0) = GD(v) (dot) RLEV(s_0).
+void deriveFirstComponentNtt(Trlwe& out, const TrlevDft& firstLev, const TorusPolynomial& v, const YatfheParameters& param) {
+    const auto K = param.k;
+    const auto L = param.l;
+    const auto N = param.N;
+
+    if (out.a.size() != static_cast<size_t>(K) || out.b.N != N) {
+        out = Trlwe{K, N};
+    }
+
+    thread_local vector<TorusPolynomial> decomp;
+    if (decomp.size() != static_cast<size_t>(L) || decomp[0].N != N) {
+        decomp.assign(L, TorusPolynomial{N});
+    }
+    thread_local DecomposedData d{L};
+    if (d.l != L) d = DecomposedData{L};
+    for (auto j = 0; j < N; j++) {
+        signedGadgetDecomposition(d, v.coeffs[j], param);
+        for (auto lvl = 0; lvl < L; lvl++) {
+            decomp[lvl].coeffs[j] = d.value[lvl] * d.sign;
+        }
+    }
+
+    thread_local TrlweDft accDft;
+    if (accDft.a.size() != static_cast<size_t>(K) || accDft.b.N != N)
+        accDft = TrlweDft{K, N};
+    clearTrlwe(accDft);
+
+    thread_local NttPolynomial dDft{N};
+    for (auto l = 0; l < L; l++) {
+        applyNtt(dDft, decomp[l]);
+        const auto& lev = firstLev.trlweDfts[l];
+        for (auto k = 0; k < K; k++) {
+            calModularInnerProductNtt(accDft.a[k], dDft, lev.a[k]);
+        }
+        calModularInnerProductNtt(accDft.b, dDft, lev.b);
+    }
+    applyInttForAB(out, accDft);
+}
+
 void switchTrlweToSecretEmbeddingAltNtt(vector<TrlweDft>& cDft, TrlweDft& cPrimeDft, const Trlwe& cPrime, const TrlevDft& sSquare, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.l;

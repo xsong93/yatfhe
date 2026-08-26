@@ -209,7 +209,7 @@ int main(int argc, char** argv) {
         genBootstrappingKeyMPLazy(key, trgswKey, tlweKey, v, param);
         serializeBskMPLazy(key, f);
         BootstrappingKeyMPLazyPipeAlt s2Src{param, param.lApprox, true};
-        genBootstrappingKeyMPLazyPipeAlt(s2Src, trgswKey, tlweKey, v, param);
+        genBootstrappingKeyMPLazyPipeAlt(s2Src, trgswKey, tlweKey, param);
         Trlwe out{param};
         auto warm = measureTime(warmReps, [&] {
             BootstrappingKeyMPLazy srv;
@@ -255,7 +255,7 @@ int main(int argc, char** argv) {
     {
         const std::string f = "COMP_G_PIPE_ALT.bin";
         BootstrappingKeyMPLazyPipeAlt key{param, param.lApprox, true};
-        genBootstrappingKeyMPLazyPipeAlt(key, trgswKey, tlweKey, v, param);
+        genBootstrappingKeyMPLazyPipeAlt(key, trgswKey, tlweKey, param);
         serializeBskLazyPipeAlt(key, f);
         BootstrappingKeyMPLazyPipeAlt srv;
         deserializeBskLazyPipeAlt(srv, f, param.n);

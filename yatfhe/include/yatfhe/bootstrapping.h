@@ -282,7 +282,10 @@ struct BootstrappingKeyMPLazyPipe {
 };
 
 struct BootstrappingKeyMPLazyPipeAlt {
-    vector<Trlwe> bskFirst;
+    // LUT-INDEPENDENT first component:
+    TrlevDft bskFirstLev;
+    mutable Trlwe bskFirstDerived;
+    mutable bool derivedValid{false};
     vector<TrgswMP> bskPrime;
     TrlevDft s2Dft;
     int n{};
@@ -299,7 +302,8 @@ struct BootstrappingKeyMPLazyPipeAlt {
         } else {
             n = p.n / group * (1 << group);
         }
-        bskFirst = vector(1, Trlwe{p.k, p.N});
+        bskFirstLev = TrlevDft{p, p.l};
+        bskFirstDerived = Trlwe{p.k, p.N};
         bskPrime = vector(p.n - 1, TrgswMP{p, level, isHalf});
         s2Dft = TrlevDft{p, p.l};
 #endif
@@ -395,7 +399,7 @@ void genBootstrappingKeyMPLazyPipe(BootstrappingKeyMPLazyPipe& bsk, const TrgswK
                                    const TorusPolynomial& v, const YatfheParameters& param);
 
 void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
-                                      const TorusPolynomial& v, const YatfheParameters& param);
+                                      const YatfheParameters& param);
 
 void genBootstrappingKeyMPPreRot(BootstrappingKeyMPPreRot& bsk, const TrgswKey& trgswKey, const TlweKey& tlweKey,
                                  const TorusPolynomial& v, int batchSize, const YatfheParameters& param);
