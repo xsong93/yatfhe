@@ -875,15 +875,13 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
     }
 
     thread_local vector decomp(L, Trlwe{K, N});
-    thread_local DecomposedData d{L};
-    for (auto row = 0; row < K; row++) {
-        auto& currIn = cPrimeA[row];
-        for (auto j = 0; j < N; j++) {
-            signedGadgetDecomposition(d, currIn.coeffs[j], param);
+    {
+        std::vector<Torus*> outPtr(L);
+        for (auto row = 0; row < K; row++) {
             for (auto lvl = 0; lvl < L; lvl++) {
-                auto& currOut = decomp[lvl].a[row];
-                currOut.coeffs[j] = d.value[lvl] * d.sign;
+                outPtr[lvl] = decomp[lvl].a[row].coeffs.data();
             }
+            decomposeRow(outPtr.data(), cPrimeA[row].coeffs.data(), N, L, param);
         }
     }
 

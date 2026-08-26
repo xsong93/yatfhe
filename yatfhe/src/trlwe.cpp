@@ -63,54 +63,7 @@ namespace {
         calModularInnerProductNtt(trlweDft.b, trlweDft.a, key.sDft);
     }
 
-    template<int L, typename OutT>
-    void decomposeRowUnrolled(OutT* const* outPtr, const Torus* in, const int N,
-                              const int radixBits, const int torusBits) {
-        const Torus B = static_cast<Torus>(1) << radixBits;
-        const Torus halfB = B >> 1;
-        const int shift = torusBits - L * radixBits;
-        const UnsignedInteger round = (shift > 0) ? (static_cast<UnsignedInteger>(1) << (shift - 1)) : 0;
 
-        OutT* out[L];
-        for (int lvl = 0; lvl < L; lvl++) out[lvl] = outPtr[lvl];
-
-        for (int j = 0; j < N; j++) {
-            const UnsignedInteger u = static_cast<UnsignedInteger>(in[j]) + round;
-            Torus carry = 0;
-            for (int lvl = L - 1; lvl >= 0; --lvl) {   // constant trip count -> fully unrolled
-                const UnsignedInteger window = (u >> (torusBits - (lvl + 1) * radixBits)) & static_cast<UnsignedInteger>(B - 1);
-                Torus digit = static_cast<Torus>(window) + carry;
-                carry = (digit >= halfB);
-                digit -= carry * B;
-                out[lvl][j] = static_cast<OutT>(digit);  // sign is always +1
-            }
-        }
-    }
-
-    template<typename OutT>
-    void decomposeRow(OutT* const* outPtr, const Torus* in, const int N, const int l,
-                      const YatfheParameters& param) {
-        const int b = param.radixBits, t = param.torusBits;
-        switch (l) {
-            case 1: decomposeRowUnrolled<1>(outPtr, in, N, b, t); return;
-            case 2: decomposeRowUnrolled<2>(outPtr, in, N, b, t); return;
-            case 3: decomposeRowUnrolled<3>(outPtr, in, N, b, t); return;
-            case 4: decomposeRowUnrolled<4>(outPtr, in, N, b, t); return;
-            case 5: decomposeRowUnrolled<5>(outPtr, in, N, b, t); return;
-            case 6: decomposeRowUnrolled<6>(outPtr, in, N, b, t); return;
-            case 7: decomposeRowUnrolled<7>(outPtr, in, N, b, t); return;
-            case 8: decomposeRowUnrolled<8>(outPtr, in, N, b, t); return;
-            default: {
-                DecomposedData d{l};
-                for (auto j = 0; j < N; j++) {
-                    signedGadgetDecomposition(d, in[j], param);
-                    for (auto lvl = 0; lvl < l; lvl++) {
-                        outPtr[lvl][j] = static_cast<OutT>(d.value[lvl] * d.sign);
-                    }
-                }
-            }
-        }
-    }
 }
 
 
