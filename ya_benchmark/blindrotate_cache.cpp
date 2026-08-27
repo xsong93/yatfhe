@@ -1,4 +1,5 @@
 
+#include "include/bench_out.h"
 #include <nlohmann/json.hpp>
 
 #include <sched.h>
@@ -75,6 +76,7 @@ public:
         std::cout << "  --m=N        GINX/OURS key size ratio (Default: 4)" << std::endl;
         std::cout << "  --m2=N       GINX/WWL+24 key size ratio (Default: 2)" << std::endl;
         std::cout << "  --tag=STR    Suffix appended to the output json" << std::endl;
+        std::cout << "  --out=DIR    Directory for result json" << std::endl;
         std::cout << std::endl;
         std::cout << "Usage example:" << std::endl;
         std::cout << "  taskset -c 0-7 " << programName << " --reqs=10000 --seed=1" << std::endl;
@@ -85,7 +87,6 @@ private:
     void parseArguments(int argc, char** argv) {
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
-
             if (arg == "--help") {
                 arguments_["help"] = "true";
             }
@@ -105,7 +106,6 @@ private:
         }
     }
 };
-
 
 struct RunConfig {
     int users{};
@@ -239,11 +239,12 @@ void benchStat(const std::vector<RequestRecord>& records, const double hitRate,
     results["hit_statistics"] = summarize(hits);
     results["miss_statistics"] = summarize(misses);
 
-    std::ofstream outfile(saveFileName);
+    const std::string savePath = yabench::benchOutPath(saveFileName);
+    std::ofstream outfile(savePath);
     outfile << results.dump(2) << std::endl;
     outfile.close();
 
-    std::cout << "Saved " << saveFileName
+    std::cout << "Saved " << savePath
               << "  n=" << all.size()
               << "  mean=" << results["statistics"]["mean_us"].get<double>() / 1000.0 << " ms"
               << "  sd=" << results["statistics"]["sd_us"].get<double>() / 1000.0 << " ms"
@@ -437,6 +438,7 @@ int main(int argc, char **argv) {
     const auto seed = static_cast<uint64_t>(parser.getInt("seed", ZipfDistribution::kDefaultSeed));
     const std::string iso = parser.getString("iso", "bytes");
     const std::string tag = parser.getString("tag", "");
+    yabench::setBenchOutDir(parser.getString("out", yabench::benchOutDirRef()));
 
     std::vector<int> capacities = parseCapacity(caps);
     if (capacities.empty()) {

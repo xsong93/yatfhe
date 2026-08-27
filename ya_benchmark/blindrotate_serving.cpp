@@ -2,6 +2,7 @@
 // Created by xsong93 on 08/25/2026.
 //
 
+#include "include/bench_out.h"
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
@@ -601,8 +602,7 @@ int main(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
         const std::string s = argv[i];
         if (s == "--help") {
-            std::cout
-                << "Usage: blindrotate_serving [options]\n"
+            std::cout << "Usage: blindrotate_serving [options]\n"
                    "  --method=ours|tfhe|wwl24   scheme under test (default ours)\n"
                    "  --rate=N                   offered requests/sec (default 20)\n"
                    "  --workers=N                concurrent servers (default 4)\n"
@@ -615,8 +615,6 @@ int main(int argc, char** argv) {
                    "  --slo=MS                   SLO target for violation rate (default 100)\n"
                    "  --queuemax=N               shed beyond this depth (default 4096)\n"
                    "  --batch=B                  bootstraps per tenant visit (default 1).\n"
-                   "                             B=1 is the worst case for key thrashing; a real\n"
-                   "                             circuit evaluation has B >> 1 and amortises loads.\n"
                    "  --sched=shared|affinity|soft\n"
                    "                             shared:   one queue, no locality, even load\n"
                    "                             affinity: hard tenant->worker hash (imbalances)\n"
@@ -625,7 +623,8 @@ int main(int argc, char** argv) {
                    "  --spill=N                  soft: spill when the owner lane is N deep (default 2)\n"
                    "  --steal=N                  soft: only steal from a lane N deep (default 2).\n"
                    "                             Higher preserves locality, lower favours balance.\n"
-                   "  --s=F --seed=N --tag=STR\n";
+                   "  --s=F --seed=N --tag=STR\n"
+                   "  --out=DIR                  directory for result json\n";
             return 0;
         }
         arg("method", s, method);
@@ -641,6 +640,11 @@ int main(int argc, char** argv) {
         arg("s", s, opt.zipfS);
         arg("seed", s, opt.seed);
         arg("tag", s, opt.tag);
+        {
+            std::string od;
+            if (arg("out", s, od))
+                yabench::setBenchOutDir(od);
+        }
         arg("burston", s, opt.burstOnMs);
         arg("batch", s, opt.batch);
         arg("sched", s, opt.sched);
@@ -751,7 +755,8 @@ int main(int argc, char** argv) {
                             : opt.method == Method::Tfhe ? "tfhe" : "wwl+24");
     if (!opt.tag.empty()) name += "_" + opt.tag;
     name += ".json";
-    std::ofstream out(name);
+    const std::string outPath = yabench::benchOutPath(name);
+    std::ofstream out(outPath);
     out << result.dump(2) << std::endl;
 
     std::cout << "throughput " << result["throughput_rps"].get<double>()

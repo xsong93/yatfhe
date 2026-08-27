@@ -2,6 +2,7 @@
 // Created by xsong93 on 08/25/2026.
 //
 
+#include "include/bench_out.h"
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
@@ -65,8 +66,12 @@ int main(int argc, char** argv) {
     int coldReps = 15;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
-        if (a.rfind("--warmreps=", 0) == 0) warmReps = std::atoi(a.c_str() + 11);
-        if (a.rfind("--coldreps=", 0) == 0) coldReps = std::atoi(a.c_str() + 11);
+        if (a.rfind("--warmreps=", 0) == 0)
+            warmReps = std::atoi(a.c_str() + 11);
+        if (a.rfind("--coldreps=", 0) == 0)
+            coldReps = std::atoi(a.c_str() + 11);
+        if (a.rfind("--out=", 0) == 0)
+            yabench::setBenchOutDir(a.substr(6));
     }
 
     YatfheParameters param{};
@@ -277,7 +282,8 @@ int main(int argc, char** argv) {
         record("G", "OURS: pipeline + on-the-fly NTT", "full design", f, warm, cold, ilv);
     }
 
-    std::ofstream out("comp_results.json");
+    const std::string compPath = yabench::benchOutPath("comp_results.json");
+    std::ofstream out(compPath);
     out << results.dump(2) << std::endl;
     return 0;
 }
