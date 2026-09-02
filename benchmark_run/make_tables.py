@@ -127,7 +127,7 @@ ABL_LABEL = {
     "D": r"\quad + on-the-fly NTT",
     "E": r"\quad + parallel expansion (Alg.~S1)",
     "F": r"\quad + pipeline overlap",
-    "G": r"\textbf{OURS} (F + on-the-fly NTT)",
+    "G": r"\textbf{OURS} (E + on-the-fly NTT)",
 }
 
 
@@ -143,27 +143,32 @@ def ablation(outdir):
            r"    \begin{tabular}{clrrr}", r"        \toprule",
            r"        & \textbf{Configuration} & \textbf{Key (MB)} & "
            r"\textbf{Warm} & \textbf{Cold} \\", r"        \midrule"]
-    for i in "ABCDEFG":
+    # Rung B (the retired embedded first-key construction) is not part of the
+    # shipped design and is excluded; the remaining rungs are relabeled A-F.
+    relabel = {"C": "B", "D": "C", "E": "D", "F": "E", "G": "F"}
+    for i in "ACDEFG":
         if i not in d:
             continue
+        j = relabel.get(i, i)
         k, w, c = f"{d[i]['key_mb']:.2f}", _fmt(med(i, 'warm'), 2), _fmt(med(i, 'cold'), 2)
-        if i == "G":
+        if j == "F":
             k, w, c = _bf(k), _bf(w), _bf(c)
-        out.append(f"        {i} & {ABL_LABEL[i]} & {k} & {w} & {c} \\\\")
+        out.append(f"        {j} & {ABL_LABEL[i]} & {k} & {w} & {c} \\\\")
 
-    ilv = [i for i in "ABCDEFG" if i in d and "interleaved" in d[i]]
+    ilv = [i for i in "FG" if i in d and "interleaved" in d[i]]
     if ilv:
         out += [r"        \midrule",
                 r"        \multicolumn{5}{l}{\textit{with key-loading interleaved "
                 r"into} $\mathsf{NS'}$:} \\"]
         for i in ilv:
+            j = relabel[i]
             k = f"{d[i]['key_mb']:.2f}"
             w = _fmt(med(i, "warm"), 2)
             c = _fmt(d[i]["interleaved"]["median_ms"], 2)
-            name = r"\textbf{OURS}" if i == "G" else "pipeline overlap"
-            if i == "G":
+            name = r"\textbf{OURS}" if j == "F" else "pipeline overlap"
+            if j == "F":
                 k, w, c = _bf(k), _bf(w), _bf(c)
-            out.append(f"        {i} & {name} & {k} & {w} & {c} \\\\")
+            out.append(f"        {j} & {name} & {k} & {w} & {c} \\\\")
 
     nw, nc = d["A"]["warm"]["count"], d["A"]["cold"]["count"]
     out += [r"        \bottomrule", r"    \end{tabular}",
