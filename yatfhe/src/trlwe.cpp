@@ -256,7 +256,6 @@ void convertTrlweKeyToTlweKey(TlweKey& tlweKey, const TrlweKey& trlweKey) {
 }
 
 void rotateTrlwe(Trlwe& res, const Trlwe& input, const int a) {
-    if (a % (input.b.N * 2) == 0) return;
     for (auto i = 0; i < input.a.size(); i++) {
         rotateTorusPolynomial(res.a[i], a, input.a[i]);
     }

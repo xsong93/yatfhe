@@ -39,6 +39,13 @@ void verifyTrlevDft(const TrlevDft& a, const TrlevDft& b) {
     }
 }
 
+void verifyTrlev(const Trlev& a, const Trlev& b) {
+    ASSERT_EQ(a.l, b.l);
+    for (auto i = 0; i < a.l; i++) {
+        verifyTrlwe(a.trlwes[i], b.trlwes[i]);
+    }
+}
+
 void verifyTrgswMP(const TrgswMP& a, const TrgswMP& b) {
     ASSERT_EQ(a.l, b.l);
     ASSERT_EQ(a.k, b.k);
@@ -124,7 +131,7 @@ void verifyBskMPLazyAlt(const BootstrappingKeyMPLazyPipeAlt& a, const Bootstrapp
     ASSERT_EQ(a.n, b.n);
     ASSERT_EQ(a.level, b.level);
     ASSERT_EQ(a.group, b.group);
-    verifyTrlevDft(a.bskFirstLev, b.bskFirstLev);
+    verifyTrlev(a.bskFirstLev, b.bskFirstLev);
     verifyTrlevDft(a.s2Dft, b.s2Dft);
     for (auto i = 0; i < a.n - 1; i++) {
         verifyTrgswMP(a.bskPrime[i], b.bskPrime[i]);

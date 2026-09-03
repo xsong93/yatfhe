@@ -282,8 +282,8 @@ struct BootstrappingKeyMPLazyPipe {
 };
 
 struct BootstrappingKeyMPLazyPipeAlt {
-    // LUT-INDEPENDENT first component:
-    TrlevDft bskFirstLev;
+    // LUT-INDEPENDENT first component (stored plaintext, transformed on the fly):
+    Trlev bskFirstLev;
     mutable Trlwe bskFirstDerived;
     mutable bool derivedValid{false};
     vector<TrgswMP> bskPrime;
@@ -302,7 +302,8 @@ struct BootstrappingKeyMPLazyPipeAlt {
         } else {
             n = p.n / group * (1 << group);
         }
-        bskFirstLev = TrlevDft{p, p.l};
+        // first component at the approximate (external-product) level, like bskPrime
+        bskFirstLev = Trlev{p, p.lApprox};
         bskFirstDerived = Trlwe{p.k, p.N};
         bskPrime = vector(p.n - 1, TrgswMP{p, level, isHalf});
         s2Dft = TrlevDft{p, p.l};

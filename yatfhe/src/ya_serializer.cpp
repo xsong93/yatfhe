@@ -112,6 +112,21 @@ void deserialize(TrlevDft& t, std::istream& is) {
     for (auto& trlweDft : t.trlweDfts) deserialize(trlweDft, is);
 }
 
+// Serialize Trlev (plaintext domain)
+void serialize(const Trlev& t, std::ostream& os) {
+    writePOD(os, t.l);
+    writePOD(os, static_cast<int>(t.trlwes.size()));
+    for (const auto& trlwe : t.trlwes) serialize(trlwe, os);
+}
+
+void deserialize(Trlev& t, std::istream& is) {
+    readPOD(is, t.l);
+    int trlwes_size;
+    readPOD(is, trlwes_size);
+    t.trlwes.resize(trlwes_size);
+    for (auto& trlwe : t.trlwes) deserialize(trlwe, is);
+}
+
 // Serialize TrgswMP
 void serialize(const TrgswMP& t, std::ostream& os) {
     writePOD(os, t.l);

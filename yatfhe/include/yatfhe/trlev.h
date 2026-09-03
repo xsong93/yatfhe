@@ -11,6 +11,8 @@ struct Trlev {
     std::vector<Trlwe> trlwes; // l
     int l{};
 
+    Trlev() = default;
+
     explicit Trlev(const YatfheParameters& param) :
             trlwes(param.l,  Trlwe(param.k, param.N)),
             l(param.l) {}

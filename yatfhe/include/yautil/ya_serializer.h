@@ -37,6 +37,10 @@ void serialize(const TrlevDft& t, std::ostream& os);
 
 void deserialize(TrlevDft& t, std::istream& is);
 
+void serialize(const Trlev& t, std::ostream& os);
+
+void deserialize(Trlev& t, std::istream& is);
+
 void serialize(const TrgswMP& t, std::ostream& os);
 
 void deserialize(TrgswMP& t, std::istream& is);

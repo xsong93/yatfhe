@@ -909,9 +909,9 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
 }
 
 // RLWE(v * s_0) = GD(v) (dot) RLEV(s_0).
-void deriveFirstComponentNtt(Trlwe& out, const TrlevDft& firstLev, const TorusPolynomial& v, const YatfheParameters& param) {
+void deriveFirstComponentNtt(Trlwe& out, const Trlev& firstLev, const TorusPolynomial& v, const YatfheParameters& param) {
     const auto K = param.k;
-    const auto L = param.l;
+    const auto L = param.lApprox;
     const auto N = param.N;
 
     if (out.a.size() != static_cast<size_t>(K) || out.b.N != N) {
@@ -937,13 +937,16 @@ void deriveFirstComponentNtt(Trlwe& out, const TrlevDft& firstLev, const TorusPo
     clearTrlwe(accDft);
 
     thread_local NttPolynomial dDft{N};
+    thread_local TrlweDft levDft;
+    if (levDft.a.size() != static_cast<size_t>(K) || levDft.b.N != N)
+        levDft = TrlweDft{K, N};
     for (auto l = 0; l < L; l++) {
         applyNtt(dDft, decomp[l]);
-        const auto& lev = firstLev.trlweDfts[l];
+        applyNttForAB(levDft, firstLev.trlwes[l]);
         for (auto k = 0; k < K; k++) {
-            calModularInnerProductNtt(accDft.a[k], dDft, lev.a[k]);
+            calModularInnerProductNtt(accDft.a[k], dDft, levDft.a[k]);
         }
-        calModularInnerProductNtt(accDft.b, dDft, lev.b);
+        calModularInnerProductNtt(accDft.b, dDft, levDft.b);
     }
     applyInttForAB(out, accDft);
 }

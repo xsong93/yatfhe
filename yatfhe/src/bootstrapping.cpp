@@ -328,13 +328,9 @@ void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const 
     vector<future<void>> futures;
     futures.reserve(bsk.n);  // 1 first-block task + (n-1) loop tasks
 
-    // First key component: RLEV(s_0) without test polynomial.
+    // First key component: RLEV(s_0)
     futures.emplace_back(pool.enqueue([&bsk, &trgswKey, &tlweKey, &param] {
-        Trlev lev{param, param.l};
-        encTrlevSingleSample(lev, trgswKey.trlweKey, tlweKey.s[0], 0, param);
-        for (auto l = 0; l < param.l; l++) {
-            applyNttForAB(bsk.bskFirstLev.trlweDfts[l], lev.trlwes[l]);
-        }
+        encTrlevSingleSample(bsk.bskFirstLev, trgswKey.trlweKey, tlweKey.s[0], 0, param);
     }));
 
     // process remaining n - 1 components concurrently with the first
