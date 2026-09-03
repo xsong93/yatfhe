@@ -265,6 +265,8 @@ void benchPipe(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     // server
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
+    vector<NttPolynomial> gdVntt;
+    prepareGdV(gdVntt, v, param);
     ScaledTlwe sTlwe {2 * param.N, param.n};
     rescaleTlweToNewMod(sTlwe, input);
     Trlwe out{param};
@@ -289,10 +291,10 @@ void benchPipe(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
         auto* bskServer = cache.getLazyKeySimple(id);
         const bool hit = bskServer != nullptr;
         if (hit) {
-            blindRotateLazyPipeAltNtt(out, *bskServer, sTlwe, v, param);
+            blindRotateLazyPipeAltNtt(out, *bskServer, sTlwe, v, gdVntt, param);
         } else {
             BootstrappingKeyMPLazyPipeAlt bsk;
-            blindRotateLazyPipeAltInitNtt(out, bsk, sTlwe, v, file, param);
+            blindRotateLazyPipeAltInitNtt(out, bsk, sTlwe, v, file, gdVntt, param);
             cache.putLazyKey(id, std::move(bsk));
         }
         auto end = steady_clock::now();

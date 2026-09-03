@@ -31,6 +31,8 @@ int main(int argc, char **argv) {
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
+    vector<NttPolynomial> gdVntt;
+    prepareGdV(gdVntt, v, param);
 
     BootstrappingKeyMP bskMP{param, param.lApprox};
     COUNT_TIME("genBootstrappingKeyMP", genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);)
@@ -136,7 +138,7 @@ int main(int argc, char **argv) {
     // pipelined lazy key initialization alternative server procedure
     {
         COUNT_TIME("PIPE_LAZY_ALT blindRotate",
-                   blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt, sTlwe, v, param);)
+                   blindRotateLazyPipeAltNtt(out5, bskMPLazyPipeAlt, sTlwe, v, gdVntt, param);)
         COUNT_TIME("PIPE_LAZY_ALT write key",serializeBskLazyPipeAlt(bskMPLazyPipeAlt, "BSK_PIPE_ALT.bin");)
     }
 
@@ -144,7 +146,7 @@ int main(int argc, char **argv) {
         BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAltServer;
         clearFileCache("BSK_PIPE_ALT.bin");
         COUNT_TIME("PIPE_LAZY_ALT_INIT blindRotate",
-                   blindRotateLazyPipeAltInitNtt(out6, bskMPLazyPipeAltServer, sTlwe, v, "BSK_PIPE_ALT.bin", param);)
+                   blindRotateLazyPipeAltInitNtt(out6, bskMPLazyPipeAltServer, sTlwe, v, "BSK_PIPE_ALT.bin", gdVntt, param);)
     }
 
     // WWL24 procedure

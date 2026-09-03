@@ -994,7 +994,7 @@ void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const
 }
 
 void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
-                               const YatfheParameters& param) {
+                               const vector<NttPolynomial>& gdVntt, const YatfheParameters& param) {
     const auto level = param.lApprox;
     const auto n = param.n;
     TrgswMPDft expanded0{param, level};
@@ -1022,11 +1022,13 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
     auto* currB = &b0;
     auto* nextB = &b0;
 
-    // automorphism
-    const auto stageA = [&](const int l) {
-        rotateTrlweMinusOneBPlusOne(holders[l], (*nextB)[l], bskPrime[keyIndex].cPrime[l], rotateBy,
-                                static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
-        gadgetDecomposeTrlweA((*nextDecompA)[l], holders[l].a, param);
+    // automorphism, dispatched as two units of two levels each
+    const auto stageA = [&](const int u) {
+        for (int l = u; l < level; l += 2) {
+            rotateTrlweMinusOneBPlusOne(holders[l], (*nextB)[l], bskPrime[keyIndex].cPrime[l], rotateBy,
+                                    static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
+            gadgetDecomposeTrlweA((*nextDecompA)[l], holders[l].a, param);
+        }
     };
 
     // scheme switching
@@ -1039,22 +1041,9 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
                                            (*currB)[l], s2, param);
     };
 
-    // handle first two key components
-    {
-        pool.run(group, level, stageA);   // keyIndex 0 into decompA0/b0
-
-        Trlwe tmp{param};
-        // Fold the server's LUT into RLEV(s_0).
-        if (!bsk.derivedValid) {
-            deriveFirstComponentNtt(bsk.bskFirstDerived, bsk.bskFirstLev, v, param);
-            bsk.derivedValid = true;
-        }
-        rotateTrlweMinusOne(tmp, bsk.bskFirstDerived, input.a[0]);
-        addTorusPolynomial(tmp.b, tmp.b, v);
-        rotateTrlwe(accum, tmp, -input.b);
-
-        group.wait();
-    }
+    // pre-loop: the NS' of component 2 alone
+    pool.run(group, (level + 1) / 2, stageA);   // keyIndex 0 into decompA0/b0
+    group.wait();
 
     // accumulate on the n - 1 key components
     for (auto i = 0; i < n; i++) {
@@ -1071,9 +1060,19 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
         }
 
         if (i < n - 2) {
-            keyIndex = i + 1;
+            keyIndex = i + 2;
             rotateBy = input.a[i + 2];
-            pool.run(group, level, stageA);
+            pool.run(group, (level + 1) / 2, stageA);
+        }
+
+        if (i == 0) {
+            // First accumulation
+            Trlwe tmp{param};
+            Trlwe derived{param.k, param.N};
+            deriveFirstComponentNtt(derived, bsk.bskPrime[0].cPrime, gdVntt, param);
+            rotateTrlweMinusOne(tmp, derived, input.a[0]);
+            addTorusPolynomial(tmp.b, tmp.b, v);
+            rotateTrlwe(accum, tmp, -input.b);
         }
 
         // accumulation
@@ -1088,8 +1087,194 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
 #endif
 }
 
+void blindRotateLazyPipeAltNttStageA2(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
+                               const vector<NttPolynomial>& gdVntt, const YatfheParameters& param) {
+    const auto level = param.lApprox;
+    const auto n = param.n;
+    TrgswMPDft expanded0{param, level};
+    TrgswMPDft expanded1{param, level};
+    vector decompA0(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
+    vector decompA1(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
+    vector b0(level, TorusPolynomial{param.N});
+    vector b1(level, TorusPolynomial{param.N});
+    auto& pool = ThreadPool::instance();
+    TaskGroup group;
+
+#ifdef TERNARY
+    throw std::runtime_error("blindRotateLazyPipeAltNttStageA2: not implemented for ternary keys");
+#else
+    auto& s2 = bsk.s2Dft;
+    auto& bskPrime = bsk.bskPrime;
+    vector<Trlwe> holders(level, Trlwe{param});
+
+    int keyIndex = 1;
+    int rotateBy = input.a[1];
+    auto* currExpanded = &expanded0;
+    auto* nextExpanded = &expanded1;
+    auto* currDecompA = &decompA0;
+    auto* nextDecompA = &decompA0;
+    auto* currB = &b0;
+    auto* nextB = &b0;
+
+    // automorphism, dispatched as two units of two levels each (A/B arm)
+    const auto stageA = [&](const int u) {
+        for (int l = u; l < level; l += 2) {
+            rotateTrlweMinusOneBPlusOne(holders[l], (*nextB)[l], bskPrime[keyIndex].cPrime[l], rotateBy,
+                                    static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
+            gadgetDecomposeTrlweA((*nextDecompA)[l], holders[l].a, param);
+        }
+    };
+
+    // scheme switching
+    const auto stageB = [&](const int l) {
+        clearTrlwe(nextExpanded->cPrime[l]);
+        for (auto &item: nextExpanded->c[l]) {
+            clearTrlwe(item);
+        }
+        switchTrlweToSecretEmbeddingNttMix(nextExpanded->c[l], nextExpanded->cPrime[l], (*currDecompA)[l],
+                                           (*currB)[l], s2, param);
+    };
+
+    // pre-loop: the NS' of component 2 alone
+    pool.run(group, (level + 1) / 2, stageA);   // keyIndex 0 into decompA0/b0
+    group.wait();
+
+    // accumulate on the n - 1 key components
+    for (auto i = 0; i < n; i++) {
+        const bool even = i % 2 == 0;
+        currExpanded = even ? &expanded0 : &expanded1;
+        nextExpanded = even ? &expanded1 : &expanded0;
+        currDecompA = even ? &decompA0 : &decompA1;
+        nextDecompA = even ? &decompA1 : &decompA0;
+        currB = even ? &b0 : &b1;
+        nextB = even ? &b1 : &b0;
+
+        if (i < n - 1) {
+            pool.run(group, level, stageB);
+        }
+
+        if (i < n - 2) {
+            keyIndex = i + 2;
+            rotateBy = input.a[i + 2];
+            pool.run(group, (level + 1) / 2, stageA);
+        }
+
+        if (i == 0) {
+            // First accumulation
+            Trlwe tmp{param};
+            Trlwe derived{param.k, param.N};
+            deriveFirstComponentNtt(derived, bsk.bskPrime[0].cPrime, gdVntt, param);
+            rotateTrlweMinusOne(tmp, derived, input.a[0]);
+            addTorusPolynomial(tmp.b, tmp.b, v);
+            rotateTrlwe(accum, tmp, -input.b);
+        }
+
+        // accumulation
+        if (i >= 1 && input.a[i] != 0) {
+            externalProductTrgswMPNttInPlace(accum, *currExpanded, level, param);
+        }
+
+        if (i < n - 1) {
+            group.wait();
+        }
+    }
+#endif
+}
+
+// ordinary NS' -> SS' -> EP chain
+void blindRotateLazyPipeAltNoFirstNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input,
+                                      const TorusPolynomial& v, const YatfheParameters& param) {
+    const auto level = param.lApprox;
+    const auto n = param.n;
+    TrgswMPDft expanded0{param, level};
+    TrgswMPDft expanded1{param, level};
+    vector decompA0(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
+    vector decompA1(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
+    vector b0(level, TorusPolynomial{param.N});
+    vector b1(level, TorusPolynomial{param.N});
+    auto& pool = ThreadPool::instance();
+    TaskGroup group;
+
+#ifdef TERNARY
+    throw std::runtime_error("blindRotateLazyPipeAltNoFirstNtt: not implemented for ternary keys");
+#else
+    auto& s2 = bsk.s2Dft;
+    auto& bskPrime = bsk.bskPrime;
+    vector<Trlwe> holders(level, Trlwe{param});
+
+    int keyIndex = 0;
+    int rotateBy = input.a[0];
+    auto* currExpanded = &expanded0;
+    auto* nextExpanded = &expanded1;
+    auto* currDecompA = &decompA0;
+    auto* nextDecompA = &decompA0;
+    auto* currB = &b0;
+    auto* nextB = &b0;
+
+    // automorphism, two units of two levels each
+    const auto stageA = [&](const int u) {
+        for (int l = u; l < level; l += 2) {
+            rotateTrlweMinusOneBPlusOne(holders[l], (*nextB)[l], bskPrime[keyIndex].cPrime[l], rotateBy,
+                                        static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
+            gadgetDecomposeTrlweA((*nextDecompA)[l], holders[l].a, param);
+        }
+    };
+
+    // scheme switching
+    const auto stageB = [&](const int l) {
+        clearTrlwe(nextExpanded->cPrime[l]);
+        for (auto &item: nextExpanded->c[l]) {
+            clearTrlwe(item);
+        }
+        switchTrlweToSecretEmbeddingNttMix(nextExpanded->c[l], nextExpanded->cPrime[l], (*currDecompA)[l],
+                                           (*currB)[l], s2, param);
+    };
+
+    // accumulator init: ACC = X^{-b'}(0, v), as in the classic accumulation.
+    {
+        Trlwe tmp{param};
+        addTorusPolynomial(tmp.b, tmp.b, v);
+        rotateTrlwe(accum, tmp, -input.b);
+    }
+
+    // pre-loop: the NS' of the first key component.
+    pool.run(group, (level + 1) / 2, stageA);   // keyIndex 0 into decompA0/b0
+    group.wait();
+
+    // accumulate on all n key components
+    for (auto i = 0; i <= n; i++) {
+        const bool even = i % 2 == 0;
+        currExpanded = even ? &expanded0 : &expanded1;
+        nextExpanded = even ? &expanded1 : &expanded0;
+        currDecompA = even ? &decompA0 : &decompA1;
+        nextDecompA = even ? &decompA1 : &decompA0;
+        currB = even ? &b0 : &b1;
+        nextB = even ? &b1 : &b0;
+
+        if (i < n) {
+            pool.run(group, level, stageB);
+        }
+
+        if (i < n - 1) {
+            keyIndex = i + 1;
+            rotateBy = input.a[i + 1];
+            pool.run(group, (level + 1) / 2, stageA);
+        }
+
+        // accumulation; iteration i consumes the SS' output of component i.
+        if (i >= 1 && input.a[i - 1] != 0) {
+            externalProductTrgswMPNttInPlace(accum, *currExpanded, level, param);
+        }
+
+        if (i < n) {
+            group.wait();
+        }
+    }
+#endif
+}
+
 void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
-                                   const string& fileName, const YatfheParameters& param) {
+                                   const string& fileName, const vector<NttPolynomial>& gdVntt, const YatfheParameters& param) {
     const auto level = param.lApprox;
     const auto n = param.n;
     TrgswMPDft expanded0{param, level};
@@ -1107,15 +1292,13 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
     throw std::runtime_error("blindRotateLazyPipeAltInitNtt: not implemented for ternary keys");
 #else
     // read keys
-    bsk.bskPrime.resize(n - 1);
-    bsk.derivedValid = false;
-    deserialize(bsk.bskFirstLev, inFile);
+    bsk.bskPrime.resize(n);
     deserialize(bsk.s2Dft, inFile);
     auto& s2 = bsk.s2Dft;
     auto& bskPrime = bsk.bskPrime;
     vector<Trlwe> holders(level, Trlwe{param});
 
-    int keyIndex = 0;
+    int keyIndex = 1;
     int readIndex = 0;
     bool readAhead = false;
     int rotateBy = input.a[1];
@@ -1149,17 +1332,14 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
     // handle first two key components
     {
         deserialize(bskPrime[0], inFile);
-        readIndex = 1;
+        readIndex = 2;
         readAhead = true;
         pool.run(group, level, stageA);
 
         Trlwe tmp{param};
-        // Fold the server's LUT into RLEV(s_0).
-        if (!bsk.derivedValid) {
-            deriveFirstComponentNtt(bsk.bskFirstDerived, bsk.bskFirstLev, v, param);
-            bsk.derivedValid = true;
-        }
-        rotateTrlweMinusOne(tmp, bsk.bskFirstDerived, input.a[0]);
+        Trlwe derived{param.k, param.N};
+        deriveFirstComponentNtt(derived, bsk.bskPrime[0].cPrime, gdVntt, param);
+        rotateTrlweMinusOne(tmp, derived, input.a[0]);
         addTorusPolynomial(tmp.b, tmp.b, v);
         rotateTrlwe(accum, tmp, -input.b);
 
@@ -1183,9 +1363,9 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
 
         // automorphism
         if (i < n - 2) {
-            keyIndex = i + 1;
+            keyIndex = i + 2;
             rotateBy = input.a[i + 2];
-            readIndex = i + 2;
+            readIndex = i + 3;
             readAhead = i < n - 3;
             pool.run(group, level, stageA);
         }

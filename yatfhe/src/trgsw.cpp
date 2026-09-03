@@ -908,8 +908,26 @@ void switchTrlweToSecretEmbeddingNtt(vector<TrlweDft>& cDft, const TrlweDft& cPr
     }
 }
 
+void prepareGdV(vector<NttPolynomial>& gdVntt, const TorusPolynomial& v, const YatfheParameters& param) {
+    const auto L = param.lApprox;
+    const auto N = param.N;
+    gdVntt.assign(L, NttPolynomial{N});
+
+    vector<TorusPolynomial> decomp(L, TorusPolynomial{N});
+    DecomposedData d{L};
+    for (auto j = 0; j < N; j++) {
+        signedGadgetDecomposition(d, v.coeffs[j], param);
+        for (auto lvl = 0; lvl < L; lvl++) {
+            decomp[lvl].coeffs[j] = d.value[lvl] * d.sign;
+        }
+    }
+    for (auto l = 0; l < L; l++) {
+        applyNtt(gdVntt[l], decomp[l]);
+    }
+}
+
 // RLWE(v * s_0) = GD(v) (dot) RLEV(s_0).
-void deriveFirstComponentNtt(Trlwe& out, const Trlev& firstLev, const TorusPolynomial& v, const YatfheParameters& param) {
+void deriveFirstComponentNtt(Trlwe& out, const vector<Trlwe>& firstLev, const vector<NttPolynomial>& gdVntt, const YatfheParameters& param) {
     const auto K = param.k;
     const auto L = param.lApprox;
     const auto N = param.N;
@@ -918,35 +936,20 @@ void deriveFirstComponentNtt(Trlwe& out, const Trlev& firstLev, const TorusPolyn
         out = Trlwe{K, N};
     }
 
-    thread_local vector<TorusPolynomial> decomp;
-    if (decomp.size() != static_cast<size_t>(L) || decomp[0].N != N) {
-        decomp.assign(L, TorusPolynomial{N});
-    }
-    thread_local DecomposedData d{L};
-    if (d.l != L) d = DecomposedData{L};
-    for (auto j = 0; j < N; j++) {
-        signedGadgetDecomposition(d, v.coeffs[j], param);
-        for (auto lvl = 0; lvl < L; lvl++) {
-            decomp[lvl].coeffs[j] = d.value[lvl] * d.sign;
-        }
-    }
-
     thread_local TrlweDft accDft;
     if (accDft.a.size() != static_cast<size_t>(K) || accDft.b.N != N)
         accDft = TrlweDft{K, N};
     clearTrlwe(accDft);
 
-    thread_local NttPolynomial dDft{N};
     thread_local TrlweDft levDft;
     if (levDft.a.size() != static_cast<size_t>(K) || levDft.b.N != N)
         levDft = TrlweDft{K, N};
     for (auto l = 0; l < L; l++) {
-        applyNtt(dDft, decomp[l]);
-        applyNttForAB(levDft, firstLev.trlwes[l]);
+        applyNttForAB(levDft, firstLev[l]);
         for (auto k = 0; k < K; k++) {
-            calModularInnerProductNtt(accDft.a[k], dDft, levDft.a[k]);
+            calModularInnerProductNtt(accDft.a[k], gdVntt[l], levDft.a[k]);
         }
-        calModularInnerProductNtt(accDft.b, dDft, levDft.b);
+        calModularInnerProductNtt(accDft.b, gdVntt[l], levDft.b);
     }
     applyInttForAB(out, accDft);
 }

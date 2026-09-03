@@ -326,17 +326,11 @@ void genBootstrappingKeyMPLazyPipeAlt(BootstrappingKeyMPLazyPipeAlt& bsk, const 
 #else
     auto& pool = ThreadPool::instance();
     vector<future<void>> futures;
-    futures.reserve(bsk.n);  // 1 first-block task + (n-1) loop tasks
+    futures.reserve(bsk.n);
 
-    // First key component: RLEV(s_0)
-    futures.emplace_back(pool.enqueue([&bsk, &trgswKey, &tlweKey, &param] {
-        encTrlevSingleSample(bsk.bskFirstLev, trgswKey.trlweKey, tlweKey.s[0], 0, param);
-    }));
-
-    // process remaining n - 1 components concurrently with the first
-    for (auto i = 0; i < bsk.n - 1; i++) {
+    for (auto i = 0; i < bsk.n; i++) {
         futures.emplace_back(pool.enqueue([i, &bsk, &trgswKey, &tlweKey, &param] {
-            encryptTrgswMP(bsk.bskPrime[i], tlweKey.s[i + 1], trgswKey, 0, param);
+            encryptTrgswMP(bsk.bskPrime[i], tlweKey.s[i], trgswKey, 0, param);
         }));
     }
     for (auto& f : futures) f.wait();

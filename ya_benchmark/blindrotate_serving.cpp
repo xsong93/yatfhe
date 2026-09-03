@@ -693,6 +693,8 @@ int main(int argc, char** argv) {
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     TorusPolynomial v{param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
+    vector<NttPolynomial> gdVntt;
+    prepareGdV(gdVntt, v, param);
 
     const int p = param.torusBase;
     Integer pt = -1;
@@ -711,12 +713,12 @@ int main(int argc, char** argv) {
                 opt, param, pattern, v, input,
                 [&](BootstrappingKeyMPLazyPipeAlt& k, const std::string& f,
                     Trlwe& out, const ScaledTlwe& s) {
-                    blindRotateLazyPipeAltInitNtt(out, k, s, v, f, param);
+                    blindRotateLazyPipeAltInitNtt(out, k, s, v, f, gdVntt, param);
                     return true;
                 },
                 [&](const BootstrappingKeyMPLazyPipeAlt& k, Trlwe& out,
                     const ScaledTlwe& s) {
-                    blindRotateLazyPipeAltNtt(out, k, s, v, param);
+                    blindRotateLazyPipeAltNtt(out, k, s, v, gdVntt, param);
                 });
             break;
         case Method::Tfhe:

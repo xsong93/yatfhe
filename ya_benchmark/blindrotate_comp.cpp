@@ -265,19 +265,21 @@ int main(int argc, char** argv) {
         BootstrappingKeyMPLazyPipeAlt srv;
         deserializeBskLazyPipeAlt(srv, f, param.n);
         Trlwe out{param};
+        vector<NttPolynomial> gdVntt;
+        prepareGdV(gdVntt, v, param);
         auto warm = measureTime(warmReps, [&] {
-            blindRotateLazyPipeAltNtt(out, srv, sTlwe, v, param);
+            blindRotateLazyPipeAltNtt(out, srv, sTlwe, v, gdVntt, param);
         });
         auto cold = measureTime(coldReps, [&] {
             clearFileCache(f);
             BootstrappingKeyMPLazyPipeAlt s2;
             deserializeBskLazyPipeAlt(s2, f, param.n);
-            blindRotateLazyPipeAltNtt(out, s2, sTlwe, v, param);
+            blindRotateLazyPipeAltNtt(out, s2, sTlwe, v, gdVntt, param);
         });
         auto ilv = measureTime(coldReps, [&] {
             clearFileCache(f);
             BootstrappingKeyMPLazyPipeAlt s2;
-            blindRotateLazyPipeAltInitNtt(out, s2, sTlwe, v, f, param);
+            blindRotateLazyPipeAltInitNtt(out, s2, sTlwe, v, f, gdVntt, param);
         });
         record("G", "OURS: pipeline + on-the-fly NTT", "full design", f, warm, cold, ilv);
     }

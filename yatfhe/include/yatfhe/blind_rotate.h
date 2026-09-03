@@ -42,10 +42,21 @@ void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const
                                    const string& fileName, const YatfheParameters& param);
 
 void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
-                               const YatfheParameters& param);
+                               const vector<NttPolynomial>& gdVntt, const YatfheParameters& param);
+
+// A/B arm: the same pipeline with the NS' stage dispatched as two units of
+// two levels each (steady-state contention experiment).
+void blindRotateLazyPipeAltNttStageA2(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input,
+                                      const TorusPolynomial& v, const vector<NttPolynomial>& gdVntt,
+                                      const YatfheParameters& param);
+
+// Ablation arm: the same pipeline without the first-accumulation-step
+// restructure (the first key component goes through NS' -> SS' -> EP).
+void blindRotateLazyPipeAltNoFirstNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input,
+                                      const TorusPolynomial& v, const YatfheParameters& param);
 
 void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
-                                   const string& fileName, const YatfheParameters& param);
+                                   const string& fileName, const vector<NttPolynomial>& gdVntt, const YatfheParameters& param);
 
 void blindRotateExternalGeneralNtt(Trlev& accum, const vector<TrgswMPDft>& trgsws, const ScaledTlwe& input, const YatfheParameters& param);
 
