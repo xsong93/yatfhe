@@ -44,14 +44,17 @@ void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const
 void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
                                const vector<NttPolynomial>& gdVntt, const YatfheParameters& param);
 
-// A/B arm: the same pipeline with the NS' stage dispatched as two units of
-// two levels each (steady-state contention experiment).
+// pipeline with the first moveNtt gadget levels of the a-part decomposition NTT'd in stageA and shipped to stageB
+void blindRotateLazyPipeAltNttSweep(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input,
+                                    const TorusPolynomial& v, const vector<NttPolynomial>& gdVntt, const int moveNtt,
+                                    const int unitsA, const YatfheParameters& param);
+
+// pipeline with the NS' stage dispatched as two units of two levels each.
 void blindRotateLazyPipeAltNttStageA2(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input,
                                       const TorusPolynomial& v, const vector<NttPolynomial>& gdVntt,
                                       const YatfheParameters& param);
 
-// Ablation arm: the same pipeline without the first-accumulation-step
-// restructure (the first key component goes through NS' -> SS' -> EP).
+// pipeline without the first-accumulation-step restructure.
 void blindRotateLazyPipeAltNoFirstNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input,
                                       const TorusPolynomial& v, const YatfheParameters& param);
 

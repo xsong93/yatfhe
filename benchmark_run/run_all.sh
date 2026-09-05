@@ -5,11 +5,11 @@ B="$(cd "$(dirname "$0")" && pwd)"
 OUTDIR="${OUTDIR:-$B/out}"
 say(){ echo "===== $1  $(date -Is) ====="; }
 
-say "1/9 pressure sweep (5 seeds x 6 caps x 1000 req)"
-REQS=1000 SEEDS="1 2 3 4 5" "$B/run_sweep.sh"
+say "1/9 pressure sweep (5 seeds x 6 caps x 2000 req)"
+REQS=2000 SEEDS="1 2 3 4 5" "$B/run_sweep.sh"
 
-say "2/9 component (40 warm / 50 cold)"
-( cd "$B/server" && taskset -c 0-7 ./blindrotate_comp --out="$OUTDIR" --warmreps=40 --coldreps=50 )
+say "2/9 component (100 warm / 100 cold)"
+( cd "$B/server" && taskset -c 0-7 ./blindrotate_comp --out="$OUTDIR" --warmreps=100 --coldreps=100 )
 
 say "3/9 thread scaling + CCD placement"
 "$B/run_threads.sh"

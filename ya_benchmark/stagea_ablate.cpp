@@ -129,16 +129,19 @@ int main(int argc, char** argv) {
 
     json out;
     out["reps"] = reps;
-    out["stageA_4units_ms"] = summarize(a4);
-    out["stageA_2units_ms"] = summarize(a2);
-    out["paired_delta_ms"] = paired(a4, a2);
+    // Arms: a4[] holds blindRotateLazyPipeAltNtt = Sweep(moveNtt=2, unitsA=2)(the shipped warm path)
+    // a2[] holds blindRotateLazyPipeAltNttStageA2 = rotate+GD only, moveNtt=0, unitsA=2.
+    // The paired delta isolates the NTT split (m=0 vs m=2), not the dispatch width.
+    out["shipped_m2_u2_ms"] = summarize(a4);
+    out["m0_u2_ms"] = summarize(a2);
+    out["paired_delta_ms"] = paired(a2, a4);  // positive = shipped (m2) faster
     const auto& d = out["paired_delta_ms"];
-    printf("stageA4 %.3f  stageA2 %.3f  delta(A4-A2) %.4f +/- %.4f ms (medians: %.3f / %.3f)\n",
-           out["stageA_4units_ms"]["median_ms"].get<double>(),
-           out["stageA_2units_ms"]["median_ms"].get<double>(),
+    printf("shipped(m2,u2) %.3f  m0,u2 %.3f  delta(m0-shipped) %.4f +/- %.4f ms (medians: %.3f / %.3f)\n",
+           out["shipped_m2_u2_ms"]["median_ms"].get<double>(),
+           out["m0_u2_ms"]["median_ms"].get<double>(),
            d["mean_ms"].get<double>(), d["se_ms"].get<double>(),
-           out["stageA_4units_ms"]["median_ms"].get<double>(),
-           out["stageA_2units_ms"]["median_ms"].get<double>());
+           out["shipped_m2_u2_ms"]["median_ms"].get<double>(),
+           out["m0_u2_ms"]["median_ms"].get<double>());
 
     const std::string path = yabench::benchOutPath("stagea_results.json");
     std::ofstream ofs(path);

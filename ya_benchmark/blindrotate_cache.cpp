@@ -271,10 +271,19 @@ void benchPipe(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     rescaleTlweToNewMod(sTlwe, input);
     Trlwe out{param};
 
-    // warm up
+    // warm up: pre-touch every tenant once, then the Zipf warm-up sequence.
     cout << "warm up" << endl;
+    for (int id = 1; id <= cfg.users; id++) {
+        cache.getLazyKey(id);
+    }
     for (long i = 0; i < cfg.warmupRequests; i++) {
         cache.getLazyKey(accessPattern[i]);
+    }
+    // settle the compute path before the measured window
+    if (auto* key = cache.getLazyKeySimple(1)) {
+        for (int k = 0; k < 20; k++) {
+            blindRotateLazyPipeAltNtt(out, *key, sTlwe, v, gdVntt, param);
+        }
     }
     cache.resetStats();
 
@@ -319,10 +328,20 @@ void benchGinx(const Tlwe& input, const YatfheParameters& param, SimpleCacheMana
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
 
-    // warm up
+    // warm up: pre-touch every tenant once, then the Zipf warm-up sequence.
     cout << "warm up" << endl;
+    for (int id = 1; id <= cfg.users; id++) {
+        cache.getGinxKey(id);
+    }
     for (long i = 0; i < cfg.warmupRequests; i++) {
         cache.getGinxKey(accessPattern[i]);
+    }
+    // settle the compute path before the measured window
+    if (auto* key = cache.getGinxKeySimple(1)) {
+        for (int k = 0; k < 20; k++) {
+            genNoiselessTrlweSample(acc, v, sTlwe);
+            blindRotateJP22Ntt(acc, *key, sTlwe, param);
+        }
     }
     cache.resetStats();
 
@@ -369,10 +388,20 @@ void benchWWL24(const Tlwe& input, const YatfheParameters& param, SimpleCacheMan
     TorusPolynomial v {param.N};
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
 
-    // warm up
+    // warm up: pre-touch every tenant once, then the Zipf warm-up sequence.
     cout << "warm up" << endl;
+    for (int id = 1; id <= cfg.users; id++) {
+        cache.getWWL24Key(id);
+    }
     for (long i = 0; i < cfg.warmupRequests; i++) {
         cache.getWWL24Key(accessPattern[i]);
+    }
+    // settle the compute path before the measured window
+    if (auto* key = cache.getWWL24KeySimple(1)) {
+        for (int k = 0; k < 20; k++) {
+            genNoiselessTrlweSample(acc, v, sTlwe);
+            blindRotateWWL24Ntt(acc, *key, sTlwe, param);
+        }
     }
     cache.resetStats();
 

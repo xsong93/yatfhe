@@ -59,7 +59,7 @@ def _bf(s):
 # ---------------------------------------------------------------- Table II ---
 
 def performance(outdir):
-    rows, n_per_cell = [], None
+    rows, n_per_cell = [], {}
     for cap, label in CAPS:
         cell = {}
         for stem, name in METHODS:
@@ -69,7 +69,7 @@ def performance(outdir):
             cell[name] = dict(hr=hit.mean(), avg=lat.mean(), sd=lat.std(ddof=1),
                               p50=np.percentile(lat, 50), p99=np.percentile(lat, 99),
                               p999=np.percentile(lat, 99.9), n=len(lat))
-            n_per_cell = len(lat)
+            n_per_cell[cap] = len(lat)
         rows.append((label, cell))
 
     out = [r"\begin{table*}[!t]", r"    \centering",
@@ -110,9 +110,18 @@ def performance(outdir):
             out.append(f"{head} & {name:6s} & {c['hr']:.2f} & {avg} & {sd} "
                        f"& {_fmt(c['p50'])} & {p99} & {p999} \\\\")
 
+    counts = sorted(set(n_per_cell.values()))
+    if len(counts) == 1:
+        note = (r"Five seeds of " + f"{counts[0] // 5}" +
+                r" requests per cell ($n=" + f"{counts[0]}" + r"$).")
+    else:
+        big = max(counts)
+        note = (r"Five seeds of " + f"{big // 5}" +
+                r" requests per cell at the two resident pressures "
+                r"(1.0 and 2.5) and " + f"{min(counts) // 5}" +
+                r" otherwise ($n=" + f"{big}" + r" / " + f"{min(counts)}" + r"$).")
     out += [r"        \bottomrule", r"    \end{tabular}",
-            r"    \tabnote{Five seeds of 1000 requests per cell ($n=" +
-            f"{n_per_cell}" + r"$). Parenthesised",
+            r"    \tabnote{" + note + r" Parenthesised",
             r"    factors give each method's standard deviation relative to ours.}",
             r"\end{table*}"]
     return "\n".join(out), None
@@ -122,12 +131,10 @@ def performance(outdir):
 
 ABL_LABEL = {
     "A": "GINX/CGGI baseline",
-    "B": r"\quad + first-key restructure",
     "C": r"\cite{WWL+24} succinct key",
     "D": r"\quad + on-the-fly NTT",
     "E": r"\quad + parallel expansion (Alg.~S1)",
-    "F": r"\quad + pipeline overlap",
-    "G": r"\textbf{OURS} (E + on-the-fly NTT)",
+    "G": r"\textbf{OURS} (C + pipeline overlap)",
 }
 
 
@@ -143,19 +150,20 @@ def ablation(outdir):
            r"    \begin{tabular}{clrrr}", r"        \toprule",
            r"        & \textbf{Configuration} & \textbf{Key (MB)} & "
            r"\textbf{Warm} & \textbf{Cold} \\", r"        \midrule"]
-    # Rung B (the retired embedded first-key construction) is not part of the
-    # shipped design and is excluded; the remaining rungs are relabeled A-F.
-    relabel = {"C": "B", "D": "C", "E": "D", "F": "E", "G": "F"}
-    for i in "ACDEFG":
+    # Rungs B (retired embedded first-key construction) and F (retired
+    # pre-stored GD-decomposition pipeline) are not part of the shipped
+    # design and are excluded; the remaining rungs are relabeled A-E.
+    relabel = {"C": "B", "D": "C", "E": "D", "G": "E"}
+    for i in "ACDEG":
         if i not in d:
             continue
         j = relabel.get(i, i)
         k, w, c = f"{d[i]['key_mb']:.2f}", _fmt(med(i, 'warm'), 2), _fmt(med(i, 'cold'), 2)
-        if j == "F":
+        if i == "G":
             k, w, c = _bf(k), _bf(w), _bf(c)
         out.append(f"        {j} & {ABL_LABEL[i]} & {k} & {w} & {c} \\\\")
 
-    ilv = [i for i in "FG" if i in d and "interleaved" in d[i]]
+    ilv = [i for i in "G" if i in d and "interleaved" in d[i]]
     if ilv:
         out += [r"        \midrule",
                 r"        \multicolumn{5}{l}{\textit{with key-loading interleaved "
@@ -165,8 +173,8 @@ def ablation(outdir):
             k = f"{d[i]['key_mb']:.2f}"
             w = _fmt(med(i, "warm"), 2)
             c = _fmt(d[i]["interleaved"]["median_ms"], 2)
-            name = r"\textbf{OURS}" if j == "F" else "pipeline overlap"
-            if j == "F":
+            name = r"\textbf{OURS}" if i == "G" else "pipeline overlap"
+            if i == "G":
                 k, w, c = _bf(k), _bf(w), _bf(c)
             out.append(f"        {j} & {name} & {k} & {w} & {c} \\\\")
 

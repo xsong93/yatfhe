@@ -142,27 +142,6 @@ int main(int argc, char** argv) {
         record("A", "TFHE (GINX) baseline", "none", f, warm, cold, {});
     }
 
-    // first-key restructuring
-    {
-        const std::string f = "COMP_B_GINX_OPT.bin";
-        BootstrappingKeyMPOpt key{param, param.lApprox, false};
-        genBootstrappingKeyMPOpt(key, trgswKey, tlweKey, v, param);
-        serializeBskMPOpt(key, f);
-        BootstrappingKeyMPOpt srv;
-        deserializeBskMPOpt(srv, f, param.n);
-        Trlwe out{param};
-        auto warm = measureTime(warmReps, [&] {
-            blindRotateOptNtt(out, srv.bskFirst, srv.bskDft, sTlwe, v, param);
-        });
-        auto cold = measureTime(coldReps, [&] {
-            clearFileCache(f);
-            BootstrappingKeyMPOpt s2;
-            deserializeBskMPOpt(s2, f, param.n);
-            blindRotateOptNtt(out, s2.bskFirst, s2.bskDft, sTlwe, v, param);
-        });
-        record("B", "+ first-key restructuring", "test polynomial embedded", f, warm, cold, {});
-    }
-
     // WWL+24
     {
         const std::string f = "COMP_C_WWL24.bin";
@@ -228,32 +207,6 @@ int main(int argc, char** argv) {
             blindRotateLazyMTNtt(out, srv.bskFirst, srv.bskTrim, srv.bskDecompA, sTlwe, v, s2Src.s2Dft, param);
         });
         record("E", "+ naive parallel expansion (Alg. 3)", "expansion off critical path via threads", f, warm, cold, {});
-    }
-
-    // pipeline overlap, NTT-domain key
-    {
-        const std::string f = "COMP_F_PIPE.bin";
-        BootstrappingKeyMPLazyPipe key{param, param.lApprox, true, true};
-        genBootstrappingKeyMPLazyPipe(key, trgswKey, tlweKey, v, param);
-        serializeBskLazyPipe(key, f);
-        BootstrappingKeyMPLazyPipe srv;
-        deserializeBskLazyPipe(srv, f, param.n);
-        Trlwe out{param};
-        auto warm = measureTime(warmReps, [&] {
-            blindRotateLazyPipeNtt(out, srv, sTlwe, v, param);
-        });
-        auto cold = measureTime(coldReps, [&] {
-            clearFileCache(f);
-            BootstrappingKeyMPLazyPipe s2;
-            deserializeBskLazyPipe(s2, f, param.n);
-            blindRotateLazyPipeNtt(out, s2, sTlwe, v, param);
-        });
-        auto ilv = measureTime(coldReps, [&] {
-            clearFileCache(f);
-            BootstrappingKeyMPLazyPipe s2;
-            blindRotatePipeInitNtt(out, s2, sTlwe, v, f, param);
-        });
-        record("F", "+ pipeline overlap", "3-stage pipeline, NTT-domain key", f, warm, cold, ilv);
     }
 
     // OURS = pipeline + on-the-fly NTT

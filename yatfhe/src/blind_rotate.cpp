@@ -993,8 +993,15 @@ void blindRotatePipeInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipe& bsk, const
 #endif
 }
 
-void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
-                               const vector<NttPolynomial>& gdVntt, const YatfheParameters& param) {
+void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input,
+                               const TorusPolynomial& v, const vector<NttPolynomial>& gdVntt,
+                               const YatfheParameters& param) {
+    blindRotateLazyPipeAltNttSweep(accum, bsk, input, v, gdVntt, 2, 2, param);
+}
+
+void blindRotateLazyPipeAltNttSweep(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input, const TorusPolynomial& v,
+                               const vector<NttPolynomial>& gdVntt, const int moveNtt, const int unitsA,
+                               const YatfheParameters& param) {
     const auto level = param.lApprox;
     const auto n = param.n;
     TrgswMPDft expanded0{param, level};
@@ -1003,31 +1010,40 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
     vector decompA1(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
     vector b0(level, TorusPolynomial{param.N});
     vector b1(level, TorusPolynomial{param.N});
+    vector decompADft0(level, vector(moveNtt, vector(param.k, NttPolynomial{param.N})));
+    vector decompADft1(level, vector(moveNtt, vector(param.k, NttPolynomial{param.N})));
     auto& pool = ThreadPool::instance();
     TaskGroup group;
 
 #ifdef TERNARY
-    throw std::runtime_error("blindRotateLazyPipeAltNtt: not implemented for ternary keys");
+    throw std::runtime_error("blindRotateLazyPipeAltNttSweep: not implemented for ternary keys");
 #else
     auto& s2 = bsk.s2Dft;
     auto& bskPrime = bsk.bskPrime;
     vector<Trlwe> holders(level, Trlwe{param});
 
-    int keyIndex = 0;
+    int keyIndex = 1;
     int rotateBy = input.a[1];
     auto* currExpanded = &expanded0;
     auto* nextExpanded = &expanded1;
     auto* currDecompA = &decompA0;
     auto* nextDecompA = &decompA0;
+    auto* currDecompADft = &decompADft0;
+    auto* nextDecompADft = &decompADft0;
     auto* currB = &b0;
     auto* nextB = &b0;
 
-    // automorphism, dispatched as two units of two levels each
+    // automorphism
     const auto stageA = [&](const int u) {
-        for (int l = u; l < level; l += 2) {
+        for (int l = u; l < level; l += unitsA) {
             rotateTrlweMinusOneBPlusOne(holders[l], (*nextB)[l], bskPrime[keyIndex].cPrime[l], rotateBy,
                                     static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
             gadgetDecomposeTrlweA((*nextDecompA)[l], holders[l].a, param);
+            for (int gl = 0; gl < moveNtt; gl++) {
+                for (int k1 = 0; k1 < param.k; k1++) {
+                    NttHexl::applyNtt((*nextDecompADft)[l][gl][k1], (*nextDecompA)[l][gl][k1]);
+                }
+            }
         }
     };
 
@@ -1037,12 +1053,41 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
         for (auto &item: nextExpanded->c[l]) {
             clearTrlwe(item);
         }
-        switchTrlweToSecretEmbeddingNttMix(nextExpanded->c[l], nextExpanded->cPrime[l], (*currDecompA)[l],
-                                           (*currB)[l], s2, param);
+        const auto K = param.k;
+        const auto L = param.l;
+        thread_local NttPolynomial aDft;
+        if (aDft.N != param.N) aDft = NttPolynomial{param.N};
+        auto& cDft = nextExpanded->c[l];
+        auto& cPrimeDft = nextExpanded->cPrime[l];
+        auto& decompA = (*currDecompA)[l];
+        auto& decompADft = (*currDecompADft)[l];
+        for (auto gl = 0; gl < L; gl++) {
+            auto& s2l = s2.trlweDfts[gl];
+            for (auto k1 = 0; k1 < K; k1++) {
+                const NttPolynomial* aSrc;
+                if (gl < moveNtt) {
+                    aSrc = &decompADft[gl][k1];
+                } else {
+                    NttHexl::applyNtt(aDft, decompA[gl][k1]);
+                    aSrc = &aDft;
+                }
+                NttHexl::calModularInnerProductNtt(cPrimeDft.a[k1], *aSrc, NttHexl::getNttGadgetRecomper(gl));
+                for (auto k2 = 0; k2 < K; k2++) {
+                    NttHexl::calModularInnerProductNtt(cDft[k1].a[k2], *aSrc, s2l.a[k2]);
+                }
+                NttHexl::calModularInnerProductNtt(cDft[k1].b, *aSrc, s2l.b);
+            }
+        }
+        NttHexl::applyNtt(cPrimeDft.b, (*currB)[l]);
+        for (auto k1 = 0; k1 < K; k1++) {
+            for (auto k2 = 0; k2 < K; k2++) {
+                NttHexl::addNttPolynomial(cDft[k1].a[k2], cDft[k1].a[k2], cPrimeDft.b);
+            }
+        }
     };
 
     // pre-loop: the NS' of component 2 alone
-    pool.run(group, (level + 1) / 2, stageA);   // keyIndex 0 into decompA0/b0
+    pool.run(group, unitsA, stageA);   // keyIndex 1 into decompA0/b0
     group.wait();
 
     // accumulate on the n - 1 key components
@@ -1052,6 +1097,8 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
         nextExpanded = even ? &expanded1 : &expanded0;
         currDecompA = even ? &decompA0 : &decompA1;
         nextDecompA = even ? &decompA1 : &decompA0;
+        currDecompADft = even ? &decompADft0 : &decompADft1;
+        nextDecompADft = even ? &decompADft1 : &decompADft0;
         currB = even ? &b0 : &b1;
         nextB = even ? &b1 : &b0;
 
@@ -1062,7 +1109,7 @@ void blindRotateLazyPipeAltNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt
         if (i < n - 2) {
             keyIndex = i + 2;
             rotateBy = input.a[i + 2];
-            pool.run(group, (level + 1) / 2, stageA);
+            pool.run(group, unitsA, stageA);
         }
 
         if (i == 0) {
@@ -1192,6 +1239,9 @@ void blindRotateLazyPipeAltNoFirstNtt(Trlwe& accum, const BootstrappingKeyMPLazy
     vector decompA1(level, vector(param.l, vector(param.k, DecompPolynomial{param.N})));
     vector b0(level, TorusPolynomial{param.N});
     vector b1(level, TorusPolynomial{param.N});
+    constexpr int moveNtt = 2;
+    vector decompADft0(level, vector(moveNtt, vector(param.k, NttPolynomial{param.N})));
+    vector decompADft1(level, vector(moveNtt, vector(param.k, NttPolynomial{param.N})));
     auto& pool = ThreadPool::instance();
     TaskGroup group;
 
@@ -1208,26 +1258,63 @@ void blindRotateLazyPipeAltNoFirstNtt(Trlwe& accum, const BootstrappingKeyMPLazy
     auto* nextExpanded = &expanded1;
     auto* currDecompA = &decompA0;
     auto* nextDecompA = &decompA0;
+    auto* currDecompADft = &decompADft0;
+    auto* nextDecompADft = &decompADft0;
     auto* currB = &b0;
     auto* nextB = &b0;
 
-    // automorphism, two units of two levels each
+    // automorphism, two units of two levels each; the first two gadget levels
+    // of the a-part decomposition are NTT'd here, as in the shipped pipeline.
     const auto stageA = [&](const int u) {
         for (int l = u; l < level; l += 2) {
             rotateTrlweMinusOneBPlusOne(holders[l], (*nextB)[l], bskPrime[keyIndex].cPrime[l], rotateBy,
                                         static_cast<Torus>(1) << (param.torusBits - (l + 1) * param.radixBits));
             gadgetDecomposeTrlweA((*nextDecompA)[l], holders[l].a, param);
+            for (int gl = 0; gl < moveNtt; gl++) {
+                for (int k1 = 0; k1 < param.k; k1++) {
+                    NttHexl::applyNtt((*nextDecompADft)[l][gl][k1], (*nextDecompA)[l][gl][k1]);
+                }
+            }
         }
     };
 
-    // scheme switching
+    // scheme switching; the moved decomposition levels arrive pre-NTT'd
     const auto stageB = [&](const int l) {
         clearTrlwe(nextExpanded->cPrime[l]);
         for (auto &item: nextExpanded->c[l]) {
             clearTrlwe(item);
         }
-        switchTrlweToSecretEmbeddingNttMix(nextExpanded->c[l], nextExpanded->cPrime[l], (*currDecompA)[l],
-                                           (*currB)[l], s2, param);
+        const auto K = param.k;
+        const auto L = param.l;
+        thread_local NttPolynomial aDft;
+        if (aDft.N != param.N) aDft = NttPolynomial{param.N};
+        auto& cDft = nextExpanded->c[l];
+        auto& cPrimeDft = nextExpanded->cPrime[l];
+        auto& decompA = (*currDecompA)[l];
+        auto& decompADft = (*currDecompADft)[l];
+        for (auto gl = 0; gl < L; gl++) {
+            auto& s2l = s2.trlweDfts[gl];
+            for (auto k1 = 0; k1 < K; k1++) {
+                const NttPolynomial* aSrc;
+                if (gl < moveNtt) {
+                    aSrc = &decompADft[gl][k1];
+                } else {
+                    NttHexl::applyNtt(aDft, decompA[gl][k1]);
+                    aSrc = &aDft;
+                }
+                NttHexl::calModularInnerProductNtt(cPrimeDft.a[k1], *aSrc, NttHexl::getNttGadgetRecomper(gl));
+                for (auto k2 = 0; k2 < K; k2++) {
+                    NttHexl::calModularInnerProductNtt(cDft[k1].a[k2], *aSrc, s2l.a[k2]);
+                }
+                NttHexl::calModularInnerProductNtt(cDft[k1].b, *aSrc, s2l.b);
+            }
+        }
+        NttHexl::applyNtt(cPrimeDft.b, (*currB)[l]);
+        for (auto k1 = 0; k1 < K; k1++) {
+            for (auto k2 = 0; k2 < K; k2++) {
+                NttHexl::addNttPolynomial(cDft[k1].a[k2], cDft[k1].a[k2], cPrimeDft.b);
+            }
+        }
     };
 
     // accumulator init: ACC = X^{-b'}(0, v), as in the classic accumulation.
@@ -1248,6 +1335,8 @@ void blindRotateLazyPipeAltNoFirstNtt(Trlwe& accum, const BootstrappingKeyMPLazy
         nextExpanded = even ? &expanded1 : &expanded0;
         currDecompA = even ? &decompA0 : &decompA1;
         nextDecompA = even ? &decompA1 : &decompA0;
+        currDecompADft = even ? &decompADft0 : &decompADft1;
+        nextDecompADft = even ? &decompADft1 : &decompADft0;
         currB = even ? &b0 : &b1;
         nextB = even ? &b1 : &b0;
 
@@ -1332,6 +1421,7 @@ void blindRotateLazyPipeAltInitNtt(Trlwe& accum, BootstrappingKeyMPLazyPipeAlt& 
     // handle first two key components
     {
         deserialize(bskPrime[0], inFile);
+        deserialize(bskPrime[1], inFile);
         readIndex = 2;
         readAhead = true;
         pool.run(group, level, stageA);
