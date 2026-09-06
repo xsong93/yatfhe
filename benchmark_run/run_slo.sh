@@ -24,7 +24,7 @@ SLO="${SLO:-300}"
 declare -A CAP=(   [tfhe]=10        [wwl24]=20        [ours]=40      )
 
 # override with e.g. RATES_ours="30 40 50"
-declare -A RATES=( [ours]="40 50 60" [wwl24]="16 12 8" [tfhe]="8 5" )
+declare -A RATES=( [ours]="40 50 60 62 64" [wwl24]="8 12 16 18" [tfhe]="5 8" )
 
 for m in ours wwl24 tfhe; do
     v="RATES_$m"

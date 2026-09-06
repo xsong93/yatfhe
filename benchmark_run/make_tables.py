@@ -226,32 +226,40 @@ def storage(outdir):
                    f"{_fmt(v['WWL+24'])} & {_bf(_fmt(v['OURS']))} "
                    f"(${ratio:.1f}\\times$) \\\\")
 
-    cap, att = slo_capacity(outdir)
+    cap, att = slo_capacity(outdir, "slo8k")
+    bcap, batt = slo_capacity(outdir, "slo_burst")
     out += [r"        \midrule",
             r"        \multicolumn{5}{l}{\textit{open-loop capacity at a "
             r"300\,ms P99.9 budget:}} \\",
-            f"        Capacity     &  & {cap['GINX']}   & {cap['WWL+24']}     "
+            f"        Capacity, Poisson      &  & {cap['GINX']}   & {cap['WWL+24']}     "
             f"& {_bf(str(cap['OURS']))} \\\\",
-            f"        P99.9 there  &  & {att['GINX']} & {att['WWL+24']} "
+            f"        P99.9 at capacity      &  & {att['GINX']} & {att['WWL+24']} "
             f"& {att['OURS']} \\\\",
+            f"        Capacity, bursty       &  & {bcap['GINX']}   & {bcap['WWL+24']}     "
+            f"& {_bf(str(bcap['OURS']))} \\\\",
+            f"        P99.9 at capacity      &  & {batt['GINX']} & {batt['WWL+24']} "
+            f"& {batt['OURS']} \\\\",
             r"        \bottomrule", r"    \end{tabular}",
             r"    \tabnote{Latency in ms at pressure ratio 5. Capacity in req/s "
             r"at a 300\,ms",
-            r"    P99.9 budget, 8000 requests per rate point.",
+            r"    P99.9 budget, 8000 requests per rate point. Bursty arrivals: "
+            r"a $4\times$",
+            r"    on-phase (200\,ms) and a $0.25\times$ off-phase (800\,ms).",
             r"    $^\ast$Buffered sequential read, the path the key deserialiser "
             r"uses; the NVMe",
             r"    reaches $2.0$--$2.9$\,GB/s under \texttt{O\_DIRECT}.",
             r"    $^\dagger$GINX misses the budget at every rate we could "
             r"measure; " + att["GINX"].split("$")[0] + r"\,ms is its",
-            r"    value at 5\,req/s.}", r"\end{table}"]
+            r"    value at 5\,req/s under Poisson, and its bursty run at "
+            r"5\,req/s did not converge.}", r"\end{table}"]
     return "\n".join(out), None
 
 
-def slo_capacity(outdir):
+def slo_capacity(outdir, tag):
     """Highest offered rate whose P99.9 meets the budget, per method."""
     seen = {}
-    for f in glob.glob(os.path.join(outdir, "serving_*_slo8k_r*.json")):
-        m = re.search(r"serving_(.+?)_slo8k_r(\d+)\.json", os.path.basename(f))
+    for f in glob.glob(os.path.join(outdir, f"serving_*_{tag}_r*.json")):
+        m = re.search(rf"serving_(.+?)_{tag}_r(\d+)\.json", os.path.basename(f))
         if not m:
             continue
         j = json.load(open(f))
@@ -264,10 +272,13 @@ def slo_capacity(outdir):
         if ok:
             r, p = max(ok)
             cap[name], att[name] = r, f"{p:.0f}"
-        else:
-            lowest = min(pts)[1] if pts else float("nan")
+        elif pts:
+            lowest = min(pts)[1]
             cap[name] = "$<5$"
             att[name] = f"{lowest:.0f}$^\\dagger$"
+        else:
+            cap[name] = "$<5$"
+            att[name] = "---$^\\dagger$"
     return cap, att
 
 
