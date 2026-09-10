@@ -49,11 +49,6 @@ void blindRotateLazyPipeAltNttSweep(Trlwe& accum, const BootstrappingKeyMPLazyPi
                                     const TorusPolynomial& v, const vector<NttPolynomial>& gdVntt, const int moveNtt,
                                     const int unitsA, const YatfheParameters& param);
 
-// pipeline with the NS' stage dispatched as two units of two levels each.
-void blindRotateLazyPipeAltNttStageA2(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input,
-                                      const TorusPolynomial& v, const vector<NttPolynomial>& gdVntt,
-                                      const YatfheParameters& param);
-
 // pipeline without the first-accumulation-step restructure.
 void blindRotateLazyPipeAltNoFirstNtt(Trlwe& accum, const BootstrappingKeyMPLazyPipeAlt& bsk, const ScaledTlwe& input,
                                       const TorusPolynomial& v, const YatfheParameters& param);

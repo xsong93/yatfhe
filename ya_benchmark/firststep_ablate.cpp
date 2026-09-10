@@ -45,11 +45,13 @@ static json summarize(const std::vector<double>& v) {
     return o;
 }
 
-// paired plain-minus-restructured deltas with SE
+// paired restructured-minus-plain deltas with SE
 static json paired(const std::vector<double>& plain, const std::vector<double>& restruct) {
     const auto m = std::min(plain.size(), restruct.size());
     std::vector<double> d(m);
-    for (size_t i = 0; i < m; i++) d[i] = plain[i] - restruct[i];
+    for (size_t i = 0; i < m; i++) {
+        d[i] = restruct[i] - plain[i];
+    }
     json o = summarize(d);
     double mean = o["mean_ms"].get<double>();
     double se = o["sd_ms"].get<double>() / std::sqrt(static_cast<double>(m));

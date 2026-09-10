@@ -6,6 +6,7 @@
 #include <functional>
 #include "yautil/multi_threading.h"
 
+#include <cstdlib>
 #include <iostream>
 
 #ifdef __linux__
@@ -19,6 +20,11 @@ namespace {
 bool ThreadPool::onWorkerThread() { return insideWorker; }
 
 unsigned ThreadPool::usableConcurrency() {
+    // Explicit override, e.g. YATFHE_THREADS=7 taskset -c 0-7.
+    if (const char* env = std::getenv("YATFHE_THREADS")) {
+        const int n = std::atoi(env);
+        if (n > 0) return static_cast<unsigned>(n);
+    }
 #ifdef __linux__
     cpu_set_t set;
     CPU_ZERO(&set);

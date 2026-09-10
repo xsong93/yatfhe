@@ -64,6 +64,7 @@ static std::vector<double> measureTime(const int reps, F&& body) {
 int main(int argc, char** argv) {
     int warmReps = 30;
     int coldReps = 15;
+    std::string keyPrefix;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
         if (a.rfind("--warmreps=", 0) == 0)
@@ -72,7 +73,13 @@ int main(int argc, char** argv) {
             coldReps = std::atoi(a.c_str() + 11);
         if (a.rfind("--out=", 0) == 0)
             yabench::setBenchOutDir(a.substr(6));
+        if (a.rfind("--keyprefix=", 0) == 0)
+            keyPrefix = a.substr(12);
     }
+    // With --keyprefix, key files are read from the given directory and never regenerated or rewritten.
+    const auto keyPath = [&](const std::string& name) {
+        return keyPrefix.empty() ? name : (keyPrefix + "/" + name);
+    };
 
     YatfheParameters param{};
     initYatfhe(param);
@@ -122,10 +129,12 @@ int main(int argc, char** argv) {
 
     // TFHE / GINX baseline
     {
-        const std::string f = "COMP_A_GINX.bin";
-        BootstrappingKeyMP key{param, param.lApprox};
-        genBootstrappingKeyMP(key, trgswKey, tlweKey, param);
-        serializeBskMP(key, f);
+        const std::string f = keyPath("COMP_A_GINX.bin");
+        if (keyPrefix.empty()) {
+            BootstrappingKeyMP key{param, param.lApprox};
+            genBootstrappingKeyMP(key, trgswKey, tlweKey, param);
+            serializeBskMP(key, f);
+        }
         BootstrappingKeyMP srv;
         deserializeBskMP(srv, f, param.n);
         auto warm = measureTime(warmReps, [&] {
@@ -144,10 +153,12 @@ int main(int argc, char** argv) {
 
     // WWL+24
     {
-        const std::string f = "COMP_C_WWL24.bin";
-        BootstrappingKeyWWL24 key{param, param.lApprox};
-        genBootstrappingKeyWWL24(key, trgswKey, tlweKey, param);
-        serializeBskWWL24(key, f);
+        const std::string f = keyPath("COMP_C_WWL24.bin");
+        if (keyPrefix.empty()) {
+            BootstrappingKeyWWL24 key{param, param.lApprox};
+            genBootstrappingKeyWWL24(key, trgswKey, tlweKey, param);
+            serializeBskWWL24(key, f);
+        }
         BootstrappingKeyWWL24 srv;
         deserializeBskWWL24(srv, f, param.n);
         auto warm = measureTime(warmReps, [&] {
@@ -166,10 +177,12 @@ int main(int argc, char** argv) {
 
     // on-the-fly NTT
     {
-        const std::string f = "COMP_D_WWL24_ALT.bin";
-        BootstrappingKeyWWL24Alt key{param, param.lApprox};
-        genBootstrappingKeyWWL24Alt(key, trgswKey, tlweKey, param);
-        serializeBskWWL24Alt(key, f);
+        const std::string f = keyPath("COMP_D_WWL24_ALT.bin");
+        if (keyPrefix.empty()) {
+            BootstrappingKeyWWL24Alt key{param, param.lApprox};
+            genBootstrappingKeyWWL24Alt(key, trgswKey, tlweKey, param);
+            serializeBskWWL24Alt(key, f);
+        }
         BootstrappingKeyWWL24Alt srv;
         deserializeBskWWL24Alt(srv, f, param.n);
         auto warm = measureTime(warmReps, [&] {
@@ -188,10 +201,12 @@ int main(int argc, char** argv) {
 
     // restructuring + naive parallel expansion (Alg. 3)
     {
-        const std::string f = "COMP_E_PAR_LAZY.bin";
-        BootstrappingKeyMPLazy key{param, param.lApprox, true, true};
-        genBootstrappingKeyMPLazy(key, trgswKey, tlweKey, v, param);
-        serializeBskMPLazy(key, f);
+        const std::string f = keyPath("COMP_E_PAR_LAZY.bin");
+        if (keyPrefix.empty()) {
+            BootstrappingKeyMPLazy key{param, param.lApprox, true, true};
+            genBootstrappingKeyMPLazy(key, trgswKey, tlweKey, v, param);
+            serializeBskMPLazy(key, f);
+        }
         BootstrappingKeyMPLazyPipeAlt s2Src{param, param.lApprox, true};
         genBootstrappingKeyMPLazyPipeAlt(s2Src, trgswKey, tlweKey, param);
         Trlwe out{param};
@@ -211,10 +226,12 @@ int main(int argc, char** argv) {
 
     // OURS = pipeline + on-the-fly NTT
     {
-        const std::string f = "COMP_G_PIPE_ALT.bin";
-        BootstrappingKeyMPLazyPipeAlt key{param, param.lApprox, true};
-        genBootstrappingKeyMPLazyPipeAlt(key, trgswKey, tlweKey, param);
-        serializeBskLazyPipeAlt(key, f);
+        const std::string f = keyPath("COMP_G_PIPE_ALT.bin");
+        if (keyPrefix.empty()) {
+            BootstrappingKeyMPLazyPipeAlt key{param, param.lApprox, true};
+            genBootstrappingKeyMPLazyPipeAlt(key, trgswKey, tlweKey, param);
+            serializeBskLazyPipeAlt(key, f);
+        }
         BootstrappingKeyMPLazyPipeAlt srv;
         deserializeBskLazyPipeAlt(srv, f, param.n);
         Trlwe out{param};

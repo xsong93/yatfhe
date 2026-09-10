@@ -19,7 +19,12 @@ run() {  # run <label> <cpulist>
 # scaling within the V-Cache CCD
 run t1  0
 run t2  0-1
+run t3  0-2
 run t4  0-3
+run t5  0-4
+run t6  0-5
+run t7  0-6
+YATFHE_THREADS=7 run t7w8 0-7
 run t8  0-7
 # placement at 8 threads
 run t8b 8-15

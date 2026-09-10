@@ -3,7 +3,9 @@ cmake-build-debug/
 
 /ntl/
 /CMAKE_BUILD/
-/bench*
-/build/
 /venv/
 *.bin
+/benchmark_run/archive/
+/benchmark_run/fig/
+/benchmark_run/out/
+/benchmark_run/server/
