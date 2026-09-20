@@ -15,6 +15,10 @@ yatfhe/
 └── README.md
 ```
 
+## Experiments
+
+See [`benchmark_run/README.md`](benchmark_run/README.md) for benchmarks running instructions.
+
 ## Dependencies
 
 - **CMake** (>= 3.10)
@@ -50,6 +54,17 @@ yatfhe/
     Use an AVX-512 HEXL for `TARGET_ARCH=avx512`.
 
 3. **Running Benchmarks**
+
+    Benchmark suite runs end to end with one command, after the build above:
+
+    ```
+    benchmark_run/run_all.sh          # 16 stages, ~30 h, writes benchmark_run/out/
+    ```
+
+    It deploys the binaries, so `cp_bench.sh` is only needed for the manual path below. For a single experiment, run its stage script directly (`benchmark_run/run_trees.sh`, `run_slo.sh`, ...). The saturation-curve fit stage additionally needs the Python packages in `benchmark_run/requirements.txt`.
+
+    To drive one benchmark by hand:
+
     ```
     cd benchmark_run/server
     ./gen_benchkeys      # first time only, writes the BSK_*.bin key files
