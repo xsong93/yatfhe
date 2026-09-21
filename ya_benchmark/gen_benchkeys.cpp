@@ -12,13 +12,27 @@
 int main(int argc, char** argv){
     int users = 50;
     int from = 1;
+    bool doWwl = true, doLazy = true, doGinx = true;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
-        if (a.rfind("--users=", 0) == 0) users = std::atoi(a.c_str() + 8);
-        if (a.rfind("--from=", 0) == 0)  from  = std::atoi(a.c_str() + 7);
+        if (a.rfind("--users=", 0) == 0) {
+            users = std::atoi(a.c_str() + 8);
+        }
+        if (a.rfind("--from=", 0) == 0) {
+            from  = std::atoi(a.c_str() + 7);
+        }
+        if (a.rfind("--schemes=", 0) == 0) {
+            const std::string list = a.substr(10);
+            doWwl = list.find("wwl24") != std::string::npos;
+            doLazy = list.find("lazy") != std::string::npos;
+            doGinx = list.find("ginx") != std::string::npos;
+        }
     }
-    if (users < 1) users = 1;
-    if (from < 1) from = 1;
+    if (users < 1 || from < 1) {
+        std::cerr << "refusing: --users=" << users << " --from=" << from
+                  << "; a pool range must be positive" << std::endl;
+        return 1;
+    }
     std::cout << "generating ids " << from << ".." << users << std::endl;
 
     YatfheParameters param{};
@@ -37,7 +51,7 @@ int main(int argc, char** argv){
     genTlweKeySwitchingKey(ksKey, trlweKey, tlweKsKey, param);
     generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
 
-    for (int i = from; i <= users; i++) {
+    for (int i = from; doWwl && i <= users; i++) {
         BootstrappingKeyWWL24 bskWWL24{param, param.lApprox};
         genBootstrappingKeyWWL24(bskWWL24, trgswKey, tlweKey, param);
         string file;
@@ -47,7 +61,7 @@ int main(int argc, char** argv){
         serializeBskWWL24(bskWWL24, file);
         cout << file << " generated." << endl;
     }
-    for (int i = from; i <= users; i++) {
+    for (int i = from; doLazy && i <= users; i++) {
         BootstrappingKeyMPLazyPipeAlt bskMPLazyPipeAlt{param, param.lApprox, true};
         symEncTrlevWithKeyNtt(bskMPLazyPipeAlt.s2Dft, trgswKey.trlweKey, trgswKey.trlweKey.s, true, param);
         genBootstrappingKeyMPLazyPipeAlt(bskMPLazyPipeAlt, trgswKey, tlweKey, param);
@@ -58,7 +72,7 @@ int main(int argc, char** argv){
         serializeBskLazyPipeAlt(bskMPLazyPipeAlt, file);
         cout << file << " generated." << endl;
     }
-    for (int i = from; i <= users; i++) {
+    for (int i = from; doGinx && i <= users; i++) {
         BootstrappingKeyMP bskMP{param, param.lApprox};
         genBootstrappingKeyMP(bskMP, trgswKey, tlweKey, param);
         string file;
