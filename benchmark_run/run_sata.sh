@@ -1,8 +1,4 @@
 #!/bin/bash
-# SATA storage-tier point (Crucial MX500 via ntfs3).
-#
-# Same configuration as the NVMe and N2 rows -- cap=10, users=50, reqs=1000,
-# warm=500, seed=1 -- so storage is the only variable.
 
 set -u
 B="$(cd "$(dirname "$0")" && pwd)"

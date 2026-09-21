@@ -1,3 +1,9 @@
 #! /bin/bash
-cp CMAKE_BUILD/ya_benchmark/blindrotate_cache benchmark_run/server/.
-cp CMAKE_BUILD/ya_benchmark/gen_benchkeys benchmark_run/server/.
+
+set -eu
+for b in CMAKE_BUILD/ya_benchmark/*; do
+    if [ -f "$b" ] && [ -x "$b" ]; then
+        cp "$b" benchmark_run/server/.
+        echo "copied $(basename "$b")"
+    fi
+done

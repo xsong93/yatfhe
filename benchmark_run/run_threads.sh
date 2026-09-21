@@ -1,5 +1,5 @@
 #!/bin/bash
-# 5a: thread scaling and CCD placement
+# thread scaling and CCD placement
 #
 # The pool sizes from sched_getaffinity, so taskset sets both the thread count and core complex.
 # Cap 100 with 50 tenants is pure compute and the numbers are not contaminated by I/O.

@@ -1,14 +1,15 @@
 #!/bin/bash
-# Full cache-pressure sweep
+# Cache-pressure sweep
 
 set -u
 B="$(cd "$(dirname "$0")" && pwd)"
 OUTDIR="${OUTDIR:-$B/out}"
 
 CPUS="${CPUS:-0-7}"
-REQS="${REQS:-1000}"
+REQS="${REQS:-2000}"
 WARM="${WARM:-500}"
-CAPS="${CAPS:-100,50,20,10,5,1}"
+# Capacities are GINX-key bytes at 50 tenants, so these are pressure ratios 1.0, 2.5, 5.0, 10.0 and 50.0.
+CAPS="${CAPS:-50,20,10,5,1}"
 SEEDS="${SEEDS:-1 2 3 4 5}"
 ISO="${ISO:-bytes}"
 
