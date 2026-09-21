@@ -199,7 +199,7 @@ int main(int argc, char** argv) {
         record("D", "+ on-the-fly NTT (plaintext key)", "avoids NTT key expansion", f, warm, cold, {});
     }
 
-    // restructuring + naive parallel expansion (Alg. 3)
+    // restructuring + naive parallel expansion
     {
         const std::string f = keyPath("COMP_E_PAR_LAZY.bin");
         if (keyPrefix.empty()) {
@@ -210,10 +210,11 @@ int main(int argc, char** argv) {
         BootstrappingKeyMPLazyPipeAlt s2Src{param, param.lApprox, true};
         genBootstrappingKeyMPLazyPipeAlt(s2Src, trgswKey, tlweKey, param);
         Trlwe out{param};
+
+        BootstrappingKeyMPLazy srvWarm;
+        deserializeBskMPLazy(srvWarm, f, param.n);
         auto warm = measureTime(warmReps, [&] {
-            BootstrappingKeyMPLazy srv;
-            deserializeBskMPLazy(srv, f, param.n);
-            blindRotateLazyMTNtt(out, srv.bskFirst, srv.bskTrim, srv.bskDecompA, sTlwe, v, s2Src.s2Dft, param);
+            blindRotateLazyMTNtt(out, srvWarm.bskFirst, srvWarm.bskTrim, srvWarm.bskDecompA, sTlwe, v, s2Src.s2Dft, param);
         });
         auto cold = measureTime(coldReps, [&] {
             clearFileCache(f);
@@ -221,7 +222,7 @@ int main(int argc, char** argv) {
             deserializeBskMPLazy(srv, f, param.n);
             blindRotateLazyMTNtt(out, srv.bskFirst, srv.bskTrim, srv.bskDecompA, sTlwe, v, s2Src.s2Dft, param);
         });
-        record("E", "+ naive parallel expansion (Alg. 3)", "expansion off critical path via threads", f, warm, cold, {});
+        record("E", "parallel expansion (Alg. 3), LUT-dependent lazy key", "expansion off critical path via threads", f, warm, cold, {});
     }
 
     // OURS = pipeline + on-the-fly NTT

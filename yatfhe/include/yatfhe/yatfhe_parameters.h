@@ -27,9 +27,9 @@ struct YatfheParameters {
     // int l {4};
     // int lApprox {2};
 #else // binary secret
-    // LWE params, 128.3-bit
+    // LWE params, 128.0-bit
     int n {680};
-    int lweNoiseB {17}; // log2 σ: 17.21
+    int lweNoiseB {18}; // log2 σ: 17.21
     int64_t qLwe{Q_32};
     int qLweBits {32};
 

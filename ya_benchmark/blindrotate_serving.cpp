@@ -3,6 +3,7 @@
 //
 
 #include "include/bench_out.h"
+#include "include/blindrotate_serving.h"
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
@@ -45,250 +46,6 @@ static double toMs(const ns d) {
     return std::chrono::duration<double, std::milli>(d).count();
 }
 
-namespace {
-
-// Shared key cache
-template <typename V>
-class ConcurrentKeyCache {
-public:
-    explicit ConcurrentKeyCache(const size_t capacity) : capacity_(capacity) {}
-
-    struct Acquired {
-        std::shared_ptr<V> value;
-        bool hit{};
-        bool loadedHere{};
-        bool waitedForPeer{};
-    };
-
-    template <typename Loader>
-    Acquired acquire(const int key, Loader&& loader) {
-        std::unique_lock<std::mutex> lock(mutex_);
-        for (;;) {
-            if (const auto it = index_.find(key); it != index_.end()) {
-                order_.splice(order_.begin(), order_, it->second);
-                return {it->second->second, true, false, false};
-            }
-            const auto inflight = inflight_.find(key);
-            if (inflight == inflight_.end()) break;
-            auto state = inflight->second;
-            ++state->waiters;
-            state->cv.wait(lock, [&] { return state->done; });
-            if (state->value) {
-                return {state->value, false, false, true};
-            }
-        }
-
-        auto state = std::make_shared<LoadState>();
-        inflight_.emplace(key, state);
-        lock.unlock();
-
-        std::shared_ptr<V> loaded;
-        try {
-            loaded = loader();
-        } catch (...) {
-            lock.lock();
-            state->done = true;
-            inflight_.erase(key);
-            state->cv.notify_all();
-            throw;
-        }
-
-        lock.lock();
-        insertLocked(key, loaded);
-        state->value = loaded;
-        state->done = true;
-        inflight_.erase(key);
-        state->cv.notify_all();
-        return {loaded, false, true, false};
-    }
-
-    size_t size() const {
-        std::lock_guard<std::mutex> g(mutex_);
-        return order_.size();
-    }
-
-private:
-    struct LoadState {
-        std::condition_variable cv;
-        std::shared_ptr<V> value;
-        bool done{false};
-        int waiters{0};
-    };
-
-    void insertLocked(const int key, std::shared_ptr<V> value) {
-        if (index_.count(key)) return;
-        order_.emplace_front(key, std::move(value));
-        index_[key] = order_.begin();
-        while (order_.size() > capacity_) {
-            index_.erase(order_.back().first);
-            order_.pop_back();
-        }
-    }
-
-    mutable std::mutex mutex_;
-    std::list<std::pair<int, std::shared_ptr<V>>> order_;
-    std::unordered_map<int,
-                       typename std::list<std::pair<int, std::shared_ptr<V>>>::iterator>
-        index_;
-    std::unordered_map<int, std::shared_ptr<LoadState>> inflight_;
-    size_t capacity_;
-};
-
-struct Request {
-    long id{};
-    int tenant{};
-    Clock::time_point arrival;
-};
-
-struct Completion {
-    long id{};
-    int tenant{};
-    double queueMs{};
-    double serviceMs{};
-    double sojournMs{};
-    bool hit{};
-    bool waitedForPeer{};
-    int worker{};
-    int ops{};
-    bool owned{};
-};
-
-class Scheduler {
-public:
-    enum class Mode { Shared, Affinity, Soft };
-
-    static Mode parseMode(const std::string& s) {
-        if (s == "affinity") return Mode::Affinity;
-        if (s == "soft") return Mode::Soft;
-        return Mode::Shared;
-    }
-
-    Scheduler(const Mode mode, const int workers, const size_t maxDepth,
-              const int spillThreshold, const int stealThreshold)
-        : mode_(mode),
-          workers_(workers),
-          maxDepth_(maxDepth),
-          spill_(spillThreshold),
-          steal_(stealThreshold),
-          lanes_(mode == Mode::Shared ? 1 : workers) {}
-
-    bool push(const Request& r) {
-        std::lock_guard<std::mutex> g(m_);
-        int lane = 0;
-        if (mode_ != Mode::Shared) {
-            lane = owner(r.tenant);
-            if (mode_ == Mode::Soft && lanes_[lane].size() >=
-                static_cast<size_t>(spill_)) {
-                const int alt = shortestLaneLocked();
-                if (lanes_[alt].size() + 1 < lanes_[lane].size()) {
-                    lane = alt;
-                    ++spilled_;
-                }
-            }
-        }
-        if (lanes_[lane].size() >= maxDepth_) return false;
-        lanes_[lane].push_back(r);
-        peak_ = std::max(peak_, lanes_[lane].size());
-        cv_.notify_all();
-        return true;
-    }
-
-    bool pop(const int workerId, Request& out, bool& servedByOwner) {
-        std::unique_lock<std::mutex> lk(m_);
-        const int own = mode_ == Mode::Shared ? 0 : workerId;
-        auto ready = [&] {
-            if (!lanes_[own].empty()) return true;
-            if (mode_ == Mode::Affinity) return false;
-            if (mode_ == Mode::Shared) return anyPendingLocked();
-            return longestDepthLocked() >= static_cast<size_t>(steal_);
-        };
-        cv_.wait(lk, [&] { return closed_ || ready(); });
-        if (!ready()) {
-            if (closed_ && anyPendingLocked() && mode_ != Mode::Affinity) {
-            } else {
-                return false;
-            }
-        }
-
-        int lane = -1;
-        if (!lanes_[own].empty()) {
-            lane = own;
-        } else {
-            lane = longestLaneLocked();
-            if (lane < 0) return false;
-            if (mode_ == Mode::Soft) ++stolen_;
-        }
-        out = lanes_[lane].front();
-        lanes_[lane].pop_front();
-        servedByOwner = (mode_ != Mode::Shared) &&
-                        (owner(out.tenant) == workerId);
-        return true;
-    }
-
-    void close() {
-        std::lock_guard<std::mutex> g(m_);
-        closed_ = true;
-        cv_.notify_all();
-    }
-
-    size_t longestDepthLocked() const {
-        size_t d = 0;
-        for (const auto& l : lanes_) d = std::max(d, l.size());
-        return d;
-    }
-    size_t peakDepth() const { std::lock_guard<std::mutex> g(m_); return peak_; }
-    long spilled() const { std::lock_guard<std::mutex> g(m_); return spilled_; }
-    long stolen() const { std::lock_guard<std::mutex> g(m_); return stolen_; }
-
-private:
-    int owner(const int tenant) const {
-        return static_cast<int>(static_cast<unsigned>(tenant) % workers_);
-    }
-    bool anyPendingLocked() const {
-        for (const auto& l : lanes_) if (!l.empty()) return true;
-        return false;
-    }
-    int shortestLaneLocked() const {
-        int best = 0;
-        for (size_t i = 1; i < lanes_.size(); ++i)
-            if (lanes_[i].size() < lanes_[best].size()) best = static_cast<int>(i);
-        return best;
-    }
-    int longestLaneLocked() const {
-        int best = -1;
-        for (size_t i = 0; i < lanes_.size(); ++i)
-            if (!lanes_[i].empty() &&
-                (best < 0 || lanes_[i].size() > lanes_[best].size()))
-                best = static_cast<int>(i);
-        return best;
-    }
-
-    mutable std::mutex m_;
-    std::condition_variable cv_;
-    Mode mode_;
-    int workers_;
-    size_t maxDepth_;
-    int spill_;
-    int steal_;
-    std::vector<std::deque<Request>> lanes_;
-    size_t peak_{0};
-    long spilled_{0};
-    long stolen_{0};
-    bool closed_{false};
-};
-
-enum class Method { Ours, Tfhe, Wwl24 };
-
-}  // namespace
-
-static const char* methodName(const Method m) {
-    switch (m) {
-        case Method::Ours: return "OURS";
-        case Method::Tfhe: return "TFHE";
-        default: return "WWL+24";
-    }
-}
-
 static std::string keyFile(const Method m, const int tenant) {
     switch (m) {
         case Method::Ours:
@@ -300,68 +57,6 @@ static std::string keyFile(const Method m, const int tenant) {
     }
 }
 
-struct ControlArgs {
-    Method method{Method::Ours};
-    double rate{20.0};
-    int workers{4};
-    long requests{2000};
-    int users{50};
-    int capacity{10};
-    double zipfS{0.83};
-    uint64_t seed{1};
-    std::string arrival{"poisson"};
-    double burstOnMs{200.0};
-    double burstOffMs{800.0};
-    double burstFactor{4.0};
-    double sloMs{100.0};
-    size_t queueMax{4096};
-    long warm{200};
-    int batch{1};
-    int spill{2};
-    int steal{2};
-    std::string sched{"shared"};
-    std::string tag;
-};
-
-class ArrivalProcess {
-public:
-    ArrivalProcess(const ControlArgs& o, const uint64_t seed)
-        : opt_(o), gen_(seed), exp_(1.0) {}
-
-    double nextOffsetMs() {
-        if (opt_.arrival == "uniform") {
-            cursorMs_ += 1000.0 / opt_.rate;
-            return cursorMs_;
-        }
-        if (opt_.arrival == "bursty") {
-            advanceBurstPhase();
-            const double period = opt_.burstOnMs + opt_.burstOffMs;
-            const double onShare = opt_.burstOnMs / period;
-            const double offFactor =
-                (1.0 - onShare * opt_.burstFactor) / std::max(1e-9, 1.0 - onShare);
-            const double factor =
-                inOnPhase_ ? opt_.burstFactor : std::max(0.05, offFactor);
-            cursorMs_ += exp_(gen_) * 1000.0 / (opt_.rate * factor);
-            return cursorMs_;
-        }
-        cursorMs_ += exp_(gen_) * 1000.0 / opt_.rate;  // Poisson
-        return cursorMs_;
-    }
-
-private:
-    void advanceBurstPhase() {
-        const double period = opt_.burstOnMs + opt_.burstOffMs;
-        const double phase = std::fmod(cursorMs_, period);
-        inOnPhase_ = phase < opt_.burstOnMs;
-    }
-
-    const ControlArgs& opt_;
-    std::mt19937_64 gen_;
-    std::exponential_distribution<double> exp_;
-    double cursorMs_{0.0};
-    bool inOnPhase_{true};
-};
-
 static json summarize(std::vector<double> v) {
     json o;
     o["count"] = v.size();
@@ -369,7 +64,9 @@ static json summarize(std::vector<double> v) {
     std::sort(v.begin(), v.end());
     const double mean = std::accumulate(v.begin(), v.end(), 0.0) / v.size();
     double sq = 0;
-    for (double x : v) sq += (x - mean) * (x - mean);
+    for (double x : v) {
+        sq += (x - mean) * (x - mean);
+    }
     auto pct = [&](const double p) {
         auto i = static_cast<long>(std::ceil(p / 100.0 * v.size())) - 1;
         return v[std::min<long>(std::max<long>(i, 0), v.size() - 1)];
@@ -387,16 +84,24 @@ static json summarize(std::vector<double> v) {
 static std::string affinity() {
     cpu_set_t mask;
     CPU_ZERO(&mask);
-    if (sched_getaffinity(0, sizeof(mask), &mask) != 0) return "unknown";
+    if (sched_getaffinity(0, sizeof(mask), &mask) != 0) {
+        return "unknown";
+    }
     std::string out;
     int runStart = -1;
     for (int cpu = 0; cpu <= CPU_SETSIZE; ++cpu) {
         const bool in = cpu < CPU_SETSIZE && CPU_ISSET(cpu, &mask);
-        if (in && runStart < 0) runStart = cpu;
+        if (in && runStart < 0) {
+            runStart = cpu;
+        }
         else if (!in && runStart >= 0) {
-            if (!out.empty()) out += ",";
+            if (!out.empty()) {
+                out += ",";
+            }
             out += std::to_string(runStart);
-            if (cpu - 1 != runStart) out += "-" + std::to_string(cpu - 1);
+            if (cpu - 1 != runStart) {
+                out += "-" + std::to_string(cpu - 1);
+            }
             runStart = -1;
         }
     }
@@ -404,16 +109,20 @@ static std::string affinity() {
 }
 
 template <typename KeyT, typename LoadFn, typename RotateFn>
-static json runServing(const ControlArgs& opt, const YatfheParameters& param,
-                       const std::vector<int>& pattern,
-                       const TorusPolynomial& v, const Tlwe& input,
-                       LoadFn loadAndMaybeRotate, RotateFn rotate) {
+static json runServing(const ControlArgs& opt, const YatfheParameters& param, const std::vector<int>& pattern, const TorusPolynomial& v, const Tlwe& input, LoadFn loadAndMaybeRotate, RotateFn rotate) {
     ConcurrentKeyCache<KeyT> cache(opt.capacity);
-    Scheduler queue(Scheduler::parseMode(opt.sched), opt.workers, opt.queueMax,
-                    opt.spill, opt.steal);
+    Scheduler queue(Scheduler::parseMode(opt.sched), opt.workers, opt.queueMax, opt.spill, opt.steal);
 
     std::atomic<long> shed{0};
     std::atomic<long> completed{0};
+    // Device-level queue-depth instrumentation (R1 asked for SSD queue depth).
+    std::atomic<long> loadsInFlight{0};
+    std::atomic<long> loadsPeak{0};
+    std::atomic<long long> loadSamples{0};
+    std::atomic<long long> loadTickSum{0};
+    std::atomic<long> devPeak{0};
+    std::atomic<long long> devSamples{0};
+    std::atomic<long long> devTickSum{0};
     std::vector<std::vector<Completion>> perWorker(opt.workers);
 
     auto makeScaled = [&] {
@@ -426,8 +135,7 @@ static json runServing(const ControlArgs& opt, const YatfheParameters& param,
     {
         auto sTlwe = makeScaled();
         Trlwe out{param};
-        for (long i = 0; i < opt.warm && i < static_cast<long>(pattern.size());
-             ++i) {
+        for (long i = 0; i < opt.warm && i < static_cast<long>(pattern.size()); ++i) {
             const int tenant = pattern[i];
             const std::string file = keyFile(opt.method, tenant);
             bool done = false;
@@ -437,9 +145,38 @@ static json runServing(const ControlArgs& opt, const YatfheParameters& param,
                 done = loadAndMaybeRotate(*k, file, out, *sTlwe);
                 return k;
             });
-            if (!done) rotate(*acq.value, out, *sTlwe);
-            for (int b = 1; b < opt.batch; ++b) rotate(*acq.value, out, *sTlwe);
+            if (!done) {
+                rotate(*acq.value, out, *sTlwe);
+            }
+            for (int b = 1; b < opt.batch; ++b) {
+                rotate(*acq.value, out, *sTlwe);
+            }
         }
+    }
+
+    // Sample the kernel's in-flight read counter and the number of concurrent key loads over the measured window.
+    // The first counts block-layer requests, the second counts workers loading a key.
+    std::atomic<bool> monitorStop{false};
+    std::thread monitor;
+    const std::string inflightPath = opt.devStat.empty() ? std::string() : ("/sys/block/" + opt.devStat + "/inflight");
+    if (!opt.devStat.empty()) {
+        monitor = std::thread([&] {
+            while (!monitorStop.load(std::memory_order_relaxed)) {
+                long reads = 0, writes = 0;
+                {
+                    std::ifstream f(inflightPath);
+                    if (f) f >> reads >> writes;
+                }
+                const long loading = loadsInFlight.load(std::memory_order_relaxed);
+                loadTickSum.fetch_add(loading, std::memory_order_relaxed);
+                loadSamples.fetch_add(1, std::memory_order_relaxed);
+                devTickSum.fetch_add(reads, std::memory_order_relaxed);
+                devSamples.fetch_add(1, std::memory_order_relaxed);
+                long prev = devPeak.load(std::memory_order_relaxed);
+                while (reads > prev && !devPeak.compare_exchange_weak(prev, reads)) {}
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            }
+        });
     }
 
     const auto t0 = Clock::now();
@@ -450,7 +187,9 @@ static json runServing(const ControlArgs& opt, const YatfheParameters& param,
             const auto due = t0 + ns(static_cast<long long>(offsetMs * 1e6));
             std::this_thread::sleep_until(due);
             Request r{i, pattern[(opt.warm + i) % pattern.size()], Clock::now()};
-            if (!queue.push(r)) shed.fetch_add(1, std::memory_order_relaxed);
+            if (!queue.push(r)) {
+                shed.fetch_add(1, std::memory_order_relaxed);
+            }
         }
         queue.close();
     });
@@ -469,18 +208,26 @@ static json runServing(const ControlArgs& opt, const YatfheParameters& param,
                 const std::string file = keyFile(opt.method, r.tenant);
                 bool done = false;
                 auto acq = cache.acquire(r.tenant, [&] {
+                    const long nowLoading = loadsInFlight.fetch_add(1) + 1;
+                    long prevPeak = loadsPeak.load(std::memory_order_relaxed);
+                    while (nowLoading > prevPeak && !loadsPeak.compare_exchange_weak(prevPeak, nowLoading)) {}
                     auto k = std::make_shared<KeyT>();
                     clearFileCache(file);
                     done = loadAndMaybeRotate(*k, file, out, *sTlwe);
+                    loadsInFlight.fetch_sub(1);
                     return k;
                 });
-                if (!done) rotate(*acq.value, out, *sTlwe);
+                if (!done) {
+                    rotate(*acq.value, out, *sTlwe);
+                }
+
                 // remaining bootstraps of this tenant visit reuse the loaded key:
                 // this amortises the key load over a batch of size B
-                for (int b = 1; b < opt.batch; ++b)
+                for (int b = 1; b < opt.batch; ++b) {
                     rotate(*acq.value, out, *sTlwe);
+                }
                 const auto finished = Clock::now();
-                sink.push_back(Completion{
+                sink.push_back(Completion {
                     r.id, r.tenant,
                     toMs(picked - r.arrival),
                     toMs(finished - picked),
@@ -492,11 +239,19 @@ static json runServing(const ControlArgs& opt, const YatfheParameters& param,
     }
 
     producer.join();
-    for (auto& t : workers) t.join();
+    for (auto& t : workers) {
+        t.join();
+    }
     const auto t1 = Clock::now();
+    monitorStop.store(true, std::memory_order_relaxed);
+    if (monitor.joinable()) {
+        monitor.join();
+    }
 
     std::vector<Completion> all;
-    for (auto& v2 : perWorker) all.insert(all.end(), v2.begin(), v2.end());
+    for (auto& v2 : perWorker) {
+        all.insert(all.end(), v2.begin(), v2.end());
+    }
     std::vector<double> sojourn, queueDelay, service, servicePerOp;
     long hits = 0, coalesced = 0, sloViolations = 0, ownedCount = 0;
     std::vector<long> perWorkerCount(opt.workers, 0);
@@ -509,8 +264,9 @@ static json runServing(const ControlArgs& opt, const YatfheParameters& param,
         hits += c.hit;
         coalesced += c.waitedForPeer;
         sloViolations += (c.sojournMs > opt.sloMs);
-        if (c.worker >= 0 && c.worker < opt.workers)
+        if (c.worker >= 0 && c.worker < opt.workers) {
             perWorkerCount[c.worker]++;
+        }
         ownedCount += c.owned;
         auto& e = perTenant[c.tenant];
         e.first += c.sojournMs;
@@ -562,24 +318,31 @@ static json runServing(const ControlArgs& opt, const YatfheParameters& param,
     r["offered_rps"] = opt.rate;
     r["wall_sec"] = wallSec;
     r["shed"] = shed.load();
-    r["shed_rate"] = opt.requests
-                         ? static_cast<double>(shed.load()) / opt.requests
-                         : 0.0;
-    r["hit_rate"] = all.empty() ? 0.0
-                                : static_cast<double>(hits) / all.size();
+    r["shed_rate"] = opt.requests ? static_cast<double>(shed.load()) / opt.requests : 0.0;
+    r["hit_rate"] = all.empty() ? 0.0 : static_cast<double>(hits) / all.size();
     r["coalesced_loads"] = coalesced;
     r["slo_ms"] = opt.sloMs;
-    r["slo_violation_rate"] = all.empty()
-                                  ? 0.0
-                                  : static_cast<double>(sloViolations) /
-                                        all.size();
+    r["slo_violation_rate"] = all.empty() ? 0.0 : static_cast<double>(sloViolations) / all.size();
+
+    for (const double budget : {100.0, 300.0, 500.0}) {
+        long v = 0;
+        for (const auto& c : all) v += (c.sojournMs > budget);
+        r["slo_violation_rate_" + std::to_string(static_cast<int>(budget))] = all.empty() ? 0.0 : static_cast<double>(v) / all.size();
+    }
+    r["shed_plus_completed"] = shed.load() + static_cast<long>(all.size());
     r["peak_queue_depth"] = queue.peakDepth();
+    const long long nSamples = devSamples.load();
+    r["load_concurrency_peak"] = loadsPeak.load();
+    r["load_concurrency_mean"] = nSamples ? static_cast<double>(loadTickSum.load()) / nSamples : 0.0;
+    r["device"] = opt.devStat;
+    r["device_inflight_reads_peak"] = devPeak.load();
+    r["device_inflight_reads_mean"] = nSamples ? static_cast<double>(devTickSum.load()) / nSamples : 0.0;
+    r["device_inflight_samples"] = nSamples;
     r["batch"] = opt.batch;
     r["sched"] = opt.sched;
     r["per_worker_requests"] = perWorkerCount;
     r["tenant_fairness_jain"] = fair;
-    r["locality"] = all.empty() ? 0.0
-                                : static_cast<double>(ownedCount) / all.size();
+    r["locality"] = all.empty() ? 0.0 : static_cast<double>(ownedCount) / all.size();
     r["spilled"] = queue.spilled();
     r["stolen"] = queue.stolen();
     r["spill_threshold"] = opt.spill;
@@ -594,7 +357,9 @@ int main(int argc, char** argv) {
     ControlArgs opt;
     auto arg = [&](const char* name, const std::string& s, auto& dst) {
         const std::string pre = std::string("--") + name + "=";
-        if (s.rfind(pre, 0) != 0) return false;
+        if (s.rfind(pre, 0) != 0) {
+            return false;
+        }
         std::istringstream(s.substr(pre.size())) >> dst;
         return true;
     };
@@ -614,6 +379,7 @@ int main(int argc, char** argv) {
                    "  --burston=MS --burstoff=MS --burstfactor=X\n"
                    "  --slo=MS                   SLO target for violation rate (default 100)\n"
                    "  --queuemax=N               shed beyond this depth (default 4096)\n"
+                   "  --devstat=DEV              sample /sys/block/DEV/inflight (e.g. nvme0n1)\n"
                    "  --batch=B                  bootstraps per tenant visit (default 1).\n"
                    "  --sched=shared|affinity|soft\n"
                    "                             shared:   one queue, no locality, even load\n"
@@ -640,6 +406,7 @@ int main(int argc, char** argv) {
         arg("s", s, opt.zipfS);
         arg("seed", s, opt.seed);
         arg("tag", s, opt.tag);
+        arg("devstat", s, opt.devStat);
         {
             std::string od;
             if (arg("out", s, od))
@@ -653,12 +420,13 @@ int main(int argc, char** argv) {
         arg("burstoff", s, opt.burstOffMs);
         arg("burstfactor", s, opt.burstFactor);
     }
-    if (method == "tfhe")
+    if (method == "tfhe") {
         opt.method = Method::Tfhe;
-    else if (method == "wwl24")
+    } else if (method == "wwl24") {
         opt.method = Method::Wwl24;
-    else
+    } else {
         opt.method = Method::Ours;
+    }
 
     YatfheParameters param{};
     initYatfhe(param);
@@ -711,26 +479,22 @@ int main(int argc, char** argv) {
         case Method::Ours:
             result = runServing<BootstrappingKeyMPLazyPipeAlt>(
                 opt, param, pattern, v, input,
-                [&](BootstrappingKeyMPLazyPipeAlt& k, const std::string& f,
-                    Trlwe& out, const ScaledTlwe& s) {
+                [&](BootstrappingKeyMPLazyPipeAlt& k, const std::string& f, Trlwe& out, const ScaledTlwe& s) {
                     blindRotateLazyPipeAltInitNtt(out, k, s, v, f, gdVntt, param);
                     return true;
                 },
-                [&](const BootstrappingKeyMPLazyPipeAlt& k, Trlwe& out,
-                    const ScaledTlwe& s) {
+                [&](const BootstrappingKeyMPLazyPipeAlt& k, Trlwe& out, const ScaledTlwe& s) {
                     blindRotateLazyPipeAltNtt(out, k, s, v, gdVntt, param);
                 });
             break;
         case Method::Tfhe:
             result = runServing<BootstrappingKeyMP>(
                 opt, param, pattern, v, input,
-                [&](BootstrappingKeyMP& k, const std::string& f, Trlwe&,
-                    const ScaledTlwe&) {
+                [&](BootstrappingKeyMP& k, const std::string& f, Trlwe&, const ScaledTlwe&) {
                     deserializeBskMP(k, f, param.n);
                     return false;
                 },
-                [&](const BootstrappingKeyMP& k, Trlwe& out,
-                    const ScaledTlwe& s) {
+                [&](const BootstrappingKeyMP& k, Trlwe& out, const ScaledTlwe& s) {
                     genNoiselessTrlweSample(out, v, s);
                     blindRotateJP22Ntt(out, k, s, param);
                 });
@@ -738,24 +502,21 @@ int main(int argc, char** argv) {
         default:
             result = runServing<BootstrappingKeyWWL24>(
                 opt, param, pattern, v, input,
-                [&](BootstrappingKeyWWL24& k, const std::string& f, Trlwe&,
-                    const ScaledTlwe&) {
+                [&](BootstrappingKeyWWL24& k, const std::string& f, Trlwe&, const ScaledTlwe&) {
                     deserializeBskWWL24(k, f, param.n);
                     return false;
                 },
-                [&](const BootstrappingKeyWWL24& k, Trlwe& out,
-                    const ScaledTlwe& s) {
+                [&](const BootstrappingKeyWWL24& k, Trlwe& out, const ScaledTlwe& s) {
                     genNoiselessTrlweSample(out, v, s);
                     blindRotateWWL24Ntt(out, k, s, param);
                 });
             break;
     }
 
-    std::string name = std::string("serving_") +
-                       (opt.method == Method::Ours
-                            ? "ours"
-                            : opt.method == Method::Tfhe ? "tfhe" : "wwl+24");
-    if (!opt.tag.empty()) name += "_" + opt.tag;
+    std::string name = std::string("serving_") + (opt.method == Method::Ours ? "ours" : opt.method == Method::Tfhe ? "tfhe" : "wwl+24");
+    if (!opt.tag.empty()) {
+        name += "_" + opt.tag;
+    }
     name += ".json";
     const std::string outPath = yabench::benchOutPath(name);
     std::ofstream out(outPath);
