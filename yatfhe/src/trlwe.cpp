@@ -174,6 +174,10 @@ void symDecTrlweWoRoundingNtt(TorusPolynomial& output, const TrlweDft& trlweDft,
 // Trlwe: (X^-b) * (0,...,0,v)
 void genNoiselessTrlweSample(Trlwe& accum, const TorusPolynomial& v, const ScaledTlwe& scaledInput) {
     const auto barb = scaledInput.b;
+    // accum may be reused and hold a previous mask, so zero it
+    for (auto& poly : accum.a) {
+        std::fill(poly.coeffs.begin(), poly.coeffs.end(), 0);
+    }
     rotateTorusPolynomial(accum.b, -barb, v);
 }
 

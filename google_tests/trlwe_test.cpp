@@ -575,3 +575,48 @@ TEST(TRLWE, MULT_POLY_DIRECT_NTT) {
 
     printBanner("TRLWE.MULT_POLY_DIRECT_NTT");
 }
+
+TEST(TRLWE, NOISELESS_SAMPLE_CLEARS_MASK) {
+    for (const int k : {1, 2}) {
+        YatfheParameters param{};
+        param.torusBase = 8;
+        param.k = k;
+        initYatfhe(param);
+
+        TrlweKey trlweKey{param};
+        genTrlweKey(trlweKey);
+
+        TorusPolynomial v{param.N};
+        generateTestPolynomialFR(v, param.torusBase, 2 * param.N);
+
+        std::vector<Torus> plain(param.N);
+        for (auto& mu : plain) {
+            mu = modSwitchToTorus32(genIntUniformDist(-4, 3), param.torusBase);
+        }
+
+        Trlwe accum{param};
+        ScaledTlwe scaledInput{2 * param.N, param.n};
+        for (const int b : {0, 1, param.N - 1, param.N, param.N + 3, 2 * param.N - 1}) {
+            // previous ciphertext has a nonzero mask
+            symEncTrlweMultiSample(accum, trlweKey, plain);
+            Torus maskBits = 0;
+            for (const auto& poly : accum.a) {
+                for (const auto c : poly.coeffs) {
+                    maskBits |= c;
+                }
+            }
+            ASSERT_NE(0, maskBits);
+
+            scaledInput.b = b;
+            genNoiselessTrlweSample(accum, v, scaledInput);
+
+            TorusPolynomial expected{param.N};
+            rotateTorusPolynomial(expected, -b, v);
+            TorusPolynomial phase{param.N};
+            symDecTrlweWoRounding(phase, accum, trlweKey);
+            ASSERT_EQ(expected.coeffs, phase.coeffs) << "k: " << k << ", b: " << b;
+        }
+    }
+
+    printBanner("TRLWE.NOISELESS_SAMPLE_CLEARS_MASK");
+}
