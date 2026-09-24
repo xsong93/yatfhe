@@ -45,6 +45,89 @@ TEST(GADGET_DECOMP, SIGNED) {
     printBanner("GADGET_DECOMP.SIGNED");
 }
 
+TEST(GADGET_DECOMP, ZERO_MEAN) {
+    const auto centred = [](const int64_t d, const int bits) {
+        const uint64_t Q = bits >= 64 ? 0 : (1ULL << bits);
+        const uint64_t u = static_cast<uint64_t>(d) & (Q - 1);
+        return u >= Q / 2 ? static_cast<int64_t>(u) - static_cast<int64_t>(Q) : static_cast<int64_t>(u);
+    };
+    YatfheParameters base{};
+    const int tb = base.torusBits;
+    const std::vector<std::pair<int, int>> gadgets{{2, tb / 2}, {4, tb / 4}, {7, 4}, {3, 5}, {3, 10}};
+    const int samples = 1 << 17;
+    for (const auto& [radixBits, l] : gadgets) {
+        YatfheParameters param{};
+        param.setRadixBits(radixBits);
+        param.l = l;
+        initYatfhe(param);
+        const int64_t B = int64_t{1} << radixBits;
+        const int dropped = tb - l * radixBits;
+        const int64_t halfDelta = dropped > 0 ? int64_t{1} << (dropped - 1) : 0;
+        std::vector<Torus> data(samples);
+        initCoeffsViaUniformDistribution(data, TORUS_MIN, TORUS_MAX);
+        std::vector<double> mean(l, 0), sq(l, 0);
+        DecomposedData d{l}, dn{l};
+        for (const auto x : data) {
+            signedGadgetDecomposition(d, x, param);
+            int64_t rec = 0;
+            for (int j = 0; j < l; j++) {
+                ASSERT_LE(std::llabs(static_cast<long long>(d.value[j])), B / 2);
+                rec += static_cast<int64_t>(d.value[j]) * (int64_t{1} << (tb - (j + 1) * radixBits));
+                mean[j] += static_cast<double>(d.value[j]);
+                sq[j] += static_cast<double>(d.value[j]) * static_cast<double>(d.value[j]);
+            }
+            ASSERT_LE(std::llabs(static_cast<long long>(centred(static_cast<int64_t>(x) - rec, tb))), halfDelta);
+            if (x != TORUS_MIN) {
+                signedGadgetDecomposition(dn, static_cast<Torus>(-x), param);
+                for (int j = 0; j < l; j++) ASSERT_EQ(dn.value[j], -d.value[j]);
+            }
+        }
+        const double b = static_cast<double>(B);
+        for (int j = 0; j < l; j++) {
+            mean[j] /= samples;
+            sq[j] /= samples;
+            const int i = l - 1 - j;   // from the least significant kept level
+            const double vi = (b - 2) * (b - 1) / 12.0 + b * b / (4 * (b + 1)) + (i % 2 ? -1.0 : 1.0) * std::pow(b, 1.0 - i) / (4 * (b + 1));
+            // 6 standard errors of the mean; the [-B/2, B/2) digits sat at -1/2
+            EXPECT_LT(std::fabs(mean[j]), 6.0 * std::sqrt(vi / samples)) << "B=2^" << radixBits << " l=" << l << " level " << j;
+            if (j > 0) {   // the top digit follows the sign, not the carry chain
+                EXPECT_NEAR(sq[j] / vi, 1.0, 0.03) << "B=2^" << radixBits << " l=" << l << " level " << j;
+            }
+        }
+        // row decomposition, both unrolled layouts and the generic path, digit for digit
+        const int N = 256;
+        std::vector<Torus> row(data.begin(), data.begin() + N);
+        std::vector<std::vector<Torus>> out(l, std::vector<Torus>(N));
+        std::vector<Torus*> ptr(l);
+        for (int j = 0; j < l; j++) ptr[j] = out[j].data();
+        decomposeRow(ptr.data(), row.data(), N, l, param);
+        for (int i = 0; i < N; i++) {
+            signedGadgetDecomposition(d, row[i], param);
+            for (int j = 0; j < l; j++) {
+                ASSERT_EQ(out[j][i], d.value[j]);
+            }
+        }
+    }
+    // key switch digits
+    YatfheParameters param{};
+    param.setKsRadixBits(2);
+    initYatfhe(param);
+    std::vector<Torus> data(samples);
+    initCoeffsViaUniformDistribution(data, LWE_MIN, LWE_MAX);
+    DecomposedData d{param.ksLevel};
+    std::vector<double> mean(param.ksLevel, 0);
+    for (const auto x : data) {
+        signedGadgetDecompositionKs(d, x, param);
+        for (int j = 0; j < param.ksLevel; j++) {
+            mean[j] += static_cast<double>(d.value[j]);
+        }
+    }
+    for (int j = 0; j < param.ksLevel; j++) {
+        EXPECT_LT(std::fabs(mean[j] / samples), 6.0 * std::sqrt(1.5 / samples)) << "KS level " << j;
+    }
+    printBanner("GADGET_DECOMP.ZERO_MEAN");
+}
+
 TEST(GADGET_DECOMP, UNSIGNED) {
     YatfheParameters param {};
     param.setRadixBits(8);

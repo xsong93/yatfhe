@@ -49,40 +49,10 @@ void gadgetDecomposeKs(DecomposedData& out, const Torus in, const YatfheParamete
     }
 }
 
+// Zero-mean digits of the LWE_Q-domain input
 void signedGadgetDecompositionKs(DecomposedData& out, const Torus in, const YatfheParameters& param) {
-    const int radixBits = param.ksRadixBits;
-    const int widthBits = param.ksWidthBits;
-    const int l = out.l;
-    const Torus B = static_cast<Torus>(1) << radixBits;
-    const Torus halfB = B >> 1;
-
     out.sign = 1;
-
-    // Low ksWidthBits bits (LWE_Q domain): two's complement of the signed input.
-    UnsignedInteger u = static_cast<UnsignedInteger>(in);
-    if (widthBits < static_cast<int>(sizeof(UnsignedInteger) * 8)) {
-        u &= (static_cast<UnsignedInteger>(1) << widthBits) - 1;
-    }
-
-    // Round to the top l*ksRadixBits bits (residual in [-Delta/2, Delta/2)).
-    const int shift = widthBits - l * radixBits;   // # bits dropped below the last kept digit
-    if (shift > 0) {
-        u += static_cast<UnsignedInteger>(1) << (shift - 1);
-    }
-
-    Torus carry = 0;
-    for (int j = l - 1; j >= 0; --j) {
-        const UnsignedInteger window =
-            (u >> (widthBits - (j + 1) * radixBits)) & static_cast<UnsignedInteger>(B - 1);
-        Torus digit = static_cast<Torus>(window) + carry;
-        if (digit >= halfB) {          // >= B/2  ->  fold into [-B/2, B/2), carry up
-            digit -= B;
-            carry = 1;
-        } else {
-            carry = 0;
-        }
-        out.value[j] = digit;
-    }
+    zeroMeanDigits(out, in, param.ksRadixBits, param.ksWidthBits);
 }
 
 Torus recomposeSelf(const DecomposedData& digits, const YatfheParameters& param) {

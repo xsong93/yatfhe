@@ -5,6 +5,9 @@
 #ifndef YATFHE_GADGET_DECOMPOSITION_H
 #define YATFHE_GADGET_DECOMPOSITION_H
 
+#include <limits>
+#include <stdexcept>
+#include <string>
 #include <vector>
 #include "yatfhe/torus.h"
 #include "yatfhe/yatfhe_parameters.h"
@@ -45,114 +48,190 @@ void decomposeOverB(std::vector<Torus>& output, Integer in, int bitWidth, int ra
 
 void decomposeOverBKS(std::vector<Torus>& output, Integer in, const YatfheParameters& param);
 
-/**
- * Signed gadget decomposition.
- * Each digit is balanced into [-B/2, B/2) by carrying into the next-more-significant digit, and the discarded low tail is
- * rounded to nearest so the gadget residual lies in [-Delta/2, Delta/2), with Delta = 2^(torusBits-l*radixBits).
- */
-inline void signedGadgetDecomposition(DecomposedData& out, const Torus in, const YatfheParameters& param) {
-    const int radixBits = param.radixBits;
-    const int torusBits = param.torusBits;
-    const int l = out.l;
-    const Torus B = static_cast<Torus>(1) << radixBits;
-    const Torus halfB = B >> 1;
+// a window is the radixBits bits below its shift
+constexpr inline int windowShift(const int widthBits, const int radixBits, const int level) {
+    return widthBits - (level + 1) * radixBits;
+}
 
-    out.sign = 1;
+// Rounding bit of the tail below the last kept digit: adding it rounds that tail half away from zero.
+// Zero when the l*radixBits kept bits are all the bits there are.
+constexpr inline UnsignedInteger roundingBias(const int radixBits, const int widthBits, const int l) {
+    const int droppedBits = widthBits - l * radixBits;
+    return droppedBits > 0 ? static_cast<UnsignedInteger>(1) << (droppedBits - 1) : 0;
+}
 
-    auto u = static_cast<UnsignedInteger>(in);
+// Truncates a value to widthBits bits.
+// A torus narrower than UnsignedInteger keeps its two's complement sign.
+constexpr inline UnsignedInteger maskToWidth(const UnsignedInteger value, const int widthBits) {
+    constexpr int widthOfUnsigned = std::numeric_limits<UnsignedInteger>::digits;
+    return widthBits >= widthOfUnsigned ? value : value & ((static_cast<UnsignedInteger>(1) << widthBits) - 1);
+}
 
-    // Round to the top l*radixBits bits
-    const int shift = torusBits - l * radixBits; // # bits dropped below the last kept digit
-    if (shift > 0) {
-        u += static_cast<UnsignedInteger>(1) << (shift - 1);
-    }
+constexpr inline Torus balancedDigit(const Torus digit, const Torus radixBase, const bool carries) {
+    return carries ? digit - radixBase : digit;
+}
 
-    // Extract the l kept digits, least-significant first so the balancing carry propagates toward the more-significant digit.
+// Rounds then decomposes one value, handing emit(level, digit) from level l-1 (least significant) down to level 0.
+template <typename Emit>
+inline void zeroMeanDigits(UnsignedInteger u, const int l, const int radixBits, const int widthBits, Emit&& emit) {
+    const UnsignedInteger widthMask = maskToWidth(~UnsignedInteger{0}, widthBits);
+    u &= widthMask;
+    const bool negative = (u >> (widthBits - 1)) & 1;
+    const UnsignedInteger m = (negative ? (UnsignedInteger{0} - u) & widthMask : u) + roundingBias(radixBits, widthBits, l);
+
+    const Torus kRadixBase = static_cast<Torus>(1) << radixBits;
+    const Torus kHalfB = kRadixBase >> 1;
+    const Torus sign = negative ? -1 : 1;
+
     Torus carry = 0;
-    for (int j = l - 1; j >= 0; --j) {
-        const UnsignedInteger window = (u >> (torusBits - (j + 1) * radixBits)) & static_cast<UnsignedInteger>(B - 1);
-        Torus digit = static_cast<Torus>(window) + carry;
-        carry = digit >= halfB; // >= B/2  ->  fold into [-B/2, B/2), carry up
-        digit -= carry * B;
-        out.value[j] = digit;
+    for (int level = l - 1; level >= 0; --level) {
+        const int shift = windowShift(widthBits, radixBits, level);
+        const auto window = static_cast<Torus>((m >> shift) & static_cast<UnsignedInteger>(kRadixBase - 1));
+        const Torus digit = window + carry;
+        const Torus tieBit = level > 0 ? static_cast<Torus>((m >> (shift + 2 * radixBits - 1)) & 1) : 0;
+        carry = (digit > kHalfB) | ((digit == kHalfB) & tieBit);
+        emit(level, sign * balancedDigit(digit, kRadixBase, carry));
     }
 }
 
-// Row-wise gadget decomposition
+inline void zeroMeanDigits(DecomposedData& out, const Torus in, const int radixBits, const int widthBits) {
+    zeroMeanDigits(static_cast<UnsignedInteger>(in), out.l, radixBits, widthBits, [&out](const int level, const Torus digit){
+        out.value[level] = digit;
+    });
+}
+
+inline void signedGadgetDecomposition(DecomposedData& out, const Torus in, const YatfheParameters& param) {
+    out.sign = 1;
+    zeroMeanDigits(out, in, param.radixBits, param.torusBits);
+}
+
+// Decomposes a whole row, writing digit j of every value to level j, one level at a time.
+// The per-value state is held in flat arrays, which is what lets the inner loop vectorise.
+template <typename OutT>
+void decomposeRowByLevel(OutT* const* outPtr, const Torus* in, const int N, const int L, const int radixBits,
+                         const int widthBits) {
+    const Torus kRadixBase = static_cast<Torus>(1) << radixBits;
+    const Torus kHalfB = kRadixBase >> 1;
+    const UnsignedInteger widthMask = maskToWidth(~UnsignedInteger{0}, widthBits);
+    const UnsignedInteger round = roundingBias(radixBits, widthBits, L);
+
+    thread_local std::vector<UnsignedInteger> magnitudeBuf;
+    thread_local std::vector<Torus> signBuf;
+    thread_local std::vector<Torus> carryBuf;
+    if (magnitudeBuf.size() < static_cast<size_t>(N)) {
+        magnitudeBuf.resize(N);
+        signBuf.resize(N);
+        carryBuf.resize(N);
+    }
+    UnsignedInteger* __restrict magnitude = magnitudeBuf.data();
+    Torus* __restrict sign = signBuf.data();
+    Torus* __restrict carry = carryBuf.data();
+
+    for (int j = 0; j < N; j++) {
+        const UnsignedInteger value = static_cast<UnsignedInteger>(in[j]) & widthMask;
+        const bool negative = (value >> (widthBits - 1)) & 1; // top bit: the sign in two's complement
+        magnitude[j] = (negative ? (UnsignedInteger{0} - value) & widthMask : value) + round;
+        sign[j] = negative ? -1 : 1;
+        carry[j] = 0;
+    }
+
+    for (int level = L - 1; level >= 0; --level) {
+        const int shift = windowShift(widthBits, radixBits, level);
+        // no window above the top digit, so the tie read is masked off.
+        const int tieShift = level > 0 ? shift + 2 * radixBits - 1 : 0;
+        const Torus tieMask = level > 0 ? 1 : 0;
+        OutT* __restrict out = outPtr[level];
+        for (int j = 0; j < N; j++) {
+            const auto window = static_cast<Torus>((magnitude[j] >> shift) & static_cast<UnsignedInteger>(kRadixBase - 1));
+            const Torus digit = window + carry[j];
+            const Torus tieBit = static_cast<Torus>((magnitude[j] >> tieShift) & 1) & tieMask;
+            carry[j] = (digit > kHalfB) | ((digit == kHalfB) & tieBit);
+            out[j] = static_cast<OutT>((digit - carry[j] * kRadixBase) * sign[j]);
+        }
+    }
+}
+
+// Row-wise gadget decomposition, same digits as signedGadgetDecomposition
 template <int L, typename OutT>
-void decomposeRowUnrolled(OutT* const* outPtr, const Torus* in, const int N, const int radixBits, const int torusBits) {
-    // Coefficient-major
-    // Threshold at 5 keeps the fast path for both.
-    const Torus B = static_cast<Torus>(1) << radixBits;
-    const Torus halfB = B >> 1;
-    const int shift = torusBits - L * radixBits;
-    const UnsignedInteger round = shift > 0 ? static_cast<UnsignedInteger>(1) << (shift - 1) : 0;
+void decomposeRowUnrolled(OutT* const* outPtr, const Torus* in, const int N, const int radixBits, const int widthBits) {
+    const Torus kRadixBase = static_cast<Torus>(1) << radixBits;
+    const Torus kHalfB = kRadixBase >> 1;
+    const UnsignedInteger widthMask = maskToWidth(~UnsignedInteger{0}, widthBits);
+    const UnsignedInteger round = roundingBias(radixBits, widthBits, L);
 
     if constexpr (L < 5) {
-        OutT* o[L];
-        for (int lvl = 0; lvl < L; lvl++) {
-            o[lvl] = outPtr[lvl];
+        // Coefficient-major: one pass per value keeps its whole digit sequence in registers.
+        OutT* levelOut[L];
+        for (int level = 0; level < L; level++) {
+            levelOut[level] = outPtr[level];
         }
         for (int j = 0; j < N; j++) {
-            const UnsignedInteger u = static_cast<UnsignedInteger>(in[j]) + round;
+            const UnsignedInteger value = static_cast<UnsignedInteger>(in[j]) & widthMask;
+            const bool negative = (value >> (widthBits - 1)) & 1; // top bit: the sign in two's complement
+            const UnsignedInteger magnitude = (negative ? (UnsignedInteger{0} - value) & widthMask : value) + round;
+
             Torus carry = 0;
-            for (int lvl = L - 1; lvl >= 0; --lvl) {
-                const UnsignedInteger window = (u >> (torusBits - (lvl + 1) * radixBits)) & static_cast<UnsignedInteger>(B - 1);
-                Torus digit = static_cast<Torus>(window) + carry;
-                carry = digit >= halfB;
-                digit -= carry * B;
-                o[lvl][j] = static_cast<OutT>(digit);
+            for (int level = L - 1; level >= 0; --level) {
+                const int shift = windowShift(widthBits, radixBits, level);
+                const auto window = static_cast<Torus>((magnitude >> shift) & static_cast<UnsignedInteger>(kRadixBase - 1));
+                const Torus digit = window + carry;
+                const Torus tieBit = level > 0 ? static_cast<Torus>((magnitude >> (shift + 2 * radixBits - 1)) & 1) : 0;
+                carry = (digit > kHalfB) | ((digit == kHalfB) & tieBit);
+                const Torus balanced = balancedDigit(digit, kRadixBase, carry);
+                levelOut[level][j] = static_cast<OutT>(negative ? -balanced : balanced);
             }
         }
     } else {
-        // digit-major
-        thread_local std::vector<UnsignedInteger> uBuf;
-        thread_local std::vector<Torus> carryBuf;
-        if (uBuf.size() < static_cast<size_t>(N)) {
-            uBuf.resize(N);
-            carryBuf.resize(N);
-        }
-        UnsignedInteger* __restrict u = uBuf.data();
-        Torus* __restrict c = carryBuf.data();
-        for (int j = 0; j < N; j++) {
-            u[j] = static_cast<UnsignedInteger>(in[j]) + round;
-            c[j] = 0;
-        }
-        for (int lvl = L - 1; lvl >= 0; --lvl) {
-            const int sh = torusBits - (lvl + 1) * radixBits;
-            OutT* __restrict out = outPtr[lvl];
-            for (int j = 0; j < N; j++) {
-                const auto w = static_cast<Torus>((u[j] >> sh) & static_cast<UnsignedInteger>(B - 1));
-                const Torus digit = w + c[j];
-                const Torus carry = digit >= halfB ? 1 : 0;
-                c[j] = carry;
-                out[j] = static_cast<OutT>(digit - carry * B);
-            }
-        }
+        decomposeRowByLevel(outPtr, in, N, L, radixBits, widthBits);
     }
 }
 
 template<typename OutT>
 void decomposeRow(OutT* const* outPtr, const Torus* in, const int N, const int l, const YatfheParameters& param) {
-    const int b = param.radixBits, t = param.torusBits;
-    switch (l) {
-        case 1: decomposeRowUnrolled<1>(outPtr, in, N, b, t); return;
-        case 2: decomposeRowUnrolled<2>(outPtr, in, N, b, t); return;
-        case 3: decomposeRowUnrolled<3>(outPtr, in, N, b, t); return;
-        case 4: decomposeRowUnrolled<4>(outPtr, in, N, b, t); return;
-        case 5: decomposeRowUnrolled<5>(outPtr, in, N, b, t); return;
-        case 6: decomposeRowUnrolled<6>(outPtr, in, N, b, t); return;
-        case 7: decomposeRowUnrolled<7>(outPtr, in, N, b, t); return;
-        case 8: decomposeRowUnrolled<8>(outPtr, in, N, b, t); return;
-        default: {
-            DecomposedData d{l};
-            for (auto j = 0; j < N; j++) {
-                signedGadgetDecomposition(d, in[j], param);
-                for (auto lvl = 0; lvl < l; lvl++) {
-                    outPtr[lvl][j] = static_cast<OutT>(d.value[lvl] * d.sign);
-                }
-            }
+    const int radixBits = param.radixBits;
+    const int widthBits = param.torusBits;
+
+    if (l * radixBits > widthBits) {
+        throw std::invalid_argument("decomposeRow: " + std::to_string(l) +
+                                        " digits of " + std::to_string(radixBits) +
+                                        " bits do not fit the " + std::to_string(widthBits) + "-bit torus");
+    }
+    if constexpr (std::numeric_limits<OutT>::is_signed) {
+        // digits reach +2^(radixBits-1), which needs radixBits - 1 < the type's value bits
+        if (radixBits - 1 >= std::numeric_limits<OutT>::digits) {
+            throw std::invalid_argument("decomposeRow: digits up to +2^" + std::to_string(radixBits - 1) +
+                                        " do not fit the " + std::to_string(std::numeric_limits<OutT>::digits + 1) + "-bit digit type."
+                                        " Use radixBits <= " + std::to_string(std::numeric_limits<OutT>::digits));
         }
+    }
+
+    switch (l) {
+        case 1:
+            decomposeRowUnrolled<1>(outPtr, in, N, radixBits, widthBits);
+            return;
+        case 2:
+            decomposeRowUnrolled<2>(outPtr, in, N, radixBits, widthBits);
+            return;
+        case 3:
+            decomposeRowUnrolled<3>(outPtr, in, N, radixBits, widthBits);
+            return;
+        case 4:
+            decomposeRowUnrolled<4>(outPtr, in, N, radixBits, widthBits);
+            return;
+        case 5:
+            decomposeRowUnrolled<5>(outPtr, in, N, radixBits, widthBits);
+            return;
+        case 6:
+            decomposeRowUnrolled<6>(outPtr, in, N, radixBits, widthBits);
+            return;
+        case 7:
+            decomposeRowUnrolled<7>(outPtr, in, N, radixBits, widthBits);
+            return;
+        case 8:
+            decomposeRowUnrolled<8>(outPtr, in, N, radixBits, widthBits);
+            return;
+        default:
+            decomposeRowByLevel(outPtr, in, N, l, radixBits, widthBits);
     }
 }
 
