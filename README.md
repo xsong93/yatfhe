@@ -1,5 +1,3 @@
-# yatfhe: Yet another TFHE library
-
 ## Repository Structure
 ```
 yatfhe/
